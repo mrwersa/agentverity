@@ -218,6 +218,28 @@ an online evaluator and should not repeat every customer request.
 
 [Integration examples and the AgentCore validation plan](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 
+### Production-stack showcase
+
+The repository also contains a live payment-dispute triage example built with
+Strands and Amazon Bedrock. DeepEval checks labelled route quality,
+AgentVerity checks whether those scores rest on stable and varied decisions,
+and the same agent can run on AgentCore Runtime with aggregate diagnostics sent
+through OpenTelemetry.
+
+```bash
+pip install -e ".[showcase]"
+
+python examples/production_stack/evaluate_stack.py \
+  --target local \
+  --precision cheap
+```
+
+The live run uses real model calls and prints its planned call count before
+starting. It is separate from the zero-credential quickstart so a first run
+remains fast and reproducible.
+
+[Run or deploy the production-stack showcase](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack)
+
 ## Observation layers
 
 Every call becomes one `Observation`:
@@ -268,6 +290,7 @@ become passing verdicts.
 - [`payment_dispute_gate.py`](https://github.com/mrwersa/agentverity/blob/main/examples/payment_dispute_gate.py): a green evaluator whose narrow baseline is refused, then admitted after its test inputs are widened
 - [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py): blind triage plus a stochastic supervisor
 - [`strands_example.py`](https://github.com/mrwersa/agentverity/blob/main/examples/strands_example.py): optional Strands adapter
+- [`production_stack/`](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack): live Strands, Bedrock, DeepEval, AgentCore, OTEL, and CI integration
 - [`otel_monitoring.py`](https://github.com/mrwersa/agentverity/blob/main/examples/otel_monitoring.py): one diagnostic span through OTEL
 
 For Strands:

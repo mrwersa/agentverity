@@ -21,7 +21,7 @@ AgentVerity pre-flight ----> DeepEval / promptfoo / AgentCore Evaluations
 | Stack | Connection |
 |---|---|
 | Plain Python | Wrap `fn(str) -> str | dict | Observation` with `from_callable` |
-| Strands Agents | Install `agentverity[strands]` and use `from_strands` |
+| Strands Agents | Use `from_strands_factory` for isolated trials. Use `from_strands` only when one continuing session is the subject of the test |
 | LangGraph | Wrap `graph.invoke` in a callable that returns an `Observation` |
 | Remote agents | Wrap the SDK or HTTP invocation and extract the verdict or tool path |
 | AgentCore Runtime | Wrap `invoke_agent_runtime`, then use the existing OTEL pipeline |
@@ -30,6 +30,20 @@ The adapter has one job: preserve the observation layer you care about.
 `Observation.verdict` protects a routing or policy decision,
 `Observation.tools` protects the ordered tool path, and `Observation.text`
 protects the final response.
+
+Strands agents retain conversation history between calls. AgentVerity's
+identical reruns must begin from equivalent context, so the recommended adapter
+accepts a factory:
+
+```python
+from agentverity.adapters.strands import from_strands_factory
+
+agent = from_strands_factory(build_fresh_agent)
+```
+
+The factory may reuse a stateless model client, but it must return a new agent
+session. Reusing one stateful instance can turn conversation accumulation into
+apparent verdict instability.
 
 ## CI reporting
 
@@ -124,7 +138,26 @@ Capture the expanded `Narrow probes - baseline refused` and
 `Repaired probes - baseline admitted` reports side by side. The workflow pins
 the third-party reporter to an immutable commit.
 
-## AgentCore validation plan
+## Live production-stack example
+
+[`examples/production_stack/`](../examples/production_stack/) implements the
+validation path below rather than leaving it as an architecture sketch:
+
+- Strands runs a structured-output payment-dispute routing agent on Bedrock.
+- DeepEval's non-LLM exact-match metric checks the selected route against
+  reviewed labels.
+- AgentVerity measures route stability and decision coverage before admitting
+  a snapshot.
+- The same entry point deploys on AgentCore Runtime.
+- A remote canary uses a fresh AgentCore session for every repeated trial and
+  can emit one aggregate AgentVerity span into the configured OTEL pipeline.
+
+The example deliberately keeps quality and evidence as separate results. A
+quality score says whether the selected routes match their labels. AgentVerity
+says whether repeated decisions and the chosen inputs support treating that
+score as a reusable baseline.
+
+## AgentCore validation path
 
 Use the AWS account for a small canary integration after the local path is
 green:

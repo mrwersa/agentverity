@@ -427,13 +427,15 @@ class RunResult:
                 lines.append(f"   warning:     {b.warning}")
             lines.append("")
 
-        lines.append("3. ORACLE GUIDANCE")
+        lines.append("3. WHAT TO DO NEXT")
         if self.is_blind:
             lines.append("   BLIND — green relation results may be vacuous.")
         elif self.meter is not None and self.meter.call == "verdict-deterministic":
             lines.append("   STABLE — prefer frozen-baseline diffing when a reference is available.")
         elif self.meter is not None and self.meter.call.startswith("undecided"):
-            lines.append("   UNDECIDED — raise k or input count before choosing an oracle.")
+            lines.append(
+                "   UNDECIDED — raise k or input count before choosing a test strategy."
+            )
         else:
             lines.append("   STOCHASTIC — interpret relation rates against unchanged-input noise.")
         lines.append("")
