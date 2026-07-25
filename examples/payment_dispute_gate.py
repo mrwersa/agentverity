@@ -22,6 +22,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 from agentverity import (
+    RunResult,
     SnapshotRefused,
     create_snapshot,
     from_callable,
@@ -97,12 +98,14 @@ def _quality_junit_xml(suite_name: str, cases: tuple[Case, ...]) -> str:
             "failures": str(failures),
             "errors": "0",
             "skipped": "0",
+            # Without this, report collectors render the duration as "NaNms".
+            "time": "0.000",
         },
     )
     case = ET.SubElement(
         root,
         "testcase",
-        {"classname": "quality", "name": "exact_match_routes"},
+        {"classname": suite_name, "name": "exact_match_routes"},
     )
     detail = f"{correct}/{total} routes matched their reviewed labels"
     if failures:
@@ -131,12 +134,52 @@ def _print_suite(
     print()
 
 
+def _markdown_report(narrow: RunResult, repaired: RunResult) -> str:
+    """Render the gate result as Markdown.
+
+    The CI job summary is Markdown, and so is the README, so the same table
+    serves both. Emitting it from the example keeps one source of truth instead
+    of a screenshot or a hand-copied transcript that can drift.
+    """
+    lines: list[str] = []
+    for title, result, cases in (
+        ("1. Narrow probe set, baseline **REFUSED**", narrow, NARROW_CASES),
+        ("2. Repaired probe set, baseline **ADMITTED**", repaired, DIVERSE_CASES),
+    ):
+        verdicts = Counter(str(key) for key in result.observed_keys)
+        lines += [
+            f"#### {title}",
+            "",
+            "| Check | Result |",
+            "|---|---|",
+            f"| Exact-match evaluator | ✅ {len(cases)}/{len(cases)} correct |",
+            (
+                f"| Verdict stability | {'✅' if not result.is_stochastic else '❌'} "
+                f"{result.meter.call if result.meter else 'not run'} |"
+            ),
+            (
+                f"| Probe coverage | "
+                f"{'❌ blind' if result.is_blind else '✅ crosses a boundary'} "
+                f"({len(verdicts)} distinct route"
+                f"{'s' if len(verdicts) != 1 else ''}) |"
+            ),
+            "",
+        ]
+    return "\n".join(lines).rstrip()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output-dir",
         type=Path,
         help="Write JUnit reports and the admitted snapshot to this directory.",
+    )
+    parser.add_argument(
+        "--markdown",
+        action="store_true",
+        help="Print the gate result as a Markdown table for a README or a CI "
+             "job summary.",
     )
     parser.add_argument(
         "--otel",
@@ -163,6 +206,10 @@ def main() -> None:
     print()
     _print_suite("BEFORE: narrow probe set", NARROW_CASES, narrow, narrow_state)
     _print_suite("AFTER: repaired probe set", DIVERSE_CASES, repaired, repaired_state)
+
+    if args.markdown:
+        print()
+        print(_markdown_report(narrow, repaired))
 
     if args.output_dir:
         args.output_dir.mkdir(parents=True, exist_ok=True)

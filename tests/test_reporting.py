@@ -99,6 +99,8 @@ def test_junit_report_maps_blindness_and_vacuous_relations_without_raw_inputs():
         "failures": "2",
         "errors": "0",
         "skipped": "1",
+        # Emitted so report collectors show a duration instead of "NaNms".
+        "time": f"{result.duration_seconds:.3f}",
     }
     assert root.find("./testcase[@name='preflight.probe_coverage']/failure") is not None
     assert root.find("./testcase[@name='preflight.relation_coverage']/failure") is not None
@@ -139,3 +141,27 @@ def test_write_junit_xml_round_trips(tmp_path):
     assert {
         case.attrib["classname"] for case in root.findall("./testcase")
     } == {"checkout-agent"}
+
+
+def test_junit_suite_carries_a_duration():
+    """Report collectors compute NaN from a missing time attribute."""
+    result = run(
+        from_callable(lambda text: {"verdict": "A" if text.startswith("a") else "B"}),
+        ["alpha", "bravo", "charlie", "apricot"],
+        relations=[],
+    )
+    root = ET.fromstring(run_result_to_junit_xml(result))
+    assert "time" in root.attrib
+    assert float(root.attrib["time"]) >= 0.0
+
+
+def test_relation_coverage_is_absent_when_no_relations_were_requested():
+    """A check the caller opted out of should not appear as skipped noise."""
+    result = run(
+        from_callable(lambda text: {"verdict": "A" if text.startswith("a") else "B"}),
+        ["alpha", "bravo", "charlie", "apricot"],
+        relations=[],
+    )
+    root = ET.fromstring(run_result_to_junit_xml(result))
+    assert root.find("./testcase[@name='preflight.relation_coverage']") is None
+    assert root.attrib["skipped"] == "0"

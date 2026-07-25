@@ -24,6 +24,18 @@ jobs:
         run: |
           python examples/payment_dispute_gate.py \
             --output-dir "${RUNNER_TEMP}/agentverity-payment-demo"
+      - name: Lead the job summary with the gate result
+        # The detailed JUnit reports below are useful but dense. This puts the
+        # actual finding at the top of the summary, in the same Markdown the
+        # README carries, so both surfaces say the same thing.
+        run: |
+          {
+            echo "## AgentVerity evidence gate"
+            echo
+            echo "Same router, two probe sets. Both score 6/6."
+            python examples/payment_dispute_gate.py --markdown \
+              | sed -n '/^#### /,$p'
+          } >> "${GITHUB_STEP_SUMMARY}"
       - name: Narrow probes - baseline refused
         uses: dorny/test-reporter@1cc81a5edf733718d4850df304aaa21c05cd7280
         if: ${{ !cancelled() }}
