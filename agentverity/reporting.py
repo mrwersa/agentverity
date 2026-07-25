@@ -154,7 +154,10 @@ def run_result_to_junit_xml(
     incomplete evidence is an error, and relations that never changed an input
     are skipped rather than passed.
     """
-    root = ET.Element("testsuite", {"name": suite_name})
+    root = ET.Element(
+        "testsuite",
+        {"name": suite_name, "time": f"{result.duration_seconds:.3f}"},
+    )
     failures = 0
     errors = 0
     skipped = 0
@@ -204,14 +207,18 @@ def run_result_to_junit_xml(
             f"threshold={result.blindness.threshold}"
         )
 
-    relation_coverage = _junit_case(
-        root,
-        "preflight.relation_coverage",
-        classname=suite_name,
-    )
+    # A caller who passed no relations did not ask for this check, so reporting
+    # it as skipped is noise in every consuming dashboard. Say nothing instead.
     if not result.relation_results:
-        skipped += 1
-        ET.SubElement(relation_coverage, "skipped", {"message": "no relations requested"})
+        relation_coverage = None
+    else:
+        relation_coverage = _junit_case(
+            root,
+            "preflight.relation_coverage",
+            classname=suite_name,
+        )
+    if relation_coverage is None:
+        pass
     elif not any(relation.exercised for relation in result.relation_results):
         failures += 1
         detail = "no relation changed an input, so the catalogue tested nothing"

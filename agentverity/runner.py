@@ -24,6 +24,7 @@ Example::
 from __future__ import annotations
 
 import textwrap
+import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 from typing import Any, Literal
@@ -243,6 +244,7 @@ class RunResult:
     input_fingerprints: tuple[str, ...] = ()
     observed_keys: tuple[Any | None, ...] = ()
     requested_inputs: int = 0
+    duration_seconds: float = 0.0
 
     @property
     def complete(self) -> bool:
@@ -537,6 +539,7 @@ def run(
     Returns:
         A :class:`RunResult` with meter, blindness, and per-relation results.
     """
+    started = time.perf_counter()
     config = _resolve(config or RunConfig(), inputs)
     inputs = list(inputs)
     if not inputs:
@@ -717,4 +720,5 @@ def run(
         input_fingerprints=tuple(input_fingerprint(text) for text in inputs),
         observed_keys=observed_keys,
         requested_inputs=len(inputs),
+        duration_seconds=time.perf_counter() - started,
     )
