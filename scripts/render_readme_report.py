@@ -42,7 +42,7 @@ def _panel(
         _text(x + 32, 391, flip_rate, css="value"),
         _text(x + 270, 360, "VERDICT SKEW", css="label"),
         _text(x + 270, 391, skew, css="value"),
-        _text(x + 32, 447, "ORACLE DECISION", css="label"),
+        _text(x + 32, 447, "TEST DECISION", css="label"),
         _text(x + 32, 480, oracle, css="decision"),
         f'<line x1="{x + 32}" y1="512" x2="{x + 488}" y2="512" class="rule"/>',
         _text(x + 32, 548, "NEXT ACTION", css="label"),
@@ -92,7 +92,7 @@ def render(output: Path = DEFAULT_OUTPUT) -> str:
 <rect x="984" y="114" width="162" height="52" rx="6" class="route"/>
 {_text(167, 147, "REPEAT VERDICTS", css="routeText")}
 {_text(477, 147, "SCAN FOR SKEW", css="routeText")}
-{_text(787, 147, "CHOOSE ORACLE", css="routeText")}
+{_text(787, 147, "CHOOSE TEST", css="routeText")}
 {_text(1065, 147, "TEST", css="routeText")}
 <line x1="298" y1="140" x2="338" y2="140" class="flow"/>
 <path d="M 338 135 L 348 140 L 338 145 z" fill="#64748b"/>
@@ -114,7 +114,7 @@ def render(output: Path = DEFAULT_OUTPUT) -> str:
     ),
     skew=f"{triage.blindness.skew:.1%} · one verdict",
     oracle="Do not trust green relations",
-    action="Diversify probes before adding tests",
+    action="Vary test inputs before adding checks",
 )}
 {_panel(
     x=626,

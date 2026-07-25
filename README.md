@@ -1,4 +1,4 @@
-# agentverity
+# AgentVerity
 
 > **Can you trust this green agent test?**
 
@@ -7,16 +7,25 @@
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
-AgentVerity is a pre-flight testing library for non-deterministic agents. It
-checks whether the verdict is stable across identical reruns and whether the
-probe set can move the decision at all. Then it tells you which test result is
-safe to trust.
+Run the same agent case again and it can reach a different decision. Give it a
+varied-looking test suite and every case can still follow one decision path.
+
+AgentVerity runs two pre-flight checks before you trust a green result:
+
+- **Decision stability:** how consistently does the agent reach the same
+  categorical `verdict` across repeated runs of one case?
+- **Decision coverage:** do the test inputs exercise more than one verdict?
+
+Pass cases through `inputs=`. Together, those cases form the **probe set** used
+by the coverage check. A deliberately varied probe set is necessary for a
+reusable baseline. A narrow set may still test one path correctly, but it
+cannot justify that broader claim.
 
 It does not replace DeepEval, promptfoo, AgentCore Evaluations, or your quality
 metrics. It checks two conditions that can make those scores misleading before
 you trust them.
 
-![AgentVerity diagnoses a blind triage step and a stochastic supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
+![AgentVerity diagnoses poor decision coverage in a triage step and unstable decisions in a supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
 
 *This report is regenerated from the executable
 [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py)
@@ -70,15 +79,17 @@ agentverity run \
 
 | Condition | Why the green result is unsafe | AgentVerity's action |
 |---|---|---|
-| **Blind probes** | One verdict dominates, so relations can pass without crossing a decision boundary | Repair the probe set |
-| **Stochastic verdict** | Identical reruns disagree, so zero-tolerance checks confuse noise with regressions | Use repeated rates against measured noise |
-| **Stable, varied verdict** | The decision is suitable for a reviewed reference | Prefer an evidence-gated snapshot or targeted relations |
-| **Unexercised relation** | The transform returned the original input, so no test happened | Report `n/a`, never a false pass |
+| **Poor decision coverage (`blind`)** | One verdict dominates, so relations can pass without crossing a decision boundary | Add test inputs that exercise other decisions |
+| **Unstable decision (`stochastic`)** | Identical reruns disagree, so zero-tolerance checks confuse noise with regressions | Use repeated rates against measured noise |
+| **Stable, varied decision** | The decision is suitable for a reviewed reference | Prefer an evidence-gated snapshot or targeted relations |
+| **Relation tested nothing (`vacuous`)** | The transform returned the original input, so no comparison happened | Report `n/a`, never a false pass |
 
-The meter reports `deterministic`, `stochastic`, or `undecided` from a Wilson
-interval over disjoint repeat pairs. The skew scan separately checks whether
-varied inputs produce varied verdicts. Stability is not correctness, so
-snapshots still require explicit human approval.
+The terminal report calls these the **verdict-stochasticity meter** and the
+**constant-gate-blindness detector**. They are the underlying stability and
+coverage checks. The stability check reports `deterministic`, `stochastic`, or
+`undecided` from a Wilson interval, so a small sample cannot fake certainty.
+Stability is not correctness, so snapshots still require explicit human
+approval.
 
 ## The evidence gate
 
@@ -178,7 +189,8 @@ agentverity run \
 Exit codes and JUnit carry the same interpretation:
 
 - `0`: interpretable evidence and no relation violation
-- `1`: blind or vacuous probes, a relation violation, or snapshot drift
+- `1`: poor probe coverage (`blind`), a relation that tested nothing
+  (`vacuous`), a relation violation, or snapshot drift
 - `2`: incomplete, undecided, or unsupported evidence
 
 ### Monitoring
@@ -244,14 +256,16 @@ config = RunConfig(
 )
 ```
 
-`k=` and `epsilon=` remain exact overrides. Repeated calls for one input stay
-sequential, while distinct inputs can run concurrently. Recorded provider
-failures mark evidence incomplete and never become passing verdicts.
+`k=` and `epsilon=` remain exact overrides. `k` sets repeats per input.
+`epsilon` sets how much verdict flakiness the stability check will tolerate.
+Repeated calls for one input stay sequential, while distinct inputs can run
+concurrently. Recorded provider failures mark evidence incomplete and never
+become passing verdicts.
 
 ## Examples
 
 - [`support_router.py`](https://github.com/mrwersa/agentverity/blob/main/examples/support_router.py): the smallest blind-agent example
-- [`payment_dispute_gate.py`](https://github.com/mrwersa/agentverity/blob/main/examples/payment_dispute_gate.py): a green evaluator whose narrow baseline is refused, then admitted after probe repair
+- [`payment_dispute_gate.py`](https://github.com/mrwersa/agentverity/blob/main/examples/payment_dispute_gate.py): a green evaluator whose narrow baseline is refused, then admitted after its test inputs are widened
 - [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py): blind triage plus a stochastic supervisor
 - [`strands_example.py`](https://github.com/mrwersa/agentverity/blob/main/examples/strands_example.py): optional Strands adapter
 - [`otel_monitoring.py`](https://github.com/mrwersa/agentverity/blob/main/examples/otel_monitoring.py): one diagnostic span through OTEL
@@ -275,12 +289,12 @@ AgentVerity is:
 
 It is not:
 
-- a correctness oracle or LLM judge
+- a judge of whether an answer is correct
 - a benchmark or leaderboard
 - a trace store, dashboard, or production monitoring service
-- a claim that metamorphic relations or Wilson intervals are new
+- a claim that relation checks or Wilson intervals are new
 
-The distinctive part is their ordering: measure verdict stability and probe
+The distinctive part is the ordering: check decision stability and probe
 coverage before interpreting the ordinary test result.
 
 ## Documentation
