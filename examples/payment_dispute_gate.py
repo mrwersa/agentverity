@@ -166,14 +166,25 @@ def main() -> None:
 
     if args.output_dir:
         args.output_dir.mkdir(parents=True, exist_ok=True)
-        write_junit_xml(narrow, args.output_dir / "narrow-agentverity.xml")
-        write_junit_xml(repaired, args.output_dir / "repaired-agentverity.xml")
+        # Suite names have to say which probe set they came from. Both reports
+        # land in one Actions summary, and a pair of suites both called
+        # "agentverity" leaves a reader unable to tell refused from admitted.
+        write_junit_xml(
+            narrow,
+            args.output_dir / "narrow-agentverity.xml",
+            suite_name="narrow-probes.agentverity",
+        )
+        write_junit_xml(
+            repaired,
+            args.output_dir / "repaired-agentverity.xml",
+            suite_name="repaired-probes.agentverity",
+        )
         (args.output_dir / "narrow-quality.xml").write_text(
-            _quality_junit_xml("narrow-quality", NARROW_CASES),
+            _quality_junit_xml("narrow-probes.exact-match", NARROW_CASES),
             encoding="utf-8",
         )
         (args.output_dir / "repaired-quality.xml").write_text(
-            _quality_junit_xml("repaired-quality", DIVERSE_CASES),
+            _quality_junit_xml("repaired-probes.exact-match", DIVERSE_CASES),
             encoding="utf-8",
         )
         save_snapshot(repaired_snapshot, args.output_dir / "repaired-snapshot.json")

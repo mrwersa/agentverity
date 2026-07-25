@@ -34,7 +34,7 @@ jobs:
           fail-on-error: "false"
           collapsed: never
           list-tests: all
-          report-title: AgentVerity evidence gate
+          report-title: "1. Narrow probe set: evaluator green, baseline REFUSED"
       - name: Repaired probes - baseline admitted
         uses: dorny/test-reporter@1cc81a5edf733718d4850df304aaa21c05cd7280
         if: ${{ !cancelled() }}
@@ -44,4 +44,4 @@ jobs:
           reporter: java-junit
           collapsed: never
           list-tests: all
-          report-title: AgentVerity evidence gate
+          report-title: "2. Repaired probe set: evaluator green, baseline ADMITTED"
