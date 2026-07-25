@@ -12,6 +12,9 @@ trivially satisfied by an indifferent agent. Two headline diagnostics:
      trivially and the suite is lying to you.
 
 Metamorphic relations are the vehicle; the diagnostics are the product.
+When those diagnostics support frozen-baseline testing, evidence-gated
+snapshots refuse to freeze an incomplete, underpowered, blind, or unapproved
+reference.
 
 Quickstart::
 
@@ -27,24 +30,56 @@ from importlib.metadata import PackageNotFoundError, version
 
 from agentverity.adapters import from_callable
 from agentverity.blindness import BlindnessResult, detect
+from agentverity.execution import ProgressEvent, RunError, input_fingerprint
 from agentverity.meter import MeterResult, measure
 from agentverity.observation import Observation
 from agentverity.relations import Relation, builtin_relations
+from agentverity.reporting import RUN_SCHEMA, run_result_to_dict, write_run_json
 from agentverity.runner import RelationResult, RunConfig, RunResult, run
+from agentverity.snapshot import (
+    SNAPSHOT_SCHEMA,
+    Snapshot,
+    SnapshotChange,
+    SnapshotCompatibilityError,
+    SnapshotDiff,
+    SnapshotProbe,
+    SnapshotRefused,
+    compare_snapshot,
+    create_snapshot,
+    load_snapshot,
+    save_snapshot,
+)
 
 __all__ = [
+    "RUN_SCHEMA",
+    "SNAPSHOT_SCHEMA",
     "BlindnessResult",
     "MeterResult",
     "Observation",
+    "ProgressEvent",
     "Relation",
     "RelationResult",
     "RunConfig",
+    "RunError",
     "RunResult",
+    "Snapshot",
+    "SnapshotChange",
+    "SnapshotCompatibilityError",
+    "SnapshotDiff",
+    "SnapshotProbe",
+    "SnapshotRefused",
     "builtin_relations",
+    "compare_snapshot",
+    "create_snapshot",
     "detect",
     "from_callable",
+    "input_fingerprint",
+    "load_snapshot",
     "measure",
     "run",
+    "run_result_to_dict",
+    "save_snapshot",
+    "write_run_json",
 ]
 
 try:

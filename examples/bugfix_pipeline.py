@@ -18,7 +18,7 @@ import json
 import random
 from pathlib import Path
 
-from agentverity import Observation, from_callable, run
+from agentverity import Observation, from_callable, run, run_result_to_dict
 
 BUG_REPORTS = [
     "NullPointerException in checkout when cart is empty",
@@ -61,35 +61,6 @@ def make_supervisor(*, seed: int = 1, escalation_bias: float = 0.35):
     return supervisor
 
 
-def _as_dict(result) -> dict:
-    return {
-        "meter": {
-            "call": result.meter.call,
-            "flip_rate": result.meter.flip_rate,
-            "ci_low": result.meter.ci_low,
-            "ci_high": result.meter.ci_high,
-            "pair_trials": result.meter.pair_trials,
-            "pair_flips": result.meter.pair_flips,
-        },
-        "blindness": {
-            "blind": result.blindness.blind,
-            "skew": result.blindness.skew,
-            "majority_verdict": result.blindness.majority_verdict,
-        },
-        "relations": {
-            item.relation.name: {
-                "held": item.held,
-                "violated": item.violated,
-                "skipped": item.skipped,
-                "exercised": item.exercised,
-                "vacuous": item.is_vacuous,
-                "violation_rate": item.violation_rate,
-            }
-            for item in result.relation_results
-        },
-    }
-
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=1)
@@ -109,10 +80,11 @@ def main() -> None:
 
     if args.json:
         payload = {
+            "schema": "agentverity.example.bugfix-pipeline/v1",
             "seed": args.seed,
             "inputs": len(BUG_REPORTS),
-            "triage": _as_dict(triage_result),
-            "pipeline": _as_dict(pipeline_result),
+            "triage": run_result_to_dict(triage_result),
+            "pipeline": run_result_to_dict(pipeline_result),
         }
         args.json.write_text(json.dumps(payload, indent=2) + "\n")
         print(f"\nwrote {args.json}")

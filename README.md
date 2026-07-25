@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
-[![Tests: 96](https://img.shields.io/badge/tests-96%20passing-brightgreen.svg)](#tests)
+[![Tests: 124](https://img.shields.io/badge/tests-124%20passing-brightgreen.svg)](#tests)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 
 **agentverity** is a measure-first testing framework for non-deterministic LLM agents. Before running any test relation, it answers two questions that ordinary pass-rate reports leave unresolved:
@@ -16,6 +16,13 @@
 
 The meter recommends an oracle. The skew scan warns when green relation
 results may be vacuous. Neither substitutes for a correctness specification.
+
+![AgentVerity diagnoses two defects in a multi-agent bug-fix pipeline: a blind triage step and a stochastic supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
+
+*Generated from the executable
+[`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py)
+example. The image is
+regenerated from its current results, not maintained by hand.*
 
 ---
 
@@ -53,7 +60,13 @@ agentverity detects both failure modes *before* running any test relation, and t
 
 2. **Constant-gate-blindness detector.** A gate that returns `"allow"` on 96% of a probe set can satisfy many invariance relations without exercising a boundary. agentverity measures that skew and flags the green report as potentially vacuous.
 
-3. **Diagnostics before relations.** The primary output is not another pass rate. It is an oracle recommendation and a warning about whether the probe set can make the agent change its mind. Relation results come afterwards.
+3. **Evidence-gated snapshots.** AgentVerity refuses to freeze a reference
+unless the exact observation layer is deterministic at the configured
+epsilon, every call completed, the probes cross a decision boundary, and a
+human explicitly approves the outputs. Stability is necessary, but it does
+not make an answer correct.
+
+4. **Diagnostics before relations.** The primary output is not another pass rate. It is an oracle recommendation and a warning about whether the probe set can make the agent change its mind. Relation results come afterwards.
 
 Metamorphic relations are the vehicle. The diagnostics are the product.
 
@@ -112,12 +125,12 @@ agentverity — suite-quality report
    UNDECIDED — raise k or input count before choosing an oracle.
 
 4. RELATION RESULTS
-   relation                       type           held   violated  skipped     rate
-   ------------------------------ ------------ ------ ---------- -------- --------
-   normalisation-invariance       invariant         0          0        4      n/a
-   case-invariance                invariant         4          0        0     0.0%
-   whitespace-invariance          invariant         4          0        0     0.0%
-   tool-selection-invariance      invariant         0          0        4      n/a
+   relation                     type         held violated skipped errors    rate
+   ---------------------------- ----------- ----- -------- ------- ------ -------
+   normalisation-invariance     invariant       0        0       4      0     n/a
+   case-invariance              invariant       4        0       0      0    0.0%
+   whitespace-invariance        invariant       4        0       0      0    0.0%
+   tool-selection-invariance    invariant       0        0       4      0     n/a
 
    NOT EXERCISED: normalisation-invariance, tool-selection-invariance.
    The transform returned every input unchanged, so the agent was never
@@ -142,7 +155,55 @@ agentverity run --agent mymod:build_agent --inputs seeds.txt
 
 The `--agent` argument is a Python dotted path `module:func` to a callable that returns an agent function. The `--inputs` argument is a text file with one input per line.
 
-Exit codes: `0` if all relations hold and no blindness is detected. `1` if the gate is blind or any relation is violated.
+Use diagnostics without relations, write a versioned JSON report, and process
+distinct inputs concurrently:
+
+```bash
+agentverity run \
+  --agent mymod:build_agent \
+  --inputs seeds.txt \
+  --no-relations \
+  --format json \
+  --output report.json \
+  --max-workers 8 \
+  --progress
+```
+
+Concurrency is opt-in. AgentVerity parallelises distinct inputs only and keeps
+repeated calls for one input sequential. Leave `--max-workers 1` for stateful
+or non-thread-safe agents. `--error-policy record` retains failures as
+incomplete evidence instead of turning them into verdicts.
+
+Exit codes are `0` for clean, `1` for blind, violated, or changed behaviour,
+and `2` for incomplete or unsupported evidence.
+
+### Evidence-gated snapshots
+
+Create a baseline only after reviewing the current outputs:
+
+```bash
+agentverity snapshot \
+  --agent mymod:build_agent \
+  --inputs seeds.txt \
+  --output baseline.json \
+  --accept-reference
+```
+
+AgentVerity refuses this command when the meter is stochastic or undecided,
+the probe set is blind, any call failed, or approval is absent. The snapshot
+stores SHA-256 input fingerprints rather than raw prompts.
+
+Check the same approved cases later:
+
+```bash
+agentverity check \
+  --agent mymod:build_agent \
+  --inputs seeds.txt \
+  --snapshot baseline.json
+```
+
+The check first re-runs the admission diagnostics. It compares outputs only if
+the current evidence still supports snapshot testing.
 
 ### Strands adapter
 
@@ -192,7 +253,10 @@ from agentverity import (
     Observation,        # dataclass: text, verdict, tools, raw
     Relation,           # dataclass: name, rtype, transform, check
     builtin_relations, # normalisation, case, whitespace, tool-selection
-    RunConfig,          # k, epsilon, blindness_threshold, layer, run_meter, run_blindness
+    RunConfig,          # diagnostics, bounded concurrency, and error policy
+    create_snapshot,    # admit a reviewed baseline only when evidence supports it
+    compare_snapshot,   # re-admit current evidence, then compare
+    run_result_to_dict, # versioned JSON report without raw input text
 )
 
 from agentverity.adapters.strands import from_strands  # optional, needs strands-agents
@@ -207,6 +271,8 @@ The return of `run()` carries the full diagnostic picture:
 | `result.meter` | `MeterResult \| None` | Verdict-stochasticity meter result |
 | `result.blindness` | `BlindnessResult \| None` | Constant-gate-blindness result |
 | `result.relation_results` | `list[RelationResult]` | Per-relation held/violated/skipped counts |
+| `result.complete` | `bool` | False when any requested call or check failed |
+| `result.errors` | `tuple[RunError, ...]` | Structured failures retained under the record policy |
 | `result.is_stochastic` | `bool` | True if meter says verdict-stochastic |
 | `result.is_blind` | `bool` | True if blindness detector fires |
 | `result.vacuous_relations` | `list[RelationResult]` | Relations whose transform never changed any input |
@@ -254,15 +320,17 @@ flowchart TD
     end
 
     Obs --> Meter
-    Rel --> Result["RunResult.summary()<br/>diagnostics-first text report"]
-    Result --> Exit["CLI exit code<br/>0 = clean · 1 = blind or violated"]
+    Rel --> Result["RunResult<br/>text or versioned JSON"]
+    Result --> Gate{"evidence supports<br/>a snapshot?"}
+    Gate -->|yes + human approval| Snapshot["approved snapshot"]
+    Gate -->|no| Refuse["refuse to freeze"]
 
     style Meter fill:#e8f4fd,stroke:#0056b3,stroke-width:2px
     style Blind fill:#e8f4fd,stroke:#0056b3,stroke-width:2px
     style Rel fill:#f5f5f5,stroke:#888
 ```
 
-`cli.py` wraps this same flow behind `agentverity run --agent module:func --inputs file.txt`.
+`cli.py` exposes the same flow through `run`, `snapshot`, and `check`.
 
 ### Three layers of `Observation`
 
@@ -322,6 +390,14 @@ Relations run source and follow-up inputs through the agent and check whether a 
 
 An input whose transform returns it unchanged is skipped rather than tested. Re-asking the agent a byte-identical question measures rerun stability, which is the meter's job, and scoring it as a relation pass would inflate a green report.
 
+### 4. Snapshot admission
+
+A stable verdict is not necessarily a correct verdict. Snapshot creation
+therefore requires both statistical evidence and explicit reference approval.
+Checking is symmetric: current evidence must still be complete,
+deterministic-at-epsilon, and non-blind before output differences are treated
+as regressions.
+
 ### Agent calls per run
 
 Agent calls dominate the cost of a real run, so every phase reuses what the
@@ -338,11 +414,25 @@ the source side of every relation. On the four-input Quickstart above that is
 28 calls instead of 40. Set `RunConfig(reuse_unchanged_calls=False)` to give
 each phase an independent draw.
 
+Set `max_workers` to overlap work across distinct inputs. AgentVerity never
+overlaps repeated calls for the same input, preserving the order of each
+meter series and avoiding concurrent re-entry on one probe.
+
+### Data handling
+
+Machine reports and snapshots identify prompts by SHA-256 fingerprint rather
+than storing their raw text. This avoids plaintext retention but does not
+hide low-entropy prompts from dictionary guessing. Snapshot outputs are
+retained because they are the approved reference, and exception messages are
+retained to diagnose failed providers. Treat both files as potentially
+sensitive when the observation layer is `text` or provider errors echo
+request data.
+
 ---
 
 ## Tests
 
-96 tests, all passing.
+124 tests, all passing.
 
 ```bash
 pip install -e ".[dev]"
@@ -350,14 +440,18 @@ python -m pytest tests/ -v
 ruff check .
 ```
 
-Coverage: observation construction and frozenness, Wilson CI bounds and edge cases, independent-pair meter detection, empty-input and parameter guards, blindness detection, all transforms and relation checks, runner orchestration and ordering, callable adapter, Strands adapter, and CLI behaviour.
+Coverage includes observation construction, Wilson intervals, independent-pair
+meter detection, blindness, relation execution, bounded concurrency, partial
+failures, versioned reports, snapshot admission and drift, both adapters, the
+CLI, and README image generation.
 
 ---
 
 ## Status
 
-Alpha. Public APIs may change before 1.0. The Strands adapter is verified, and
-a LangGraph adapter is planned.
+Alpha. Public APIs may change before 1.0. The Strands adapter is verified.
+Pytest helpers, JUnit output, noise calibration, and a LangGraph adapter are
+planned.
 
 ## License
 

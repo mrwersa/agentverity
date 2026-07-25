@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 
 from agentverity.adapters import from_callable
-from agentverity.meter import measure, wilson_ci
+from agentverity.meter import measure, score_runs, wilson_ci
+from agentverity.observation import Observation
 
 
 class TestWilsonCI:
@@ -121,3 +122,25 @@ class TestMeasure:
         result_verdict = measure(agent, ["hello"], k=5, layer="verdict")
         assert result_text.pair_flips > 0
         assert result_verdict.pair_flips == 0
+
+
+class TestScoreRuns:
+    def test_scores_precollected_series(self):
+        result = score_runs(
+            [
+                [Observation(verdict="allow"), Observation(verdict="allow")],
+                [Observation(verdict="allow"), Observation(verdict="block")],
+            ],
+            k=2,
+            epsilon=0.1,
+        )
+        assert result.pair_trials == 2
+        assert result.pair_flips == 1
+        assert result.inputs_with_flip == 1
+
+    def test_rejects_incomplete_series(self):
+        with pytest.raises(ValueError, match="exactly"):
+            score_runs(
+                [[Observation(verdict="allow")]],
+                k=2,
+            )
