@@ -31,7 +31,13 @@ from importlib.metadata import PackageNotFoundError, version
 from agentverity.adapters import from_callable
 from agentverity.blindness import BlindnessResult, detect
 from agentverity.execution import ProgressEvent, RunError, input_fingerprint
-from agentverity.meter import MeterResult, measure, pairs_for_deterministic_call
+from agentverity.meter import (
+    PRECISION_LEVELS,
+    MeterResult,
+    measure,
+    pairs_for_deterministic_call,
+    plan_repeats,
+)
 from agentverity.observation import Observation
 from agentverity.relations import Relation, builtin_relations
 from agentverity.reporting import RUN_SCHEMA, run_result_to_dict, write_run_json
@@ -51,6 +57,7 @@ from agentverity.snapshot import (
 )
 
 __all__ = [
+    "PRECISION_LEVELS",
     "RUN_SCHEMA",
     "SNAPSHOT_SCHEMA",
     "BlindnessResult",
@@ -77,6 +84,7 @@ __all__ = [
     "load_snapshot",
     "measure",
     "pairs_for_deterministic_call",
+    "plan_repeats",
     "run",
     "run_result_to_dict",
     "save_snapshot",

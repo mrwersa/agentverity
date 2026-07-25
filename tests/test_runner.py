@@ -71,11 +71,27 @@ class TestRunStochastic:
         assert result.suite_is_meaningful is True
 
     def test_undecided_nonblind_gate_is_not_vacuous(self):
+        """Undecided is now something you opt into, not the default outcome.
+
+        Defaults size k to reach a decision, so an underpowered probe has to be
+        asked for explicitly.
+        """
         agent = from_callable(lambda x: {"verdict": "allow" if x == "a" else "block"})
-        result = run(agent, ["a", "b"])
+        result = run(agent, ["a", "b"], config=RunConfig(k=2, precision="strict"))
         assert result.meter is not None
         assert result.meter.call.startswith("undecided")
         assert result.suite_is_meaningful is True
+
+    def test_defaults_reach_a_decision_on_a_deterministic_agent(self):
+        """The regression this release exists to prevent.
+
+        A zero-randomness function used to report "undecided" on a default run,
+        which reads as a broken tool rather than an answer.
+        """
+        agent = from_callable(lambda x: {"verdict": "allow" if x == "a" else "block"})
+        result = run(agent, ["a", "b"])
+        assert result.meter is not None
+        assert result.meter.call == "verdict-deterministic"
 
 
 class TestRunBlind:
@@ -465,3 +481,103 @@ class TestSuiteIsMeaningfulSemantics:
         assert result.vacuous_relations
         assert any(rr.exercised for rr in result.relation_results)
         assert result.suite_is_meaningful is True
+
+
+class TestHeadline:
+    """One sentence should answer "can I trust this?" before any detail."""
+
+    INPUTS: ClassVar[list[str]] = ["apple", "banana", "cherry", "apricot"]
+
+    def test_blind_agent_is_not_trustworthy(self):
+        result = run(from_callable(lambda x: {"verdict": "same"}), self.INPUTS)
+        assert result.headline.startswith("NOT TRUSTWORTHY")
+        assert "100%" in result.headline
+
+    def test_deterministic_and_varied_is_trustworthy(self):
+        agent = from_callable(
+            lambda x: {"verdict": "A" if x.startswith("a") else "B"}
+        )
+        result = run(agent, self.INPUTS)
+        assert result.headline.startswith("TRUSTWORTHY")
+        assert "NOT TRUSTWORTHY" not in result.headline
+
+    def test_stochastic_says_read_against_noise(self):
+        import itertools
+
+        counter = itertools.count()
+        agent = from_callable(
+            lambda x: {"verdict": "A" if next(counter) % 3 else "B"}
+        )
+        result = run(agent, self.INPUTS)
+        assert result.headline.startswith("TRUSTWORTHY WITH CARE")
+
+    def test_underpowered_says_no_answer_yet(self):
+        agent = from_callable(
+            lambda x: {"verdict": "A" if x.startswith("a") else "B"}
+        )
+        result = run(agent, self.INPUTS, config=RunConfig(k=2, precision="strict"))
+        assert result.headline.startswith("NO ANSWER YET")
+
+    def test_headline_leads_the_summary(self):
+        result = run(from_callable(lambda x: {"verdict": "same"}), self.INPUTS)
+        body = result.summary()
+        assert result.headline.split(" - ")[0] in body
+        assert body.index("NOT TRUSTWORTHY") < body.index("VERDICT-STOCHASTICITY")
+
+
+class TestBudgetAndPrecision:
+    """Two knobs people actually think in: what it costs and how much I care."""
+
+    INPUTS: ClassVar[list[str]] = [f"probe {i}" for i in range(10)]
+
+    @staticmethod
+    def _counting_agent():
+        calls: list[str] = []
+
+        def fn(text: str) -> dict:
+            calls.append(text)
+            return {"verdict": "A" if text.endswith(("0", "1", "2")) else "B"}
+
+        return from_callable(fn), calls
+
+    def test_precision_selects_epsilon(self):
+        agent, _ = self._counting_agent()
+        for precision, expected in (("cheap", 0.10), ("balanced", 0.05), ("strict", 0.01)):
+            result = run(agent, self.INPUTS, config=RunConfig(precision=precision))
+            assert result.config.epsilon == expected
+
+    def test_explicit_epsilon_beats_precision(self):
+        agent, _ = self._counting_agent()
+        result = run(agent, self.INPUTS,
+                     config=RunConfig(precision="cheap", epsilon=0.02))
+        assert result.config.epsilon == 0.02
+
+    def test_cheaper_precision_costs_fewer_calls(self):
+        agent_cheap, cheap_calls = self._counting_agent()
+        run(agent_cheap, self.INPUTS, relations=[], config=RunConfig(precision="cheap"))
+        agent_strict, strict_calls = self._counting_agent()
+        run(agent_strict, self.INPUTS, relations=[], config=RunConfig(precision="strict"))
+        assert len(cheap_calls) < len(strict_calls)
+
+    def test_budget_caps_the_repeats(self):
+        agent, calls = self._counting_agent()
+        run(agent, self.INPUTS, relations=[],
+            config=RunConfig(precision="strict", budget=100))
+        assert len(calls) <= 100
+
+    def test_budget_below_the_structural_floor_is_rejected(self):
+        agent, _ = self._counting_agent()
+        with pytest.raises(ValueError, match="cannot cover"):
+            run(agent, self.INPUTS, config=RunConfig(budget=5))
+
+    def test_explicit_k_wins_over_budget(self):
+        agent, _ = self._counting_agent()
+        result = run(agent, self.INPUTS, config=RunConfig(k=4, budget=10_000))
+        assert result.config.k == 4
+
+    def test_resolved_values_are_visible_after_the_run(self):
+        """Downstream code and snapshots read concrete numbers, never None."""
+        agent, _ = self._counting_agent()
+        result = run(agent, self.INPUTS)
+        assert isinstance(result.config.k, int)
+        assert isinstance(result.config.epsilon, float)

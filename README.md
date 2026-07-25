@@ -109,12 +109,16 @@ Output (captured from an actual run, not hand-written):
 agentverity — suite-quality report
 ============================================================
 
+  TRUSTWORTHY - the verdict held across every identical
+  rerun and the probes cross a decision boundary. 2
+  relations tested nothing and are marked n/a.
+
 1. VERDICT-STOCHASTICITY METER
-   call:        undecided (add repeats or inputs)
-   flip rate:   0.0% (0/8 pairs)
-   Wilson CI:   [0.000, 0.324] at epsilon=0.01
-   inputs:      4, repeats: 5, layer: verdict
-   advice:      not enough evidence to choose an oracle; raise K or input count.
+   call:        verdict-deterministic
+   flip rate:   0.0% (0/76 pairs)
+   Wilson CI:   [0.000, 0.048] at epsilon=0.05
+   inputs:      4, repeats: 38, layer: verdict
+   advice:      verdict is stable: prefer frozen-baseline diffing when a trusted reference is available.
 
 2. CONSTANT-GATE-BLINDNESS DETECTOR
    call:        ok
@@ -122,7 +126,7 @@ agentverity — suite-quality report
    distinct:    2 verdicts
 
 3. ORACLE GUIDANCE
-   UNDECIDED — raise k or input count before choosing an oracle.
+   STABLE — prefer frozen-baseline diffing when a reference is available.
 
 4. RELATION RESULTS
    relation                     type         held violated skipped errors    rate
@@ -138,9 +142,11 @@ agentverity — suite-quality report
    anything. Add inputs the transform actually changes.
 ```
 
-Two things in that report are the whole point of the library.
+Three things in that report are the whole point of the library.
 
-The meter says `undecided`, not `verdict-deterministic`, even though `my_gate` is a plain Python function with zero randomness. Four inputs at five repeats yield eight independent, disjoint comparisons. That is nowhere near enough to certify a flip rate below the strict default epsilon of 1%. The meter exposes that cost instead of manufacturing certainty. Raise `k`, add inputs, or choose a deployment-relevant epsilon before making a deterministic call.
+The first line is the answer. You should not have to assemble a verdict out of four numbered sections to learn whether your suite means anything.
+
+The repeat count was chosen for you. Certifying a flip rate takes more repeats than most people guess, so `k` is sized from the precision you asked for: 38 repeats here, 76 disjoint pairs, enough to clear a 5% threshold. Set `budget=` to cap the spend, `precision="cheap"` or `"strict"` to move the threshold, or `k=` to take the wheel.
 
 Two relations report `n/a` rather than a green `0.0%`. Their transform normalises accents and whitespace, and these four inputs are plain ASCII with ordinary spacing, so the follow-up string was byte-identical to the source every time. The agent was never asked a different question. Counting that as a pass would be exactly the vacuous green result the library exists to catch, so it is reported as skipped instead.
 
@@ -193,26 +199,26 @@ AgentVerity refuses this command when the meter is stochastic or undecided,
 the probe set is blind, any call failed, or approval is absent. The snapshot
 stores SHA-256 input fingerprints rather than raw prompts.
 
-#### Budget the evidence before you run it
+#### What certification costs
 
-Expect the first attempt to be refused, including on an agent you know is
-deterministic. Certifying determinism means driving the Wilson upper bound
-below epsilon, and that takes more repeats than most people expect. Even with
-zero observed flips:
+Defaults size the repeats for you, so this normally just works. The numbers
+matter when you are picking a precision or capping a budget. Certifying
+determinism means driving the Wilson upper bound below epsilon, which takes
+more repeats than most people guess. Even with zero observed flips:
 
-| epsilon | disjoint pairs needed | 20 inputs | agent calls |
-|---:|---:|---:|---:|
-| 0.01 (default) | 381 | `--k 40` | 800 |
-| 0.02 | 189 | `--k 20` | 400 |
-| 0.05 | 73 | `--k 8` | 160 |
-| 0.10 | 35 | `--k 4` | 80 |
+| precision | epsilon | pairs needed | 20 inputs | agent calls |
+|---|---:|---:|---:|---:|
+| `strict` | 0.01 | 381 | k=40 | 800 |
+| | 0.02 | 189 | k=20 | 400 |
+| `balanced` (default) | 0.05 | 73 | k=8 | 160 |
+| `cheap` | 0.10 | 35 | k=4 | 80 |
 
 Each input contributes `floor(k / 2)` pairs, so pairs come from inputs and
-repeats together and you can trade one against the other. The default epsilon
-of 1% is deliberately strict, and on a paid model it is the difference between
-80 calls and 800. Pick an epsilon your deployment actually cares about rather
-than accepting the default, then size `--k` from the table. The refusal message
-does this arithmetic for your probe set and prints the specific flag to change.
+repeats together and you can trade one against the other. On a paid model the
+gap between `cheap` and `strict` is 80 calls against 800, which is why the
+default is `balanced` rather than the tightest available. Cap the spend with
+`--budget`, and a run that still cannot decide says exactly how far short it
+fell.
 
 `pairs_for_deterministic_call(epsilon)` returns these numbers if you want to
 budget in code. Pass `flip_rate=` to account for flips already seen, and note
@@ -287,6 +293,7 @@ from agentverity import (
     compare_snapshot,   # re-admit current evidence, then compare
     run_result_to_dict, # versioned JSON report without raw input text
     pairs_for_deterministic_call,  # budget the snapshot gate before spending calls
+    plan_repeats,       # the k a precision needs for a given probe set
 )
 
 from agentverity.adapters.strands import from_strands  # optional, needs strands-agents

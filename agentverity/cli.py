@@ -11,7 +11,11 @@ from pathlib import Path
 
 from agentverity.adapters.callable_adapter import from_callable
 from agentverity.execution import ProgressEvent
-from agentverity.meter import pairs_for_deterministic_call
+from agentverity.meter import (
+    PRECISION_LEVELS,
+    pairs_for_deterministic_call,
+    resolve_epsilon,
+)
 from agentverity.reporting import run_result_to_dict, write_run_json
 from agentverity.runner import RunConfig, RunResult, run
 from agentverity.snapshot import (
@@ -90,16 +94,34 @@ def _add_execution_options(
 
 def _add_meter_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
+        "--precision",
+        choices=sorted(PRECISION_LEVELS),
+        default="balanced",
+        help=(
+            "How tight a flip rate to care about: cheap (10%%), balanced (5%%, "
+            "the default), or strict (1%%). Overridden by --epsilon."
+        ),
+    )
+    parser.add_argument(
+        "--budget",
+        type=int,
+        default=None,
+        help=(
+            "Cap on meter agent calls. Defaults to spending what the chosen "
+            "precision needs. Overridden by --k."
+        ),
+    )
+    parser.add_argument(
         "--k",
         type=int,
-        default=5,
-        help="Meter repeats per input (default 5).",
+        default=None,
+        help="Meter repeats per input. Defaults to sizing from --budget.",
     )
     parser.add_argument(
         "--epsilon",
         type=float,
-        default=0.01,
-        help="Meter flip-rate threshold (default 0.01).",
+        default=None,
+        help="Exact meter flip-rate threshold, overriding --precision.",
     )
     parser.add_argument(
         "--blindness-threshold",
@@ -172,7 +194,7 @@ def _run_command(args: argparse.Namespace) -> int:
     return _exit_code(result)
 
 
-def _infeasible_reason(inputs: int, k: int, epsilon: float) -> str | None:
+def _infeasible_reason(inputs: int, k: int | None, epsilon: float) -> str | None:
     """Reject a configuration that cannot certify determinism, before running.
 
     Each input contributes ``floor(k / 2)`` disjoint pairs, so the ceiling on
@@ -180,6 +202,10 @@ def _infeasible_reason(inputs: int, k: int, epsilon: float) -> str | None:
     ceiling sits below the pairs needed even in the best case of zero flips, no
     execution can succeed and the calls are wasted.
     """
+    if k is None:
+        # Auto-sizing already picks a k that can reach the bound, so there is
+        # nothing to rule out ahead of the run.
+        return None
     best_case = pairs_for_deterministic_call(epsilon)
     if best_case is None:
         return None
@@ -205,7 +231,11 @@ def _snapshot_command(args: argparse.Namespace) -> int:
         )
         return 2
     agent, inputs = _agent_and_inputs(args)
-    infeasible = _infeasible_reason(len(inputs), args.k, args.epsilon)
+    infeasible = _infeasible_reason(
+        len(inputs),
+        args.k,
+        resolve_epsilon(args.precision, args.epsilon),
+    )
     if infeasible is not None:
         # Refusing after the run would be honest but expensive: on a paid model
         # every one of those calls is spent proving something the arithmetic
@@ -217,6 +247,8 @@ def _snapshot_command(args: argparse.Namespace) -> int:
         inputs,
         relations=[],
         config=RunConfig(
+            budget=args.budget,
+            precision=args.precision,
             k=args.k,
             epsilon=args.epsilon,
             blindness_threshold=args.blindness_threshold,

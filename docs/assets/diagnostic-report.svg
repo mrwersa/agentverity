@@ -46,9 +46,9 @@
 <rect x="394" y="207" width="142" height="34" rx="5" class="danger"/>
 <text x="465" y="230" class="badge">BLIND</text>
 <text x="86" y="285" class="label">VERDICT METER</text>
-<text x="86" y="316" class="value">undecided</text>
+<text x="86" y="316" class="value">verdict-deterministic</text>
 <text x="86" y="360" class="label">PAIRWISE FLIP RATE</text>
-<text x="86" y="391" class="value">0.0% (0/12)</text>
+<text x="86" y="391" class="value">0.0% (0/78)</text>
 <text x="324" y="360" class="label">VERDICT SKEW</text>
 <text x="324" y="391" class="value">100.0% · one verdict</text>
 <text x="86" y="447" class="label">ORACLE DECISION</text>
@@ -62,9 +62,9 @@
 <text x="658" y="285" class="label">VERDICT METER</text>
 <text x="658" y="316" class="value">verdict-stochastic</text>
 <text x="658" y="360" class="label">PAIRWISE FLIP RATE</text>
-<text x="658" y="391" class="value">66.7% (8/12)</text>
+<text x="658" y="391" class="value">42.3% (33/78)</text>
 <text x="896" y="360" class="label">VERDICT SKEW</text>
-<text x="896" y="391" class="value">66.7% · two verdicts</text>
+<text x="896" y="391" class="value">50.0% · two verdicts</text>
 <text x="658" y="447" class="label">ORACLE DECISION</text>
 <text x="658" y="480" class="decision">Use noise-robust relations</text>
 <line x1="658" y1="512" x2="1114" y2="512" class="rule"/>
