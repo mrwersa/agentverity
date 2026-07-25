@@ -80,6 +80,40 @@ interval over disjoint repeat pairs. The skew scan separately checks whether
 varied inputs produce varied verdicts. Stability is not correctness, so
 snapshots still require explicit human approval.
 
+## The evidence gate
+
+AgentVerity will not freeze a baseline it cannot justify. The
+[`payment_dispute_gate.py`](https://github.com/mrwersa/agentverity/blob/main/examples/payment_dispute_gate.py)
+example runs the same router against two probe sets:
+
+```bash
+python examples/payment_dispute_gate.py
+```
+
+Both sets score 6/6 against their expected routes. The narrow set produces one
+verdict, so snapshot creation is refused. The repaired set crosses six routing
+categories and is admitted. The evaluator remains green while the evidence
+gate distinguishes a focused unit test from a system-wide baseline.
+
+The repository's manually triggered **Evidence gate demo** workflow renders
+both JUnit reports in GitHub's Check Run interface. No AgentVerity account or
+dashboard is involved.
+
+Create a reviewed reference through the CLI:
+
+```bash
+agentverity snapshot \
+  --agent mymod:build_agent \
+  --inputs seeds.txt \
+  --output baseline.json \
+  --accept-reference
+```
+
+Calls must complete, the verdict must be stable enough, the probes must cross a
+decision boundary, and a person must approve the outputs. The same admission
+checks run again before `agentverity check` reports differences as regressions.
+Snapshot files retain SHA-256 input fingerprints rather than raw prompts.
+
 ## Where it fits
 
 ```text
@@ -142,35 +176,6 @@ an online evaluator and should not repeat every customer request.
 
 [Integration examples and the AgentCore validation plan](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 
-## Evidence-gated snapshots
-
-Create a baseline only after reviewing the outputs:
-
-```bash
-agentverity snapshot \
-  --agent mymod:build_agent \
-  --inputs seeds.txt \
-  --output baseline.json \
-  --accept-reference
-```
-
-AgentVerity refuses to freeze a reference if calls failed, the verdict remains
-undecided or stochastic, the probes are blind, or approval is absent. It also
-rejects a mathematically impossible `k` before spending model calls.
-
-Check the same approved cases later:
-
-```bash
-agentverity check \
-  --agent mymod:build_agent \
-  --inputs seeds.txt \
-  --snapshot baseline.json
-```
-
-Current evidence must pass the same admission checks before differences are
-reported as regressions. Snapshot files store SHA-256 input fingerprints
-rather than raw prompts.
-
 ## Observation layers
 
 Every call becomes one `Observation`:
@@ -216,6 +221,7 @@ failures mark evidence incomplete and never become passing verdicts.
 ## Examples
 
 - [`support_router.py`](https://github.com/mrwersa/agentverity/blob/main/examples/support_router.py): the smallest blind-agent example
+- [`payment_dispute_gate.py`](https://github.com/mrwersa/agentverity/blob/main/examples/payment_dispute_gate.py): a green evaluator whose narrow baseline is refused, then admitted after probe repair
 - [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py): blind triage plus a stochastic supervisor
 - [`strands_example.py`](https://github.com/mrwersa/agentverity/blob/main/examples/strands_example.py): optional Strands adapter
 - [`otel_monitoring.py`](https://github.com/mrwersa/agentverity/blob/main/examples/otel_monitoring.py): one diagnostic span through OTEL

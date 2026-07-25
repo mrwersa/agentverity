@@ -1,0 +1,47 @@
+name: Evidence gate demo
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  payment-dispute-router:
+    name: Payment dispute router
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install AgentVerity
+        run: python -m pip install -e .
+      - name: Run the evidence gate
+        run: |
+          python examples/payment_dispute_gate.py \
+            --output-dir "${RUNNER_TEMP}/agentverity-payment-demo"
+      - name: Narrow probes - baseline refused
+        uses: dorny/test-reporter@1cc81a5edf733718d4850df304aaa21c05cd7280
+        if: ${{ !cancelled() }}
+        with:
+          name: Narrow probes - baseline refused
+          path: ${{ runner.temp }}/agentverity-payment-demo/narrow-*.xml
+          reporter: java-junit
+          fail-on-error: "false"
+          collapsed: never
+          list-tests: all
+          report-title: AgentVerity evidence gate
+      - name: Repaired probes - baseline admitted
+        uses: dorny/test-reporter@1cc81a5edf733718d4850df304aaa21c05cd7280
+        if: ${{ !cancelled() }}
+        with:
+          name: Repaired probes - baseline admitted
+          path: ${{ runner.temp }}/agentverity-payment-demo/repaired-*.xml
+          reporter: java-junit
+          collapsed: never
+          list-tests: all
+          report-title: AgentVerity evidence gate

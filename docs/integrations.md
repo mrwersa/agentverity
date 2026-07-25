@@ -91,6 +91,37 @@ AgentVerity is not an online evaluator. Do not repeat each customer request 26
 times. Run it in CI, before deployment, or as a scheduled canary over a
 reviewed probe set, then monitor the resulting summary.
 
+## Capture the evidence gate
+
+The payment-dispute demo prepares the exact outputs needed for CI and
+observability:
+
+```bash
+python examples/payment_dispute_gate.py \
+  --output-dir /tmp/agentverity-payment-demo
+```
+
+Both probe sets score 6/6. The `narrow-*.xml` reports show a passing
+exact-match evaluator beside a failed probe-coverage case, and no snapshot is
+admitted. The `repaired-*.xml` reports are green, and
+`repaired-snapshot.json` records the reviewed reference.
+
+Inside a configured OTEL process, add `--otel` to emit:
+
+- `agentverity.payment_dispute.narrow` with `agentverity.status=blind`
+- `agentverity.payment_dispute.repaired` with
+  `agentverity.status=deterministic`
+
+This makes a useful before-and-after trace without inventing an AgentVerity
+dashboard. The same spans can be viewed in CloudWatch, Phoenix, or another
+OTLP-compatible interface.
+
+For a CI view, run **Evidence gate demo** from the repository's Actions tab.
+The manual workflow feeds both JUnit files into GitHub Check Runs. Capture the
+expanded `Narrow probes - baseline refused` and
+`Repaired probes - baseline admitted` reports side by side. The workflow pins
+the third-party reporter to an immutable commit.
+
 ## AgentCore validation plan
 
 Use the AWS account for a small canary integration after the local path is
@@ -98,14 +129,18 @@ green:
 
 1. Enable AgentCore Observability and verify ordinary agent spans in
    CloudWatch.
-2. Create a callable around the deployed runtime invocation. Extract a
-   categorical verdict or tool path into `Observation`.
-3. Start with `precision="cheap"` and six non-sensitive probes. This bounds the
-   first validation run while checking the wiring.
-4. Call `record_otel_run(result)` inside the configured OTEL process.
-5. In CloudWatch, verify one `agentverity.run` span and the
-   `agentverity.status`, meter, blindness, and aggregate relation attributes.
-6. Move to `balanced` only after confirming call cost and latency.
+2. Replace the demo's local router with a callable around
+   `invoke_agent_runtime`. Keep the two synthetic probe sets unchanged and
+   extract the returned route into `Observation.verdict`.
+3. Start with `precision="cheap"`. This bounds the first live run while
+   checking the wiring.
+4. Run the narrow and repaired suites with `--otel` inside the configured OTEL
+   process.
+5. In CloudWatch, select each AgentVerity span and verify the status, meter,
+   blindness, and aggregate relation attributes.
+6. Capture the two real span-detail views, redacting account identifiers and
+   runtime ARNs. Use those views for a labelled before-and-after image.
+7. Move to `balanced` only after confirming call cost and latency.
 
 This validation needs a deployed AgentCore ARN, region, response parser, and
 AWS credentials. Keep those deployment details outside the repository.

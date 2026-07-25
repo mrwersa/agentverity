@@ -8,6 +8,12 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- A payment-dispute evidence-gate demo where both probe sets score 6/6, while
+  only the set that crosses the routing boundary can become a snapshot. It can
+  write JUnit artifacts and emit before-and-after OTEL spans.
+
 ## [0.6.0] - 2026-07-25
 
 The diagnosis now leaves the terminal. Same two questions, carried into the CI

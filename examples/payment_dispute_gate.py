@@ -1,0 +1,188 @@
+"""Evidence-gate demo using one payment router and two probe sets.
+
+Both probe sets score 6/6 against their expected routes. The narrow set only
+exercises one verdict, so AgentVerity refuses to freeze it as a system-wide
+baseline. The repaired set crosses the router's decision boundary and is
+admitted.
+
+Run from the repository root:
+
+    python examples/payment_dispute_gate.py
+    python examples/payment_dispute_gate.py --output-dir /tmp/agentverity-demo
+
+Use ``--otel`` inside an existing OpenTelemetry process to emit one aggregate
+span for each suite.
+"""
+
+from __future__ import annotations
+
+import argparse
+from collections import Counter
+from pathlib import Path
+from xml.etree import ElementTree as ET
+
+from agentverity import (
+    SnapshotRefused,
+    create_snapshot,
+    from_callable,
+    record_otel_run,
+    run,
+    save_snapshot,
+    write_junit_xml,
+)
+
+Case = tuple[str, str]
+
+NARROW_CASES: tuple[Case, ...] = (
+    ("My card was charged twice for the same order.", "duplicate_charge"),
+    ("The same restaurant payment appears twice.", "duplicate_charge"),
+    ("I can see duplicate identical card transactions.", "duplicate_charge"),
+    ("A payment was duplicated on my statement.", "duplicate_charge"),
+    ("The merchant billed me twice.", "duplicate_charge"),
+    ("There is a duplicate charge for one purchase.", "duplicate_charge"),
+)
+
+DIVERSE_CASES: tuple[Case, ...] = (
+    ("My card was charged twice for the same order.", "duplicate_charge"),
+    ("The shop promised a refund but it has not arrived.", "refund_delay"),
+    ("I do not recognise this card purchase.", "card_security"),
+    ("The merchant charged more than the agreed amount.", "merchant_dispute"),
+    ("Cash came out of my balance but the ATM dispensed nothing.", "cash_withdrawal"),
+    ("The transfer is still pending after two days.", "transfer_delay"),
+)
+
+
+def route_dispute(text: str) -> dict[str, str]:
+    """Route a synthetic payment dispute to a categorical queue."""
+    lowered = text.lower()
+    if any(term in lowered for term in ("twice", "duplicate", "duplicated")):
+        verdict = "duplicate_charge"
+    elif "refund" in lowered:
+        verdict = "refund_delay"
+    elif any(term in lowered for term in ("do not recognise", "stolen")):
+        verdict = "card_security"
+    elif any(term in lowered for term in ("more than", "wrong amount")):
+        verdict = "merchant_dispute"
+    elif any(term in lowered for term in ("atm", "cash")):
+        verdict = "cash_withdrawal"
+    else:
+        verdict = "transfer_delay"
+    return {"text": f"route: {verdict}", "verdict": verdict}
+
+
+def build_agent():
+    """Factory used by the AgentVerity CLI."""
+    return route_dispute
+
+
+def _evaluate(cases: tuple[Case, ...]) -> tuple[int, int]:
+    correct = sum(route_dispute(text)["verdict"] == expected for text, expected in cases)
+    return correct, len(cases)
+
+
+def _run_suite(cases: tuple[Case, ...]):
+    inputs = [text for text, _ in cases]
+    return run(from_callable(route_dispute), inputs=inputs, relations=[])
+
+
+def _quality_junit_xml(suite_name: str, cases: tuple[Case, ...]) -> str:
+    """Return one exact-match evaluator result in JUnit form."""
+    correct, total = _evaluate(cases)
+    failures = int(correct != total)
+    root = ET.Element(
+        "testsuite",
+        {
+            "name": suite_name,
+            "tests": "1",
+            "failures": str(failures),
+            "errors": "0",
+            "skipped": "0",
+        },
+    )
+    case = ET.SubElement(
+        root,
+        "testcase",
+        {"classname": "quality", "name": "exact_match_routes"},
+    )
+    detail = f"{correct}/{total} routes matched their reviewed labels"
+    if failures:
+        ET.SubElement(case, "failure", {"message": detail}).text = detail
+    else:
+        ET.SubElement(case, "system-out").text = detail
+    ET.indent(root, space="  ")
+    return ET.tostring(root, encoding="unicode", xml_declaration=True) + "\n"
+
+
+def _print_suite(
+    name: str,
+    cases: tuple[Case, ...],
+    result,
+    snapshot_state: str,
+) -> None:
+    correct, total = _evaluate(cases)
+    verdicts = Counter(route_dispute(text)["verdict"] for text, _ in cases)
+    mix = ", ".join(f"{verdict}={count}" for verdict, count in verdicts.items())
+    print(f"{name}")
+    print("-" * len(name))
+    print(f"Exact-match evaluator: {correct}/{total} correct")
+    print(f"Verdict mix: {mix}")
+    print(f"AgentVerity: {result.headline}")
+    print(f"Baseline: {snapshot_state}")
+    print()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Write JUnit reports and the admitted snapshot to this directory.",
+    )
+    parser.add_argument(
+        "--otel",
+        action="store_true",
+        help="Emit aggregate spans through the configured OpenTelemetry provider.",
+    )
+    args = parser.parse_args()
+
+    narrow = _run_suite(NARROW_CASES)
+    repaired = _run_suite(DIVERSE_CASES)
+
+    try:
+        create_snapshot(narrow, approved=True)
+    except SnapshotRefused as exc:
+        narrow_state = f"REFUSED - {exc}"
+    else:  # pragma: no cover - a regression guard, not an expected branch
+        narrow_state = "ADMITTED (unexpected)"
+
+    repaired_snapshot = create_snapshot(repaired, approved=True)
+    repaired_state = "ADMITTED - evidence is complete, stable, and non-blind"
+
+    print("PAYMENT-DISPUTE ROUTER: THE EVIDENCE GATE")
+    print("=" * 42)
+    print()
+    _print_suite("BEFORE: narrow probe set", NARROW_CASES, narrow, narrow_state)
+    _print_suite("AFTER: repaired probe set", DIVERSE_CASES, repaired, repaired_state)
+
+    if args.output_dir:
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        write_junit_xml(narrow, args.output_dir / "narrow-agentverity.xml")
+        write_junit_xml(repaired, args.output_dir / "repaired-agentverity.xml")
+        (args.output_dir / "narrow-quality.xml").write_text(
+            _quality_junit_xml("narrow-quality", NARROW_CASES),
+            encoding="utf-8",
+        )
+        (args.output_dir / "repaired-quality.xml").write_text(
+            _quality_junit_xml("repaired-quality", DIVERSE_CASES),
+            encoding="utf-8",
+        )
+        save_snapshot(repaired_snapshot, args.output_dir / "repaired-snapshot.json")
+        print(f"Artifacts written to {args.output_dir}")
+
+    if args.otel:
+        record_otel_run(narrow, span_name="agentverity.payment_dispute.narrow")
+        record_otel_run(repaired, span_name="agentverity.payment_dispute.repaired")
+
+
+if __name__ == "__main__":
+    main()
