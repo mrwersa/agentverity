@@ -18,11 +18,24 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   output. It remains optional, while the zero-dependency quickstart stays the
   default path.
 - A `showcase` optional dependency group for running that integration.
+- A machine-readable showcase evidence bundle with labelled-route accuracy,
+  AgentVerity diagnostics, and end-to-end p50 and p95 latency.
+- A redacted result bundle and generated dashboard from a real AgentCore
+  Runtime canary in London.
 
 ### Changed
 
 - Terminal guidance now says `WHAT TO DO NEXT` and `test strategy` instead of
   reintroducing the retired research term `oracle`.
+- The production showcase defaults to low-cost Amazon Nova Micro and separates
+  runtime dependencies from the external evaluation stack.
+- The showcase admits a reference only when both labelled-route quality and
+  AgentVerity's evidence qualification pass. Stability can no longer mask an
+  incorrect route.
+- The AgentCore canary stops every isolated runtime session after reading its
+  response, avoiding the idle-cost tail between repeated trials.
+- The live canary exposes bounded concurrency through `--max-workers`, using
+  four independent calls by default so a real runtime check finishes promptly.
 
 ## [0.7.0] - 2026-07-25
 

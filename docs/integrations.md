@@ -8,12 +8,15 @@ quality evaluators and observability platforms, not replace them.
 ```text
 agent or workflow
        |
-       v
-AgentVerity pre-flight ----> DeepEval / promptfoo / AgentCore Evaluations
-       |                                  |
-       +---- JUnit XML to CI               +---- quality scores
+       +---- AgentVerity ----> JUnit XML to CI
+       |         |
+       |         +---- OTEL summary span
        |
-       +---- OTEL summary span to CloudWatch / Phoenix / LangSmith
+       +---- DeepEval / promptfoo / AgentCore Evaluations
+                            |
+                            +---- quality scores
+
+release decision = quality result + qualified evidence
 ```
 
 ## Agent interfaces
@@ -157,28 +160,38 @@ quality score says whether the selected routes match their labels. AgentVerity
 says whether repeated decisions and the chosen inputs support treating that
 score as a reusable baseline.
 
-## AgentCore validation path
+## AgentCore validation result
 
-Use the AWS account for a small canary integration after the local path is
-green:
+The production-stack example was run through a real AgentCore Runtime in
+London. DeepEval and AgentVerity remained outside the serving process, as they
+would in CI or a scheduled canary:
 
-1. Enable AgentCore Observability and verify ordinary agent spans in
-   CloudWatch.
-2. Replace the demo's local router with a callable around
-   `invoke_agent_runtime`. Keep the two synthetic probe sets unchanged and
-   extract the returned route into `Observation.verdict`.
-3. Start with `precision="cheap"`. This bounds the first live run while
-   checking the wiring.
-4. Run the narrow and repaired suites with `--otel` inside the configured OTEL
-   process.
-5. In CloudWatch, select each AgentVerity span and verify the status, meter,
-   blindness, and aggregate relation attributes.
-6. Capture the two real span-detail views, redacting account identifiers and
-   runtime ARNs. Use those views for a labelled before-and-after image.
-7. Move to `balanced` only after confirming call cost and latency.
+```text
+reviewed cases
+      |
+      +---- DeepEval: is each route correct?
+      |
+      +---- AgentVerity: is that result stable and non-blind?
+                         |
+                         v
+                admit or refuse baseline
+      |
+      v
+AgentCore Runtime ----> CloudWatch operational evidence
+```
 
-This validation needs a deployed AgentCore ARN, region, response parser, and
-AWS credentials. Keep those deployment details outside the repository.
+The final canary produced 6/6 correct routes, 0/36 verdict flips, six distinct
+routes, 78 successful invocations, and no errors or throttles. Every repeat
+used a fresh AgentCore session, which was stopped after the response.
+
+The first live run was more informative. It was stable and non-blind but
+scored only 5/6 on route quality. The example now blocks snapshot creation
+unless both quality and evidence pass. This is the boundary between a quality
+evaluator and AgentVerity in executable form.
+
+See the [method and measured result](../examples/production_stack/RESULTS.md).
+Account identifiers, runtime ARNs, prompts, outputs, sessions, and trace
+identifiers are not committed.
 
 AWS documents AgentCore telemetry as OpenTelemetry-compatible and exposes it
 through CloudWatch:
