@@ -8,6 +8,11 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-25
+
+The diagnosis now leaves the terminal. Same two questions, carried into the CI
+and monitoring surfaces a team already runs.
+
 ### Added
 
 - JUnit XML output through `--format junit`, `run_result_to_junit_xml`, and
@@ -257,7 +262,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/mrwersa/agentverity/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/mrwersa/agentverity/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mrwersa/agentverity/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mrwersa/agentverity/compare/v0.2.0...v0.3.0
