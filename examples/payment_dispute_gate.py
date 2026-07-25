@@ -134,38 +134,39 @@ def _print_suite(
     print()
 
 
-def _markdown_report(narrow: RunResult, repaired: RunResult) -> str:
-    """Render the gate result as Markdown.
+def _markdown_row(label: str, result: RunResult, cases: tuple[Case, ...]) -> str:
+    """One probe set as a single comparison row."""
+    correct, total = _evaluate(cases)
+    routes = len(Counter(str(key) for key in result.observed_keys))
+    stability = result.meter.call if result.meter else "not measured"
+    coverage = (
+        f"❌ blind, {routes} route" if result.is_blind
+        else f"✅ {routes} routes"
+    )
+    baseline = "❌ REFUSED" if result.is_blind else "✅ ADMITTED"
+    return (
+        f"| {label} | ✅ {correct}/{total} | ✅ {stability} | {coverage} "
+        f"| {baseline} |"
+    )
 
-    The CI job summary is Markdown, and so is the README, so the same table
-    serves both. Emitting it from the example keeps one source of truth instead
-    of a screenshot or a hand-copied transcript that can drift.
+
+def _markdown_report(narrow: RunResult, repaired: RunResult) -> str:
+    """Render the gate result as one comparison table.
+
+    Both probe sets side by side in a single table, because the finding is the
+    contrast between them. Two separate tables make the reader hold one set of
+    numbers in their head while they read the other.
+
+    Deliberately unnumbered and unheaded: this block leads a CI job summary
+    whose detailed reports carry their own numbered titles, and duplicating
+    that numbering reads as four sections rather than two.
     """
-    lines: list[str] = []
-    for title, result, cases in (
-        ("1. Narrow probe set, baseline **REFUSED**", narrow, NARROW_CASES),
-        ("2. Repaired probe set, baseline **ADMITTED**", repaired, DIVERSE_CASES),
-    ):
-        verdicts = Counter(str(key) for key in result.observed_keys)
-        lines += [
-            f"#### {title}",
-            "",
-            "| Check | Result |",
-            "|---|---|",
-            f"| Exact-match evaluator | ✅ {len(cases)}/{len(cases)} correct |",
-            (
-                f"| Verdict stability | {'✅' if not result.is_stochastic else '❌'} "
-                f"{result.meter.call if result.meter else 'not run'} |"
-            ),
-            (
-                f"| Probe coverage | "
-                f"{'❌ blind' if result.is_blind else '✅ crosses a boundary'} "
-                f"({len(verdicts)} distinct route"
-                f"{'s' if len(verdicts) != 1 else ''}) |"
-            ),
-            "",
-        ]
-    return "\n".join(lines).rstrip()
+    return "\n".join([
+        "| Probe set | Exact-match | Verdict stability | Probe coverage | Baseline |",
+        "|---|---|---|---|---|",
+        _markdown_row("Narrow, 6 duplicate-charge cases", narrow, NARROW_CASES),
+        _markdown_row("Repaired, 6 dispute categories", repaired, DIVERSE_CASES),
+    ])
 
 
 def main() -> None:

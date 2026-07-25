@@ -109,6 +109,11 @@ AgentVerity: TRUSTWORTHY - the verdict held across every identical rerun and the
 Baseline: ADMITTED - evidence is complete, stable, and non-blind
 ```
 
+| Probe set | Exact-match | Verdict stability | Probe coverage | Baseline |
+|---|---|---|---|---|
+| Narrow, 6 duplicate-charge cases | ✅ 6/6 | ✅ verdict-deterministic | ❌ blind, 1 route | ❌ REFUSED |
+| Repaired, 6 dispute categories | ✅ 6/6 | ✅ verdict-deterministic | ✅ 6 routes | ✅ ADMITTED |
+
 Both sets score 6/6 against their expected routes. The narrow set produces one
 verdict, so snapshot creation is refused. The repaired set crosses six routing
 categories and is admitted. The evaluator remains green while the evidence
