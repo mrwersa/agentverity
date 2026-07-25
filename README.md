@@ -96,7 +96,7 @@ categories and is admitted. The evaluator remains green while the evidence
 gate distinguishes a focused unit test from a system-wide baseline.
 
 The repository's manually triggered **Evidence gate demo** workflow renders
-both JUnit reports in GitHub's Check Run interface. No AgentVerity account or
+both JUnit reports in its GitHub Actions run summary. No AgentVerity account or
 dashboard is involved.
 
 Create a reviewed reference through the CLI:

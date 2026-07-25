@@ -117,8 +117,8 @@ dashboard. The same spans can be viewed in CloudWatch, Phoenix, or another
 OTLP-compatible interface.
 
 For a CI view, run **Evidence gate demo** from the repository's Actions tab.
-The manual workflow feeds both JUnit files into GitHub Check Runs. Capture the
-expanded `Narrow probes - baseline refused` and
+The manual workflow feeds both JUnit files into its Actions run summary.
+Capture the expanded `Narrow probes - baseline refused` and
 `Repaired probes - baseline admitted` reports side by side. The workflow pins
 the third-party reporter to an immutable commit.
 
