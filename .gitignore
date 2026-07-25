@@ -6,3 +6,6 @@ __pycache__/
 .ruff_cache/
 build/
 dist/
+
+# Demo reports written by the evidence-gate workflow
+evidence-gate-reports/

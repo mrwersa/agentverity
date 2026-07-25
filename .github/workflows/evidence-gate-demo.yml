@@ -23,7 +23,7 @@ jobs:
       - name: Run the evidence gate
         run: |
           python examples/payment_dispute_gate.py \
-            --output-dir "${RUNNER_TEMP}/agentverity-payment-demo"
+            --output-dir evidence-gate-reports
       - name: Lead the job summary with the gate result
         # The detailed JUnit reports below are useful but dense. This puts the
         # actual finding at the top of the summary, in the same Markdown the
@@ -45,7 +45,7 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: Narrow probes - baseline refused
-          path: ${{ runner.temp }}/agentverity-payment-demo/narrow-*.xml
+          path: evidence-gate-reports/narrow-*.xml
           reporter: java-junit
           fail-on-error: "false"
           collapsed: never
@@ -56,7 +56,7 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: Repaired probes - baseline admitted
-          path: ${{ runner.temp }}/agentverity-payment-demo/repaired-*.xml
+          path: evidence-gate-reports/repaired-*.xml
           reporter: java-junit
           collapsed: never
           list-tests: all
