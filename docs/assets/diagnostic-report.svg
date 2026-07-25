@@ -30,9 +30,9 @@
 <rect x="364" y="114" width="226" height="52" rx="6" class="route"/>
 <rect x="674" y="114" width="226" height="52" rx="6" class="route"/>
 <rect x="984" y="114" width="162" height="52" rx="6" class="route"/>
-<text x="167" y="147" class="routeText">REPEAT VERDICTS</text>
-<text x="477" y="147" class="routeText">SCAN FOR SKEW</text>
-<text x="787" y="147" class="routeText">CHOOSE TEST</text>
+<text x="167" y="147" class="routeText">REPEAT EACH CASE</text>
+<text x="477" y="147" class="routeText">VARY THE INPUTS</text>
+<text x="787" y="147" class="routeText">THEN SCORE IT</text>
 <text x="1065" y="147" class="routeText">TEST</text>
 <line x1="298" y1="140" x2="338" y2="140" class="flow"/>
 <path d="M 338 135 L 348 140 L 338 145 z" fill="#64748b"/>
@@ -45,28 +45,28 @@
 <text x="86" y="234" class="eyebrow">TRIAGE STEP</text>
 <rect x="394" y="207" width="142" height="34" rx="5" class="danger"/>
 <text x="465" y="230" class="badge">BLIND</text>
-<text x="86" y="285" class="label">VERDICT METER</text>
+<text x="86" y="285" class="label">DECISION STABILITY</text>
 <text x="86" y="316" class="value">verdict-deterministic</text>
-<text x="86" y="360" class="label">PAIRWISE FLIP RATE</text>
+<text x="86" y="360" class="label">REPEAT DISAGREEMENT</text>
 <text x="86" y="391" class="value">0.0% (0/78)</text>
-<text x="324" y="360" class="label">VERDICT SKEW</text>
-<text x="324" y="391" class="value">100.0% · one verdict</text>
-<text x="86" y="447" class="label">TEST DECISION</text>
-<text x="86" y="480" class="decision">Do not trust green relations</text>
+<text x="324" y="360" class="label">DECISION COVERAGE</text>
+<text x="324" y="391" class="value">100.0% · one decision</text>
+<text x="86" y="447" class="label">WHAT TO DO</text>
+<text x="86" y="480" class="decision">A green score proves little here</text>
 <line x1="86" y1="512" x2="542" y2="512" class="rule"/>
 <text x="86" y="548" class="label">NEXT ACTION</text>
 <text x="86" y="579" class="action">Vary test inputs before adding checks</text>
 <text x="658" y="234" class="eyebrow">FULL SUPERVISOR PIPELINE</text>
 <rect x="966" y="207" width="142" height="34" rx="5" class="warning"/>
 <text x="1037" y="230" class="badge">STOCHASTIC</text>
-<text x="658" y="285" class="label">VERDICT METER</text>
+<text x="658" y="285" class="label">DECISION STABILITY</text>
 <text x="658" y="316" class="value">verdict-stochastic</text>
-<text x="658" y="360" class="label">PAIRWISE FLIP RATE</text>
+<text x="658" y="360" class="label">REPEAT DISAGREEMENT</text>
 <text x="658" y="391" class="value">42.3% (33/78)</text>
-<text x="896" y="360" class="label">VERDICT SKEW</text>
-<text x="896" y="391" class="value">50.0% · two verdicts</text>
-<text x="658" y="447" class="label">TEST DECISION</text>
-<text x="658" y="480" class="decision">Use noise-robust relations</text>
+<text x="896" y="360" class="label">DECISION COVERAGE</text>
+<text x="896" y="391" class="value">50.0% · two decisions</text>
+<text x="658" y="447" class="label">WHAT TO DO</text>
+<text x="658" y="480" class="decision">Read scores against measured noise</text>
 <line x1="658" y1="512" x2="1114" y2="512" class="rule"/>
 <text x="658" y="548" class="label">NEXT ACTION</text>
 <text x="658" y="579" class="action">Calibrate against unchanged-input noise</text>

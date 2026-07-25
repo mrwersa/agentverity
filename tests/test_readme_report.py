@@ -11,7 +11,13 @@ def test_readme_report_renders_real_diagnostics(tmp_path):
     assert output.read_text() == svg
     # Pinned to what the committed example actually produces at defaults, so a
     # change in sizing cannot quietly leave a stale picture in the README.
-    assert "100.0% · one verdict" in svg   # triage is blind
+    assert "100.0% · one decision" in svg  # triage is blind
     assert "42.3% (33/78)" in svg          # pipeline flips, measured over 78 pairs
     assert "BLIND" in svg
     assert "STOCHASTIC" in svg
+    # The hero image sits directly under the README's own vocabulary, so it has
+    # to use the same words rather than the retired instrument names.
+    assert "DECISION STABILITY" in svg
+    assert "DECISION COVERAGE" in svg
+    for retired in ("VERDICT METER", "VERDICT SKEW", "SCAN FOR SKEW", "oracle"):
+        assert retired not in svg, f"retired vocabulary in the hero image: {retired}"
