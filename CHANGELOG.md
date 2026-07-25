@@ -8,6 +8,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Changed
+
+- `RunResult.suite_is_meaningful` documents why `relations=[]` returns `True`.
+  A run that deliberately requested no relations produced no green result to
+  distrust, so failing it would break a legitimate diagnostics-only run. The
+  vacuous case it guards is relations that were asked for, ran, and tested
+  nothing. Behaviour is unchanged and now pinned by tests.
+
 ## [0.3.0] - 2026-07-25
 
 Post-release review of v0.2.0. Two correctness defects and a set of
@@ -24,8 +32,8 @@ documentation claims that did not match the code.
   now rejects a probe set containing the same input twice and names the
   duplicates. Repeating a measurement is what `k` is for.
 - `README.md` documented the reuse saving on the four-input Quickstart as 35
-  calls against 70. Those were the figures for a five-input probe. Measured
-  values are 28 and 40. The general formula was correct.
+  calls against 70. Measured values for that example are 28 and 40. The
+  general formula was correct.
 - The published v0.2.0 description on PyPI still said the package was not on
   PyPI and told readers to install from git, because the documentation fix
   landed after the release tag. PyPI metadata is immutable, so this release
