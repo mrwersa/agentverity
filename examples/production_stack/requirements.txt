@@ -1,0 +1,7 @@
+-e ../..
+bedrock-agentcore>=1.18,<2
+boto3>=1.40
+deepeval>=4,<5
+opentelemetry-api>=1.27,<2
+pydantic>=2,<3
+strands-agents>=1.0

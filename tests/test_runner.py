@@ -238,7 +238,7 @@ class TestSummary:
         s = result.summary()
         assert "VERDICT-STOCHASTICITY METER" in s
         assert "CONSTANT-GATE-BLINDNESS DETECTOR" in s
-        assert "ORACLE GUIDANCE" in s
+        assert "WHAT TO DO NEXT" in s
         assert "RELATION RESULTS" in s
 
     def test_summary_blind_warning(self):

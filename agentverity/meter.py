@@ -258,7 +258,10 @@ class MeterResult:
         if c == "verdict-deterministic":
             return ("verdict is stable: prefer frozen-baseline diffing when "
                     "a trusted reference is available.")
-        return "not enough evidence to choose an oracle; raise K or input count."
+        return (
+            "not enough evidence to choose a test strategy; "
+            "raise K or input count."
+        )
 
 
 def measure(

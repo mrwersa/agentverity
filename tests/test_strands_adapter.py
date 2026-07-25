@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from agentverity.adapters.strands import from_strands
+from agentverity.adapters.strands import from_strands, from_strands_factory
 from agentverity.observation import Observation
 
 
@@ -85,6 +85,15 @@ class TestFromStrands:
         obs = agent("hi")
         assert obs.verdict == "allow"
 
+    def test_custom_structured_output_verdict_key(self):
+        result = _make_result(
+            [{"text": "routed"}],
+            structured_output={"route": "refunds"},
+        )
+        agent = from_strands(_mock_strands_agent(result), verdict_key="route")
+        obs = agent("hi")
+        assert obs.verdict == "refunds"
+
     def test_no_message(self):
         """When no message is present, fall back to stringifying the result."""
         result = SimpleNamespace(message=None)
@@ -99,3 +108,50 @@ class TestFromStrands:
         agent = from_strands(_mock_strands_agent(result))
         obs = agent("hi")
         assert isinstance(obs, Observation)
+
+
+class TestFromStrandsFactory:
+    def test_each_call_uses_a_fresh_agent(self):
+        instances: list[list[str]] = []
+
+        def factory():
+            prompts: list[str] = []
+            instances.append(prompts)
+
+            def agent(prompt: str):
+                prompts.append(prompt)
+                return _make_result(
+                    [{"text": "routed"}],
+                    structured_output={"verdict": "billing"},
+                )
+
+            return agent
+
+        wrapped = from_strands_factory(factory)
+
+        assert wrapped("first").verdict == "billing"
+        assert wrapped("second").verdict == "billing"
+        assert instances == [["first"], ["second"]]
+
+    def test_custom_invoker_can_request_structured_output(self):
+        calls: list[tuple[object, str]] = []
+
+        def factory():
+            return object()
+
+        def invoke(agent, prompt: str):
+            calls.append((agent, prompt))
+            return _make_result(
+                [{"text": "review"}],
+                structured_output={"route": "manual_review"},
+            )
+
+        wrapped = from_strands_factory(
+            factory,
+            invoke=invoke,
+            verdict_key="route",
+        )
+
+        assert wrapped("charge disputed").verdict == "manual_review"
+        assert len(calls) == 1
+        assert calls[0][1] == "charge disputed"

@@ -8,6 +8,22 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `from_strands_factory`, which builds a fresh Strands agent for each trial so
+  repeated measurements do not inherit conversation history from earlier
+  calls.
+- A live payment-triage showcase combining Strands, Amazon Bedrock, DeepEval,
+  AgentVerity, AgentCore Runtime, OpenTelemetry, and JUnit-compatible CI
+  output. It remains optional, while the zero-dependency quickstart stays the
+  default path.
+- A `showcase` optional dependency group for running that integration.
+
+### Changed
+
+- Terminal guidance now says `WHAT TO DO NEXT` and `test strategy` instead of
+  reintroducing the retired research term `oracle`.
+
 ## [0.7.0] - 2026-07-25
 
 Reports that read well where people actually read them.

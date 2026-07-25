@@ -7,6 +7,8 @@ without those libraries present.
 Available adapters:
     - :func:`from_callable` — wrap any ``fn(input) -> str | dict | Observation``.
     - :func:`from_strands` — wrap a Strands ``Agent`` (requires ``strands-agents``).
+    - :func:`from_strands_factory` — isolate repeated Strands trials by
+      constructing a fresh agent for every call.
 """
 
 from agentverity.adapters.callable_adapter import from_callable
