@@ -6,10 +6,12 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+from xml.etree import ElementTree as ET
 
 from agentverity.runner import RunResult
 
 RUN_SCHEMA = "agentverity.run/v1"
+JUNIT_SUITE_NAME = "agentverity"
 
 
 def json_value(value: Any) -> Any:
@@ -68,6 +70,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
 
     return {
         "schema": RUN_SCHEMA,
+        "status": result.status,
         "complete": result.complete,
         "requested_inputs": result.requested_inputs,
         "input_fingerprints": list(result.input_fingerprints),
@@ -122,5 +125,154 @@ def write_run_json(result: RunResult, path: str | Path) -> None:
     """Write a run report as formatted UTF-8 JSON."""
     Path(path).write_text(
         json.dumps(run_result_to_dict(result), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _junit_case(
+    parent: ET.Element,
+    name: str,
+    *,
+    classname: str,
+) -> ET.Element:
+    return ET.SubElement(
+        parent,
+        "testcase",
+        {"classname": classname, "name": name},
+    )
+
+
+def run_result_to_junit_xml(
+    result: RunResult,
+    *,
+    suite_name: str = JUNIT_SUITE_NAME,
+) -> str:
+    """Return a JUnit XML report for existing CI report collectors.
+
+    The XML mirrors AgentVerity's own interpretation. Stochasticity is guidance,
+    not a failed test. Blind probes and violated relations are failures,
+    incomplete evidence is an error, and relations that never changed an input
+    are skipped rather than passed.
+    """
+    root = ET.Element("testsuite", {"name": suite_name})
+    failures = 0
+    errors = 0
+    skipped = 0
+
+    execution = _junit_case(root, "evidence.complete", classname=suite_name)
+    if not result.complete:
+        errors += 1
+        detail = f"{len(result.errors)} call or check failures made the run incomplete"
+        ET.SubElement(execution, "error", {"message": detail}).text = detail
+
+    meter_case = _junit_case(
+        root,
+        "preflight.verdict_stability",
+        classname=suite_name,
+    )
+    if result.meter is None:
+        skipped += 1
+        ET.SubElement(meter_case, "skipped", {"message": "meter disabled"})
+    elif result.meter.call.startswith("undecided"):
+        errors += 1
+        detail = result.headline
+        ET.SubElement(meter_case, "error", {"message": detail}).text = detail
+    else:
+        ET.SubElement(meter_case, "system-out").text = (
+            f"call={result.meter.call} "
+            f"flip_rate={result.meter.flip_rate:.6f} "
+            f"ci=[{result.meter.ci_low:.6f},{result.meter.ci_high:.6f}] "
+            f"epsilon={result.meter.epsilon}"
+        )
+
+    blindness_case = _junit_case(
+        root,
+        "preflight.probe_coverage",
+        classname=suite_name,
+    )
+    if result.blindness is None:
+        skipped += 1
+        ET.SubElement(blindness_case, "skipped", {"message": "scan disabled"})
+    elif result.blindness.blind:
+        failures += 1
+        detail = result.headline
+        ET.SubElement(blindness_case, "failure", {"message": detail}).text = detail
+    else:
+        ET.SubElement(blindness_case, "system-out").text = (
+            f"skew={result.blindness.skew:.6f} "
+            f"distinct={result.blindness.distinct} "
+            f"threshold={result.blindness.threshold}"
+        )
+
+    relation_coverage = _junit_case(
+        root,
+        "preflight.relation_coverage",
+        classname=suite_name,
+    )
+    if not result.relation_results:
+        skipped += 1
+        ET.SubElement(relation_coverage, "skipped", {"message": "no relations requested"})
+    elif not any(relation.exercised for relation in result.relation_results):
+        failures += 1
+        detail = "no relation changed an input, so the catalogue tested nothing"
+        ET.SubElement(
+            relation_coverage,
+            "failure",
+            {"message": detail},
+        ).text = detail
+    else:
+        ET.SubElement(relation_coverage, "system-out").text = (
+            f"exercised={sum(r.exercised for r in result.relation_results)} "
+            f"vacuous={sum(r.is_vacuous for r in result.relation_results)}"
+        )
+
+    for relation in result.relation_results:
+        case = _junit_case(
+            root,
+            f"relation.{relation.relation.name}",
+            classname=suite_name,
+        )
+        if relation.errors:
+            errors += 1
+            detail = f"{relation.errors}/{relation.total} relation checks failed"
+            ET.SubElement(case, "error", {"message": detail}).text = detail
+        elif relation.is_vacuous:
+            skipped += 1
+            ET.SubElement(
+                case,
+                "skipped",
+                {"message": "transform did not change any input"},
+            )
+        elif relation.violated:
+            failures += 1
+            detail = (
+                f"{relation.violated}/{relation.exercised} exercised pairs violated "
+                f"the {relation.relation.rtype} relation"
+            )
+            ET.SubElement(case, "failure", {"message": detail}).text = detail
+        else:
+            ET.SubElement(case, "system-out").text = (
+                f"held={relation.held} exercised={relation.exercised} "
+                f"skipped={relation.skipped}"
+            )
+
+    root.set("tests", str(len(root)))
+    root.set("failures", str(failures))
+    root.set("errors", str(errors))
+    root.set("skipped", str(skipped))
+    ET.indent(root, space="  ")
+    payload = ET.tostring(root, encoding="unicode")
+    return '<?xml version="1.0" encoding="UTF-8"?>\n' + payload + "\n"
+
+
+def write_junit_xml(
+    result: RunResult,
+    path: str | Path,
+    *,
+    suite_name: str = JUNIT_SUITE_NAME,
+) -> None:
+    """Write a JUnit XML report without retaining raw probe text."""
+    Path(path).write_text(
+        run_result_to_junit_xml(result, suite_name=suite_name),
         encoding="utf-8",
     )

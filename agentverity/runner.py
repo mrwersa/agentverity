@@ -26,7 +26,7 @@ from __future__ import annotations
 import textwrap
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, Literal
 
 from agentverity.blindness import BlindnessResult
 from agentverity.blindness import score as blindness_score
@@ -52,6 +52,16 @@ from agentverity.relations import (
 )
 
 AgentFn = Callable[[str], Observation]
+RunStatus = Literal[
+    "incomplete",
+    "blind",
+    "vacuous",
+    "undecided",
+    "violations",
+    "stochastic",
+    "deterministic",
+    "unmeasured",
+]
 
 
 def _reject_duplicates(inputs: list[str]) -> None:
@@ -59,8 +69,8 @@ def _reject_duplicates(inputs: list[str]) -> None:
 
     Duplicates corrupt the skew scan whether or not calls are reused: the
     repeated input's verdict is counted once per copy, so the probe set
-    reports its own composition rather than the agent's behaviour. With
-    Repeating a *measurement* is what ``k`` is for. Repeating an *input* is a
+    reports its own composition rather than the agent's behaviour. Repeating
+    a *measurement* is what ``k`` is for. Repeating an *input* is a
     defect in the probe set.
 
     Raises:
@@ -248,6 +258,29 @@ class RunResult:
     def is_blind(self) -> bool:
         """True if the blindness detector determined the gate is near-constant."""
         return self.blindness is not None and self.blindness.blind
+
+    @property
+    def status(self) -> RunStatus:
+        """Canonical machine interpretation of the run.
+
+        Reporters and integrations should consume this property instead of
+        reconstructing precedence from the component results.
+        """
+        if not self.complete:
+            return "incomplete"
+        if self.is_blind:
+            return "blind"
+        if self.relation_results and not self.suite_is_meaningful:
+            return "vacuous"
+        if self.meter is not None and self.meter.call.startswith("undecided"):
+            return "undecided"
+        if any(relation.violated for relation in self.relation_results):
+            return "violations"
+        if self.is_stochastic:
+            return "stochastic"
+        if self.meter is not None:
+            return "deterministic"
+        return "unmeasured"
 
     @property
     def vacuous_relations(self) -> list[RelationResult]:

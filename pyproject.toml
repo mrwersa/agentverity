@@ -40,6 +40,7 @@ dependencies = []
 
 [project.optional-dependencies]
 strands = ["strands-agents>=1.0"]
+otel = ["opentelemetry-api>=1.27,<2"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -54,6 +55,7 @@ Homepage = "https://github.com/mrwersa/agentverity"
 Repository = "https://github.com/mrwersa/agentverity"
 Issues = "https://github.com/mrwersa/agentverity/issues"
 Changelog = "https://github.com/mrwersa/agentverity/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/mrwersa/agentverity#documentation"
 
 [tool.hatch.build.targets.wheel]
 packages = ["agentverity"]

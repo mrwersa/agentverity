@@ -1,191 +1,150 @@
 # agentverity
 
-> **Does your agent test suite actually test anything, or is it lying to you?**
+> **Can you trust this green agent test?**
 
 [![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
-[![Tests: 124](https://img.shields.io/badge/tests-124%20passing-brightgreen.svg)](#tests)
-[![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 
-**agentverity** is a measure-first testing framework for non-deterministic LLM agents. Before running any test relation, it answers two questions that ordinary pass-rate reports leave unresolved:
+AgentVerity is a pre-flight testing library for non-deterministic agents. It
+checks whether the verdict is stable across identical reruns and whether the
+probe set can move the decision at all. Then it tells you which test result is
+safe to trust.
 
-1. **Is the agent's verdict stable enough to test against?** (verdict-stochasticity meter)
-2. **Is the test suite trivially satisfied by an indifferent agent?** (constant-gate-blindness detector)
+It does not replace DeepEval, promptfoo, AgentCore Evaluations, or your quality
+metrics. It catches two conditions that can make their result misleading
+before you read the score.
 
-The meter recommends an oracle. The skew scan warns when green relation
-results may be vacuous. Neither substitutes for a correctness specification.
+![AgentVerity diagnoses a blind triage step and a stochastic supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
 
-![AgentVerity diagnoses two defects in a multi-agent bug-fix pipeline: a blind triage step and a stochastic supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
-
-*Generated from the executable
+*This report is regenerated from the executable
 [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py)
-example. The image is
-regenerated from its current results, not maintained by hand.*
+example and tested against
+its current results.*
 
----
-
-## Why does this exist?
-
-Testing LLM agents is hard because they are non-deterministic: the same input can produce different outputs on different runs. Existing frameworks handle this by running the agent N times and reporting pass rates with confidence intervals. That is necessary but not sufficient. It misses two failure modes:
-
-**Failure mode 1: the verdict is stable but you are using noise-tolerant tests.** If the agent's categorical decision (allow/block, safe/unsafe, tool A/tool B) never flips across reruns and a trusted reference is available, frozen-baseline diffing is the more sensitive change detector. Metamorphic violations are a subset of the verdict changes that diffing can expose. Relations still express useful requirements when no reference exists.
-
-**Failure mode 2: the agent is near-constant and your suite may pass vacuously.** If the agent returns the same verdict on 96% of a diverse input set, many relations can hold without exercising a decision boundary. That pass says little about whether the agent reasons correctly.
-
-agentverity detects both failure modes *before* running any test relation, and tells you which oracle to use.
-
----
-
-## How is this different from existing tools?
-
-| | [DeepEval](https://github.com/confident-ai/deepeval) | [promptfoo](https://github.com/promptfoo/promptfoo) | [CheckList](https://github.com/marcotcr/checklist) | [AgentAssay](https://arxiv.org/abs/2603.02601) | [agentrial](https://github.com/alepot55/agentrial) | **agentverity** |
-|---|---|---|---|---|---|---|
-| Repeated trials | Yes | Yes | No | Yes | Yes | **Yes** |
-| Uncertainty or calibration | Repeat scores | Repeat scores | No | Trial calibration | Wilson pass-rate CIs | **Wilson CI over disjoint verdict pairs** |
-| Verdict-layer oracle choice | No | No | No | No | No | **Yes** |
-| Probe-set skew warning | No | No | No | No | No | **Yes** |
-| Metamorphic relations | No | No | INV/DIR (owns it) | Yes | No | Yes (inherited) |
-| License | Apache-2.0 | MIT | MIT | AGPL | MIT | **Apache-2.0** |
-
-**What we borrowed (and from where):**
-- Metamorphic relations from [Chen et al. (1998)](https://arxiv.org/abs/2002.12543) and the [CheckList](https://aclanthology.org/2020.acl-main.442/)/[LLMORPH](https://github.com/steven-b-cho/llmorph) tradition — the escape from the oracle problem for non-deterministic systems.
-- Semantic-invariance transforms (normalisation, casing, whitespace) from [CheckList](https://github.com/marcotcr/checklist).
-- [Wilson confidence intervals](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Wilson_score_interval) from [AgentAssay](https://arxiv.org/abs/2603.02601) and [agentrial](https://github.com/alepot55/agentrial) — but we use them for a different purpose: certifying verdict stability across reruns, not pass-rate CIs.
-
-**The narrow gap agentverity fills:**
-
-1. **Verdict-layer oracle selection.** Existing tools can repeat cases, estimate pass rates, and mutate suites. agentverity asks a different question first: is the categorical decision stable enough that a frozen baseline is stronger than a metamorphic relation? The answer is tri-state rather than guessed from a few identical runs.
-
-2. **Constant-gate-blindness detector.** A gate that returns `"allow"` on 96% of a probe set can satisfy many invariance relations without exercising a boundary. agentverity measures that skew and flags the green report as potentially vacuous.
-
-3. **Evidence-gated snapshots.** AgentVerity refuses to freeze a reference
-unless the exact observation layer is deterministic at the configured
-epsilon, every call completed, the probes cross a decision boundary, and a
-human explicitly approves the outputs. Stability is necessary, but it does
-not make an answer correct.
-
-4. **Diagnostics before relations.** The primary output is not another pass rate. It is an oracle recommendation and a warning about whether the probe set can make the agent change its mind. Relation results come afterwards.
-
-Metamorphic relations are the vehicle. The diagnostics are the product.
-
----
-
-## Quickstart
-
-### Install
+## Try it
 
 ```bash
 pip install agentverity
 ```
 
-For Strands agent support:
-
-```bash
-pip install "agentverity[strands]"
-```
-
-The core has zero runtime dependencies and supports Python 3.10 to 3.14.
-
-### Use in Python
-
 ```python
-from agentverity import run, from_callable
+from agentverity import from_callable, run
 
-def my_gate(text: str) -> dict:
-    verdict = "block" if "secret" in text.lower() else "allow"
-    return {"text": f"decision: {verdict}", "verdict": verdict}
+def route(ticket: str) -> dict:
+    # Deliberate defect: the input is ignored.
+    return {"text": "route: general", "verdict": "general"}
 
-agent = from_callable(my_gate)
-result = run(agent, inputs=["hello", "a secret", "world", "foo"])
-print(result.summary())
+agent = from_callable(route)
+result = run(agent, inputs=[
+    "my card was charged twice",
+    "the app crashes on login",
+    "where is my refund",
+    "the checkout button is the wrong colour",
+])
+
+print(result.headline)
 ```
 
-Output (captured from an actual run, not hand-written):
-
-```
-============================================================
-agentverity — suite-quality report
-============================================================
-
-  TRUSTWORTHY - the verdict held across every identical
-  rerun and the probes cross a decision boundary. 2
-  relations tested nothing and are marked n/a.
-
-1. VERDICT-STOCHASTICITY METER
-   call:        verdict-deterministic
-   flip rate:   0.0% (0/76 pairs)
-   Wilson CI:   [0.000, 0.048] at epsilon=0.05
-   inputs:      4, repeats: 38, layer: verdict
-   advice:      verdict is stable: prefer frozen-baseline diffing when a trusted reference is available.
-
-2. CONSTANT-GATE-BLINDNESS DETECTOR
-   call:        ok
-   skew:        75.0% ('allow' on 4 inputs)
-   distinct:    2 verdicts
-
-3. ORACLE GUIDANCE
-   STABLE — prefer frozen-baseline diffing when a reference is available.
-
-4. RELATION RESULTS
-   relation                     type         held violated skipped errors    rate
-   ---------------------------- ----------- ----- -------- ------- ------ -------
-   normalisation-invariance     invariant       0        0       4      0     n/a
-   case-invariance              invariant       4        0       0      0    0.0%
-   whitespace-invariance        invariant       4        0       0      0    0.0%
-   tool-selection-invariance    invariant       0        0       4      0     n/a
-
-   NOT EXERCISED: normalisation-invariance, tool-selection-invariance.
-   The transform returned every input unchanged, so the agent was never
-   asked a different question. Rows marked n/a are not evidence of
-   anything. Add inputs the transform actually changes.
+```text
+NOT TRUSTWORTHY - the agent answered 'general' on 100% of the probes,
+so a pass says more about the probe set than about the agent.
 ```
 
-Three things in that report are the whole point of the library.
+The default `balanced` precision sizes the repeat count automatically. A
+default run answers rather than leaving a deterministic function as
+`undecided`.
 
-The first line is the answer. You should not have to assemble a verdict out of four numbered sections to learn whether your suite means anything.
-
-The repeat count was chosen for you. Certifying a flip rate takes more repeats than most people guess, so `k` is sized from the precision you asked for: 38 repeats here, 76 disjoint pairs, enough to clear a 5% threshold. Set `budget=` to cap the spend, `precision="cheap"` or `"strict"` to move the threshold, or `k=` to take the wheel.
-
-Two relations report `n/a` rather than a green `0.0%`. Their transform normalises accents and whitespace, and these four inputs are plain ASCII with ordinary spacing, so the follow-up string was byte-identical to the source every time. The agent was never asked a different question. Counting that as a pass would be exactly the vacuous green result the library exists to catch, so it is reported as skipped instead.
-
-For a complete supervisor-pattern example with both failure modes planted,
-run [`examples/bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py).
-
-### CLI
+From a repository checkout, the same example is directly runnable:
 
 ```bash
-agentverity run --agent mymod:build_agent --inputs seeds.txt
+python examples/support_router.py
+
+agentverity run \
+  --agent examples/support_router.py:build_agent \
+  --inputs examples/support_tickets.txt
 ```
 
-The `--agent` argument is a Python dotted path `module:func` to a callable that returns an agent function. The `--inputs` argument is a text file with one input per line.
+## What it catches
 
-Use diagnostics without relations, write a versioned JSON report, and process
-distinct inputs concurrently:
+| Condition | Why the green result is unsafe | AgentVerity's action |
+|---|---|---|
+| **Blind probes** | One verdict dominates, so relations can pass without crossing a decision boundary | Repair the probe set |
+| **Stochastic verdict** | Identical reruns disagree, so zero-tolerance checks confuse noise with regressions | Use repeated rates against measured noise |
+| **Stable, varied verdict** | The decision is suitable for a reviewed reference | Prefer an evidence-gated snapshot or targeted relations |
+| **Unexercised relation** | The transform returned the original input, so no test happened | Report `n/a`, never a false pass |
+
+The meter reports `deterministic`, `stochastic`, or `undecided` from a Wilson
+interval over disjoint repeat pairs. The skew scan separately checks whether
+varied inputs produce varied verdicts. Stability is not correctness, so
+snapshots still require explicit human approval.
+
+## Where it fits
+
+```text
+agent or workflow
+       |
+       v
+AgentVerity pre-flight ----> quality evaluator
+       |                    DeepEval / promptfoo / AgentCore Evaluations
+       |
+       +---- text for people
+       +---- JSON for code
+       +---- JUnit XML for CI
+       +---- OTEL span for CloudWatch / Phoenix / LangSmith
+```
+
+AgentVerity is deliberately small at this boundary. The core has no runtime
+dependencies, no hosted account, and no dashboard to adopt.
+
+### CI reporting
+
+Write a report that Jenkins, GitLab, Azure DevOps, and JUnit collectors already
+understand:
 
 ```bash
 agentverity run \
-  --agent mymod:build_agent \
-  --inputs seeds.txt \
-  --no-relations \
-  --format json \
-  --output report.json \
-  --max-workers 8 \
-  --progress
+  --agent examples/support_router.py:build_agent \
+  --inputs examples/support_tickets.txt \
+  --format junit \
+  --output agentverity.xml
 ```
 
-Concurrency is opt-in. AgentVerity parallelises distinct inputs only and keeps
-repeated calls for one input sequential. Leave `--max-workers 1` for stateful
-or non-thread-safe agents. `--error-policy record` retains failures as
-incomplete evidence instead of turning them into verdicts.
+Exit codes and JUnit carry the same interpretation:
 
-Exit codes are `0` for clean, `1` for blind, violated, or changed behaviour,
-and `2` for incomplete or unsupported evidence.
+- `0`: interpretable evidence and no relation violation
+- `1`: blind or vacuous probes, a relation violation, or snapshot drift
+- `2`: incomplete, undecided, or unsupported evidence
 
-### Evidence-gated snapshots
+### Monitoring
 
-Create a baseline only after reviewing the current outputs:
+Use the host application's OpenTelemetry pipeline:
+
+```bash
+pip install "agentverity[otel]"
+```
+
+```python
+from agentverity import record_otel_run
+
+result = run(agent, inputs=canary_probes)
+record_otel_run(result)
+```
+
+The summary span contains low-cardinality `agentverity.*` attributes. It
+excludes prompts, outputs, fingerprints, relation names, and exception
+messages. OTLP can carry the span into Amazon Bedrock AgentCore Observability
+and CloudWatch, Phoenix, LangSmith, or another collector.
+
+Run this in CI, before deployment, or as a scheduled canary. AgentVerity is not
+an online evaluator and should not repeat every customer request.
+
+[Integration examples and the AgentCore validation plan](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
+
+## Evidence-gated snapshots
+
+Create a baseline only after reviewing the outputs:
 
 ```bash
 agentverity snapshot \
@@ -195,38 +154,9 @@ agentverity snapshot \
   --accept-reference
 ```
 
-AgentVerity refuses this command when the meter is stochastic or undecided,
-the probe set is blind, any call failed, or approval is absent. The snapshot
-stores SHA-256 input fingerprints rather than raw prompts.
-
-#### What certification costs
-
-Defaults size the repeats for you, so this normally just works. The numbers
-matter when you are picking a precision or capping a budget. Certifying
-determinism means driving the Wilson upper bound below epsilon, which takes
-more repeats than most people guess. Even with zero observed flips:
-
-| precision | epsilon | pairs needed | 20 inputs | agent calls |
-|---|---:|---:|---:|---:|
-| `strict` | 0.01 | 381 | k=40 | 800 |
-| | 0.02 | 189 | k=20 | 400 |
-| `balanced` (default) | 0.05 | 73 | k=8 | 160 |
-| `cheap` | 0.10 | 35 | k=4 | 80 |
-
-Each input contributes `floor(k / 2)` pairs, so pairs come from inputs and
-repeats together and you can trade one against the other. On a paid model the
-gap between `cheap` and `strict` is 80 calls against 800, which is why the
-default is `balanced` rather than the tightest available. Cap the spend with
-`--budget`, and a run that still cannot decide says exactly how far short it
-fell.
-
-`pairs_for_deterministic_call(epsilon)` returns these numbers if you want to
-budget in code. Pass `flip_rate=` to account for flips already seen, and note
-it returns `None` when the observed rate has already met epsilon, because more
-pairs cannot rescue that case.
-
-`agentverity snapshot` refuses an impossible configuration *before* running the
-agent, so a probe set that mathematically cannot reach the bound costs nothing.
+AgentVerity refuses to freeze a reference if calls failed, the verdict remains
+undecided or stochastic, the probes are blind, or approval is absent. It also
+rejects a mathematically impossible `k` before spending model calls.
 
 Check the same approved cases later:
 
@@ -237,262 +167,108 @@ agentverity check \
   --snapshot baseline.json
 ```
 
-The check first re-runs the admission diagnostics. It compares outputs only if
-the current evidence still supports snapshot testing.
+Current evidence must pass the same admission checks before differences are
+reported as regressions. Snapshot files store SHA-256 input fingerprints
+rather than raw prompts.
 
-### Strands adapter
+## Observation layers
 
-```python
-from strands import Agent
-from agentverity.adapters.strands import from_strands
-from agentverity import run
-
-strands_agent = Agent(model="...", system_prompt="you are a gate")
-agent = from_strands(strands_agent)
-result = run(agent, inputs=["should I share this?", "is this safe?"])
-print(result.summary())
-```
-
-The Strands adapter extracts the final response text, structured-output verdict (if any), and the ordered tool-call sequence from the agent's message content blocks. The adapter is an optional import — the core installs without `strands-agents`.
-
-### Custom relations
+Every call becomes one `Observation`:
 
 ```python
-from agentverity import run, from_callable, Relation
+from agentverity import Observation
 
-my_relation = Relation(
-    name="escalation-monotone",
-    rtype="monotone",
-    transform=lambda s: s + " URGENT",
-    check=lambda src, fol: (
-        {"allow": 0, "review": 1, "block": 2}[src.verdict]
-        <= {"allow": 0, "review": 1, "block": 2}[fol.verdict]
-    ),
+Observation(
+    text="Escalating this case",
+    verdict="escalate",
+    tools=("lookup_order", "create_case"),
 )
-
-result = run(agent, inputs=my_inputs, relations=[my_relation])
 ```
 
-Relations are typed `INVARIANT`, `MONOTONE`, or `DIRECTIONAL` because equality checks are often more noise-sensitive than ordered or one-sided checks. The type is reported so you can interpret violations against the meter rather than treating every relation as equally reliable.
+Measure the layer the test protects:
 
----
+- `verdict` for routing, policy, and categorical decisions
+- `tools` for the ordered tool trajectory
+- `text` when wording itself is the contract
 
-## API surface
+Token variation does not have to become verdict instability, and a stable
+answer can still hide a changed tool path.
+
+## Configuration
+
+Most runs need two knobs:
 
 ```python
-from agentverity import (
-    run,                # main entry: run(agent, inputs, relations=..., config=...) -> RunResult
-    from_callable,      # adapter: wrap fn(input)->str|dict|Observation
-    measure,            # meter only: measure(agent, inputs, k=5, ...) -> MeterResult
-    detect,             # blindness only: detect(agent, inputs, threshold=0.9) -> BlindnessResult
-    Observation,        # dataclass: text, verdict, tools, raw
-    Relation,           # dataclass: name, rtype, transform, check
-    builtin_relations, # normalisation, case, whitespace, tool-selection
-    RunConfig,          # diagnostics, bounded concurrency, and error policy
-    create_snapshot,    # admit a reviewed baseline only when evidence supports it
-    compare_snapshot,   # re-admit current evidence, then compare
-    run_result_to_dict, # versioned JSON report without raw input text
-    pairs_for_deterministic_call,  # budget the snapshot gate before spending calls
-    plan_repeats,       # the k a precision needs for a given probe set
+from agentverity import RunConfig
+
+config = RunConfig(
+    precision="balanced",  # cheap=10%, balanced=5%, strict=1%
+    budget=None,           # optional cap on meter calls
+    max_workers=4,         # distinct inputs only
+    error_policy="record",
 )
-
-from agentverity.adapters.strands import from_strands  # optional, needs strands-agents
 ```
 
-### `RunResult`
+`k=` and `epsilon=` remain exact overrides. Repeated calls for one input stay
+sequential, while distinct inputs can run concurrently. Recorded provider
+failures mark evidence incomplete and never become passing verdicts.
 
-The return of `run()` carries the full diagnostic picture:
+## Examples
 
-| Property | Type | Description |
-|---|---|---|
-| `result.meter` | `MeterResult \| None` | Verdict-stochasticity meter result |
-| `result.blindness` | `BlindnessResult \| None` | Constant-gate-blindness result |
-| `result.relation_results` | `list[RelationResult]` | Per-relation held/violated/skipped counts |
-| `result.complete` | `bool` | False when any requested call or check failed |
-| `result.errors` | `tuple[RunError, ...]` | Structured failures retained under the record policy |
-| `result.is_stochastic` | `bool` | True if meter says verdict-stochastic |
-| `result.is_blind` | `bool` | True if blindness detector fires |
-| `result.vacuous_relations` | `list[RelationResult]` | Relations whose transform never changed any input |
-| `result.suite_is_meaningful` | `bool` | False when a blindness warning, or a catalogue that never changed an input, makes green relation results vacuous |
-| `result.summary()` | `str` | Human-readable report, diagnostics-first |
+- [`support_router.py`](https://github.com/mrwersa/agentverity/blob/main/examples/support_router.py): the smallest blind-agent example
+- [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py): blind triage plus a stochastic supervisor
+- [`strands_example.py`](https://github.com/mrwersa/agentverity/blob/main/examples/strands_example.py): optional Strands adapter
+- [`otel_monitoring.py`](https://github.com/mrwersa/agentverity/blob/main/examples/otel_monitoring.py): one diagnostic span through OTEL
 
-### `RelationResult`
+For Strands:
 
-| Property | Description |
-|---|---|
-| `.total` | Number of inputs the relation was offered |
-| `.held`, `.violated` | Outcomes over *exercised* pairs only |
-| `.skipped` | Inputs where the transform returned the input unchanged |
-| `.exercised` | `held + violated`, the pairs that genuinely tested something |
-| `.violation_rate` | Violations over exercised pairs, or `None` if nothing ran |
-| `.is_vacuous` | True when the transform was the identity on every input |
-
-### `MeterResult`
-
-| Property | Description |
-|---|---|
-| `.flip_rate` | Observed flip rate over independent, disjoint repeat pairs |
-| `.ci_low`, `.ci_high` | Wilson CI bounds |
-| `.call` | `"verdict-stochastic"` / `"verdict-deterministic"` / `"undecided"` |
-| `.advice` | Human-readable recommendation |
-
----
-
-## Architecture
-
-```mermaid
-flowchart TD
-    Agent["Your agent<br/>(Strands · LangGraph · any callable)"]
-    Adapter["adapter<br/>normalise to Observation"]
-    Obs["Observation<br/>text · verdict · tools · raw"]
-
-    Agent --> Adapter --> Obs
-
-    subgraph Core["agentverity.core — runner.py orchestrates diagnostics before relations"]
-        direction TB
-        Meter["1 · meter.py<br/>verdict-stochasticity meter<br/><b>headline diagnostic</b>"]
-        Blind["2 · blindness.py<br/>constant-gate-blindness detector<br/><b>headline diagnostic</b>"]
-        Rel["3 · relations.py<br/>typed metamorphic relations<br/>the vehicle, not the innovation"]
-        Meter --> Blind --> Rel
-    end
-
-    Obs --> Meter
-    Rel --> Result["RunResult<br/>text or versioned JSON"]
-    Result --> Gate{"evidence supports<br/>a snapshot?"}
-    Gate -->|yes + human approval| Snapshot["approved snapshot"]
-    Gate -->|no| Refuse["refuse to freeze"]
-
-    style Meter fill:#e8f4fd,stroke:#0056b3,stroke-width:2px
-    style Blind fill:#e8f4fd,stroke:#0056b3,stroke-width:2px
-    style Rel fill:#f5f5f5,stroke:#888
+```bash
+pip install "agentverity[strands]"
 ```
 
-`cli.py` exposes the same flow through `run`, `snapshot`, and `check`.
+Plain LangGraph, remote APIs, and other frameworks can use `from_callable` by
+returning an `Observation` from their invocation wrapper.
 
-### Three layers of `Observation`
+## Scope
 
-Every agent call produces an `Observation` with four fields:
+AgentVerity is:
 
-| Field | Description |
-|---|---|
-| `text` | The agent's final response string (always present) |
-| `verdict` | An optional extracted categorical decision (`"allow"`/`"block"`, `"safe"`/`"unsafe"`) |
-| `tools` | The ordered tool names the agent called (its trajectory) |
-| `raw` | The underlying result object, for custom relations |
+- a pre-flight check for the evidence behind an agent test
+- an evidence gate for reviewed snapshots
+- a small CI and telemetry citizen
 
-The meter and relations can assert on any layer: `verdict` (default), `text`, or `tools`. This lets you measure stochasticity at the layer that matters — the verdict level, not the token level.
+It is not:
 
----
+- a correctness oracle or LLM judge
+- a benchmark or leaderboard
+- a trace store, dashboard, or production monitoring service
+- a claim that metamorphic relations or Wilson intervals are new
 
-## Built-in relations
+The distinctive part is their ordering: measure verdict stability and probe
+coverage before interpreting the ordinary test result.
 
-| Name | Type | What it checks |
-|---|---|---|
-| `normalisation-invariance` | invariant | Accent stripping and whitespace normalisation must not change the verdict |
-| `case-invariance` | invariant | Inverting letter case must not change the verdict |
-| `whitespace-invariance` | invariant | Leading newline and trailing spaces must not change the verdict |
-| `tool-selection-invariance` | invariant | Normalising the request must not change which tool the agent calls |
+## Documentation
 
-The first three follow the CheckList/LLMORPH tradition and apply to any text-in/text-out system. The fourth is agent-native: it asserts over the tool trajectory, not the text, and is the relation that makes agentverity an agent framework rather than an NLP model framework.
+- [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
+- [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
+- [Design decisions](https://github.com/mrwersa/agentverity/blob/main/DESIGN.md)
+- [Security and data handling](https://github.com/mrwersa/agentverity/blob/main/SECURITY.md)
+- [Contributing](https://github.com/mrwersa/agentverity/blob/main/CONTRIBUTING.md)
+- [Release process](https://github.com/mrwersa/agentverity/blob/main/RELEASING.md)
 
-**A transform can be a no-op on your inputs.** Normalisation strips accents and
-collapses whitespace, so on plain ASCII with ordinary spacing it returns the
-input unchanged. The two relations built on it then have no metamorphic pair to
-test. agentverity counts those inputs as `skipped`, reports the rate as `n/a`,
-and names the relation under `NOT EXERCISED`, rather than recording a pass the
-agent never earned. Feed the probe set inputs the transform actually changes,
-or write a relation whose transform bites on your domain.
-
----
-
-## How it works
-
-### 1. Meter (headline #1)
-
-The meter calls the agent `k` times on each unchanged input and compares consecutive outputs in disjoint pairs. A Wilson confidence interval on those independent pair outcomes determines a tri-state call. It deliberately avoids treating all combinations among the same repeated calls as independent evidence.
-
-- **`verdict-stochastic`** — the CI lower bound is above epsilon. The verdict varies. Use noise-robust relations and compare violations to a measured baseline, not zero.
-- **`verdict-deterministic`** — the CI upper bound is below epsilon. The verdict is stable. Prefer frozen-baseline diffing when a trusted reference is available.
-- **`undecided`** — the interval straddles epsilon. Not enough evidence. Raise `k` or input count.
-
-The meter refuses to call an underpowered probe "deterministic" — a bare `deterministic` would conflate real stability with a too-small sample.
-
-### 2. Blindness detector (headline #2)
-
-The detector calls the agent once on each input and measures the verdict distribution. If a single verdict accounts for at least `threshold` (default 90%) of inputs, the gate is flagged as blind. This does not prove the agent is wrong. It warns that many relation passes may be vacuous because the probe set rarely exercises a decision boundary.
-
-### 3. Relations (the vehicle)
-
-Relations run source and follow-up inputs through the agent and check whether a structural law holds between the two outputs. When the meter calls the verdict stochastic, the report tells you to establish an unchanged-input noise baseline before treating a non-zero violation rate as a regression. Baseline estimation is not automated in this release.
-
-An input whose transform returns it unchanged is skipped rather than tested. Re-asking the agent a byte-identical question measures rerun stability, which is the meter's job, and scoring it as a relation pass would inflate a green report.
-
-### 4. Snapshot admission
-
-A stable verdict is not necessarily a correct verdict. Snapshot creation
-therefore requires both statistical evidence and explicit reference approval.
-Checking is symmetric: current evidence must still be complete,
-deterministic-at-epsilon, and non-blind before output differences are treated
-as regressions.
-
-### Agent calls per run
-
-Agent calls dominate the cost of a real run, so every phase reuses what the
-meter already drew. With `n` inputs, `k` repeats, and `r` relations whose
-transform actually changes the input:
-
-```
-n * (k + r)     with reuse (the default)
-n * (k + 1 + 2r) without it
-```
-
-The meter's first draw per input serves as the blindness scan's sample and as
-the source side of every relation. On the four-input Quickstart above that is
-28 calls instead of 40. Set `RunConfig(reuse_unchanged_calls=False)` to give
-each phase an independent draw.
-
-Set `max_workers` to overlap work across distinct inputs. AgentVerity never
-overlaps repeated calls for the same input, preserving the order of each
-meter series and avoiding concurrent re-entry on one probe.
-
-### Data handling
-
-Machine reports and snapshots identify prompts by SHA-256 fingerprint rather
-than storing their raw text. This avoids plaintext retention but does not
-hide low-entropy prompts from dictionary guessing. Snapshot outputs are
-retained because they are the approved reference, and exception messages are
-retained to diagnose failed providers. Treat both files as potentially
-sensitive when the observation layer is `text` or provider errors echo
-request data.
-
----
-
-## Tests
-
-124 tests, all passing.
+## Development
 
 ```bash
 pip install -e ".[dev]"
-python -m pytest tests/ -v
+python -m pytest -q
 ruff check .
 ```
 
-Coverage includes observation construction, Wilson intervals, independent-pair
-meter detection, blindness, relation execution, bounded concurrency, partial
-failures, versioned reports, snapshot admission and drift, both adapters, the
-CLI, and README image generation.
+CI covers Python 3.10 through 3.14, lint, package construction, and the
+generated README diagnostic.
 
----
+## Status and licence
 
-## Status
+Alpha. Public APIs may change before 1.0.
 
-Alpha. Public APIs may change before 1.0. The Strands adapter is verified.
-Pytest helpers, JUnit output, noise calibration, and a LangGraph adapter are
-planned.
-
-## License
-
-[Apache-2.0](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
-
-Contributions are welcome through the branch-and-pull-request workflow in
-[CONTRIBUTING.md](https://github.com/mrwersa/agentverity/blob/main/CONTRIBUTING.md).
+Apache-2.0. Contributions are welcome through the pull-request workflow.

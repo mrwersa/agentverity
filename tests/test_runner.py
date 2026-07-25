@@ -67,8 +67,13 @@ class TestRunStochastic:
             return {"text": v, "verdict": v}
 
         agent = from_callable(fn)
-        result = run(agent, ["hello", "world", "foo", "bar", "a secret"])
+        result = run(
+            agent,
+            ["hello", "world", "foo", "bar", "a secret"],
+            relations=[],
+        )
         assert result.suite_is_meaningful is True
+        assert result.status == "stochastic"
 
     def test_undecided_nonblind_gate_is_not_vacuous(self):
         """Undecided is now something you opt into, not the default outcome.
@@ -81,6 +86,7 @@ class TestRunStochastic:
         assert result.meter is not None
         assert result.meter.call.startswith("undecided")
         assert result.suite_is_meaningful is True
+        assert result.status == "undecided"
 
     def test_defaults_reach_a_decision_on_a_deterministic_agent(self):
         """The regression this release exists to prevent.
@@ -105,6 +111,7 @@ class TestRunBlind:
         assert result.blindness is not None
         assert result.is_blind is True
         assert result.suite_is_meaningful is False
+        assert result.status == "blind"
 
     def test_constant_gate_relations_all_hold_trivially(self):
         """All relations hold on a constant gate — but trivially (blindness warns)."""

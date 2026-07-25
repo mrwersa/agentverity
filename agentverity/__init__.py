@@ -40,7 +40,14 @@ from agentverity.meter import (
 )
 from agentverity.observation import Observation
 from agentverity.relations import Relation, builtin_relations
-from agentverity.reporting import RUN_SCHEMA, run_result_to_dict, write_run_json
+from agentverity.reporting import (
+    JUNIT_SUITE_NAME,
+    RUN_SCHEMA,
+    run_result_to_dict,
+    run_result_to_junit_xml,
+    write_junit_xml,
+    write_run_json,
+)
 from agentverity.runner import RelationResult, RunConfig, RunResult, run
 from agentverity.snapshot import (
     SNAPSHOT_SCHEMA,
@@ -55,11 +62,18 @@ from agentverity.snapshot import (
     load_snapshot,
     save_snapshot,
 )
+from agentverity.telemetry import (
+    TELEMETRY_SCHEMA,
+    record_otel_run,
+    run_result_to_otel_attributes,
+)
 
 __all__ = [
+    "JUNIT_SUITE_NAME",
     "PRECISION_LEVELS",
     "RUN_SCHEMA",
     "SNAPSHOT_SCHEMA",
+    "TELEMETRY_SCHEMA",
     "BlindnessResult",
     "MeterResult",
     "Observation",
@@ -85,9 +99,13 @@ __all__ = [
     "measure",
     "pairs_for_deterministic_call",
     "plan_repeats",
+    "record_otel_run",
     "run",
     "run_result_to_dict",
+    "run_result_to_junit_xml",
+    "run_result_to_otel_attributes",
     "save_snapshot",
+    "write_junit_xml",
     "write_run_json",
 ]
 
