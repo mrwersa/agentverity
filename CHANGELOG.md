@@ -230,7 +230,7 @@ documentation claims that did not match the code.
   inputs, so inputs the transform left untouched no longer dilute it.
 - A run reuses the meter's first draw per input for the blindness scan and for
   each relation's source side. Agent calls drop from `n * (k + 1 + 2r)` to
-  `n * (k + r)`, halving them on the default configuration.
+  `n * (k + r)`, removing one unchanged source call per relation.
 
 ### Fixed
 

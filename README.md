@@ -13,8 +13,8 @@ probe set can move the decision at all. Then it tells you which test result is
 safe to trust.
 
 It does not replace DeepEval, promptfoo, AgentCore Evaluations, or your quality
-metrics. It catches two conditions that can make their result misleading
-before you read the score.
+metrics. It checks two conditions that can make those scores misleading before
+you trust them.
 
 ![AgentVerity diagnoses a blind triage step and a stochastic supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
 
@@ -90,7 +90,20 @@ example runs the same router against two probe sets:
 python examples/payment_dispute_gate.py
 ```
 
-```
+| Probe set | Exact-match | Verdict stability | Probe coverage | Baseline |
+|---|---|---|---|---|
+| Narrow, 6 duplicate-charge cases | ✅ 6/6 | ✅ verdict-deterministic | ❌ blind, 1 route | ❌ REFUSED |
+| Repaired, 6 dispute categories | ✅ 6/6 | ✅ verdict-deterministic | ✅ 6 routes | ✅ ADMITTED |
+
+Both sets score 6/6 against their expected routes. The narrow set produces one
+verdict, so snapshot creation is refused. The repaired set crosses six routing
+categories and is admitted. The evaluator remains green while the evidence
+gate distinguishes a focused unit test from a system-wide baseline.
+
+<details>
+<summary>See the exact terminal output</summary>
+
+```text
 PAYMENT-DISPUTE ROUTER: THE EVIDENCE GATE
 ==========================================
 
@@ -109,19 +122,12 @@ AgentVerity: TRUSTWORTHY - the verdict held across every identical rerun and the
 Baseline: ADMITTED - evidence is complete, stable, and non-blind
 ```
 
-| Probe set | Exact-match | Verdict stability | Probe coverage | Baseline |
-|---|---|---|---|---|
-| Narrow, 6 duplicate-charge cases | ✅ 6/6 | ✅ verdict-deterministic | ❌ blind, 1 route | ❌ REFUSED |
-| Repaired, 6 dispute categories | ✅ 6/6 | ✅ verdict-deterministic | ✅ 6 routes | ✅ ADMITTED |
+</details>
 
-Both sets score 6/6 against their expected routes. The narrow set produces one
-verdict, so snapshot creation is refused. The repaired set crosses six routing
-categories and is admitted. The evaluator remains green while the evidence
-gate distinguishes a focused unit test from a system-wide baseline.
-
-The repository's manually triggered **Evidence gate demo** workflow renders
-both JUnit reports in its GitHub Actions run summary. No AgentVerity account or
-dashboard is involved.
+The repository's manually triggered
+[**Evidence gate demo**](https://github.com/mrwersa/agentverity/actions/workflows/evidence-gate-demo.yml)
+workflow renders both JUnit reports in its GitHub Actions summary. No
+AgentVerity account or dashboard is involved.
 
 Create a reviewed reference through the CLI:
 
