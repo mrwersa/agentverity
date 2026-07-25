@@ -275,6 +275,27 @@ reproducible.
 [Run or deploy the production-stack showcase](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
 [Read the measured canary result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
 
+## Multi-agent systems
+
+Point `run()` at whatever you want to hold to account. That choice mirrors the
+split enterprise platforms already use between
+[system and process evaluation](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators):
+
+- **System level.** Wrap the whole pipeline. You learn whether the end-to-end
+  decision is stable and whether the inputs move it.
+- **Step level.** Wrap one agent inside the pipeline. You learn the same two
+  things about that step alone.
+
+Run both and the answers can disagree, which is the useful part.
+[`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py)
+measures a triage step and its supervisor separately: the pipeline's decision
+is unstable while the triage step inside it is perfectly stable and completely
+blind. A system-level score alone would have shown neither.
+
+Set `layer="tools"` to hold the ordered tool trajectory to account instead of
+the final decision, which is how a handoff changes shape without the answer
+changing.
+
 ## Observation layers
 
 Every call becomes one `Observation`:
@@ -321,12 +342,16 @@ become passing verdicts.
 
 ## Examples
 
-- [`support_router.py`](https://github.com/mrwersa/agentverity/blob/main/examples/support_router.py): the smallest blind-agent example
-- [`payment_dispute_gate.py`](https://github.com/mrwersa/agentverity/blob/main/examples/payment_dispute_gate.py): a green evaluator whose narrow baseline is refused, then admitted after its test inputs are widened
-- [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py): blind triage plus a stochastic supervisor
-- [`strands_example.py`](https://github.com/mrwersa/agentverity/blob/main/examples/strands_example.py): optional Strands adapter
-- [`production_stack/`](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack): live Strands, Bedrock, DeepEval, AgentCore, OTEL, and CI integration
-- [`otel_monitoring.py`](https://github.com/mrwersa/agentverity/blob/main/examples/otel_monitoring.py): one diagnostic span through OTEL
+Each one belongs to a phase in [Where it runs](#where-it-runs).
+
+| Example | Phase | What it shows |
+|---|---|---|
+| [`support_router.py`](https://github.com/mrwersa/agentverity/blob/main/examples/support_router.py) | Experimentation | The smallest blind agent, no credentials |
+| [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py) | Experimentation | One step and a whole pipeline, measured separately |
+| [`payment_dispute_gate.py`](https://github.com/mrwersa/agentverity/blob/main/examples/payment_dispute_gate.py) | Release gate | A green evaluator whose narrow baseline is refused, then admitted once the inputs widen |
+| [`production_stack/`](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) | Release gate and nightly canary | The same gate on live Strands, Bedrock, AgentCore, DeepEval, and CI |
+| [`otel_monitoring.py`](https://github.com/mrwersa/agentverity/blob/main/examples/otel_monitoring.py) | Operational steady state | One diagnostic span through OTEL |
+| [`strands_example.py`](https://github.com/mrwersa/agentverity/blob/main/examples/strands_example.py) | Any | The optional Strands adapter |
 
 For Strands:
 

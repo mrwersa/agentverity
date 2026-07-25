@@ -36,13 +36,13 @@ def _panel(
             f'rx="5" class="{badge_class}"/>'
         ),
         _text(x + 411, 230, badge, css="badge"),
-        _text(x + 32, 285, "VERDICT METER", css="label"),
+        _text(x + 32, 285, "DECISION STABILITY", css="label"),
         _text(x + 32, 316, meter, css="value"),
-        _text(x + 32, 360, "PAIRWISE FLIP RATE", css="label"),
+        _text(x + 32, 360, "REPEAT DISAGREEMENT", css="label"),
         _text(x + 32, 391, flip_rate, css="value"),
-        _text(x + 270, 360, "VERDICT SKEW", css="label"),
+        _text(x + 270, 360, "DECISION COVERAGE", css="label"),
         _text(x + 270, 391, skew, css="value"),
-        _text(x + 32, 447, "TEST DECISION", css="label"),
+        _text(x + 32, 447, "WHAT TO DO", css="label"),
         _text(x + 32, 480, oracle, css="decision"),
         f'<line x1="{x + 32}" y1="512" x2="{x + 488}" y2="512" class="rule"/>',
         _text(x + 32, 548, "NEXT ACTION", css="label"),
@@ -90,9 +90,9 @@ def render(output: Path = DEFAULT_OUTPUT) -> str:
 <rect x="364" y="114" width="226" height="52" rx="6" class="route"/>
 <rect x="674" y="114" width="226" height="52" rx="6" class="route"/>
 <rect x="984" y="114" width="162" height="52" rx="6" class="route"/>
-{_text(167, 147, "REPEAT VERDICTS", css="routeText")}
-{_text(477, 147, "SCAN FOR SKEW", css="routeText")}
-{_text(787, 147, "CHOOSE TEST", css="routeText")}
+{_text(167, 147, "REPEAT EACH CASE", css="routeText")}
+{_text(477, 147, "VARY THE INPUTS", css="routeText")}
+{_text(787, 147, "THEN SCORE IT", css="routeText")}
 {_text(1065, 147, "TEST", css="routeText")}
 <line x1="298" y1="140" x2="338" y2="140" class="flow"/>
 <path d="M 338 135 L 348 140 L 338 145 z" fill="#64748b"/>
@@ -112,8 +112,8 @@ def render(output: Path = DEFAULT_OUTPUT) -> str:
         f"{triage.meter.flip_rate:.1%} "
         f"({triage.meter.pair_flips}/{triage.meter.pair_trials})"
     ),
-    skew=f"{triage.blindness.skew:.1%} · one verdict",
-    oracle="Do not trust green relations",
+    skew=f"{triage.blindness.skew:.1%} · one decision",
+    oracle="A green score proves little here",
     action="Vary test inputs before adding checks",
 )}
 {_panel(
@@ -126,8 +126,8 @@ def render(output: Path = DEFAULT_OUTPUT) -> str:
         f"{pipeline.meter.flip_rate:.1%} "
         f"({pipeline.meter.pair_flips}/{pipeline.meter.pair_trials})"
     ),
-    skew=f"{pipeline.blindness.skew:.1%} · two verdicts",
-    oracle="Use noise-robust relations",
+    skew=f"{pipeline.blindness.skew:.1%} · two decisions",
+    oracle="Read scores against measured noise",
     action="Calibrate against unchanged-input noise",
 )}
 {_text(54, 636, "Generated from examples/bugfix_pipeline.py · seed 1 · six bug reports", css="footer")}
