@@ -40,3 +40,16 @@ class TestPublicAPI:
         import agentverity
 
         assert agentverity.__version__ == version("agentverity")
+
+
+def test_py_typed_marker_is_shipped():
+    """PEP 561: without this file, type checkers ignore our annotations.
+
+    The package is fully annotated, but a consuming project's mypy or pyright
+    silently treats an unmarked package as untyped, so the annotations would
+    do nothing outside this repository.
+    """
+    import importlib.resources
+
+    marker = importlib.resources.files("agentverity") / "py.typed"
+    assert marker.is_file(), "agentverity/py.typed is missing from the package"

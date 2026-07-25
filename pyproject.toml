@@ -54,9 +54,13 @@ agentverity = "agentverity.cli:main"
 Homepage = "https://github.com/mrwersa/agentverity"
 Repository = "https://github.com/mrwersa/agentverity"
 Issues = "https://github.com/mrwersa/agentverity/issues"
+Changelog = "https://github.com/mrwersa/agentverity/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["agentverity"]
+# PEP 561: ship the marker so type checkers in consuming projects actually
+# read the annotations instead of treating the package as untyped.
+artifacts = ["agentverity/py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

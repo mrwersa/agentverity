@@ -4,7 +4,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 [![Tests: 85](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg)](#tests)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 
@@ -132,7 +132,7 @@ The meter says `undecided`, not `verdict-deterministic`, even though `my_gate` i
 Two relations report `n/a` rather than a green `0.0%`. Their transform normalises accents and whitespace, and these four inputs are plain ASCII with ordinary spacing, so the follow-up string was byte-identical to the source every time. The agent was never asked a different question. Counting that as a pass would be exactly the vacuous green result the library exists to catch, so it is reported as skipped instead.
 
 For a complete supervisor-pattern example with both failure modes planted,
-run [`examples/bugfix_pipeline.py`](examples/bugfix_pipeline.py).
+run [`examples/bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py).
 
 ### CLI
 
@@ -361,7 +361,7 @@ a LangGraph adapter is planned.
 
 ## License
 
-[Apache-2.0](LICENSE)
+[Apache-2.0](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
 Contributions are welcome through the branch-and-pull-request workflow in
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](https://github.com/mrwersa/agentverity/blob/main/CONTRIBUTING.md).
