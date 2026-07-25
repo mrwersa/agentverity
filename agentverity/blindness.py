@@ -109,12 +109,46 @@ def detect(
         raise ValueError("inputs must not be empty")
     if not 0 < threshold <= 1:
         raise ValueError("threshold must be between 0 and 1")
-    verdicts = [_hashable(agent(x).key(layer)) for x in inputs]
+    return score([agent(x) for x in inputs], layer=layer, threshold=threshold)
+
+
+def score(
+    observations: Iterable[Observation],
+    *,
+    layer: str = "verdict",
+    threshold: float = 0.9,
+) -> BlindnessResult:
+    """Score already-collected observations for verdict skew.
+
+    :func:`detect` calls the agent and then delegates here. Call this directly
+    when the observations were gathered by an earlier phase, so a probe set does
+    not have to be re-run purely to count its verdict distribution.
+
+    Args:
+        observations: One :class:`Observation` per input, already collected.
+        layer: Which ``Observation`` layer to measure (``"verdict"``,
+            ``"text"``, or ``"tools"``).
+        threshold: The skew share (0–1) above which the gate is considered
+            blind (default 0.9, i.e. 90%).
+
+    Returns:
+        A :class:`BlindnessResult` with the skew, distinct-verdict count,
+        and blind flag.
+
+    Raises:
+        ValueError: If observations is empty or threshold is outside ``(0, 1]``.
+    """
+    observations = list(observations)
+    if not observations:
+        raise ValueError("observations must not be empty")
+    if not 0 < threshold <= 1:
+        raise ValueError("threshold must be between 0 and 1")
+    verdicts = [_hashable(obs.key(layer)) for obs in observations]
     c = Counter(verdicts)
     top, top_n = c.most_common(1)[0]
     n = len(verdicts)
     return BlindnessResult(
-        inputs=len(inputs),
+        inputs=n,
         layer=layer,
         majority_verdict=top,
         skew=top_n / n,

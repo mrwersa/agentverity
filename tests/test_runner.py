@@ -162,3 +162,134 @@ class TestSummary:
         s = result.summary()
         assert "BLIND" in s
         assert "vacuous" in s.lower()
+
+
+class TestIdentityTransformsAreNotCountedAsPasses:
+    """A transform that returns its input unchanged tests nothing."""
+
+    @staticmethod
+    def _ascii_agent():
+        def fn(x: str) -> dict:
+            return {"text": x, "verdict": "allow"}
+        return from_callable(fn)
+
+    def test_noop_relation_is_skipped_not_held(self):
+        """normalisation-invariance is the identity on plain ASCII input."""
+        result = run(self._ascii_agent(), ["alpha", "beta", "gamma"])
+        by_name = {rr.relation.name: rr for rr in result.relation_results}
+        norm = by_name["normalisation-invariance"]
+        assert norm.skipped == 3
+        assert norm.held == 0
+        assert norm.violated == 0
+        assert norm.exercised == 0
+        assert norm.is_vacuous is True
+
+    def test_real_transform_is_exercised(self):
+        """case-invariance genuinely changes plain ASCII input."""
+        result = run(self._ascii_agent(), ["alpha", "beta", "gamma"])
+        by_name = {rr.relation.name: rr for rr in result.relation_results}
+        case = by_name["case-invariance"]
+        assert case.skipped == 0
+        assert case.exercised == 3
+        assert case.is_vacuous is False
+
+    def test_transform_that_changes_only_some_inputs(self):
+        """Accented input is transformed, plain ASCII is not."""
+        result = run(self._ascii_agent(), ["cafe", "café", "naive", "naïve"])
+        by_name = {rr.relation.name: rr for rr in result.relation_results}
+        norm = by_name["normalisation-invariance"]
+        assert norm.skipped == 2
+        assert norm.exercised == 2
+        assert norm.total == 4
+        assert norm.is_vacuous is False
+
+    def test_violation_rate_excludes_skipped_inputs(self):
+        """A rate over exercised pairs, not over inputs that were never tested."""
+        def fn(x: str) -> dict:
+            return {"text": x, "verdict": "block" if x.isupper() else "allow"}
+
+        result = run(from_callable(fn), ["cafe", "café"])
+        by_name = {rr.relation.name: rr for rr in result.relation_results}
+        norm = by_name["normalisation-invariance"]
+        assert norm.exercised == 1
+        assert norm.violation_rate == 0.0
+
+        case = by_name["case-invariance"]
+        assert case.exercised == 2
+        assert case.violated == 2
+        assert case.violation_rate == 1.0
+
+    def test_vacuous_relations_are_named_in_the_summary(self):
+        result = run(self._ascii_agent(), ["alpha", "beta"])
+        summary = result.summary()
+        assert "NOT EXERCISED" in summary
+        assert "normalisation-invariance" in summary
+        assert "n/a" in summary
+
+    def test_suite_is_not_meaningful_when_every_relation_is_vacuous(self):
+        from agentverity.relations import INVARIANT, Relation
+
+        noop = Relation(
+            name="noop",
+            rtype=INVARIANT,
+            transform=lambda s: s,
+            check=lambda src, fol: True,
+        )
+        result = run(self._ascii_agent(), ["alpha", "beta"], relations=[noop])
+        assert result.vacuous_relations
+        assert result.suite_is_meaningful is False
+
+
+class TestUnchangedCallReuse:
+    """The meter's draws are reused instead of re-asking the same question."""
+
+    @staticmethod
+    def _counting_agent():
+        calls: list[str] = []
+
+        def fn(x: str) -> dict:
+            calls.append(x)
+            return {"text": x, "verdict": "allow" if "a" in x else "block"}
+
+        return from_callable(fn), calls
+
+    def test_reuse_lowers_the_call_count(self):
+        inputs = ["alpha", "beta", "gamma"]
+
+        agent, without = self._counting_agent()
+        run(agent, inputs, config=RunConfig(reuse_unchanged_calls=False))
+
+        agent, with_reuse = self._counting_agent()
+        run(agent, inputs, config=RunConfig(reuse_unchanged_calls=True))
+
+        assert len(with_reuse) < len(without)
+
+    def test_reuse_does_not_change_the_verdict_counts(self):
+        """On a deterministic agent, reuse must be result-identical."""
+        inputs = ["alpha", "beta", "gamma", "secret"]
+
+        agent, _ = self._counting_agent()
+        off = run(agent, inputs, config=RunConfig(reuse_unchanged_calls=False))
+
+        agent, _ = self._counting_agent()
+        on = run(agent, inputs, config=RunConfig(reuse_unchanged_calls=True))
+
+        assert off.blindness is not None and on.blindness is not None
+        assert off.blindness.skew == on.blindness.skew
+        assert off.blindness.majority_verdict == on.blindness.majority_verdict
+        assert [(rr.held, rr.violated, rr.skipped) for rr in off.relation_results] == [
+            (rr.held, rr.violated, rr.skipped) for rr in on.relation_results
+        ]
+
+    def test_blindness_still_scans_every_input_when_the_meter_is_off(self):
+        """With no meter there is nothing to reuse, so the scan must still run."""
+        agent, calls = self._counting_agent()
+        result = run(
+            agent,
+            ["alpha", "beta", "gamma"],
+            relations=[],
+            config=RunConfig(run_meter=False, reuse_unchanged_calls=True),
+        )
+        assert result.blindness is not None
+        assert result.blindness.inputs == 3
+        assert calls == ["alpha", "beta", "gamma"]

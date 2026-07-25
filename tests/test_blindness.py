@@ -72,3 +72,41 @@ class TestDetect:
         agent = from_callable(lambda x: "ok")
         with pytest.raises(ValueError, match="threshold"):
             detect(agent, ["hello"], threshold=0)
+
+
+class TestScoreOnCollectedObservations:
+    """score() lets a caller reuse observations another phase already drew."""
+
+    def test_score_matches_detect(self):
+        from agentverity.adapters import from_callable
+        from agentverity.blindness import detect, score
+
+        def fn(x: str) -> dict:
+            return {"text": x, "verdict": "allow" if "a" in x else "block"}
+
+        agent = from_callable(fn)
+        inputs = ["alpha", "beta", "gamma", "xyz"]
+        via_detect = detect(agent, inputs)
+        via_score = score([agent(x) for x in inputs])
+
+        assert via_score.skew == via_detect.skew
+        assert via_score.distinct == via_detect.distinct
+        assert via_score.majority_verdict == via_detect.majority_verdict
+        assert via_score.blind == via_detect.blind
+
+    def test_score_rejects_empty_observations(self):
+        import pytest
+
+        from agentverity.blindness import score
+
+        with pytest.raises(ValueError, match="must not be empty"):
+            score([])
+
+    def test_score_rejects_bad_threshold(self):
+        import pytest
+
+        from agentverity.blindness import score
+        from agentverity.observation import Observation
+
+        with pytest.raises(ValueError, match="threshold"):
+            score([Observation(text="a", verdict="a")], threshold=0)
