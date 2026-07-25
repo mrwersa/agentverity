@@ -3,7 +3,7 @@
 > **Does your agent test suite actually test anything, or is it lying to you?**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
+[![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 [![Tests: 73](https://img.shields.io/badge/tests-73%20passing-brightgreen.svg)](#tests)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
@@ -62,16 +62,17 @@ Metamorphic relations are the vehicle. The diagnostics are the product.
 
 ### Install
 
-Install from PyPI:
+Install from source. The package is not on PyPI yet, so install from the
+repository:
 
 ```bash
-pip install agentverity
+pip install git+https://github.com/mrwersa/agentverity.git
 ```
 
 For Strands agent support:
 
 ```bash
-pip install "agentverity[strands]"
+pip install "agentverity[strands] @ git+https://github.com/mrwersa/agentverity.git"
 ```
 
 ### Use in Python
