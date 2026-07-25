@@ -44,3 +44,24 @@ def test_the_gate_actually_refuses_then_admits():
     assert "REFUSED" in printed
     assert "ADMITTED" in printed
     assert printed.index("REFUSED") < printed.index("ADMITTED")
+
+
+def test_readme_comparison_table_matches_the_example():
+    """The README table and the CI job summary come from one source.
+
+    Both render `--markdown` from this example, so a drift here means the two
+    published surfaces have started disagreeing about the same run.
+    """
+    import subprocess
+
+    printed = subprocess.run(
+        [sys.executable, str(ROOT / "examples" / "payment_dispute_gate.py"),
+         "--markdown"],
+        capture_output=True, text=True, check=True, cwd=ROOT,
+    ).stdout
+    rows = [line for line in printed.splitlines() if line.startswith("|")]
+    assert rows, "example emitted no table"
+
+    readme = (ROOT / "README.md").read_text()
+    for row in rows:
+        assert row in readme, f"README is missing table row: {row}"

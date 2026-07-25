@@ -30,11 +30,15 @@ jobs:
         # README carries, so both surfaces say the same thing.
         run: |
           {
-            echo "## AgentVerity evidence gate"
+            echo "# AgentVerity evidence gate"
             echo
-            echo "Same router, two probe sets. Both score 6/6."
-            python examples/payment_dispute_gate.py --markdown \
-              | sed -n '/^#### /,$p'
+            echo "The same payment-dispute router against two probe sets."
+            echo "Both score 6/6 on the exact-match evaluator. Only one earns"
+            echo "a baseline."
+            echo
+            python examples/payment_dispute_gate.py --markdown | sed -n '/^|/,$p'
+            echo
+            echo "Full JUnit reports follow."
           } >> "${GITHUB_STEP_SUMMARY}"
       - name: Narrow probes - baseline refused
         uses: dorny/test-reporter@1cc81a5edf733718d4850df304aaa21c05cd7280
@@ -46,7 +50,7 @@ jobs:
           fail-on-error: "false"
           collapsed: never
           list-tests: all
-          report-title: "1. Narrow probe set: evaluator green, baseline REFUSED"
+          report-title: "Full JUnit report: narrow probe set (REFUSED)"
       - name: Repaired probes - baseline admitted
         uses: dorny/test-reporter@1cc81a5edf733718d4850df304aaa21c05cd7280
         if: ${{ !cancelled() }}
@@ -56,4 +60,4 @@ jobs:
           reporter: java-junit
           collapsed: never
           list-tests: all
-          report-title: "2. Repaired probe set: evaluator green, baseline ADMITTED"
+          report-title: "Full JUnit report: repaired probe set (ADMITTED)"
