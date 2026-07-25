@@ -5,13 +5,17 @@ No long-lived PyPI token is stored in GitHub.
 
 ## One-time PyPI setup
 
-Configure a pending trusted publisher for:
+Done on 2026-07-25, when v0.2.0 was published. The trusted publisher is:
 
 - PyPI project: `agentverity`
 - GitHub owner: `mrwersa`
 - Repository: `agentverity`
 - Workflow: `release.yml`
 - Environment: `pypi`
+
+It was registered as a *pending* publisher, because the project did not exist
+on PyPI yet. Publishing v0.2.0 created the project and promoted it to a normal
+publisher, so this step does not need repeating.
 
 Protect the `pypi` GitHub environment against unreviewed deployment where the
 account plan permits it.

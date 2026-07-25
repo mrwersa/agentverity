@@ -2,7 +2,8 @@
 
 > **Does your agent test suite actually test anything, or is it lying to you?**
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 [![Tests: 85](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg)](#tests)
@@ -62,18 +63,17 @@ Metamorphic relations are the vehicle. The diagnostics are the product.
 
 ### Install
 
-Install from source. The package is not on PyPI yet, so install from the
-repository:
-
 ```bash
-pip install git+https://github.com/mrwersa/agentverity.git
+pip install agentverity
 ```
 
 For Strands agent support:
 
 ```bash
-pip install "agentverity[strands] @ git+https://github.com/mrwersa/agentverity.git"
+pip install "agentverity[strands]"
 ```
+
+The core has zero runtime dependencies and supports Python 3.10 to 3.14.
 
 ### Use in Python
 
