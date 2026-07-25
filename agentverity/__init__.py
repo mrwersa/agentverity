@@ -23,6 +23,8 @@ Quickstart::
     print(result.summary())
 """
 
+from importlib.metadata import PackageNotFoundError, version
+
 from agentverity.adapters import from_callable
 from agentverity.blindness import BlindnessResult, detect
 from agentverity.meter import MeterResult, measure
@@ -45,4 +47,7 @@ __all__ = [
     "run",
 ]
 
-__version__ = "0.1.0"
+try:
+    __version__ = version("agentverity")
+except PackageNotFoundError:
+    __version__ = "0+unknown"
