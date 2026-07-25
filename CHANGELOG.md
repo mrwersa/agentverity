@@ -8,6 +8,49 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-25
+
+A default run now answers the question instead of declining to.
+
+### Changed
+
+- **`k` is sized for you.** A zero-randomness agent used to report
+  `undecided` on a default run, which reads as a broken tool rather than a
+  result. Repeats are now derived from the precision you asked for, so the
+  default run reaches a verdict. Set `k=` to take the wheel; it still wins.
+- **`precision` replaces a bare epsilon as the main dial**: `"cheap"` (10%),
+  `"balanced"` (5%, the default), `"strict"` (1%). Nobody knows what epsilon to
+  pick, everybody knows how much they care. `epsilon=` still overrides it.
+- **`budget` caps agent calls** when you need a ceiling. It defaults to `None`,
+  meaning spend what the precision needs, because refusing to answer is worse
+  than costing a predictable amount. Two repeats per input is a structural
+  floor, and a budget below it is rejected rather than silently ignored.
+- The default epsilon moved from 0.01 to 0.05 by way of `balanced`. The old
+  default demanded 381 disjoint pairs, roughly 800 agent calls, to certify
+  anything.
+- **Reports lead with one plain sentence.** `RunResult.headline` says whether
+  the suite can be trusted before any numbered section. A reader should not
+  have to assemble a verdict from four tables.
+- `agentverity run`, `snapshot`, and `check` accept `--precision` and
+  `--budget`. `--k` and `--epsilon` are now overrides rather than defaults.
+
+### Added
+
+- `plan_repeats(inputs, epsilon, budget=None)` and `PRECISION_LEVELS`, both
+  exported, so the sizing decision can be inspected or reused.
+
+### Migration
+
+`RunConfig(k=..., epsilon=...)` keeps working unchanged. Code reading
+`config.k` or `config.epsilon` before a run now sees `None` where it used to
+see a default; read them from `result.config` afterwards, where they are always
+resolved to the values the run actually used.
+
+Accuracy is a side effect worth noting. On the bundled example the old default
+of `k=5` estimated a 66.7% flip rate from 12 pairs against a true rate of
+45.5%. The new default measures 42.3% from 78 pairs, with an interval half as
+wide.
+
 ### Added
 
 - `agentverity.meter.pairs_for_deterministic_call(epsilon)` returns the minimum
@@ -190,7 +233,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/mrwersa/agentverity/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mrwersa/agentverity/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mrwersa/agentverity/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/mrwersa/agentverity/compare/v0.1.0...v0.2.0

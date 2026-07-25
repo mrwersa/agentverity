@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import textwrap
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from agentverity.blindness import BlindnessResult
@@ -38,7 +38,13 @@ from agentverity.execution import (
     map_indexed_inputs,
     map_inputs,
 )
-from agentverity.meter import MeterResult, score_runs
+from agentverity.meter import (
+    PRECISION_LEVELS,
+    MeterResult,
+    plan_repeats,
+    resolve_epsilon,
+    score_runs,
+)
 from agentverity.observation import Observation
 from agentverity.relations import (
     Relation,
@@ -80,9 +86,21 @@ def _reject_duplicates(inputs: list[str]) -> None:
 class RunConfig:
     """Configuration for a runner pass.
 
+    Two knobs cover most use: ``budget``, how many agent calls the meter may
+    spend, and ``precision``, how tight a flip rate you care about. ``k`` and
+    ``epsilon`` remain available as exact overrides, and win when set.
+
     Attributes:
-        k: Number of repeated calls per input for the meter (default 5).
-        epsilon: Flip-rate threshold for the tri-state meter call (default 0.01).
+        budget: Optional cap on meter calls. ``None`` (default) spends what
+            the chosen precision needs, so a default run reaches a decision
+            instead of reporting "undecided". Ignored when ``k`` is given.
+        precision: ``"cheap"`` (10%), ``"balanced"`` (5%, the default), or
+            ``"strict"`` (1%). Ignored when ``epsilon`` is given.
+        k: Repeated calls per input. ``None`` (default) sizes it from the
+            budget. After a run, ``result.config.k`` holds the value used.
+        epsilon: Flip-rate threshold. ``None`` (default) takes it from
+            ``precision``. After a run, ``result.config.epsilon`` holds the
+            value used.
         blindness_threshold: Skew share above which the gate is blind (default 0.9).
         layer: Which Observation layer to measure and assert on (default "verdict").
         run_meter: If True, run the verdict-stochasticity meter (default True).
@@ -99,8 +117,10 @@ class RunConfig:
             ``"record"`` retains failures and marks the run incomplete.
     """
 
-    k: int = 5
-    epsilon: float = 0.01
+    budget: int | None = None
+    precision: str = "balanced"
+    k: int | None = None
+    epsilon: float | None = None
     blindness_threshold: float = 0.9
     layer: str = "verdict"
     run_meter: bool = True
@@ -111,10 +131,17 @@ class RunConfig:
 
     def __post_init__(self) -> None:
         """Validate configuration before any agent call is made."""
-        if self.run_meter and self.k < 2:
+        if self.run_meter and self.k is not None and self.k < 2:
             raise ValueError("k must be >= 2 when the meter is enabled")
-        if self.run_meter and not 0 < self.epsilon < 1:
+        if self.epsilon is not None and not 0 < self.epsilon < 1:
             raise ValueError("epsilon must be between 0 and 1")
+        if self.epsilon is None and self.precision not in PRECISION_LEVELS:
+            known = ", ".join(sorted(PRECISION_LEVELS))
+            raise ValueError(
+                f"unknown precision {self.precision!r}; expected one of {known}"
+            )
+        if self.k is None and self.budget is not None and self.budget < 1:
+            raise ValueError("budget must be at least 1")
         if self.run_blindness and not 0 < self.blindness_threshold <= 1:
             raise ValueError("blindness_threshold must be between 0 and 1")
         if (self.run_meter or self.run_blindness) and self.layer not in {
@@ -258,6 +285,59 @@ class RunResult:
         )
         return not nothing_exercised
 
+    @property
+    def headline(self) -> str:
+        """One plain sentence answering "can I trust these test results?".
+
+        The detail below it matters, but a reader should not have to assemble
+        the verdict from four numbered sections to learn whether their suite
+        means anything.
+        """
+        if not self.complete:
+            failed = len(self.errors)
+            return (
+                f"INCOMPLETE - {failed} call{'s' if failed != 1 else ''} failed, "
+                "so this run is not evidence of anything."
+            )
+        if self.is_blind and self.blindness is not None:
+            return (
+                "NOT TRUSTWORTHY - the agent answered "
+                f"{self.blindness.majority_verdict!r} on "
+                f"{self.blindness.skew:.0%} of the probes, so a pass says more "
+                "about the probe set than about the agent."
+            )
+        vacuous = self.vacuous_relations
+        if vacuous and not any(rr.exercised for rr in self.relation_results):
+            return (
+                "NOT TRUSTWORTHY - no relation changed a single input, so "
+                "nothing was actually tested."
+            )
+        if self.meter is None:
+            return "NO VERDICT MEASURED - the meter was disabled for this run."
+        if self.meter.call == "verdict-stochastic":
+            return (
+                "TRUSTWORTHY WITH CARE - the verdict changed on "
+                f"{self.meter.flip_rate:.0%} of identical reruns, so read "
+                "relation rates against that noise, not against zero."
+            )
+        if self.meter.call == "verdict-deterministic":
+            trailer = (
+                f" {len(vacuous)} relation{'s' if len(vacuous) != 1 else ''} "
+                "tested nothing and are marked n/a."
+                if vacuous
+                else ""
+            )
+            return (
+                "TRUSTWORTHY - the verdict held across every identical rerun "
+                f"and the probes cross a decision boundary.{trailer}"
+            )
+        return (
+            "NO ANSWER YET - "
+            f"{self.meter.pair_trials} pairs cannot settle a "
+            f"{self.meter.epsilon:.0%} flip rate. Raise the budget, add inputs, "
+            "or choose a lower precision."
+        )
+
     def summary(self) -> str:
         """Return a human-readable summary of the run.
 
@@ -268,6 +348,11 @@ class RunResult:
         lines.append("=" * 60)
         lines.append("agentverity — suite-quality report")
         lines.append("=" * 60)
+        lines.append("")
+        lines.extend(
+            textwrap.wrap(self.headline, width=58, initial_indent="  ",
+                          subsequent_indent="  ")
+        )
         lines.append("")
 
         if self.errors:
@@ -378,6 +463,23 @@ class RunResult:
         return "\n".join(lines)
 
 
+def _resolve(config: RunConfig, inputs: Iterable[str]) -> RunConfig:
+    """Turn budget and precision into the concrete k and epsilon a run uses.
+
+    Everything downstream, snapshots included, reads ``config.k`` and
+    ``config.epsilon`` and needs real numbers. Resolving once here means the
+    rest of the codebase never sees the ``None`` that means "work it out".
+    """
+    probes = list(inputs)
+    if not probes:
+        return config
+    epsilon = resolve_epsilon(config.precision, config.epsilon)
+    k = config.k if config.k is not None else plan_repeats(
+        len(probes), epsilon, config.budget
+    )
+    return replace(config, k=k, epsilon=epsilon)
+
+
 def run(
     agent: AgentFn,
     inputs: Iterable[str],
@@ -402,7 +504,7 @@ def run(
     Returns:
         A :class:`RunResult` with meter, blindness, and per-relation results.
     """
-    config = config or RunConfig()
+    config = _resolve(config or RunConfig(), inputs)
     inputs = list(inputs)
     if not inputs:
         raise ValueError("inputs must not be empty")

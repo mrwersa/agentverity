@@ -58,6 +58,83 @@ def wilson_ci(successes: int, trials: int, z: float = 1.96) -> tuple[float, floa
     return max(0.0, centre - margin), min(1.0, centre + margin)
 
 
+PRECISION_LEVELS: dict[str, float] = {
+    "cheap": 0.10,
+    "balanced": 0.05,
+    "strict": 0.01,
+}
+"""Named flip-rate thresholds.
+
+Nobody knows what epsilon to pick, but everybody knows how much they care.
+``strict`` is the research-grade 1% that needs 381 pairs; ``balanced`` is 5%
+and roughly 160 calls on a typical probe set; ``cheap`` is 10% for a smoke
+test. Pass ``epsilon`` directly to override.
+"""
+
+
+def resolve_epsilon(precision: str, epsilon: float | None) -> float:
+    """Return the flip-rate threshold, with an explicit epsilon winning.
+
+    Raises:
+        ValueError: If ``precision`` is not a known level, or ``epsilon`` is
+            outside ``(0, 1)``.
+    """
+    if epsilon is not None:
+        if not 0 < epsilon < 1:
+            raise ValueError("epsilon must be between 0 and 1")
+        return epsilon
+    try:
+        return PRECISION_LEVELS[precision]
+    except KeyError:
+        known = ", ".join(sorted(PRECISION_LEVELS))
+        raise ValueError(
+            f"unknown precision {precision!r}; expected one of {known}"
+        ) from None
+
+
+def plan_repeats(inputs: int, epsilon: float, budget: int | None = None) -> int:
+    """Choose ``k`` so a run can answer, optionally under a call budget.
+
+    Callers think in "how many calls can I afford", not "how many repeats per
+    input". Each input yields ``floor(k / 2)`` disjoint pairs, so the repeats a
+    decision needs fall as the probe set grows. This spends what the decision
+    needs and no more.
+
+    Two repeats per input is the structural floor, so a probe set of ``n``
+    always costs at least ``2n`` calls. A budget below that floor is a
+    contradiction rather than a preference, and is rejected.
+
+    Args:
+        inputs: Number of distinct probes.
+        epsilon: Flip-rate threshold the run is testing against.
+        budget: Optional cap on meter calls. ``None`` spends what the precision
+            needs, which is the default because refusing to answer is worse
+            than costing a predictable amount.
+
+    Returns:
+        An even ``k`` of at least 2.
+
+    Raises:
+        ValueError: If ``inputs`` is below one, or an explicit ``budget``
+            cannot cover two repeats per input.
+    """
+    if inputs < 1:
+        raise ValueError("inputs must be at least 1")
+    needed = pairs_for_deterministic_call(epsilon)
+    wanted = 2 * -(-needed // inputs) if needed is not None else 2
+    if budget is None:
+        return max(2, wanted)
+    if budget < 2 * inputs:
+        raise ValueError(
+            f"budget of {budget} cannot cover {inputs} inputs; the meter needs "
+            f"at least two repeats each, so {2 * inputs} calls. Raise the "
+            "budget, use fewer inputs, or drop the budget to spend what the "
+            "chosen precision needs."
+        )
+    affordable = (budget // inputs) // 2 * 2
+    return max(2, min(wanted, affordable))
+
+
 def pairs_for_deterministic_call(
     epsilon: float, z: float = 1.96, *, flip_rate: float = 0.0
 ) -> int | None:
