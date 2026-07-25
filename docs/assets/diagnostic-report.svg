@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="660"
+ viewBox="0 0 1200 660" role="img"
+ aria-label="AgentVerity diagnostic report for a toy multi-agent bug-fix pipeline">
+<style>
+  .bg { fill: #0b1220; }
+  .panel { fill: #111b2e; stroke: #314158; stroke-width: 1.5; }
+  .route { fill: #17243a; stroke: #3b82f6; stroke-width: 1.5; }
+  text { font-family: Arial, sans-serif; }
+  .routeText { fill: #dbeafe; font-size: 17px; font-weight: 600;
+    text-anchor: middle; }
+  .flow { stroke: #64748b; stroke-width: 2; }
+  .headline { fill: #f8fafc; font-size: 29px; font-weight: 700; }
+  .subhead { fill: #94a3b8; font-size: 16px; font-weight: 400; }
+  .eyebrow { fill: #f8fafc; font-size: 19px; font-weight: 700; }
+  .label { fill: #7f91ab; font-size: 12px; font-weight: 700; }
+  .value { fill: #f1f5f9; font-size: 22px; font-weight: 600; }
+  .decision { fill: #93c5fd; font-size: 21px; font-weight: 700; }
+  .action { fill: #cbd5e1; font-size: 16px; font-weight: 500; }
+  .badge { fill: #ffffff; font-size: 13px; font-weight: 700;
+    text-anchor: middle; }
+  .danger { fill: #dc2626; }
+  .warning { fill: #d97706; }
+  .rule { stroke: #314158; stroke-width: 1; }
+  .footer { fill: #64748b; font-size: 13px; font-weight: 400; }
+</style>
+<rect width="1200" height="660" class="bg"/>
+<text x="54" y="54" class="headline">AgentVerity asks whether the test is trustworthy first.</text>
+<text x="54" y="84" class="subhead">One executable example. Two defects. Two different testing decisions.</text>
+<rect x="54" y="114" width="226" height="52" rx="6" class="route"/>
+<rect x="364" y="114" width="226" height="52" rx="6" class="route"/>
+<rect x="674" y="114" width="226" height="52" rx="6" class="route"/>
+<rect x="984" y="114" width="162" height="52" rx="6" class="route"/>
+<text x="167" y="147" class="routeText">REPEAT VERDICTS</text>
+<text x="477" y="147" class="routeText">SCAN FOR SKEW</text>
+<text x="787" y="147" class="routeText">CHOOSE ORACLE</text>
+<text x="1065" y="147" class="routeText">TEST</text>
+<line x1="298" y1="140" x2="338" y2="140" class="flow"/>
+<path d="M 338 135 L 348 140 L 338 145 z" fill="#64748b"/>
+<line x1="608" y1="140" x2="648" y2="140" class="flow"/>
+<path d="M 648 135 L 658 140 L 648 145 z" fill="#64748b"/>
+<line x1="918" y1="140" x2="958" y2="140" class="flow"/>
+<path d="M 958 135 L 968 140 L 958 145 z" fill="#64748b"/>
+<rect x="54" y="190" width="520" height="414" rx="7" class="panel"/>
+<rect x="626" y="190" width="520" height="414" rx="7" class="panel"/>
+<text x="86" y="234" class="eyebrow">TRIAGE STEP</text>
+<rect x="394" y="207" width="142" height="34" rx="5" class="danger"/>
+<text x="465" y="230" class="badge">BLIND</text>
+<text x="86" y="285" class="label">VERDICT METER</text>
+<text x="86" y="316" class="value">undecided</text>
+<text x="86" y="360" class="label">PAIRWISE FLIP RATE</text>
+<text x="86" y="391" class="value">0.0% (0/12)</text>
+<text x="324" y="360" class="label">VERDICT SKEW</text>
+<text x="324" y="391" class="value">100.0% · one verdict</text>
+<text x="86" y="447" class="label">ORACLE DECISION</text>
+<text x="86" y="480" class="decision">Do not trust green relations</text>
+<line x1="86" y1="512" x2="542" y2="512" class="rule"/>
+<text x="86" y="548" class="label">NEXT ACTION</text>
+<text x="86" y="579" class="action">Diversify probes before adding tests</text>
+<text x="658" y="234" class="eyebrow">FULL SUPERVISOR PIPELINE</text>
+<rect x="966" y="207" width="142" height="34" rx="5" class="warning"/>
+<text x="1037" y="230" class="badge">STOCHASTIC</text>
+<text x="658" y="285" class="label">VERDICT METER</text>
+<text x="658" y="316" class="value">verdict-stochastic</text>
+<text x="658" y="360" class="label">PAIRWISE FLIP RATE</text>
+<text x="658" y="391" class="value">66.7% (8/12)</text>
+<text x="896" y="360" class="label">VERDICT SKEW</text>
+<text x="896" y="391" class="value">66.7% · two verdicts</text>
+<text x="658" y="447" class="label">ORACLE DECISION</text>
+<text x="658" y="480" class="decision">Use noise-robust relations</text>
+<line x1="658" y1="512" x2="1114" y2="512" class="rule"/>
+<text x="658" y="548" class="label">NEXT ACTION</text>
+<text x="658" y="579" class="action">Calibrate against unchanged-input noise</text>
+<text x="54" y="636" class="footer">Generated from examples/bugfix_pipeline.py · seed 1 · six bug reports</text>
+</svg>

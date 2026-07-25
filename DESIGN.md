@@ -39,7 +39,12 @@ DeepEval/promptfoo) or on the MR taxonomy (CheckList).
    boundary. The detector flags the pass as potentially vacuous. This is a
    suite-power warning, not a correctness judgement.
 
-3. **Suite-quality diagnostic framing.** Not "run tests and report pass/fail"
+3. **Evidence-gated snapshots.** A baseline is admitted only when the chosen
+   observation layer is deterministic at epsilon, the probe set is non-blind,
+   the run is complete, and a human approves the outputs as correct. The same
+   diagnostics run again before comparison.
+
+4. **Suite-quality diagnostic framing.** Not "run tests and report pass/fail"
    but "tell you if your tests are meaningful before you trust them." The
    report leads with the diagnostics, then per-relation results.
 
@@ -73,6 +78,9 @@ your agent (Strands / LangGraph / any callable)
     |
     ├── meter.py        — verdict-stochasticity meter (headline #1)
     ├── blindness.py    — constant-gate-blindness detector (headline #2)
+    ├── execution.py    — bounded concurrency, progress, explicit failures
+    ├── reporting.py    — versioned machine report
+    ├── snapshot.py     — evidence-gated baseline admission and comparison
     ├── relations.py     — typed metamorphic relations (the vehicle)
     ├── runner.py        — orchestrates meter -> blindness -> relations
     └── cli.py           — `agentverity run` entry point
@@ -100,7 +108,10 @@ Adapters are OPTIONAL imports — the core installs without any agent library.
 - `meter.py` — verdict-stochasticity meter. Tri-state call with Wilson CI.
 - `blindness.py` — constant-gate-blindness detector. Skew scan + warning.
 - `runner.py` — orchestrates meter -> blindness -> relations. Returns RunResult.
-- `cli.py` — `agentverity run --agent module:func --inputs file.txt`.
+- `snapshot.py` — admits and checks reviewed frozen baselines.
+- `execution.py` — overlaps distinct inputs while serialising one probe series.
+- `reporting.py` — emits versioned JSON without raw probe text.
+- `cli.py` — `run`, `snapshot`, and `check`.
 
 ## 3. Scope discipline (what it is NOT)
 
@@ -110,12 +121,15 @@ Adapters are OPTIONAL imports — the core installs without any agent library.
 - Not tied to any provider or the research programme's own gate.
 - Zero dependency on the `mnem`/sibling-paper code. Fully standalone.
 
-## 4. Status (2026-07-06)
+## 4. Status (2026-07-25)
 
 - M1 core: DONE — observation, meter, blindness, relations, runner, CLI.
 - M2 Strands adapter: DONE — adapter written, tested, worked example runs.
 - M2 LangGraph adapter: PLANNED.
 - M3 agent-specific relations: PLANNED (tool-selection-invariance is built-in;
   more user-extensible relations to follow).
-- M4 packaging: pyproject.toml written, README written, LICENSE added.
-  PyPI name `agentverity` verified free. Not yet published.
+- M4 packaging: DONE — PyPI, release automation, protected main, CI on Python
+  3.10 to 3.14.
+- M5 real-agent execution: DONE — bounded concurrency, progress, partial
+  evidence, versioned JSON.
+- M6 evidence-gated snapshots: DONE in v0.4.0.

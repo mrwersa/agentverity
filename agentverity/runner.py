@@ -26,10 +26,19 @@ from __future__ import annotations
 import textwrap
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from typing import Any
 
-from agentverity.blindness import BlindnessResult, detect
+from agentverity.blindness import BlindnessResult
 from agentverity.blindness import score as blindness_score
-from agentverity.meter import MeterResult, measure
+from agentverity.execution import (
+    ErrorPolicy,
+    ProgressCallback,
+    RunError,
+    input_fingerprint,
+    map_indexed_inputs,
+    map_inputs,
+)
+from agentverity.meter import MeterResult, score_runs
 from agentverity.observation import Observation
 from agentverity.relations import (
     Relation,
@@ -39,46 +48,12 @@ from agentverity.relations import (
 AgentFn = Callable[[str], Observation]
 
 
-class _FirstCallRecorder:
-    """Wrap an agent and keep the first observation seen for each input.
-
-    The meter calls the agent ``k`` times on every unchanged input. Recording
-    the first of those draws lets the blindness scan and each relation's source
-    side reuse a real sample rather than spending another agent call on a
-    string the run has already asked about.
-    """
-
-    def __init__(self, agent: AgentFn) -> None:
-        self._agent = agent
-        self.first: dict[str, Observation] = {}
-
-    def __call__(self, text: str) -> Observation:
-        obs = self._agent(text)
-        self.first.setdefault(text, obs)
-        return obs
-
-
-def _cached_for(
-    recorder: _FirstCallRecorder | None, inputs: list[str]
-) -> list[Observation] | None:
-    """Return one recorded observation per input, or None if any is missing."""
-    if recorder is None:
-        return None
-    if not all(x in recorder.first for x in inputs):
-        return None
-    return [recorder.first[x] for x in inputs]
-
-
 def _reject_duplicates(inputs: list[str]) -> None:
     """Refuse a probe set containing the same input twice.
 
     Duplicates corrupt the skew scan whether or not calls are reused: the
     repeated input's verdict is counted once per copy, so the probe set
     reports its own composition rather than the agent's behaviour. With
-    :class:`_FirstCallRecorder` active they are worse still, because every
-    copy resolves to one cached observation and a varying agent can be
-    reported as perfectly constant.
-
     Repeating a *measurement* is what ``k`` is for. Repeating an *input* is a
     defect in the probe set.
 
@@ -117,6 +92,11 @@ class RunConfig:
             the source side of every relation, instead of calling the agent again
             for the same string. Set to False to give each phase its own
             independent draw, at roughly double the agent calls.
+        max_workers: Maximum number of distinct inputs to process concurrently.
+            Repeated calls for one input remain sequential. Defaults to one
+            because stateful agents may not be thread-safe.
+        error_policy: ``"raise"`` stops on the first failed call or check.
+            ``"record"`` retains failures and marks the run incomplete.
     """
 
     k: int = 5
@@ -126,6 +106,27 @@ class RunConfig:
     run_meter: bool = True
     run_blindness: bool = True
     reuse_unchanged_calls: bool = True
+    max_workers: int = 1
+    error_policy: ErrorPolicy = "raise"
+
+    def __post_init__(self) -> None:
+        """Validate configuration before any agent call is made."""
+        if self.run_meter and self.k < 2:
+            raise ValueError("k must be >= 2 when the meter is enabled")
+        if self.run_meter and not 0 < self.epsilon < 1:
+            raise ValueError("epsilon must be between 0 and 1")
+        if self.run_blindness and not 0 < self.blindness_threshold <= 1:
+            raise ValueError("blindness_threshold must be between 0 and 1")
+        if (self.run_meter or self.run_blindness) and self.layer not in {
+            "verdict",
+            "text",
+            "tools",
+        }:
+            raise ValueError(f"unknown observation layer: {self.layer!r}")
+        if self.max_workers < 1:
+            raise ValueError("max_workers must be >= 1")
+        if self.error_policy not in {"raise", "record"}:
+            raise ValueError("error_policy must be 'raise' or 'record'")
 
 
 @dataclass(frozen=True)
@@ -139,6 +140,8 @@ class RelationResult:
         violated: Number of exercised pairs where the relation was violated.
         skipped: Number of inputs where the transform returned the input
             unchanged, so no metamorphic pair existed to test.
+        errors: Number of inputs where transformation, execution, or checking
+            failed. Errors never count as held relations.
     """
 
     relation: Relation
@@ -146,6 +149,7 @@ class RelationResult:
     held: int
     violated: int
     skipped: int = 0
+    errors: int = 0
 
     @property
     def exercised(self) -> int:
@@ -176,7 +180,7 @@ class RelationResult:
         with ordinary spacing. It then reports a perfect pass without ever
         having sent the agent a different string.
         """
-        return self.total > 0 and self.exercised == 0
+        return self.total > 0 and self.exercised == 0 and self.errors == 0
 
 
 @dataclass(frozen=True)
@@ -188,12 +192,25 @@ class RunResult:
         blindness: The constant-gate-blindness result, or None if not run.
         relation_results: Per-relation results, in the order they were run.
         config: The RunConfig used.
+        errors: Failures retained under the ``"record"`` error policy.
+        input_fingerprints: SHA-256 identifiers for the ordered probe set.
+        observed_keys: One source-layer value per input, when available.
+        requested_inputs: Number of distinct inputs requested.
     """
 
     meter: MeterResult | None
     blindness: BlindnessResult | None
     relation_results: list[RelationResult]
     config: RunConfig
+    errors: tuple[RunError, ...] = ()
+    input_fingerprints: tuple[str, ...] = ()
+    observed_keys: tuple[Any | None, ...] = ()
+    requested_inputs: int = 0
+
+    @property
+    def complete(self) -> bool:
+        """Whether every requested piece of evidence completed successfully."""
+        return not self.errors
 
     @property
     def is_stochastic(self) -> bool:
@@ -253,6 +270,23 @@ class RunResult:
         lines.append("=" * 60)
         lines.append("")
 
+        if self.errors:
+            lines.append("INCOMPLETE EVIDENCE")
+            lines.append(
+                f"   {len(self.errors)} call or check failure"
+                f"{'s' if len(self.errors) != 1 else ''} recorded."
+            )
+            lines.append("   Failed work is never converted into a passing verdict.")
+            for error in self.errors[:5]:
+                relation = f", relation={error.relation}" if error.relation else ""
+                lines.append(
+                    f"   input #{error.input_index}, phase={error.phase}{relation}: "
+                    f"{error.exception_type}: {error.message}"
+                )
+            if len(self.errors) > 5:
+                lines.append(f"   ... and {len(self.errors) - 5} more.")
+            lines.append("")
+
         if self.meter is not None:
             m = self.meter
             lines.append("1. VERDICT-STOCHASTICITY METER")
@@ -287,17 +321,23 @@ class RunResult:
         if self.relation_results:
             lines.append("4. RELATION RESULTS")
             lines.append(
-                f"   {'relation':<30} {'type':<12} {'held':>6} {'violated':>10} "
-                f"{'skipped':>8} {'rate':>8}"
+                f"   {'relation':<28} {'type':<11} {'held':>5} {'violated':>8} "
+                f"{'skipped':>7} {'errors':>6} {'rate':>7}"
             )
             lines.append(
-                f"   {'-' * 30} {'-' * 12} {'-' * 6} {'-' * 10} {'-' * 8} {'-' * 8}"
+                f"   {'-' * 28} {'-' * 11} {'-' * 5} {'-' * 8} "
+                f"{'-' * 7} {'-' * 6} {'-' * 7}"
             )
             for rr in self.relation_results:
-                rate = "n/a" if rr.is_vacuous else f"{rr.violation_rate:.1%}"
+                rate = (
+                    "n/a"
+                    if rr.violation_rate is None
+                    else f"{rr.violation_rate:.1%}"
+                )
                 lines.append(
-                    f"   {rr.relation.name:<30} {rr.relation.rtype:<12} "
-                    f"{rr.held:>6} {rr.violated:>10} {rr.skipped:>8} {rate:>8}"
+                    f"   {rr.relation.name:<28} {rr.relation.rtype:<11} "
+                    f"{rr.held:>5} {rr.violated:>8} {rr.skipped:>7} "
+                    f"{rr.errors:>6} {rate:>7}"
                 )
             vacuous = self.vacuous_relations
             if vacuous:
@@ -325,6 +365,14 @@ class RunResult:
                         f"{rr.exercised}/{rr.total} inputs "
                         f"({rr.skipped} left unchanged by the transform)."
                     )
+            failed_some = [rr for rr in self.relation_results if rr.errors]
+            if failed_some:
+                lines.append("")
+                for rr in failed_some:
+                    lines.append(
+                        f"   INCOMPLETE: {rr.relation.name} failed on "
+                        f"{rr.errors}/{rr.total} inputs."
+                    )
             lines.append("")
 
         return "\n".join(lines)
@@ -336,6 +384,7 @@ def run(
     *,
     relations: list[Relation] | None = None,
     config: RunConfig | None = None,
+    on_progress: ProgressCallback | None = None,
 ) -> RunResult:
     """Run the full measure-first diagnostic suite on an agent.
 
@@ -347,6 +396,8 @@ def run(
         inputs: An iterable of input strings to test against.
         relations: Custom relation list. If None, uses :func:`builtin_relations`.
         config: Run configuration. If None, uses defaults.
+        on_progress: Optional callback invoked after each input completes a
+            meter, source-scan, or relation phase.
 
     Returns:
         A :class:`RunResult` with meter, blindness, and per-relation results.
@@ -359,65 +410,176 @@ def run(
     if relations is None:
         relations = builtin_relations()
 
-    # Every phase below needs the agent's answer to the *unchanged* input. The
-    # meter already draws k of them per input, so without reuse the blindness
-    # scan and each relation's source side pay for the same string again.
-    recorder = _FirstCallRecorder(agent) if config.reuse_unchanged_calls else None
-    probe: AgentFn = recorder if recorder is not None else agent
+    source_observations: list[Observation | None] = [None] * len(inputs)
+    errors: list[RunError] = []
 
     # 1. Meter
     meter_result = None
     if config.run_meter:
-        meter_result = measure(
-            probe, inputs, k=config.k, layer=config.layer, epsilon=config.epsilon
+        meter_work = map_inputs(
+            inputs,
+            lambda _index, text: [agent(text) for _ in range(config.k)],
+            phase="meter",
+            max_workers=config.max_workers,
+            error_policy=config.error_policy,
+            on_progress=on_progress,
         )
+        errors.extend(meter_work.errors)
+        complete_series = [
+            observations
+            for observations in meter_work.values
+            if observations is not None
+        ]
+        if complete_series:
+            meter_result = score_runs(
+                complete_series,
+                k=config.k,
+                layer=config.layer,
+                epsilon=config.epsilon,
+            )
+        if config.reuse_unchanged_calls:
+            for index, observations in enumerate(meter_work.values):
+                if observations:
+                    source_observations[index] = observations[0]
 
     # 2. Blindness
     blindness_result = None
     if config.run_blindness:
-        cached = _cached_for(recorder, inputs)
-        if cached is not None:
-            blindness_result = blindness_score(
-                cached, layer=config.layer, threshold=config.blindness_threshold
+        if not config.reuse_unchanged_calls:
+            source_observations = [None] * len(inputs)
+        missing = [
+            (index, text)
+            for index, (text, observation) in enumerate(
+                zip(inputs, source_observations, strict=True)
             )
-        else:
-            blindness_result = detect(
-                probe, inputs, layer=config.layer, threshold=config.blindness_threshold
+            if observation is None
+        ]
+        if missing:
+            source_work = map_indexed_inputs(
+                missing,
+                lambda _index, text: agent(text),
+                phase="blindness",
+                max_workers=config.max_workers,
+                error_policy=config.error_policy,
+                on_progress=on_progress,
+            )
+            errors.extend(source_work.errors)
+            for (index, _text), observation in zip(
+                missing, source_work.values, strict=True
+            ):
+                if observation is not None:
+                    source_observations[index] = observation
+        available = [
+            observation
+            for observation in source_observations
+            if observation is not None
+        ]
+        if available:
+            blindness_result = blindness_score(
+                available,
+                layer=config.layer,
+                threshold=config.blindness_threshold,
             )
 
     # 3. Relations
-    relation_results: list[RelationResult] = []
-    for rel in relations:
-        held = 0
-        violated = 0
-        skipped = 0
-        for x in inputs:
-            followup_input = rel.transform(x)
-            if followup_input == x:
-                # The transform is the identity on this input, so there is no
-                # metamorphic pair. Re-asking the agent the same question would
-                # measure rerun stability, which the meter already reports.
-                skipped += 1
-                continue
-            source_obs = recorder.first[x] if recorder and x in recorder.first else probe(x)
-            followup_obs = probe(followup_input)
-            if rel.check(source_obs, followup_obs):
-                held += 1
-            else:
-                violated += 1
-        relation_results.append(
-            RelationResult(
-                relation=rel,
-                total=len(inputs),
-                held=held,
-                violated=violated,
-                skipped=skipped,
-            )
+    relation_results = [
+        RelationResult(relation=relation, total=len(inputs), held=0, violated=0)
+        for relation in relations
+    ]
+    if relations:
+        def run_relations_for_input(
+            input_index: int,
+            text: str,
+        ) -> tuple[list[str], list[RunError]]:
+            outcomes: list[str] = []
+            local_errors: list[RunError] = []
+            for relation in relations:
+                try:
+                    followup_input = relation.transform(text)
+                    if followup_input == text:
+                        outcomes.append("skipped")
+                        continue
+                    source = (
+                        source_observations[input_index]
+                        if config.reuse_unchanged_calls
+                        else None
+                    )
+                    if source is None:
+                        source = agent(text)
+                    followup = agent(followup_input)
+                    outcomes.append(
+                        "held" if relation.check(source, followup) else "violated"
+                    )
+                except Exception as exc:
+                    if config.error_policy == "raise":
+                        raise
+                    outcomes.append("error")
+                    local_errors.append(
+                        RunError(
+                            phase="relations",
+                            input_index=input_index,
+                            input_fingerprint=input_fingerprint(text),
+                            exception_type=type(exc).__name__,
+                            message=str(exc),
+                            relation=relation.name,
+                        )
+                    )
+            return outcomes, local_errors
+
+        relation_work = map_inputs(
+            inputs,
+            run_relations_for_input,
+            phase="relations",
+            max_workers=config.max_workers,
+            error_policy=config.error_policy,
+            on_progress=on_progress,
+            status_of=lambda value: "error" if value[1] else "ok",
         )
+        errors.extend(relation_work.errors)
+        counts = [
+            {"held": 0, "violated": 0, "skipped": 0, "error": 0}
+            for _relation in relations
+        ]
+        for value in relation_work.values:
+            if value is None:
+                continue
+            outcomes, local_errors = value
+            errors.extend(local_errors)
+            for index, outcome in enumerate(outcomes):
+                counts[index][outcome] += 1
+        relation_results = [
+            RelationResult(
+                relation=relation,
+                total=len(inputs),
+                held=counts[index]["held"],
+                violated=counts[index]["violated"],
+                skipped=counts[index]["skipped"],
+                errors=counts[index]["error"],
+            )
+            for index, relation in enumerate(relations)
+        ]
+
+    observed_keys = tuple(
+        observation.key(config.layer) if observation is not None else None
+        for observation in source_observations
+    )
 
     return RunResult(
         meter=meter_result,
         blindness=blindness_result,
         relation_results=relation_results,
         config=config,
+        errors=tuple(
+            sorted(
+                errors,
+                key=lambda error: (
+                    error.input_index,
+                    error.phase,
+                    error.relation or "",
+                ),
+            )
+        ),
+        input_fingerprints=tuple(input_fingerprint(text) for text in inputs),
+        observed_keys=observed_keys,
+        requested_inputs=len(inputs),
     )

@@ -8,13 +8,39 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-25
+
+### Added
+
+- **Evidence-gated snapshots.** `agentverity snapshot` refuses to freeze a
+  reference unless the exact observation layer is deterministic at the
+  configured epsilon, the probe set is non-blind, all requested evidence is
+  complete, and a human explicitly approves the outputs.
+- `agentverity check` re-runs the same admission diagnostics before comparing
+  current observations with an approved snapshot. Unsupported evidence
+  returns exit code 2 rather than a false regression result.
+- Bounded concurrency across distinct inputs through `RunConfig.max_workers`
+  and `--max-workers`. Repeated calls for one input stay sequential.
+- Explicit `raise` and `record` error policies. Recorded failures produce
+  structured `RunError` values and mark the run incomplete. They never become
+  synthetic verdicts or passing checks.
+- Versioned `agentverity.run/v1` JSON reports and
+  `agentverity.snapshot/v1` baseline files.
+- Non-plaintext progress events and input identifiers based on SHA-256
+  fingerprints rather than raw probe text.
+- `--no-relations`, `--format json`, `--output`, and `--progress` CLI options.
+- A README diagnostic image generated from the executable multi-agent example.
+
 ### Changed
 
+- Runner phases share one bounded execution primitive while preserving the
+  sequential default and the existing unchanged-call reuse.
+- Relation reports include failures separately from held, violated, and
+  skipped cases.
+- The bug-fix example exports the public versioned JSON report instead of a
+  bespoke schema.
 - `RunResult.suite_is_meaningful` documents why `relations=[]` returns `True`.
-  A run that deliberately requested no relations produced no green result to
-  distrust, so failing it would break a legitimate diagnostics-only run. The
-  vacuous case it guards is relations that were asked for, ran, and tested
-  nothing. Behaviour is unchanged and now pinned by tests.
+  A diagnostics-only run produced no green relation result to distrust.
 
 ## [0.3.0] - 2026-07-25
 
@@ -135,7 +161,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/mrwersa/agentverity/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mrwersa/agentverity/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/mrwersa/agentverity/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mrwersa/agentverity/releases/tag/v0.1.0

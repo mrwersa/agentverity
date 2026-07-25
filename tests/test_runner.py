@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import random
+import threading
+import time
 from typing import ClassVar
 
 import pytest
@@ -138,6 +140,68 @@ class TestRunConfig:
         agent = from_callable(lambda x: {"verdict": "allow"})
         with pytest.raises(ValueError, match="inputs"):
             run(agent, [])
+
+    def test_invalid_worker_count_rejected_before_calls(self):
+        with pytest.raises(ValueError, match="max_workers"):
+            RunConfig(max_workers=0)
+
+
+class TestBoundedExecution:
+    def test_repeated_calls_for_one_input_remain_sequential(self):
+        lock = threading.Lock()
+        active: set[str] = set()
+        overlap: list[str] = []
+
+        def fn(text: str) -> dict:
+            with lock:
+                if text in active:
+                    overlap.append(text)
+                active.add(text)
+            time.sleep(0.003)
+            with lock:
+                active.remove(text)
+            return {"verdict": "allow" if text.startswith("a") else "block"}
+
+        result = run(
+            from_callable(fn),
+            ["alpha", "beta", "apricot", "banana"],
+            relations=[],
+            config=RunConfig(k=4, epsilon=0.5, max_workers=4),
+        )
+        assert result.complete
+        assert overlap == []
+
+    def test_recorded_relation_failure_is_not_a_pass(self):
+        from agentverity.relations import INVARIANT, Relation
+
+        relation = Relation(
+            name="uppercase",
+            rtype=INVARIANT,
+            transform=str.upper,
+            check=lambda source, followup: source.verdict == followup.verdict,
+        )
+
+        def fn(text: str) -> dict:
+            if text == "BETA":
+                raise RuntimeError("provider failed")
+            return {"verdict": "allow" if text.lower().startswith("a") else "block"}
+
+        events = []
+        result = run(
+            from_callable(fn),
+            ["alpha", "beta"],
+            relations=[relation],
+            config=RunConfig(k=2, epsilon=0.9, error_policy="record"),
+            on_progress=events.append,
+        )
+        relation_result = result.relation_results[0]
+        assert result.complete is False
+        assert relation_result.held == 1
+        assert relation_result.errors == 1
+        assert relation_result.violated == 0
+        assert "INCOMPLETE EVIDENCE" in result.summary()
+        relation_events = [event for event in events if event.phase == "relations"]
+        assert [event.status for event in relation_events].count("error") == 1
 
 
 class TestSummary:

@@ -167,11 +167,43 @@ def measure(
         raise ValueError("inputs must not be empty")
     if not 0 < epsilon < 1:
         raise ValueError("epsilon must be between 0 and 1")
+    runs: list[list[Observation]] = []
+    for x in inputs:
+        runs.append([agent(x) for _ in range(k)])
+    return score_runs(runs, k=k, layer=layer, epsilon=epsilon)
+
+
+def score_runs(
+    runs: Iterable[Iterable[Observation]],
+    *,
+    k: int,
+    layer: str = "verdict",
+    epsilon: float = 0.01,
+) -> MeterResult:
+    """Score already-collected repeated observations.
+
+    The runner uses this function after gathering one sequential repeat series
+    per input, potentially in parallel across inputs. Direct callers normally
+    use :func:`measure`.
+    """
+    if k < 2:
+        raise ValueError("k must be >= 2 to compare repeated runs")
+    if not 0 < epsilon < 1:
+        raise ValueError("epsilon must be between 0 and 1")
+
+    runs = [list(observations) for observations in runs]
+    if not runs:
+        raise ValueError("runs must not be empty")
+
     pair_trials = 0
     pair_flips = 0
     inputs_with_flip = 0
-    for x in inputs:
-        keys = [agent(x).key(layer) for _ in range(k)]
+    for observations in runs:
+        if len(observations) != k:
+            raise ValueError(
+                f"every repeat series must contain exactly k={k} observations"
+            )
+        keys = [observation.key(layer) for observation in observations]
         if len({_hashable(v) for v in keys}) > 1:
             inputs_with_flip += 1
         for i in range(0, k - 1, 2):
@@ -182,7 +214,7 @@ def measure(
     return MeterResult(
         layer=layer,
         epsilon=epsilon,
-        inputs=len(inputs),
+        inputs=len(runs),
         repeats=k,
         pair_trials=pair_trials,
         pair_flips=pair_flips,
