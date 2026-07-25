@@ -8,11 +8,26 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-25
+
+Reports that read well where people actually read them.
+
 ### Added
 
 - A payment-dispute evidence-gate demo where both probe sets score 6/6, while
   only the set that crosses the routing boundary can become a snapshot. It can
-  write JUnit artifacts and emit before-and-after OTEL spans.
+  write JUnit artifacts, emit before-and-after OTEL spans, and print a
+  comparison table with `--markdown` for a README or a CI job summary.
+- `RunResult.duration_seconds`, the wall-clock time a run took.
+
+### Changed
+
+- JUnit output carries a `time` attribute. Without it, report collectors
+  computed the duration as `NaNms` in every rendered section.
+- `preflight.relation_coverage` is omitted when the caller passed no relations,
+  instead of appearing as a skipped case. A check nobody requested is noise in
+  a dashboard, and it rendered as an icon that reads as broken. Anything
+  parsing the JUnit for that case should treat its absence as "not requested".
 
 ## [0.6.0] - 2026-07-25
 
@@ -268,7 +283,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/mrwersa/agentverity/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/mrwersa/agentverity/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/mrwersa/agentverity/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mrwersa/agentverity/compare/v0.3.0...v0.4.0
