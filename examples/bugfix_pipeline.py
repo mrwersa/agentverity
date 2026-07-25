@@ -80,6 +80,9 @@ def _as_dict(result) -> dict:
             item.relation.name: {
                 "held": item.held,
                 "violated": item.violated,
+                "skipped": item.skipped,
+                "exercised": item.exercised,
+                "vacuous": item.is_vacuous,
                 "violation_rate": item.violation_rate,
             }
             for item in result.relation_results

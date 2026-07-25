@@ -5,7 +5,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
-[![Tests: 73](https://img.shields.io/badge/tests-73%20passing-brightgreen.svg)](#tests)
+[![Tests: 85](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg)](#tests)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 
 **agentverity** is a measure-first testing framework for non-deterministic LLM agents. Before running any test relation, it answers two questions that ordinary pass-rate reports leave unresolved:
@@ -112,15 +112,24 @@ agentverity — suite-quality report
    UNDECIDED — raise k or input count before choosing an oracle.
 
 4. RELATION RESULTS
-   relation                       type           held   violated     rate
-   ------------------------------ ------------ ------ ---------- --------
-   normalisation-invariance       invariant         4          0    0.0%
-   case-invariance                invariant         4          0    0.0%
-   whitespace-invariance          invariant         4          0    0.0%
-   tool-selection-invariance      invariant         4          0    0.0%
+   relation                       type           held   violated  skipped     rate
+   ------------------------------ ------------ ------ ---------- -------- --------
+   normalisation-invariance       invariant         0          0        4      n/a
+   case-invariance                invariant         4          0        0     0.0%
+   whitespace-invariance          invariant         4          0        0     0.0%
+   tool-selection-invariance      invariant         0          0        4      n/a
+
+   NOT EXERCISED: normalisation-invariance, tool-selection-invariance.
+   The transform returned every input unchanged, so the agent was never
+   asked a different question. Rows marked n/a are not evidence of
+   anything. Add inputs the transform actually changes.
 ```
 
-Notice the meter says `undecided`, not `verdict-deterministic`, even though `my_gate` is a plain Python function with zero randomness. Four inputs at five repeats yield eight independent, disjoint comparisons. That is nowhere near enough to certify a flip rate below the strict default epsilon of 1%. The meter exposes that cost instead of manufacturing certainty. Raise `k`, add inputs, or choose a deployment-relevant epsilon before making a deterministic call.
+Two things in that report are the whole point of the library.
+
+The meter says `undecided`, not `verdict-deterministic`, even though `my_gate` is a plain Python function with zero randomness. Four inputs at five repeats yield eight independent, disjoint comparisons. That is nowhere near enough to certify a flip rate below the strict default epsilon of 1%. The meter exposes that cost instead of manufacturing certainty. Raise `k`, add inputs, or choose a deployment-relevant epsilon before making a deterministic call.
+
+Two relations report `n/a` rather than a green `0.0%`. Their transform normalises accents and whitespace, and these four inputs are plain ASCII with ordinary spacing, so the follow-up string was byte-identical to the source every time. The agent was never asked a different question. Counting that as a pass would be exactly the vacuous green result the library exists to catch, so it is reported as skipped instead.
 
 For a complete supervisor-pattern example with both failure modes planted,
 run [`examples/bugfix_pipeline.py`](examples/bugfix_pipeline.py).
@@ -197,11 +206,23 @@ The return of `run()` carries the full diagnostic picture:
 |---|---|---|
 | `result.meter` | `MeterResult \| None` | Verdict-stochasticity meter result |
 | `result.blindness` | `BlindnessResult \| None` | Constant-gate-blindness result |
-| `result.relation_results` | `list[RelationResult]` | Per-relation held/violated counts |
+| `result.relation_results` | `list[RelationResult]` | Per-relation held/violated/skipped counts |
 | `result.is_stochastic` | `bool` | True if meter says verdict-stochastic |
 | `result.is_blind` | `bool` | True if blindness detector fires |
-| `result.suite_is_meaningful` | `bool` | False when a blindness warning makes green relation results potentially vacuous |
+| `result.vacuous_relations` | `list[RelationResult]` | Relations whose transform never changed any input |
+| `result.suite_is_meaningful` | `bool` | False when a blindness warning, or a catalogue that never changed an input, makes green relation results vacuous |
 | `result.summary()` | `str` | Human-readable report, diagnostics-first |
+
+### `RelationResult`
+
+| Property | Description |
+|---|---|
+| `.total` | Number of inputs the relation was offered |
+| `.held`, `.violated` | Outcomes over *exercised* pairs only |
+| `.skipped` | Inputs where the transform returned the input unchanged |
+| `.exercised` | `held + violated`, the pairs that genuinely tested something |
+| `.violation_rate` | Violations over exercised pairs, not over inputs |
+| `.is_vacuous` | True when the transform was the identity on every input |
 
 ### `MeterResult`
 
@@ -269,6 +290,14 @@ The meter and relations can assert on any layer: `verdict` (default), `text`, or
 
 The first three follow the CheckList/LLMORPH tradition and apply to any text-in/text-out system. The fourth is agent-native: it asserts over the tool trajectory, not the text, and is the relation that makes agentverity an agent framework rather than an NLP model framework.
 
+**A transform can be a no-op on your inputs.** Normalisation strips accents and
+collapses whitespace, so on plain ASCII with ordinary spacing it returns the
+input unchanged. The two relations built on it then have no metamorphic pair to
+test. agentverity counts those inputs as `skipped`, reports the rate as `n/a`,
+and names the relation under `NOT EXERCISED`, rather than recording a pass the
+agent never earned. Feed the probe set inputs the transform actually changes,
+or write a relation whose transform bites on your domain.
+
 ---
 
 ## How it works
@@ -291,11 +320,29 @@ The detector calls the agent once on each input and measures the verdict distrib
 
 Relations run source and follow-up inputs through the agent and check whether a structural law holds between the two outputs. When the meter calls the verdict stochastic, the report tells you to establish an unchanged-input noise baseline before treating a non-zero violation rate as a regression. Baseline estimation is not automated in this release.
 
+An input whose transform returns it unchanged is skipped rather than tested. Re-asking the agent a byte-identical question measures rerun stability, which is the meter's job, and scoring it as a relation pass would inflate a green report.
+
+### Agent calls per run
+
+Agent calls dominate the cost of a real run, so every phase reuses what the
+meter already drew. With `n` inputs, `k` repeats, and `r` relations whose
+transform actually changes the input:
+
+```
+n * (k + r)     with reuse (the default)
+n * (k + 1 + 2r) without it
+```
+
+The meter's first draw per input serves as the blindness scan's sample and as
+the source side of every relation. On the four-input Quickstart above that is
+35 calls instead of 70. Set `RunConfig(reuse_unchanged_calls=False)` to give
+each phase an independent draw.
+
 ---
 
 ## Tests
 
-73 tests, all passing.
+85 tests, all passing.
 
 ```bash
 pip install -e ".[dev]"

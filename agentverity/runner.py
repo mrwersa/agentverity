@@ -23,10 +23,12 @@ Example::
 
 from __future__ import annotations
 
+import textwrap
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 from agentverity.blindness import BlindnessResult, detect
+from agentverity.blindness import score as blindness_score
 from agentverity.meter import MeterResult, measure
 from agentverity.observation import Observation
 from agentverity.relations import (
@@ -35,6 +37,36 @@ from agentverity.relations import (
 )
 
 AgentFn = Callable[[str], Observation]
+
+
+class _FirstCallRecorder:
+    """Wrap an agent and keep the first observation seen for each input.
+
+    The meter calls the agent ``k`` times on every unchanged input. Recording
+    the first of those draws lets the blindness scan and each relation's source
+    side reuse a real sample rather than spending another agent call on a
+    string the run has already asked about.
+    """
+
+    def __init__(self, agent: AgentFn) -> None:
+        self._agent = agent
+        self.first: dict[str, Observation] = {}
+
+    def __call__(self, text: str) -> Observation:
+        obs = self._agent(text)
+        self.first.setdefault(text, obs)
+        return obs
+
+
+def _cached_for(
+    recorder: _FirstCallRecorder | None, inputs: list[str]
+) -> list[Observation] | None:
+    """Return one recorded observation per input, or None if any is missing."""
+    if recorder is None:
+        return None
+    if not all(x in recorder.first for x in inputs):
+        return None
+    return [recorder.first[x] for x in inputs]
 
 
 @dataclass(frozen=True)
@@ -48,6 +80,11 @@ class RunConfig:
         layer: Which Observation layer to measure and assert on (default "verdict").
         run_meter: If True, run the verdict-stochasticity meter (default True).
         run_blindness: If True, run the constant-gate-blindness detector (default True).
+        reuse_unchanged_calls: If True (default), the first observation the meter
+            draws for each unchanged input is reused by the blindness scan and as
+            the source side of every relation, instead of calling the agent again
+            for the same string. Set to False to give each phase its own
+            independent draw, at roughly double the agent calls.
     """
 
     k: int = 5
@@ -56,6 +93,7 @@ class RunConfig:
     layer: str = "verdict"
     run_meter: bool = True
     run_blindness: bool = True
+    reuse_unchanged_calls: bool = True
 
 
 @dataclass(frozen=True)
@@ -64,20 +102,43 @@ class RelationResult:
 
     Attributes:
         relation: The relation that was run.
-        total: Total number of source/follow-up pairs tested.
-        held: Number of pairs where the relation held (no violation).
-        violated: Number of pairs where the relation was violated.
+        total: Number of inputs the relation was offered.
+        held: Number of exercised pairs where the relation held.
+        violated: Number of exercised pairs where the relation was violated.
+        skipped: Number of inputs where the transform returned the input
+            unchanged, so no metamorphic pair existed to test.
     """
 
     relation: Relation
     total: int
     held: int
     violated: int
+    skipped: int = 0
+
+    @property
+    def exercised(self) -> int:
+        """Number of inputs that produced a genuine source/follow-up pair."""
+        return self.held + self.violated
 
     @property
     def violation_rate(self) -> float:
-        """The fraction of pairs that violated the relation."""
-        return self.violated / self.total if self.total else 0.0
+        """The fraction of *exercised* pairs that violated the relation.
+
+        Inputs the transform left unchanged are excluded, because a
+        byte-identical follow-up tests rerun stability rather than the
+        relation. Measuring rerun stability is the meter's job.
+        """
+        return self.violated / self.exercised if self.exercised else 0.0
+
+    @property
+    def is_vacuous(self) -> bool:
+        """``True`` if the transform was the identity on every input.
+
+        A relation like ``normalisation-invariance`` is a no-op on plain ASCII
+        with ordinary spacing. It then reports a perfect pass without ever
+        having sent the agent a different string.
+        """
+        return self.total > 0 and self.exercised == 0
 
 
 @dataclass(frozen=True)
@@ -107,16 +168,32 @@ class RunResult:
         return self.blindness is not None and self.blindness.blind
 
     @property
+    def vacuous_relations(self) -> list[RelationResult]:
+        """Relations whose transform was the identity on every input.
+
+        These report a perfect pass without ever sending the agent a different
+        string, so their green rows are not evidence of anything.
+        """
+        return [rr for rr in self.relation_results if rr.is_vacuous]
+
+    @property
     def suite_is_meaningful(self) -> bool:
-        """True if relation results are not vacuous under the skew scan.
+        """True if relation results are not vacuous.
 
         The meter determines how relation results should be interpreted, not
         whether they can express a useful requirement. A stable verdict may
         make frozen-baseline diffing more sensitive, while an undecided meter
-        calls for more evidence. Only a blindness warning makes green relation
-        results potentially vacuous.
+        calls for more evidence.
+
+        Two things make green relation results vacuous: a blindness warning,
+        and a relation catalogue where no transform actually changed any input.
         """
-        return not self.is_blind
+        if self.is_blind:
+            return False
+        nothing_exercised = self.relation_results and not any(
+            rr.exercised for rr in self.relation_results
+        )
+        return not nothing_exercised
 
     def summary(self) -> str:
         """Return a human-readable summary of the run.
@@ -163,13 +240,45 @@ class RunResult:
 
         if self.relation_results:
             lines.append("4. RELATION RESULTS")
-            lines.append(f"   {'relation':<30} {'type':<12} {'held':>6} {'violated':>10} {'rate':>8}")
-            lines.append(f"   {'-' * 30} {'-' * 12} {'-' * 6} {'-' * 10} {'-' * 8}")
+            lines.append(
+                f"   {'relation':<30} {'type':<12} {'held':>6} {'violated':>10} "
+                f"{'skipped':>8} {'rate':>8}"
+            )
+            lines.append(
+                f"   {'-' * 30} {'-' * 12} {'-' * 6} {'-' * 10} {'-' * 8} {'-' * 8}"
+            )
             for rr in self.relation_results:
+                rate = "n/a" if rr.is_vacuous else f"{rr.violation_rate:.1%}"
                 lines.append(
                     f"   {rr.relation.name:<30} {rr.relation.rtype:<12} "
-                    f"{rr.held:>6} {rr.violated:>10} {rr.violation_rate:>7.1%}"
+                    f"{rr.held:>6} {rr.violated:>10} {rr.skipped:>8} {rate:>8}"
                 )
+            vacuous = self.vacuous_relations
+            if vacuous:
+                lines.append("")
+                names = ", ".join(rr.relation.name for rr in vacuous)
+                lines.extend(
+                    textwrap.wrap(
+                        f"NOT EXERCISED: {names}. The transform returned every "
+                        "input unchanged, so the agent was never asked a "
+                        "different question. Rows marked n/a are not evidence "
+                        "of anything. Add inputs the transform actually changes.",
+                        width=72,
+                        initial_indent="   ",
+                        subsequent_indent="   ",
+                    )
+                )
+            skipped_some = [
+                rr for rr in self.relation_results if rr.skipped and not rr.is_vacuous
+            ]
+            if skipped_some:
+                lines.append("")
+                for rr in skipped_some:
+                    lines.append(
+                        f"   PARTIAL: {rr.relation.name} ran on "
+                        f"{rr.exercised}/{rr.total} inputs "
+                        f"({rr.skipped} left unchanged by the transform)."
+                    )
             lines.append("")
 
         return "\n".join(lines)
@@ -203,36 +312,60 @@ def run(
     if relations is None:
         relations = builtin_relations()
 
+    # Every phase below needs the agent's answer to the *unchanged* input. The
+    # meter already draws k of them per input, so without reuse the blindness
+    # scan and each relation's source side pay for the same string again.
+    recorder = _FirstCallRecorder(agent) if config.reuse_unchanged_calls else None
+    probe: AgentFn = recorder if recorder is not None else agent
+
     # 1. Meter
     meter_result = None
     if config.run_meter:
         meter_result = measure(
-            agent, inputs, k=config.k, layer=config.layer, epsilon=config.epsilon
+            probe, inputs, k=config.k, layer=config.layer, epsilon=config.epsilon
         )
 
     # 2. Blindness
     blindness_result = None
     if config.run_blindness:
-        blindness_result = detect(
-            agent, inputs, layer=config.layer, threshold=config.blindness_threshold
-        )
+        cached = _cached_for(recorder, inputs)
+        if cached is not None:
+            blindness_result = blindness_score(
+                cached, layer=config.layer, threshold=config.blindness_threshold
+            )
+        else:
+            blindness_result = detect(
+                probe, inputs, layer=config.layer, threshold=config.blindness_threshold
+            )
 
     # 3. Relations
     relation_results: list[RelationResult] = []
     for rel in relations:
         held = 0
         violated = 0
+        skipped = 0
         for x in inputs:
-            source_input = x
             followup_input = rel.transform(x)
-            source_obs = agent(source_input)
-            followup_obs = agent(followup_input)
+            if followup_input == x:
+                # The transform is the identity on this input, so there is no
+                # metamorphic pair. Re-asking the agent the same question would
+                # measure rerun stability, which the meter already reports.
+                skipped += 1
+                continue
+            source_obs = recorder.first[x] if recorder and x in recorder.first else probe(x)
+            followup_obs = probe(followup_input)
             if rel.check(source_obs, followup_obs):
                 held += 1
             else:
                 violated += 1
         relation_results.append(
-            RelationResult(relation=rel, total=len(inputs), held=held, violated=violated)
+            RelationResult(
+                relation=rel,
+                total=len(inputs),
+                held=held,
+                violated=violated,
+                skipped=skipped,
+            )
         )
 
     return RunResult(

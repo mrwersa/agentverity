@@ -15,6 +15,15 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 - Distribution build and clean-install validation in CI.
 - PyPI Trusted Publishing workflow and a documented maintainer release
   procedure.
+- `RelationResult.skipped`, `.exercised`, and `.is_vacuous`, plus
+  `RunResult.vacuous_relations`, so a relation whose transform never changed
+  an input is reported instead of counted as a pass.
+- `RunConfig.reuse_unchanged_calls` (default on) and
+  `agentverity.blindness.score`, which scores observations another phase has
+  already collected.
+- A reproducible supervisor-pattern example that contrasts a blind triage step
+  with a stochastic full pipeline.
+- A pull-request-only contribution workflow and CI across Python 3.10 to 3.14.
 
 ### Changed
 
@@ -28,10 +37,11 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   under the skew scan. Meter calls remain separate oracle guidance.
 - Public novelty claims now distinguish repeated-trial and calibration tools
   from AgentVerity's narrower oracle-selection and verdict-skew diagnostics.
-- Added a reproducible supervisor-pattern example that contrasts a blind
-  triage step with a stochastic full pipeline.
-- Added a pull-request-only contribution workflow and CI across Python
-  3.10--3.12.
+- `violation_rate` is now measured over exercised pairs rather than over all
+  inputs, so inputs the transform left untouched no longer dilute it.
+- A run reuses the meter's first draw per input for the blindness scan and for
+  each relation's source side. Agent calls drop from `n * (k + 1 + 2r)` to
+  `n * (k + r)`, halving them on the default configuration.
 
 ### Fixed
 
@@ -40,6 +50,11 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 - The CLI no longer invokes an agent with a hidden probe input before the
   configured suite, avoiding side effects and wasted model calls.
 - Passing `relations=[]` now runs no relations instead of restoring built-ins.
+- `normalisation-invariance` and `tool-selection-invariance` normalise accents
+  and whitespace, so on plain ASCII input the follow-up string was identical to
+  the source. Both relations reported a perfect pass without the agent ever
+  being asked a different question. Those inputs are now skipped, the rate
+  reads `n/a`, and the report names the relation as not exercised.
 
 ## [0.1.0] - 2026-07-24
 
