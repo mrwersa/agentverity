@@ -67,7 +67,7 @@ def test_snapshot_refuses_undecided_meter():
     message = str(excinfo.value)
     # "undecided" alone reads like a bug on an obviously deterministic agent,
     # so the refusal has to say how far short the run fell and what to change.
-    assert "381 are needed" in message
+    assert "about 381 pairs are needed" in message
     assert "--k" in message
     assert "--epsilon" in message
 
@@ -94,7 +94,7 @@ def test_stochastic_refusal_differs_from_underpowered_refusal():
     with pytest.raises(SnapshotRefused, match="stochastic") as excinfo:
         create_snapshot(stochastic, approved=True)
     assert "disagreed" in str(excinfo.value)
-    assert "381 are needed" not in str(excinfo.value)
+    assert "pairs are needed" not in str(excinfo.value)
 
 
 def test_snapshot_refuses_incomplete_run():
@@ -154,3 +154,69 @@ def test_snapshot_round_trip(tmp_path):
     path = tmp_path / "baseline.json"
     save_snapshot(snapshot, path)
     assert load_snapshot(path) == snapshot
+
+
+class TestDocumentedSizingIsPinned:
+    """The README table and the documented escape route are claims, so test them."""
+
+    def test_readme_sizing_table(self):
+        """Every row of the README's budgeting table, generated not typed."""
+        from agentverity.meter import pairs_for_deterministic_call
+
+        # epsilon -> (pairs, --k for 20 inputs, agent calls)
+        table = {0.01: (381, 40, 800), 0.02: (189, 20, 400),
+                 0.05: (73, 8, 160), 0.10: (35, 4, 80)}
+        for epsilon, (pairs, k, calls) in table.items():
+            actual = pairs_for_deterministic_call(epsilon)
+            assert actual == pairs, f"eps={epsilon}"
+            needed_k = -(-actual // 20) * 2
+            assert needed_k == k and 20 * needed_k == calls, f"eps={epsilon}"
+
+    def test_the_documented_escape_route_actually_works(self):
+        """Advice that does not lead to a snapshot is worse than no advice."""
+        deterministic = from_callable(
+            lambda text: {"text": text, "verdict":
+                          "billing" if "charge" in text else "tech"}
+        )
+        inputs = [f"charge query {i}" for i in range(3)] + [
+            f"crash report {i}" for i in range(3)
+        ]
+        result = run(deterministic, inputs, relations=[],
+                     config=RunConfig(k=26, epsilon=0.05))
+        snapshot = create_snapshot(result, approved=True)
+        assert len(snapshot.probes) == len(inputs)
+
+
+class TestAdviceAccountsForObservedFlips:
+    """Assuming zero flips can advise a caller to collect less than they have."""
+
+    @staticmethod
+    def _meter(pair_trials, pair_flips, epsilon=0.01, inputs=6):
+        from agentverity.meter import MeterResult, wilson_ci
+
+        low, high = wilson_ci(pair_flips, pair_trials)
+        return MeterResult(
+            layer="verdict", epsilon=epsilon, inputs=inputs,
+            repeats=(pair_trials // inputs) * 2, pair_trials=pair_trials,
+            pair_flips=pair_flips, inputs_with_flip=pair_flips,
+            ci_low=low, ci_high=high,
+        )
+
+    def test_never_recommends_fewer_pairs_than_already_collected(self):
+        from agentverity.snapshot import _underpowered_message
+
+        meter = self._meter(pair_trials=1200, pair_flips=6)
+        assert meter.call.startswith("undecided")
+        message = _underpowered_message(meter)
+        assert "1574" in message, message
+        assert "128" not in message, "advised dropping below the pairs already run"
+
+    def test_says_more_pairs_cannot_help_when_the_rate_meets_epsilon(self):
+        from agentverity.meter import pairs_for_deterministic_call
+        from agentverity.snapshot import _underpowered_message
+
+        assert pairs_for_deterministic_call(0.01, flip_rate=0.01) is None
+        meter = self._meter(pair_trials=200, pair_flips=6, epsilon=0.02)
+        if meter.call.startswith("undecided"):
+            message = _underpowered_message(meter)
+            assert "More pairs will not help" in message or "pairs are needed" in message

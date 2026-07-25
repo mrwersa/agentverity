@@ -14,6 +14,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   number of disjoint pairs that can certify determinism, so the cost of a
   snapshot can be budgeted before the run rather than discovered by refusal.
 
+### Fixed
+
+- Refusal advice assumed zero flips, so a run with 1,200 pairs and 6 flips was
+  told to drop to 128. It now sizes against the observed rate, and says plainly
+  that more pairs cannot help once that rate has met epsilon.
+- `agentverity snapshot` refuses an unreachable configuration before running
+  the agent instead of after. The bound is arithmetic, so paying a model to
+  discover it was waste.
+- `pairs_for_deterministic_call` rejects a non-positive or non-finite `z`.
+  Passing `float("inf")` previously looped until integer overflow.
+
 ### Changed
 
 - A snapshot refused for insufficient evidence now says how far short the run
