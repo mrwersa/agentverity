@@ -160,14 +160,17 @@ Snapshot files retain SHA-256 input fingerprints rather than raw prompts.
 ```text
 agent or workflow
        |
-       v
-AgentVerity pre-flight ----> quality evaluator
-       |                    DeepEval / promptfoo / AgentCore Evaluations
+       +---- quality evaluator
+       |     DeepEval / promptfoo / AgentCore Evaluations
        |
-       +---- text for people
-       +---- JSON for code
-       +---- JUnit XML for CI
-       +---- OTEL span for CloudWatch / Phoenix / LangSmith
+       +---- AgentVerity evidence qualification
+                    |
+                    +---- text for people
+                    +---- JSON for code
+                    +---- JUnit XML for CI
+                    +---- OTEL span for CloudWatch / Phoenix / LangSmith
+
+release decision = quality result + qualified evidence
 ```
 
 AgentVerity is deliberately small at this boundary. The core has no runtime
@@ -220,11 +223,18 @@ an online evaluator and should not repeat every customer request.
 
 ### Production-stack showcase
 
-The repository also contains a live payment-dispute triage example built with
-Strands and Amazon Bedrock. DeepEval checks labelled route quality,
-AgentVerity checks whether those scores rest on stable and varied decisions,
-and the same agent can run on AgentCore Runtime with aggregate diagnostics sent
-through OpenTelemetry.
+The repository contains a payment-dispute router built with Strands and Amazon
+Bedrock. DeepEval checks labelled route quality. AgentVerity decides whether
+that score rests on stable, varied decisions. The same agent runs on AgentCore
+Runtime, with operational evidence in CloudWatch.
+
+![A real AgentCore canary passes DeepEval quality, AgentVerity evidence, and cloud health checks before its baseline is admitted](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
+
+The redacted London canary made 78 isolated calls through Nova Micro. All six
+reviewed routes were correct, no flips appeared in 36 repeat pairs, all six
+routes were reached, and CloudWatch recorded no errors or throttles. More
+importantly, the first run had been stable but only 5/6 correct. The example
+now refuses snapshot admission unless quality and evidence both pass.
 
 ```bash
 pip install -e ".[showcase]"
@@ -234,11 +244,12 @@ python examples/production_stack/evaluate_stack.py \
   --precision cheap
 ```
 
-The live run uses real model calls and prints its planned call count before
-starting. It is separate from the zero-credential quickstart so a first run
-remains fast and reproducible.
+The live run prints its planned call count before starting. It is separate
+from the zero-credential quickstart so a first run remains fast and
+reproducible.
 
-[Run or deploy the production-stack showcase](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack)
+[Run or deploy the production-stack showcase](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
+[Read the measured canary result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
 
 ## Observation layers
 

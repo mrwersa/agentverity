@@ -1,0 +1,43 @@
+{
+  "schema": "agentverity.production-evidence/v1",
+  "captured_at": "2026-07-25",
+  "region": "eu-west-2",
+  "region_label": "London",
+  "model_id": "amazon.nova-micro-v1:0",
+  "method": {
+    "reviewed_cases": 6,
+    "repeats_per_case": 12,
+    "planned_calls": 78,
+    "isolated_session_per_call": true
+  },
+  "local": {
+    "quality_passed": 6,
+    "quality_total": 6,
+    "pair_flips": 0,
+    "pair_trials": 36,
+    "distinct_routes": 6,
+    "latency_p50_seconds": 0.49816573900170624,
+    "latency_p95_seconds": 0.7987233519670554
+  },
+  "agentcore": {
+    "quality_passed": 6,
+    "quality_total": 6,
+    "pair_flips": 0,
+    "pair_trials": 36,
+    "distinct_routes": 6,
+    "baseline_admitted": true,
+    "successful_invocations": 78,
+    "errors": 0,
+    "throttles": 0,
+    "end_to_end_p50_seconds": 5.868600373971276,
+    "end_to_end_p95_seconds": 7.591448601975571,
+    "runtime_p50_seconds": 0.576,
+    "runtime_p95_seconds": 1.489
+  },
+  "initial_failure": {
+    "quality_passed": 5,
+    "quality_total": 6,
+    "evidence_stable": true,
+    "lesson": "Stability cannot override correctness."
+  }
+}

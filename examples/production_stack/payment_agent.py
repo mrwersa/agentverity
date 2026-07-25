@@ -11,17 +11,18 @@ from pydantic import BaseModel, Field
 SYSTEM_PROMPT = """\
 You route card-payment support tickets.
 Choose exactly one route:
-- duplicate_charge
-- refund_delay
-- card_security
-- merchant_dispute
-- cash_withdrawal
-- transfer_delay
+- duplicate_charge: the same card purchase was charged more than once
+- refund_delay: a merchant promised a refund that has not arrived
+- card_security: the customer does not recognise a card purchase
+- merchant_dispute: the customer recognises the merchant but disputes the
+  amount, goods, or service
+- cash_withdrawal: an ATM cash withdrawal is missing or incorrect
+- transfer_delay: a bank transfer is pending or late
 
 Return the route and a short reason. Do not resolve the dispute.
 """
 
-DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-6"
+DEFAULT_MODEL_ID = "amazon.nova-micro-v1:0"
 
 
 class RouteDecision(BaseModel):

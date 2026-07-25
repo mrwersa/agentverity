@@ -20,6 +20,9 @@ It uses real model calls. The repository's
 [`payment_dispute_gate.py`](../payment_dispute_gate.py) remains the fast,
 zero-credential version of the same evidence-gate idea.
 
+[Read the measured London canary result](RESULTS.md), including the first
+stable-but-wrong run that led to the fail-fast quality gate.
+
 ## 1. Install
 
 From the repository root:
@@ -29,8 +32,9 @@ python -m pip install -e ".[showcase]"
 ```
 
 Configure AWS credentials and enable model access. The example pins
-`global.anthropic.claude-sonnet-4-6` by default. Set `BEDROCK_MODEL_ID` to use
-another Bedrock model that supports structured output:
+the low-cost `amazon.nova-micro-v1:0` model by default. Set
+`BEDROCK_MODEL_ID` to use another Bedrock model that supports structured
+output:
 
 ```bash
 export AWS_REGION=eu-west-2
@@ -52,7 +56,10 @@ python examples/production_stack/evaluate_stack.py \
 DeepEval applies its deterministic exact-match metric to six reviewed routing
 labels. AgentVerity then repeats those six cases from clean Strands sessions,
 checks whether the route is stable, and verifies that the cases cross a
-decision boundary.
+decision boundary. A failed labelled check stops before the repeat budget is
+spent. Both gates must pass before the script admits a reference. Stable but
+incorrect routing is still a failed run. The canary permits four concurrent
+calls by default. Pass `--max-workers 1` for a sequential run.
 
 The script does not save a baseline by default. Review the outputs before
 explicitly admitting one:
@@ -91,7 +98,7 @@ cp examples/production_stack/payment_agent.py \
 
 cd PaymentTriage/app/PaymentTriage
 uv add "bedrock-agentcore>=1.18,<2" "pydantic>=2,<3" \
-  "strands-agents>=1.0"
+  "strands-agents>=1.0" "aws-opentelemetry-distro>=0.10"
 cd ../..
 
 agentcore dev
@@ -101,7 +108,7 @@ agentcore dev
 right, stop the development server and deploy from the generated project:
 
 ```bash
-agentcore deploy --plan
+agentcore deploy --dry-run
 agentcore deploy
 agentcore status
 ```
@@ -124,7 +131,12 @@ python examples/production_stack/evaluate_stack.py \
 
 The remote adapter creates a fresh `runtimeSessionId` for every call. Reusing a
 session would make later trials depend on earlier tickets and invalidate the
-stability measurement.
+stability measurement. It stops each session after reading the response, which
+avoids paying for an idle tail between canary trials.
+
+The output directory contains a JUnit report and `stack-evidence.json`. The
+JSON records labelled-route accuracy, AgentVerity's aggregate evidence, and
+end-to-end p50 and p95 latency without storing ticket text or model responses.
 
 ## What each component proves
 

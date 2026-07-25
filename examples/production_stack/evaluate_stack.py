@@ -9,10 +9,16 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import json
+import math
+import os
+import threading
+import time
 from pathlib import Path
+from typing import Any
 
 from cases import CASES
-from payment_agent import build_isolated_router
+from payment_agent import DEFAULT_MODEL_ID, build_isolated_router
 from runtime_client import build_runtime_router
 
 from agentverity import (
@@ -23,9 +29,34 @@ from agentverity import (
     plan_repeats,
     record_otel_run,
     run,
+    run_result_to_dict,
     save_snapshot,
     write_junit_xml,
 )
+
+
+class TimedAgent:
+    """Record end-to-end latency without changing the wrapped callable."""
+
+    def __init__(self, agent: Any) -> None:
+        self.agent = agent
+        self.durations: list[float] = []
+        self._lock = threading.Lock()
+
+    def __call__(self, value: str):
+        started = time.perf_counter()
+        try:
+            return self.agent(value)
+        finally:
+            with self._lock:
+                self.durations.append(time.perf_counter() - started)
+
+
+def _percentile(values: list[float], quantile: float) -> float:
+    """Return the nearest-rank percentile for a non-empty sample."""
+    ordered = sorted(values)
+    index = max(0, math.ceil(quantile * len(ordered)) - 1)
+    return ordered[index]
 
 
 def _quality_score(agent) -> tuple[int, int]:
@@ -73,6 +104,12 @@ def main() -> None:
         help="Stability threshold. Cheap is appropriate for the first live run.",
     )
     parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=4,
+        help="Maximum concurrent canary calls. Use 1 for a sequential run.",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         help="Write the AgentVerity JUnit report and optional snapshot.",
@@ -104,17 +141,29 @@ def main() -> None:
     )
     print()
 
-    agent = _build_target(args.target)
+    agent = TimedAgent(_build_target(args.target))
     correct, total = _quality_score(agent)
     print(f"DeepEval exact-match: {correct}/{total} labelled routes passed")
+    if correct != total:
+        raise SystemExit(
+            "Quality gate failed: "
+            f"{correct}/{total} labelled routes passed. "
+            "Stability cannot override correctness. AgentVerity was not run."
+        )
 
     result = run(
         agent,
         inputs=[ticket for ticket, _ in CASES],
         relations=[],
-        config=RunConfig(precision=args.precision),
+        config=RunConfig(
+            precision=args.precision,
+            max_workers=args.max_workers,
+        ),
     )
     print(result.summary())
+    p50 = _percentile(agent.durations, 0.50)
+    p95 = _percentile(agent.durations, 0.95)
+    print(f"End-to-end latency: p50={p50:.3f}s, p95={p95:.3f}s")
 
     if args.output_dir:
         args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -122,6 +171,28 @@ def main() -> None:
             result,
             args.output_dir / "agentverity.xml",
             suite_name=f"payment-triage.{args.target}.agentverity",
+        )
+        evidence = {
+            "schema": "agentverity.showcase/v1",
+            "target": args.target,
+            "model_id": os.environ.get("BEDROCK_MODEL_ID", DEFAULT_MODEL_ID),
+            "precision": args.precision,
+            "planned_model_calls": quality_calls + preflight_calls,
+            "quality": {
+                "metric": "DeepEval ExactMatchMetric",
+                "passed": correct,
+                "total": total,
+            },
+            "latency_seconds": {
+                "calls": len(agent.durations),
+                "p50": p50,
+                "p95": p95,
+            },
+            "agentverity": run_result_to_dict(result),
+        }
+        (args.output_dir / "stack-evidence.json").write_text(
+            json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
         )
 
     if args.accept_reference:
@@ -138,7 +209,6 @@ def main() -> None:
             result,
             span_name=f"agentverity.payment_triage.{args.target}",
         )
-
 
 if __name__ == "__main__":
     main()
