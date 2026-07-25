@@ -25,6 +25,30 @@ It does not replace DeepEval, promptfoo, AgentCore Evaluations, or your quality
 metrics. It checks two conditions that can make those scores misleading before
 you trust them.
 
+## Where it runs
+
+Evaluation is usually split into
+[offline and online](https://docs.langchain.com/langsmith/evaluation-concepts):
+offline scores a curated set before release, online scores live traffic after
+it. **AgentVerity is offline only.** Both its checks work by issuing calls of
+their own, repeating one case and varying the inputs, so it can never read
+production traffic the way an online evaluator does.
+
+| Lifecycle phase | Run it? | Budget |
+|---|---|---|
+| Experimentation | Yes | `precision="cheap"`, a handful of cases |
+| Build, on each pull request | Only a fast subset | `precision="cheap"`, few cases, local or stubbed agent |
+| Release gate, before deploy | **Yes, this is the main one** | `precision="balanced"`, the full probe set |
+| Operational steady state | As a scheduled canary against production | Nightly, not per request |
+
+Budget it before you wire it in. On a managed runtime a single call costs far
+more than the agent does: in the [measured AgentCore
+canary](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
+the agent answered in 0.58s while the caller waited 5.87s, because statistical
+independence needs a fresh session per call. Six cases at twelve repeats took
+78 calls and about eight minutes. Twenty cases would take roughly twenty-five.
+That is a nightly job or a release gate, not a per-commit check.
+
 ![AgentVerity diagnoses poor decision coverage in a triage step and unstable decisions in a supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
 
 *This report is regenerated from the executable
@@ -216,8 +240,8 @@ excludes prompts, outputs, fingerprints, relation names, and exception
 messages. OTLP can carry the span into Amazon Bedrock AgentCore Observability
 and CloudWatch, Phoenix, LangSmith, or another collector.
 
-Run this in CI, before deployment, or as a scheduled canary. AgentVerity is not
-an online evaluator and should not repeat every customer request.
+Run this at the release gate or as a scheduled canary, per
+[Where it runs](#where-it-runs) above.
 
 [Integration examples and the AgentCore validation plan](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 
