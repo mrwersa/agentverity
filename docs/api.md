@@ -7,7 +7,8 @@ from agentverity import Observation, RunConfig, from_callable, run
 ```
 
 - `from_callable` adapts a Python function.
-- `run` performs the meter, skew scan, and optional relations.
+- `run` performs the decision-stability check, decision-coverage check, and
+  optional relations.
 - `Observation` separates text, verdict, and tool-path layers.
 - `RunConfig` controls precision, call budget, concurrency, and failures.
 
@@ -32,10 +33,12 @@ The CLI exposes the same path through `agentverity snapshot` and
 
 ## Advanced measurement
 
-- `measure` runs only the verdict-stochasticity meter.
-- `detect` runs only the constant-gate-blindness scan.
+- `measure` runs only the verdict-stochasticity meter, the underlying
+  decision-stability check.
+- `detect` runs only the constant-gate-blindness scan, the underlying
+  decision-coverage check.
 - `pairs_for_deterministic_call` budgets the minimum pair count.
-- `plan_repeats` converts the probe count and precision into `k`.
+- `plan_repeats` converts the input count and precision into `k`.
 - `builtin_relations` returns the default metamorphic catalogue.
 - `Relation` defines a custom invariant, monotone, or directional check.
 

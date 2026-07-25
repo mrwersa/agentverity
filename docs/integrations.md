@@ -1,8 +1,9 @@
 # Integrations
 
-AgentVerity owns one step: checking whether an agent and its probe set produce
-interpretable test evidence. It should sit beside quality evaluators and
-observability platforms, not replace them.
+AgentVerity owns one step: checking whether repeated decisions are stable and
+whether the test inputs exercise more than one decision. Together, those
+deliberately selected inputs form the probe set. AgentVerity should sit beside
+quality evaluators and observability platforms, not replace them.
 
 ```text
 agent or workflow
@@ -43,17 +44,18 @@ agentverity run \
   --output agentverity.xml
 ```
 
-AgentVerity maps blind probes and violated relations to failures, incomplete or
-undecided evidence to errors, and unexercised relations to skipped tests.
-Stochasticity is guidance rather than a failure because it changes the oracle
-you should use. It does not by itself prove a defective agent.
+AgentVerity maps poor probe coverage (`blind`) and violated relations to
+failures, incomplete or undecided evidence to errors, and unexercised relations
+to skipped tests. An unstable decision (`stochastic`) is guidance rather than a
+failure because it changes the test strategy. It does not by itself prove a
+defective agent.
 
 The command's exit code carries the same interpretation:
 
 | Code | Meaning |
 |---:|---|
 | 0 | Evidence is interpretable and no relation was violated |
-| 1 | Blind or vacuous probes, a violated relation, or snapshot drift |
+| 1 | Poor probe coverage, a relation that tested nothing, a violated relation, or snapshot drift |
 | 2 | Incomplete or undecided evidence, or unsupported snapshot admission |
 
 ## OpenTelemetry monitoring
