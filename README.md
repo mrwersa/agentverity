@@ -3,8 +3,9 @@
 > **Does your agent test suite actually test anything, or is it lying to you?**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
-[![Tests: 72](https://img.shields.io/badge/tests-72%20passing-brightgreen.svg)](#tests)
+[![Tests: 73](https://img.shields.io/badge/tests-73%20passing-brightgreen.svg)](#tests)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 
 **agentverity** is a measure-first testing framework for non-deterministic LLM agents. Before running any test relation, it answers two questions that ordinary pass-rate reports leave unresolved:
@@ -61,16 +62,16 @@ Metamorphic relations are the vehicle. The diagnostics are the product.
 
 ### Install
 
-Not yet on PyPI (see [Status](#status)). Install from GitHub:
+Install from PyPI:
 
 ```bash
-pip install git+https://github.com/mrwersa/agentverity.git
+pip install agentverity
 ```
 
 For Strands agent support:
 
 ```bash
-pip install "agentverity[strands] @ git+https://github.com/mrwersa/agentverity.git"
+pip install "agentverity[strands]"
 ```
 
 ### Use in Python
@@ -293,7 +294,7 @@ Relations run source and follow-up inputs through the agent and check whether a 
 
 ## Tests
 
-72 tests, all passing.
+73 tests, all passing.
 
 ```bash
 pip install -e ".[dev]"
@@ -307,7 +308,8 @@ Coverage: observation construction and frozenness, Wilson CI bounds and edge cas
 
 ## Status
 
-Alpha. Core API is stable. Strands adapter is verified. LangGraph adapter is planned. Not yet on PyPI.
+Alpha. Public APIs may change before 1.0. The Strands adapter is verified, and
+a LangGraph adapter is planned.
 
 ## License
 

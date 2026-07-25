@@ -8,6 +8,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-25
+
+### Added
+
+- Distribution build and clean-install validation in CI.
+- PyPI Trusted Publishing workflow and a documented maintainer release
+  procedure.
+
 ### Changed
 
 - The verdict-stochasticity interval now uses disjoint repeat pairs. The
@@ -71,4 +79,6 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mrwersa/agentverity/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mrwersa/agentverity/releases/tag/v0.1.0

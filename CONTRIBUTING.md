@@ -27,3 +27,6 @@ AgentVerity uses a pull-request-only workflow for `main`.
 
 Direct pushes, force pushes, and deletion of `main` are blocked. Merge only
 after CI passes and all review conversations are resolved.
+
+Maintainers should follow [RELEASING.md](RELEASING.md) when publishing a
+version.

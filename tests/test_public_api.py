@@ -6,6 +6,8 @@ drifting out of sync with what agentverity/__init__.py actually exports.
 
 from __future__ import annotations
 
+from importlib.metadata import version
+
 
 class TestPublicAPI:
     def test_readme_quickstart_imports(self):
@@ -32,3 +34,9 @@ class TestPublicAPI:
 
         for name in agentverity.__all__:
             assert hasattr(agentverity, name), f"{name!r} in __all__ but not importable"
+
+    def test_package_version_matches_installed_metadata(self):
+        """Keep the runtime version on the packaging metadata's single source."""
+        import agentverity
+
+        assert agentverity.__version__ == version("agentverity")
