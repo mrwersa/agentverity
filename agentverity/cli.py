@@ -11,6 +11,7 @@ from pathlib import Path
 
 from agentverity.adapters.callable_adapter import from_callable
 from agentverity.execution import ProgressEvent
+from agentverity.meter import pairs_for_deterministic_call
 from agentverity.reporting import run_result_to_dict, write_run_json
 from agentverity.runner import RunConfig, RunResult, run
 from agentverity.snapshot import (
@@ -171,6 +172,30 @@ def _run_command(args: argparse.Namespace) -> int:
     return _exit_code(result)
 
 
+def _infeasible_reason(inputs: int, k: int, epsilon: float) -> str | None:
+    """Reject a configuration that cannot certify determinism, before running.
+
+    Each input contributes ``floor(k / 2)`` disjoint pairs, so the ceiling on
+    evidence is fixed the moment the probe set and ``k`` are chosen. If that
+    ceiling sits below the pairs needed even in the best case of zero flips, no
+    execution can succeed and the calls are wasted.
+    """
+    best_case = pairs_for_deterministic_call(epsilon)
+    if best_case is None:
+        return None
+    available = inputs * (k // 2)
+    if available >= best_case:
+        return None
+    per_input = -(-best_case // inputs)
+    return (
+        f"this configuration cannot certify determinism at epsilon={epsilon}. "
+        f"{inputs} inputs at k={k} yield {available} disjoint pairs, and "
+        f"{best_case} are needed even with zero flips. Raise --k to at least "
+        f"{per_input * 2}, add inputs, or set a deployment-relevant --epsilon. "
+        "Refused before running so the calls are not spent."
+    )
+
+
 def _snapshot_command(args: argparse.Namespace) -> int:
     if not args.accept_reference:
         print(
@@ -180,6 +205,13 @@ def _snapshot_command(args: argparse.Namespace) -> int:
         )
         return 2
     agent, inputs = _agent_and_inputs(args)
+    infeasible = _infeasible_reason(len(inputs), args.k, args.epsilon)
+    if infeasible is not None:
+        # Refusing after the run would be honest but expensive: on a paid model
+        # every one of those calls is spent proving something the arithmetic
+        # already ruled out.
+        print(f"snapshot refused: {infeasible}", file=sys.stderr)
+        return 2
     result = run(
         agent,
         inputs,

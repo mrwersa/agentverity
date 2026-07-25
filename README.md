@@ -214,8 +214,13 @@ of 1% is deliberately strict, and on a paid model it is the difference between
 than accepting the default, then size `--k` from the table. The refusal message
 does this arithmetic for your probe set and prints the specific flag to change.
 
-`agentverity.meter.pairs_for_deterministic_call(epsilon)` returns these numbers
-if you want to budget in code.
+`pairs_for_deterministic_call(epsilon)` returns these numbers if you want to
+budget in code. Pass `flip_rate=` to account for flips already seen, and note
+it returns `None` when the observed rate has already met epsilon, because more
+pairs cannot rescue that case.
+
+`agentverity snapshot` refuses an impossible configuration *before* running the
+agent, so a probe set that mathematically cannot reach the bound costs nothing.
 
 Check the same approved cases later:
 
@@ -281,6 +286,7 @@ from agentverity import (
     create_snapshot,    # admit a reviewed baseline only when evidence supports it
     compare_snapshot,   # re-admit current evidence, then compare
     run_result_to_dict, # versioned JSON report without raw input text
+    pairs_for_deterministic_call,  # budget the snapshot gate before spending calls
 )
 
 from agentverity.adapters.strands import from_strands  # optional, needs strands-agents

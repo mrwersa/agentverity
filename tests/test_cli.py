@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 
 import pytest
 
@@ -190,3 +191,34 @@ class TestCLI:
         captured = capsys.readouterr()
         assert exit_code == 2
         assert "run is incomplete" in captured.err
+
+
+def test_snapshot_refuses_impossible_config_without_calling_the_agent(tmp_path):
+    """An unreachable bound is arithmetic, so do not pay a model to discover it."""
+    module = tmp_path / "counting_agent.py"
+    module.write_text(
+        "CALLS = []\n"
+        "def build():\n"
+        "    def fn(text):\n"
+        "        CALLS.append(text)\n"
+        "        return {'text': text, 'verdict': 'a' if 'x' in text else 'b'}\n"
+        "    return fn\n"
+    )
+    seeds = tmp_path / "seeds.txt"
+    seeds.write_text("x one\nx two\ny three\ny four\n")
+
+    sys.path.insert(0, str(tmp_path))
+    try:
+        code = main([
+            "snapshot", "--agent", "counting_agent:build",
+            "--inputs", str(seeds), "--output", str(tmp_path / "b.json"),
+            "--accept-reference", "--k", "5", "--epsilon", "0.01",
+        ])
+        import counting_agent
+
+        assert code == 2
+        assert counting_agent.CALLS == [], "agent was called despite an impossible bound"
+        assert not (tmp_path / "b.json").exists()
+    finally:
+        sys.path.remove(str(tmp_path))
+        sys.modules.pop("counting_agent", None)

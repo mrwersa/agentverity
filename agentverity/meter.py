@@ -58,38 +58,61 @@ def wilson_ci(successes: int, trials: int, z: float = 1.96) -> tuple[float, floa
     return max(0.0, centre - margin), min(1.0, centre + margin)
 
 
-def pairs_for_deterministic_call(epsilon: float, z: float = 1.96) -> int:
-    """Smallest number of disjoint pairs that can certify determinism.
+def pairs_for_deterministic_call(
+    epsilon: float, z: float = 1.96, *, flip_rate: float = 0.0
+) -> int | None:
+    """Pairs needed to certify determinism, given the flip rate seen so far.
 
-    A ``verdict-deterministic`` call needs the Wilson upper bound to fall below
-    ``epsilon``, and the bound shrinks with the number of independent pairs. Even
-    with zero observed flips, a small probe cannot get there: at the default
-    ``epsilon`` of 0.01 it takes 381 pairs, which is roughly 800 agent calls
-    spread over 20 inputs. Callers use this to say how far short a run fell
-    instead of only reporting "undecided".
+    A ``verdict-deterministic`` call needs the Wilson upper bound below
+    ``epsilon``. With no flips observed the bound depends only on the pair
+    count: 381 pairs at the default epsilon of 0.01.
+
+    Flips change the answer completely. As the pair count grows at a fixed
+    observed rate the bound converges down onto that rate, so a probe already
+    flipping at or above ``epsilon`` can never be certified no matter how many
+    calls it buys. Advising "collect more pairs" there is wrong, and advising a
+    *smaller* count than the caller already has is worse.
 
     Args:
-        epsilon: The flip-rate threshold the caller is testing against.
+        epsilon: The flip-rate threshold being tested against.
         z: Z-value for the interval, matching :func:`wilson_ci`.
+        flip_rate: Flip rate observed so far. Zero is the best case and the
+            cheapest.
 
     Returns:
-        The minimum pair count, assuming the best case of zero observed flips.
+        The minimum pair count, or ``None`` when no pair count can get there
+        because the observed rate is already at or above ``epsilon``.
 
     Raises:
-        ValueError: If ``epsilon`` is outside ``(0, 1)``.
+        ValueError: If ``epsilon`` is outside ``(0, 1)``, ``z`` is not finite
+            and positive, or ``flip_rate`` is outside ``[0, 1]``.
     """
     if not 0 < epsilon < 1:
         raise ValueError("epsilon must be between 0 and 1")
-    # Zero flips is the most favourable case, so this is a lower bound on cost.
-    # The upper bound falls monotonically in the pair count, so double until it
-    # clears epsilon, then bisect for the exact crossing.
+    if not math.isfinite(z) or z <= 0:
+        raise ValueError("z must be a finite positive number")
+    if not 0 <= flip_rate <= 1:
+        raise ValueError("flip_rate must be between 0 and 1")
+    if flip_rate >= epsilon:
+        # The bound converges onto the observed rate from above, so it never
+        # crosses below an epsilon the rate already meets or exceeds.
+        return None
+
+    def upper_at(pairs: int) -> float:
+        return wilson_ci(round(flip_rate * pairs), pairs, z)[1]
+
+    # The bound falls monotonically in the pair count, so double then bisect.
+    # The cap stops a pathological rate just under epsilon from looping forever.
+    cap = 10_000_000
     high = 1
-    while wilson_ci(0, high, z)[1] >= epsilon:
+    while upper_at(high) >= epsilon:
         high *= 2
+        if high > cap:
+            return None
     low = high // 2
     while low + 1 < high:
         mid = (low + high) // 2
-        if wilson_ci(0, mid, z)[1] < epsilon:
+        if upper_at(mid) < epsilon:
             high = mid
         else:
             low = mid

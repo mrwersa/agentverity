@@ -165,26 +165,48 @@ def _underpowered_message(meter: MeterResult) -> str:
     """Explain how far the evidence fell short, not just that it did.
 
     "undecided" on its own reads like a bug when the agent is plainly
-    deterministic. The interval simply has not been driven below epsilon yet,
-    and the gap is often an order of magnitude, so quantify it.
+    deterministic. The gap is often an order of magnitude, so quantify it, and
+    quantify it against the flip rate actually observed. Assuming zero flips
+    can advise a caller who already has 1,200 pairs to drop to 128.
     """
     if meter.call == "verdict-stochastic":
         return (
-            "the verdict is stochastic at epsilon="
-            f"{meter.epsilon}: {meter.pair_flips} of {meter.pair_trials} disjoint "
-            "pairs disagreed. A baseline cannot be frozen against a decision "
-            "that changes on rerun. Fix the agent, or snapshot a layer that is "
-            "stable."
+            f"the verdict is stochastic at epsilon={meter.epsilon}: "
+            f"{meter.pair_flips} of {meter.pair_trials} disjoint pairs "
+            "disagreed. A baseline cannot be frozen against a decision that "
+            "changes on rerun. Fix the agent, or snapshot a layer that is stable."
         )
-    needed = pairs_for_deterministic_call(meter.epsilon)
+
+    rate = meter.flip_rate
+    needed = pairs_for_deterministic_call(meter.epsilon, flip_rate=rate)
+    seen = (
+        f"{meter.pair_trials} disjoint pairs with {meter.pair_flips} flips"
+        if meter.pair_flips
+        else f"{meter.pair_trials} disjoint pairs and no flips"
+    )
+
+    if needed is None:
+        cheaper = pairs_for_deterministic_call(meter.epsilon * 5, flip_rate=rate)
+        route = (
+            f"about {cheaper} pairs at epsilon={meter.epsilon * 5:g}"
+            if cheaper is not None
+            else f"an epsilon above the observed rate of {rate:.2%}"
+        )
+        return (
+            f"cannot certify determinism at epsilon={meter.epsilon}: {seen}, "
+            f"a rate of {rate:.2%}. More pairs will not help, because the "
+            "interval converges onto the observed rate rather than below it. "
+            f"Either accept a deployment-relevant epsilon ({route}) or treat "
+            "this layer as non-deterministic."
+        )
+
     per_input = -(-needed // meter.inputs)
     return (
         f"not enough evidence to certify determinism at epsilon={meter.epsilon}: "
-        f"{meter.pair_trials} disjoint pairs, and {needed} are needed even with "
-        f"zero flips. Options: raise --k to at least {per_input * 2} across "
-        f"{meter.inputs} inputs (about {meter.inputs * per_input * 2} agent "
-        f"calls), add inputs, or set a deployment-relevant --epsilon "
-        f"({pairs_for_deterministic_call(0.05)} pairs at 0.05)."
+        f"{seen}, and about {needed} pairs are needed at that rate. Options: "
+        f"raise --k to at least {per_input * 2} across {meter.inputs} inputs "
+        f"(about {meter.inputs * per_input * 2} agent calls), add inputs, or set "
+        "a deployment-relevant --epsilon."
     )
 
 
