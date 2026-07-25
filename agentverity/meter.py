@@ -58,6 +58,44 @@ def wilson_ci(successes: int, trials: int, z: float = 1.96) -> tuple[float, floa
     return max(0.0, centre - margin), min(1.0, centre + margin)
 
 
+def pairs_for_deterministic_call(epsilon: float, z: float = 1.96) -> int:
+    """Smallest number of disjoint pairs that can certify determinism.
+
+    A ``verdict-deterministic`` call needs the Wilson upper bound to fall below
+    ``epsilon``, and the bound shrinks with the number of independent pairs. Even
+    with zero observed flips, a small probe cannot get there: at the default
+    ``epsilon`` of 0.01 it takes 381 pairs, which is roughly 800 agent calls
+    spread over 20 inputs. Callers use this to say how far short a run fell
+    instead of only reporting "undecided".
+
+    Args:
+        epsilon: The flip-rate threshold the caller is testing against.
+        z: Z-value for the interval, matching :func:`wilson_ci`.
+
+    Returns:
+        The minimum pair count, assuming the best case of zero observed flips.
+
+    Raises:
+        ValueError: If ``epsilon`` is outside ``(0, 1)``.
+    """
+    if not 0 < epsilon < 1:
+        raise ValueError("epsilon must be between 0 and 1")
+    # Zero flips is the most favourable case, so this is a lower bound on cost.
+    # The upper bound falls monotonically in the pair count, so double until it
+    # clears epsilon, then bisect for the exact crossing.
+    high = 1
+    while wilson_ci(0, high, z)[1] >= epsilon:
+        high *= 2
+    low = high // 2
+    while low + 1 < high:
+        mid = (low + high) // 2
+        if wilson_ci(0, mid, z)[1] < epsilon:
+            high = mid
+        else:
+            low = mid
+    return high
+
+
 @dataclass(frozen=True)
 class MeterResult:
     """The outcome of a verdict-stochasticity measurement.

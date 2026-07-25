@@ -8,6 +8,24 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `agentverity.meter.pairs_for_deterministic_call(epsilon)` returns the minimum
+  number of disjoint pairs that can certify determinism, so the cost of a
+  snapshot can be budgeted before the run rather than discovered by refusal.
+
+### Changed
+
+- A snapshot refused for insufficient evidence now says how far short the run
+  fell and which flag to change. "undecided" alone reads like a bug on an
+  obviously deterministic agent, when the real answer is that 12 pairs cannot
+  clear a 1% epsilon and 381 are needed. Stochastic verdicts get a distinct
+  message, because a flipping decision is a different problem from a small
+  sample.
+- The README sizes the snapshot gate. At the default epsilon of 0.01 a
+  deterministic agent still needs about 800 agent calls to be certified, which
+  was previously something you found out by being refused.
+
 ## [0.4.0] - 2026-07-25
 
 ### Added

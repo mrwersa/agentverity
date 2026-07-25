@@ -193,6 +193,30 @@ AgentVerity refuses this command when the meter is stochastic or undecided,
 the probe set is blind, any call failed, or approval is absent. The snapshot
 stores SHA-256 input fingerprints rather than raw prompts.
 
+#### Budget the evidence before you run it
+
+Expect the first attempt to be refused, including on an agent you know is
+deterministic. Certifying determinism means driving the Wilson upper bound
+below epsilon, and that takes more repeats than most people expect. Even with
+zero observed flips:
+
+| epsilon | disjoint pairs needed | 20 inputs | agent calls |
+|---:|---:|---:|---:|
+| 0.01 (default) | 381 | `--k 40` | 800 |
+| 0.02 | 189 | `--k 20` | 400 |
+| 0.05 | 73 | `--k 8` | 160 |
+| 0.10 | 35 | `--k 4` | 80 |
+
+Each input contributes `floor(k / 2)` pairs, so pairs come from inputs and
+repeats together and you can trade one against the other. The default epsilon
+of 1% is deliberately strict, and on a paid model it is the difference between
+80 calls and 800. Pick an epsilon your deployment actually cares about rather
+than accepting the default, then size `--k` from the table. The refusal message
+does this arithmetic for your probe set and prints the specific flag to change.
+
+`agentverity.meter.pairs_for_deterministic_call(epsilon)` returns these numbers
+if you want to budget in code.
+
 Check the same approved cases later:
 
 ```bash
