@@ -18,8 +18,8 @@ DeepEval/promptfoo) or on the MR taxonomy (CheckList).
 
 | Tool | Stars | Non-determinism | Metamorphic | Suite-quality diagnostic | License |
 |---|---|---|---|---|---|
-| DeepEval | 16.7k | No | No | No | Apache-2.0 |
-| promptfoo | 22.9k | No | No | Red-team coverage only | MIT |
+| DeepEval | 16.7k | Repeated runs | No | No | Apache-2.0 |
+| promptfoo | 22.9k | Repeated runs | No | Red-team coverage only | MIT |
 | agentevals (langchain) | 636 | No | No | No | MIT |
 | CheckList | 2k | Assumes deterministic | INV/DIR (owns it) | No | MIT |
 | AgentAssay | paper | Yes (Wilson CIs) | Yes | Mutation testing | AGPL |
@@ -28,16 +28,16 @@ DeepEval/promptfoo) or on the MR taxonomy (CheckList).
 
 **The three differentiators that survive the research:**
 
-1. **Measure-first verdict-stochasticity meter.** No tool asks "is the verdict
-   even stochastic before applying MRs?" AgentAssay assumes non-determinism;
-   agentrial just runs N trials. We say "if the verdict is deterministic, a
-   frozen-output diff dominates and MRs are redundant — the tool says so
-   instead of wasting your effort." Found in no scanned tool.
+1. **Verdict-layer oracle selection.** Existing tools repeat tests, report
+   uncertainty, and in AgentAssay's case calibrate trial budgets. AgentVerity
+   asks whether the chosen categorical decision layer is stable enough that a
+   frozen baseline dominates MRs. The novelty claim is this oracle-selection
+   use, not awareness that agents are non-deterministic.
 
-2. **Constant-gate-blindness detector.** No tool detects when a passing suite
-   is trivially satisfied by a near-constant agent. A gate that returns
-   `"allow"` on 96% of inputs satisfies every invariance relation trivially.
-   The detector flags this. Found in no scanned tool.
+2. **Constant-gate-blindness detector.** A gate that returns `"allow"` on 96%
+   of a probe set can satisfy many invariance checks without exercising a
+   boundary. The detector flags the pass as potentially vacuous. This is a
+   suite-power warning, not a correctness judgement.
 
 3. **Suite-quality diagnostic framing.** Not "run tests and report pass/fail"
    but "tell you if your tests are meaningful before you trust them." The
@@ -47,7 +47,7 @@ DeepEval/promptfoo) or on the MR taxonomy (CheckList).
 - **Metamorphic relations** (Chen et al. 1998): assert a law between two runs
   (transform input, check the outputs relate correctly) — no golden output
   needed. The escape from the oracle problem for non-deterministic systems.
-- **Semantic-invariance transforms** (CheckList / LLMORPH): paraphrase,
+- **Semantic-invariance transforms** (CheckList / LLMORPH): normalisation,
   casing, whitespace.
 - **Wilson CIs** (AgentAssay, agentrial use them for pass-rate CIs; we use
   them for verdict-stability certification — same primitive, different use).
@@ -60,10 +60,8 @@ DeepEval/promptfoo) or on the MR taxonomy (CheckList).
 
 `agentverity` runs two diagnostics before any test relation: does the agent's
 verdict flip across identical reruns (meter), and does the agent return a
-near-constant verdict across a diverse input set (blindness). If either
-diagnostic says "no," the tool tells you that metamorphic relations add little
-and a frozen-output diff or a careful look at the test suite is the better
-oracle.
+near-constant verdict across a diverse input set (blindness). The first guides
+oracle selection. The second warns when green relation results may be vacuous.
 
 ## 2. Architecture (three layers)
 
@@ -76,8 +74,7 @@ your agent (Strands / LangGraph / any callable)
     ├── meter.py        — verdict-stochasticity meter (headline #1)
     ├── blindness.py    — constant-gate-blindness detector (headline #2)
     ├── relations.py     — typed metamorphic relations (the vehicle)
-    ├── runner.py        — orchestrates meter -> relations -> blindness
-    ├── report.py        — text + JSON report, diagnostics-first
+    ├── runner.py        — orchestrates meter -> blindness -> relations
     └── cli.py           — `agentverity run` entry point
 ```
 
@@ -98,11 +95,11 @@ Adapters are OPTIONAL imports — the core installs without any agent library.
 
 ### 3b. Core (`agentverity/`)
 - `relations.py` — Relation = (name, type, transform, check). Built-in
-  catalogue: paraphrase, casing, whitespace invariance (text-level);
+  catalogue: normalisation, casing, whitespace invariance (text-level);
   tool-selection-invariance (agent-specific, our emphasis).
 - `meter.py` — verdict-stochasticity meter. Tri-state call with Wilson CI.
 - `blindness.py` — constant-gate-blindness detector. Skew scan + warning.
-- `runner.py` — orchestrates meter -> relations -> blindness. Returns RunResult.
+- `runner.py` — orchestrates meter -> blindness -> relations. Returns RunResult.
 - `cli.py` — `agentverity run --agent module:func --inputs file.txt`.
 
 ## 3. Scope discipline (what it is NOT)

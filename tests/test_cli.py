@@ -24,6 +24,7 @@ class TestCLI:
             "run",
             "--agent", "examples.toy_agent:deterministic_gate",
             "--inputs", str(inputs_file),
+            "--k", "10",
         ])
         captured = capsys.readouterr()
         assert "VERDICT-STOCHASTICITY METER" in captured.out

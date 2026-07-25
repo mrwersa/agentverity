@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from agentverity.adapters import from_callable
 from agentverity.blindness import detect
 
@@ -60,3 +62,13 @@ class TestDetect:
         result_high = detect(agent, inputs, threshold=0.95)
         assert result_low.blind is True
         assert result_high.blind is False
+
+    def test_empty_inputs_rejected(self):
+        agent = from_callable(lambda x: "ok")
+        with pytest.raises(ValueError, match="inputs"):
+            detect(agent, [])
+
+    def test_invalid_threshold_rejected(self):
+        agent = from_callable(lambda x: "ok")
+        with pytest.raises(ValueError, match="threshold"):
+            detect(agent, ["hello"], threshold=0)
