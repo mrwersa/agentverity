@@ -133,3 +133,33 @@ Adapters are OPTIONAL imports — the core installs without any agent library.
 - M5 real-agent execution: DONE — bounded concurrency, progress, partial
   evidence, versioned JSON.
 - M6 evidence-gated snapshots: DONE in v0.4.0.
+- M7 delivery-stack handoff: DONE after v0.5.0 — JUnit XML for CI and one
+  privacy-minimised OpenTelemetry summary span for an existing monitoring
+  pipeline.
+
+## 5. Reporting boundary
+
+AgentVerity interprets one `RunResult`; reporters do not reinterpret it.
+Terminal text, versioned JSON, JUnit XML, process exit codes, and OTEL
+attributes must agree on these cases:
+
+- incomplete or undecided evidence is unsupported, never green
+- blind probes and wholly vacuous relation catalogues are failed test evidence
+- stochasticity is oracle guidance, not automatically a defective agent
+- violated relations fail
+- transforms that changed no input are skipped, not passed
+
+JUnit is a delivery format rather than a new testing model. OpenTelemetry is a
+monitoring handoff rather than a hosted AgentVerity service.
+
+## 6. Telemetry privacy
+
+The OTEL bridge emits aggregate, low-cardinality `agentverity.*` attributes.
+It excludes raw prompts, outputs, fingerprints, majority-verdict values,
+relation names, and exception messages. This makes the summary useful for
+dashboards without turning the span into a second report store.
+
+The bridge creates one span after a diagnostic run. It does not repeat
+production requests, instrument model internals, or replace the host's trace
+collector. When called inside an active trace, the span follows the current
+OpenTelemetry context.

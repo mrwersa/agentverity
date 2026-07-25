@@ -26,6 +26,10 @@ class TestPublicAPI:
             Relation,
             builtin_relations,
             RunConfig,
+            record_otel_run,
+            run_result_to_junit_xml,
+            run_result_to_otel_attributes,
+            write_junit_xml,
         )
 
     def test_dunder_all_matches_exports(self):

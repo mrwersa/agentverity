@@ -19,6 +19,12 @@ output with sensitive content. Recorded exception messages may also echo
 provider request data. Store these artefacts under the same controls as test
 fixtures and model logs.
 
+The optional OpenTelemetry bridge emits aggregate `agentverity.*` attributes.
+It excludes raw prompts, outputs, fingerprints, majority-verdict values,
+relation names, and exception messages. Exporters, collectors, and monitoring
+backends remain outside AgentVerity's control. Review their retention and
+access policy before enabling the bridge.
+
 ## Concurrent execution
 
 Concurrency is disabled by default. `max_workers` overlaps distinct inputs but

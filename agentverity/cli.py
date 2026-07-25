@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.util
 import json
 import sys
 from collections.abc import Callable
@@ -16,7 +17,12 @@ from agentverity.meter import (
     pairs_for_deterministic_call,
     resolve_epsilon,
 )
-from agentverity.reporting import run_result_to_dict, write_run_json
+from agentverity.reporting import (
+    run_result_to_dict,
+    run_result_to_junit_xml,
+    write_junit_xml,
+    write_run_json,
+)
 from agentverity.runner import RunConfig, RunResult, run
 from agentverity.snapshot import (
     SnapshotCompatibilityError,
@@ -29,11 +35,26 @@ from agentverity.snapshot import (
 
 
 def _load_agent(spec: str) -> Callable:
-    """Load an agent factory from a ``module:func`` spec."""
+    """Load an agent factory from ``module:func`` or ``file.py:func``."""
     if ":" not in spec:
-        raise ValueError(f"--agent must be 'module:func', got {spec!r}")
-    module_path, func_name = spec.split(":", 1)
-    module = importlib.import_module(module_path)
+        raise ValueError(
+            f"--agent must be 'module:func' or 'file.py:func', got {spec!r}"
+        )
+    module_path, func_name = spec.rsplit(":", 1)
+    if module_path.endswith(".py"):
+        source = Path(module_path).resolve()
+        if not source.is_file():
+            raise FileNotFoundError(f"agent module not found: {source}")
+        module_spec = importlib.util.spec_from_file_location(
+            "_agentverity_user_agent",
+            source,
+        )
+        if module_spec is None or module_spec.loader is None:
+            raise ImportError(f"cannot load agent module: {source}")
+        module = importlib.util.module_from_spec(module_spec)
+        module_spec.loader.exec_module(module)
+    else:
+        module = importlib.import_module(module_path)
     factory = getattr(module, func_name)
     if not callable(factory):
         raise TypeError(f"{spec!r} is not callable")
@@ -51,8 +72,9 @@ def _add_agent_inputs(parser: argparse.ArgumentParser) -> None:
         "--agent",
         required=True,
         help=(
-            "Python dotted path to an agent factory: 'module:func'. The "
-            "factory must return a callable (str) -> Observation."
+            "Python module or file path to an agent factory: 'module:func' or "
+            "'file.py:func'. The factory must return a callable "
+            "(str) -> Observation."
         ),
     )
     parser.add_argument(
@@ -152,11 +174,11 @@ def _agent_and_inputs(args: argparse.Namespace) -> tuple[Callable, list[str]]:
 
 
 def _exit_code(result: RunResult) -> int:
-    if not result.complete:
+    if result.status == "incomplete":
         return 2
-    if result.is_blind or any(
-        relation.violated > 0 for relation in result.relation_results
-    ):
+    if result.status == "undecided":
+        return 2
+    if result.status in {"blind", "vacuous", "violations"}:
         return 1
     return 0
 
@@ -185,6 +207,11 @@ def _run_command(args: argparse.Namespace) -> int:
             write_run_json(result, args.output)
         else:
             print(json.dumps(run_result_to_dict(result), indent=2, sort_keys=True))
+    elif args.format == "junit":
+        if args.output:
+            write_junit_xml(result, args.output)
+        else:
+            print(run_result_to_junit_xml(result), end="")
     else:
         report = result.summary()
         if args.output:
@@ -340,7 +367,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     run_parser.add_argument(
         "--format",
-        choices=("text", "json"),
+        choices=("text", "json", "junit"),
         default="text",
         help="Report format (default text).",
     )

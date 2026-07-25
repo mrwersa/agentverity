@@ -71,6 +71,29 @@ class TestCLI:
                 "--inputs", str(inputs_file),
             ])
 
+    def test_run_loads_agent_from_python_file(self, capsys, tmp_path):
+        agent_file = tmp_path / "router.py"
+        agent_file.write_text(
+            "def build():\n"
+            "    def route(text):\n"
+            "        verdict = 'a' if text.startswith('a') else 'b'\n"
+            "        return {'verdict': verdict}\n"
+            "    return route\n",
+            encoding="utf-8",
+        )
+        inputs_file = tmp_path / "inputs.txt"
+        _write_inputs(str(inputs_file), ["alpha", "beta"])
+
+        exit_code = main([
+            "run",
+            "--agent", f"{agent_file}:build",
+            "--inputs", str(inputs_file),
+            "--no-relations",
+        ])
+
+        assert exit_code == 0
+        assert "TRUSTWORTHY" in capsys.readouterr().out
+
     def test_no_subcommand(self):
         with pytest.raises(SystemExit):
             main([])
@@ -95,6 +118,46 @@ class TestCLI:
         assert report["schema"] == "agentverity.run/v1"
         assert report["relations"] == []
         assert report["complete"] is True
+
+    def test_junit_report_is_valid_xml_and_preserves_exit_semantics(
+        self,
+        capsys,
+        tmp_path,
+    ):
+        from xml.etree import ElementTree as ET
+
+        inputs_file = tmp_path / "inputs.txt"
+        _write_inputs(str(inputs_file), ["hello", "world", "foo", "bar"])
+        exit_code = main([
+            "run",
+            "--agent", "examples.toy_agent:constant_gate",
+            "--inputs", str(inputs_file),
+            "--format", "junit",
+        ])
+        root = ET.fromstring(capsys.readouterr().out)
+        assert exit_code == 1
+        assert root.attrib["failures"] == "1"
+
+    def test_undecided_meter_is_unsupported_evidence_not_green(
+        self,
+        capsys,
+        tmp_path,
+    ):
+        inputs_file = tmp_path / "inputs.txt"
+        _write_inputs(
+            str(inputs_file),
+            ["public-a", "public-b", "secret-a", "secret-b"],
+        )
+        exit_code = main([
+            "run",
+            "--agent", "examples.toy_agent:deterministic_gate",
+            "--inputs", str(inputs_file),
+            "--k", "2",
+            "--epsilon", "0.01",
+            "--no-relations",
+        ])
+        assert exit_code == 2
+        assert "NO ANSWER YET" in capsys.readouterr().out
 
     def test_snapshot_then_check(self, capsys, tmp_path):
         inputs_file = tmp_path / "inputs.txt"

@@ -8,6 +8,30 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- JUnit XML output through `--format junit`, `run_result_to_junit_xml`, and
+  `write_junit_xml`. Blind probes and relation violations become failures,
+  incomplete or undecided evidence becomes errors, and relations that tested
+  nothing become skipped cases.
+- A vendor-neutral OpenTelemetry handoff. `run_result_to_otel_attributes`
+  returns low-cardinality aggregate fields, while `record_otel_run` emits one
+  optional summary span through the host application's tracer provider.
+- A directly runnable support-router example, an OTEL console example, a
+  shorter product-first README, and integration guidance for AgentCore,
+  CloudWatch, Phoenix, LangSmith, and quality-evaluation tools.
+- A canonical `RunResult.status` shared by machine-readable reports,
+  telemetry, and downstream integrations.
+- CLI agent factories can be loaded directly from `file.py:func` as well as
+  importable `module:func` paths.
+
+### Fixed
+
+- `agentverity run` could print `NO ANSWER YET` for an undecided meter and still
+  exit successfully. It now returns exit code 2 for unsupported evidence.
+- A relation catalogue that exercised no input could print `NOT TRUSTWORTHY`
+  and still return exit code 0. It now returns exit code 1.
+
 ## [0.5.0] - 2026-07-25
 
 A default run now answers the question instead of declining to.
