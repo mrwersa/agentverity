@@ -15,6 +15,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
+from agentverity.meter import MeterResult, pairs_for_deterministic_call
 from agentverity.reporting import json_value
 from agentverity.runner import RunResult
 
@@ -160,6 +161,33 @@ def _package_version() -> str:
         return "0+unknown"
 
 
+def _underpowered_message(meter: MeterResult) -> str:
+    """Explain how far the evidence fell short, not just that it did.
+
+    "undecided" on its own reads like a bug when the agent is plainly
+    deterministic. The interval simply has not been driven below epsilon yet,
+    and the gap is often an order of magnitude, so quantify it.
+    """
+    if meter.call == "verdict-stochastic":
+        return (
+            "the verdict is stochastic at epsilon="
+            f"{meter.epsilon}: {meter.pair_flips} of {meter.pair_trials} disjoint "
+            "pairs disagreed. A baseline cannot be frozen against a decision "
+            "that changes on rerun. Fix the agent, or snapshot a layer that is "
+            "stable."
+        )
+    needed = pairs_for_deterministic_call(meter.epsilon)
+    per_input = -(-needed // meter.inputs)
+    return (
+        f"not enough evidence to certify determinism at epsilon={meter.epsilon}: "
+        f"{meter.pair_trials} disjoint pairs, and {needed} are needed even with "
+        f"zero flips. Options: raise --k to at least {per_input * 2} across "
+        f"{meter.inputs} inputs (about {meter.inputs * per_input * 2} agent "
+        f"calls), add inputs, or set a deployment-relevant --epsilon "
+        f"({pairs_for_deterministic_call(0.05)} pairs at 0.05)."
+    )
+
+
 def _require_snapshot_evidence(result: RunResult) -> None:
     """Reject incomplete, underpowered, stochastic, or blind evidence."""
     if not result.complete:
@@ -167,10 +195,7 @@ def _require_snapshot_evidence(result: RunResult) -> None:
     if result.meter is None:
         raise SnapshotRefused("the verdict-stochasticity meter must be enabled")
     if result.meter.call != "verdict-deterministic":
-        raise SnapshotRefused(
-            "observation layer is not deterministic at the configured epsilon: "
-            f"{result.meter.call}"
-        )
+        raise SnapshotRefused(_underpowered_message(result.meter))
     if result.meter.inputs != result.requested_inputs:
         raise SnapshotRefused("meter did not cover every requested input")
     if result.blindness is None:

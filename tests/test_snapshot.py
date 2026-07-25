@@ -61,8 +61,40 @@ def test_snapshot_refuses_undecided_meter():
         relations=[],
         config=RunConfig(k=2, epsilon=0.01),
     )
-    with pytest.raises(SnapshotRefused, match="not deterministic"):
+    with pytest.raises(SnapshotRefused, match="not enough evidence") as excinfo:
         create_snapshot(undecided, approved=True)
+
+    message = str(excinfo.value)
+    # "undecided" alone reads like a bug on an obviously deterministic agent,
+    # so the refusal has to say how far short the run fell and what to change.
+    assert "381 are needed" in message
+    assert "--k" in message
+    assert "--epsilon" in message
+
+
+def test_underpowered_refusal_scales_its_advice_to_the_probe_set():
+    """The suggested k depends on how many inputs are carrying the pairs."""
+    from agentverity.snapshot import _underpowered_message
+
+    few = run(from_callable(_gate), INPUTS, relations=[], config=RunConfig(k=2))
+    message = _underpowered_message(few.meter)
+    assert f"across {few.meter.inputs} inputs" in message
+
+
+def test_stochastic_refusal_differs_from_underpowered_refusal():
+    """A flipping verdict is a different problem from a small sample."""
+    import itertools
+
+    counter = itertools.count()
+
+    def flipping(text: str) -> dict:
+        return {"text": text, "verdict": "A" if next(counter) % 2 else "B"}
+
+    stochastic = run(from_callable(flipping), INPUTS, relations=[])
+    with pytest.raises(SnapshotRefused, match="stochastic") as excinfo:
+        create_snapshot(stochastic, approved=True)
+    assert "disagreed" in str(excinfo.value)
+    assert "381 are needed" not in str(excinfo.value)
 
 
 def test_snapshot_refuses_incomplete_run():
