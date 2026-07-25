@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from typing import ClassVar
 
 import pytest
 
@@ -359,3 +360,44 @@ class TestVacuousRelationHasNoRate:
             from_callable(lambda x: {"text": x, "verdict": "x"}), ["alpha", "beta"]
         )
         assert "n/a" in result.summary()
+
+
+class TestSuiteIsMeaningfulSemantics:
+    """Pin the difference between "no relations asked for" and "none ran"."""
+
+    @staticmethod
+    def _splitting_agent():
+        """Verdict genuinely splits, so the blindness detector stays quiet."""
+        return from_callable(
+            lambda x: {"text": x, "verdict": "A" if x.startswith("a") else "B"}
+        )
+
+    INPUTS: ClassVar[list[str]] = ["apple", "banana", "cherry", "apricot"]
+
+    def test_no_relations_requested_is_meaningful(self):
+        """A diagnostics-only run produced no green result to distrust."""
+        result = run(self._splitting_agent(), self.INPUTS, relations=[])
+        assert result.is_blind is False
+        assert result.relation_results == []
+        assert result.suite_is_meaningful is True
+
+    def test_relations_that_ran_but_tested_nothing_are_not_meaningful(self):
+        """Asked for, ran, exercised nothing. That is the vacuous case."""
+        from agentverity.relations import INVARIANT, Relation
+
+        noop = Relation(
+            name="noop", rtype=INVARIANT, transform=lambda s: s,
+            check=lambda src, fol: True,
+        )
+        result = run(self._splitting_agent(), self.INPUTS, relations=[noop])
+        assert result.is_blind is False
+        assert result.vacuous_relations
+        assert result.suite_is_meaningful is False
+
+    def test_partially_exercised_catalogue_is_meaningful(self):
+        """Two of the four built-ins are no-ops on ASCII, two are not."""
+        result = run(self._splitting_agent(), self.INPUTS)
+        assert result.is_blind is False
+        assert result.vacuous_relations
+        assert any(rr.exercised for rr in result.relation_results)
+        assert result.suite_is_meaningful is True

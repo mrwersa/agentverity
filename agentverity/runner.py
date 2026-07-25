@@ -225,6 +225,14 @@ class RunResult:
 
         Two things make green relation results vacuous: a blindness warning,
         and a relation catalogue where no transform actually changed any input.
+
+        Running with ``relations=[]`` returns ``True``. That is deliberate. The
+        property asks whether a green relation result can be trusted, and a run
+        that deliberately requested no relations produced none to distrust.
+        Returning ``False`` there would fail a legitimate diagnostics-only run,
+        where the caller wants the meter and the skew scan and nothing else.
+        The vacuous case this guards against is different: relations that were
+        asked for, ran, and turned out to test nothing.
         """
         if self.is_blind:
             return False

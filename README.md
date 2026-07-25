@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
-[![Tests: 93](https://img.shields.io/badge/tests-93%20passing-brightgreen.svg)](#tests)
+[![Tests: 96](https://img.shields.io/badge/tests-96%20passing-brightgreen.svg)](#tests)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 
 **agentverity** is a measure-first testing framework for non-deterministic LLM agents. Before running any test relation, it answers two questions that ordinary pass-rate reports leave unresolved:
@@ -342,7 +342,7 @@ each phase an independent draw.
 
 ## Tests
 
-93 tests, all passing.
+96 tests, all passing.
 
 ```bash
 pip install -e ".[dev]"
