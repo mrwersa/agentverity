@@ -41,7 +41,7 @@ class TestMeasure:
             v = "block" if "secret" in x.lower() else "allow"
             return {"text": v, "verdict": v}
 
-        inputs = [f"input_{i}" for i in range(50)]
+        inputs = [f"input_{i}" for i in range(200)]
         inputs.append("a secret")
         agent = from_callable(fn)
         result = measure(agent, inputs, k=5)
@@ -72,6 +72,21 @@ class TestMeasure:
         agent = from_callable(fn)
         with pytest.raises(ValueError, match="k must be >= 2"):
             measure(agent, ["hi"], k=1)
+
+    def test_empty_inputs_rejected(self):
+        agent = from_callable(lambda x: "ok")
+        with pytest.raises(ValueError, match="inputs"):
+            measure(agent, [])
+
+    def test_invalid_epsilon_rejected(self):
+        agent = from_callable(lambda x: "ok")
+        with pytest.raises(ValueError, match="epsilon"):
+            measure(agent, ["hi"], epsilon=0)
+
+    def test_ci_uses_disjoint_pairs(self):
+        agent = from_callable(lambda x: {"verdict": "allow"})
+        result = measure(agent, ["a", "b", "c"], k=5)
+        assert result.pair_trials == 6
 
     def test_inputs_with_flip(self):
         """inputs_with_flip counts inputs that had at least one flip."""

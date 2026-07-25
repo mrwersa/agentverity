@@ -18,7 +18,6 @@ import sys
 from collections.abc import Callable
 
 from agentverity.adapters.callable_adapter import from_callable
-from agentverity.observation import Observation
 from agentverity.runner import RunConfig, run
 
 
@@ -85,12 +84,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "run":
         factory = _load_agent(args.agent)
-        agent_fn = factory()
-        # Auto-wrap: if the factory returns a raw callable (str) -> str|dict
-        # rather than (str) -> Observation, wrap it with from_callable.
-        probe = agent_fn("__agentverity_probe__")
-        if not isinstance(probe, Observation):
-            agent_fn = from_callable(agent_fn)
+        # from_callable passes Observation objects through unchanged, so the
+        # CLI can adapt every factory without a side-effecting probe call.
+        agent_fn = from_callable(factory())
         inputs = _load_inputs(args.inputs)
         config = RunConfig(
             k=args.k,

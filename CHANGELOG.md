@@ -6,6 +6,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project follows [Semantic Versioning](https://semver.org/) once it
 reaches 1.0.0; before that, minor versions may include breaking changes.
 
+## [Unreleased]
+
+### Changed
+
+- The verdict-stochasticity interval now uses disjoint repeat pairs. The
+  earlier all-pairs calculation reused the same calls across comparisons and
+  overstated the effective sample size.
+- The runner now executes both diagnostics before any metamorphic relation.
+- The built-in accent/whitespace transform is named
+  `normalisation-invariance`, matching what it actually does.
+- `suite_is_meaningful` now reports whether relation passes may be vacuous
+  under the skew scan. Meter calls remain separate oracle guidance.
+- Public novelty claims now distinguish repeated-trial and calibration tools
+  from AgentVerity's narrower oracle-selection and verdict-skew diagnostics.
+- Added a reproducible supervisor-pattern example that contrasts a blind
+  triage step with a stochastic full pipeline.
+- Added a pull-request-only contribution workflow and CI across Python
+  3.10--3.12.
+
+### Fixed
+
+- Empty probe sets and invalid meter/blindness thresholds now fail with clear
+  `ValueError`s.
+- The CLI no longer invokes an agent with a hidden probe input before the
+  configured suite, avoiding side effects and wasted model calls.
+- Passing `relations=[]` now runs no relations instead of restoring built-ins.
+
 ## [0.1.0] - 2026-07-24
 
 Initial public release.

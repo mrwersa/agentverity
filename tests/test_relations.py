@@ -9,19 +9,19 @@ from agentverity.relations import (
     Relation,
     _change_case,
     _insert_whitespace,
-    _paraphrase,
+    _normalise,
     builtin_relations,
 )
 
 
 class TestTransforms:
-    def test_paraphrase_strips_accents(self):
-        assert _paraphrase("café") == "cafe"
-        assert _paraphrase("naïve") == "naive"
+    def test_normalise_strips_accents(self):
+        assert _normalise("café") == "cafe"
+        assert _normalise("naïve") == "naive"
 
-    def test_paraphrase_normalises_whitespace(self):
-        assert _paraphrase("hello   world") == "hello world"
-        assert _paraphrase("  hello  world  ") == "hello world"
+    def test_normalise_whitespace(self):
+        assert _normalise("hello   world") == "hello world"
+        assert _normalise("  hello  world  ") == "hello world"
 
     def test_change_case(self):
         assert _change_case("Hello") == "hELLO"
@@ -46,7 +46,7 @@ class TestBuiltinRelations:
     def test_names(self):
         rels = builtin_relations()
         names = {r.name for r in rels}
-        assert "paraphrase-invariance" in names
+        assert "normalisation-invariance" in names
         assert "case-invariance" in names
         assert "whitespace-invariance" in names
         assert "tool-selection-invariance" in names
@@ -58,13 +58,13 @@ class TestBuiltinRelations:
 
 class TestParaphraseInvarianceCheck:
     def test_holds_when_verdict_unchanged(self):
-        rel = next(r for r in builtin_relations() if r.name == "paraphrase-invariance")
+        rel = next(r for r in builtin_relations() if r.name == "normalisation-invariance")
         src = Observation(text="allow", verdict="allow")
         fol = Observation(text="allow", verdict="allow")
         assert rel.check(src, fol) is True
 
     def test_violated_when_verdict_changes(self):
-        rel = next(r for r in builtin_relations() if r.name == "paraphrase-invariance")
+        rel = next(r for r in builtin_relations() if r.name == "normalisation-invariance")
         src = Observation(text="allow", verdict="allow")
         fol = Observation(text="block", verdict="block")
         assert rel.check(src, fol) is False

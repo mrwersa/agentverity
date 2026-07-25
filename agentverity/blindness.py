@@ -1,10 +1,9 @@
 """Constant-gate-blindness detector — the honesty instrument.
 
 A test suite can pass for the wrong reason: if the agent returns a near-constant
-verdict across a diverse input set, every invariance and monotone relation is
-satisfied trivially, because nothing the transform does moves a verdict that
-never moves anyway. A green suite then says nothing about whether the agent
-reasons correctly.
+verdict across a diverse input set, many invariance and monotonicity checks can
+be satisfied without exercising a decision boundary. A green suite can then say
+more about verdict skew than about whether the agent reasons correctly.
 
 This detector measures the agent's verdict **skew** on a probe set and warns
 when a pass is likely trivial. It is the feature that makes the framework
@@ -56,7 +55,7 @@ class BlindnessResult:
 
     @property
     def blind(self) -> bool:
-        """``True`` if the gate is near-constant and relation passes are trivial."""
+        """``True`` if verdict skew can make green relation results vacuous."""
         return self.skew >= self.threshold
 
     @property
@@ -67,8 +66,8 @@ class BlindnessResult:
         return (
             f"constant-gate blindness: agent returns "
             f"{self.majority_verdict!r} on {self.skew:.0%} of inputs. "
-            f"Relation passes are likely trivial (an indifferent agent "
-            f"satisfies every relation). A green suite is NOT evidence of "
+            f"Relation passes may be trivial because the probe set rarely "
+            f"exercises a decision boundary. A green suite is NOT evidence of "
             f"correct behaviour here."
         )
 
@@ -80,13 +79,14 @@ def detect(
     layer: str = "verdict",
     threshold: float = 0.9,
 ) -> BlindnessResult:
-    """Detect whether an agent is near-constant and relation passes are trivial.
+    """Detect whether an agent is near-constant and passes may be vacuous.
 
     The agent is called once on each input and the verdict distribution is
-    measured. If a single verdict accounts for more than ``threshold`` of the
-    inputs, the gate is flagged as blind: every monotone, directional, and
-    invariance relation is trivially satisfied because the transform cannot
-    move a verdict that never moves.
+    measured. If a single verdict accounts for at least ``threshold`` of the
+    inputs, the gate is flagged as blind. High skew makes relation passes
+    vulnerable to being vacuous because few probes exercise a decision
+    boundary. The detector is a warning about suite power, not a correctness
+    judgement about the agent.
 
     Args:
         agent: An agent function ``run(input) -> Observation``.
@@ -100,12 +100,19 @@ def detect(
     Returns:
         A :class:`BlindnessResult` with the skew, distinct-verdict count,
         and blind flag.
+
+    Raises:
+        ValueError: If inputs is empty or threshold is outside ``(0, 1]``.
     """
     inputs = list(inputs)
+    if not inputs:
+        raise ValueError("inputs must not be empty")
+    if not 0 < threshold <= 1:
+        raise ValueError("threshold must be between 0 and 1")
     verdicts = [_hashable(agent(x).key(layer)) for x in inputs]
     c = Counter(verdicts)
     top, top_n = c.most_common(1)[0]
-    n = len(verdicts) or 1
+    n = len(verdicts)
     return BlindnessResult(
         inputs=len(inputs),
         layer=layer,

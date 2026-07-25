@@ -3,10 +3,9 @@
 The runner is the main entry point for programmatic use. It follows the
 measure-first discipline:
 
-1. **Meter** — probe the agent's verdict-stochasticity before any relation.
-2. **Relations** — run the relation catalogue, comparing violations against
-   a measured baseline if the agent is stochastic.
-3. **Blindness** — scan for constant-gate blindness and warn if a pass is trivial.
+1. **Meter** — probe the agent's verdict-stochasticity.
+2. **Blindness** — scan for verdict skew that can make a pass vacuous.
+3. **Relations** — run the relation catalogue with both diagnostics in hand.
 
 The report leads with the two diagnostics (meter + blindness) and then
 presents per-relation results. This order is the framework's identity:
@@ -109,17 +108,15 @@ class RunResult:
 
     @property
     def suite_is_meaningful(self) -> bool:
-        """True if the test suite can produce meaningful results.
+        """True if relation results are not vacuous under the skew scan.
 
-        Returns False if the agent is blind (relation passes are trivial) or
-        if the verdict is deterministic (a frozen diff dominates and MRs are
-        redundant). Returns True otherwise.
+        The meter determines how relation results should be interpreted, not
+        whether they can express a useful requirement. A stable verdict may
+        make frozen-baseline diffing more sensitive, while an undecided meter
+        calls for more evidence. Only a blindness warning makes green relation
+        results potentially vacuous.
         """
-        if self.is_blind:
-            return False
-        if self.meter is not None and self.meter.call == "verdict-deterministic":
-            return False
-        return True
+        return not self.is_blind
 
     def summary(self) -> str:
         """Return a human-readable summary of the run.
@@ -153,15 +150,15 @@ class RunResult:
                 lines.append(f"   warning:     {b.warning}")
             lines.append("")
 
-        lines.append("3. SUITE MEANINGFUL?")
+        lines.append("3. ORACLE GUIDANCE")
         if self.is_blind:
-            lines.append("   NO — the gate is near-constant. Relation passes are trivial.")
+            lines.append("   BLIND — green relation results may be vacuous.")
         elif self.meter is not None and self.meter.call == "verdict-deterministic":
-            lines.append("   NO — the verdict is deterministic. Use a frozen-output diff instead.")
+            lines.append("   STABLE — prefer frozen-baseline diffing when a reference is available.")
         elif self.meter is not None and self.meter.call.startswith("undecided"):
-            lines.append("   UNDECIDED — raise k or input count to resolve the meter.")
+            lines.append("   UNDECIDED — raise k or input count before choosing an oracle.")
         else:
-            lines.append("   YES — relations can produce meaningful results.")
+            lines.append("   STOCHASTIC — interpret relation rates against unchanged-input noise.")
         lines.append("")
 
         if self.relation_results:
@@ -187,8 +184,8 @@ def run(
 ) -> RunResult:
     """Run the full measure-first diagnostic suite on an agent.
 
-    The runner follows the measure-first discipline: meter first, then
-    relations, then blindness. The report leads with the diagnostics.
+    The runner follows the measure-first discipline: meter and blindness first,
+    then relations. The report leads with the diagnostics.
 
     Args:
         agent: An agent function ``run(input) -> Observation``.
@@ -201,7 +198,10 @@ def run(
     """
     config = config or RunConfig()
     inputs = list(inputs)
-    relations = relations or builtin_relations()
+    if not inputs:
+        raise ValueError("inputs must not be empty")
+    if relations is None:
+        relations = builtin_relations()
 
     # 1. Meter
     meter_result = None
@@ -210,7 +210,14 @@ def run(
             agent, inputs, k=config.k, layer=config.layer, epsilon=config.epsilon
         )
 
-    # 2. Relations
+    # 2. Blindness
+    blindness_result = None
+    if config.run_blindness:
+        blindness_result = detect(
+            agent, inputs, layer=config.layer, threshold=config.blindness_threshold
+        )
+
+    # 3. Relations
     relation_results: list[RelationResult] = []
     for rel in relations:
         held = 0
@@ -226,13 +233,6 @@ def run(
                 violated += 1
         relation_results.append(
             RelationResult(relation=rel, total=len(inputs), held=held, violated=violated)
-        )
-
-    # 3. Blindness
-    blindness_result = None
-    if config.run_blindness:
-        blindness_result = detect(
-            agent, inputs, layer=config.layer, threshold=config.blindness_threshold
         )
 
     return RunResult(

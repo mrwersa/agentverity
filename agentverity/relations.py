@@ -4,13 +4,13 @@ Relations are inherited from the metamorphic-testing tradition (Chen et al.)
 and the semantic-invariance transforms of CheckList and LLMORPH. They are
 typed ``INVARIANT`` / ``MONOTONE`` / ``DIRECTIONAL`` because on a
 non-deterministic agent the types have different noise robustness: monotone
-and directional relations are robust to verdict noise, invariance relations
-are fragile. The runner leads with the robust ones on stochastic agents.
+and directional relations can be less noise-sensitive than equality checks,
+while invariance relations are often fragile. The framework reports the type
+so users can interpret it against the meter.
 
-The built-in catalogue is intentionally small and covers three invariance
-transforms (paraphrase, case, whitespace). Users define their own
-agent-specific relations (e.g. tool-selection-invariance) via the
-:class:`Relation` dataclass.
+The built-in catalogue is intentionally small and covers normalisation, case,
+whitespace, and tool-selection invariance. Users define their own
+agent-specific relations via the :class:`Relation` dataclass.
 
 The relations are **not** the innovation — the diagnostics (meter, blindness)
 are. They are the vehicle, presented as CheckList-lineage.
@@ -23,7 +23,10 @@ Example::
         name="my-monotone",
         rtype="monotone",
         transform=lambda s: s + " urgent",
-        check=lambda src, fol: src.key("verdict") <= fol.key("verdict"),
+        check=lambda src, fol: (
+            {"allow": 0, "review": 1, "block": 2}[src.key("verdict")]
+            <= {"allow": 0, "review": 1, "block": 2}[fol.key("verdict")]
+        ),
     )
     relations = builtin_relations() + [custom]
 """
@@ -72,8 +75,8 @@ def _strip_accents(text: str) -> str:
     )
 
 
-def _paraphrase(text: str) -> str:
-    """Invariance transform: strip accents, normalise whitespace."""
+def _normalise(text: str) -> str:
+    """Invariance transform: strip accents and normalise whitespace."""
     return re.sub(r"\s+", " ", _strip_accents(text)).strip()
 
 
@@ -109,9 +112,9 @@ def builtin_relations() -> list[Relation]:
     """
     return [
         Relation(
-            name="paraphrase-invariance",
+            name="normalisation-invariance",
             rtype=INVARIANT,
-            transform=_paraphrase,
+            transform=_normalise,
             check=_verdict_invariant,
             description="Accent stripping and whitespace normalisation must not change the verdict.",
         ),
@@ -132,8 +135,8 @@ def builtin_relations() -> list[Relation]:
         Relation(
             name="tool-selection-invariance",
             rtype=INVARIANT,
-            transform=_paraphrase,
+            transform=_normalise,
             check=_tools_invariant,
-            description="Paraphrasing the request must not change which tool the agent calls.",
+            description="Normalising the request must not change which tool the agent calls.",
         ),
     ]
