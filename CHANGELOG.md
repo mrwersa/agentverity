@@ -8,6 +8,39 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-25
+
+Post-release review of v0.2.0. Two correctness defects and a set of
+documentation claims that did not match the code.
+
+### Fixed
+
+- **Duplicate inputs could report a varying agent as constant.** The
+  first-call recorder keys observations by input text, so every copy of a
+  repeated input resolved to one cached observation. An agent alternating
+  between two verdicts across four identical probes was reported as 100% skew
+  and `BLIND` instead of 50% and `ok`. Duplicates also distort the skew scan
+  without any caching, because one verdict is counted once per copy. `run`
+  now rejects a probe set containing the same input twice and names the
+  duplicates. Repeating a measurement is what `k` is for.
+- `README.md` documented the reuse saving on the four-input Quickstart as 35
+  calls against 70. Those were the figures for a five-input probe. Measured
+  values are 28 and 40. The general formula was correct.
+- The published v0.2.0 description on PyPI still said the package was not on
+  PyPI and told readers to install from git, because the documentation fix
+  landed after the release tag. PyPI metadata is immutable, so this release
+  carries the corrected text.
+- The test-count badge and the tests section claimed 85 while 86 passed.
+
+### Changed
+
+- **`RelationResult.violation_rate` returns `None` instead of `0.0` when the
+  relation was never exercised.** The text report already printed `n/a`, but
+  programmatic callers and exported JSON received a clean zero, which is the
+  same false green the report refuses to print. Type is now `float | None`.
+- The `langgraph` optional dependency was removed. It installed LangGraph for
+  an adapter that does not exist yet.
+
 ## [0.2.0] - 2026-07-25
 
 ### Added
@@ -94,6 +127,7 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/mrwersa/agentverity/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/mrwersa/agentverity/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mrwersa/agentverity/releases/tag/v0.1.0

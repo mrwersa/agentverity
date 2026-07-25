@@ -69,6 +69,38 @@ def _cached_for(
     return [recorder.first[x] for x in inputs]
 
 
+def _reject_duplicates(inputs: list[str]) -> None:
+    """Refuse a probe set containing the same input twice.
+
+    Duplicates corrupt the skew scan whether or not calls are reused: the
+    repeated input's verdict is counted once per copy, so the probe set
+    reports its own composition rather than the agent's behaviour. With
+    :class:`_FirstCallRecorder` active they are worse still, because every
+    copy resolves to one cached observation and a varying agent can be
+    reported as perfectly constant.
+
+    Repeating a *measurement* is what ``k`` is for. Repeating an *input* is a
+    defect in the probe set.
+
+    Raises:
+        ValueError: naming the duplicated inputs.
+    """
+    seen: set[str] = set()
+    duplicated: list[str] = []
+    for x in inputs:
+        if x in seen and x not in duplicated:
+            duplicated.append(x)
+        seen.add(x)
+    if duplicated:
+        shown = ", ".join(repr(d) for d in duplicated[:3])
+        more = f" and {len(duplicated) - 3} more" if len(duplicated) > 3 else ""
+        raise ValueError(
+            f"inputs must be distinct, found duplicates: {shown}{more}. "
+            "Duplicate probes inflate the blindness skew by counting one "
+            "verdict several times. Use k to repeat a measurement."
+        )
+
+
 @dataclass(frozen=True)
 class RunConfig:
     """Configuration for a runner pass.
@@ -121,14 +153,20 @@ class RelationResult:
         return self.held + self.violated
 
     @property
-    def violation_rate(self) -> float:
+    def violation_rate(self) -> float | None:
         """The fraction of *exercised* pairs that violated the relation.
 
         Inputs the transform left unchanged are excluded, because a
         byte-identical follow-up tests rerun stability rather than the
         relation. Measuring rerun stability is the meter's job.
+
+        Returns ``None`` when nothing was exercised. A relation that never ran
+        has no rate, and returning ``0.0`` would hand a programmatic caller the
+        same false green the text report refuses to print.
         """
-        return self.violated / self.exercised if self.exercised else 0.0
+        if not self.exercised:
+            return None
+        return self.violated / self.exercised
 
     @property
     def is_vacuous(self) -> bool:
@@ -309,6 +347,7 @@ def run(
     inputs = list(inputs)
     if not inputs:
         raise ValueError("inputs must not be empty")
+    _reject_duplicates(inputs)
     if relations is None:
         relations = builtin_relations()
 

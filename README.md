@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
-[![Tests: 85](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg)](#tests)
+[![Tests: 93](https://img.shields.io/badge/tests-93%20passing-brightgreen.svg)](#tests)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 
 **agentverity** is a measure-first testing framework for non-deterministic LLM agents. Before running any test relation, it answers two questions that ordinary pass-rate reports leave unresolved:
@@ -221,7 +221,7 @@ The return of `run()` carries the full diagnostic picture:
 | `.held`, `.violated` | Outcomes over *exercised* pairs only |
 | `.skipped` | Inputs where the transform returned the input unchanged |
 | `.exercised` | `held + violated`, the pairs that genuinely tested something |
-| `.violation_rate` | Violations over exercised pairs, not over inputs |
+| `.violation_rate` | Violations over exercised pairs, or `None` if nothing ran |
 | `.is_vacuous` | True when the transform was the identity on every input |
 
 ### `MeterResult`
@@ -335,14 +335,14 @@ n * (k + 1 + 2r) without it
 
 The meter's first draw per input serves as the blindness scan's sample and as
 the source side of every relation. On the four-input Quickstart above that is
-35 calls instead of 70. Set `RunConfig(reuse_unchanged_calls=False)` to give
+28 calls instead of 40. Set `RunConfig(reuse_unchanged_calls=False)` to give
 each phase an independent draw.
 
 ---
 
 ## Tests
 
-85 tests, all passing.
+93 tests, all passing.
 
 ```bash
 pip install -e ".[dev]"
