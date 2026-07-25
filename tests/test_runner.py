@@ -293,3 +293,69 @@ class TestUnchangedCallReuse:
         assert result.blindness is not None
         assert result.blindness.inputs == 3
         assert calls == ["alpha", "beta", "gamma"]
+
+
+class TestDuplicateInputsAreRejected:
+    """A probe set is a set. Duplicates measure the probe set, not the agent."""
+
+    @staticmethod
+    def _agent():
+        return from_callable(lambda x: {"text": x, "verdict": "allow"})
+
+    def test_duplicates_raise(self):
+        with pytest.raises(ValueError, match="must be distinct"):
+            run(self._agent(), ["alpha", "beta", "alpha"])
+
+    def test_error_names_the_duplicate(self):
+        with pytest.raises(ValueError, match="'alpha'"):
+            run(self._agent(), ["alpha", "beta", "alpha"])
+
+    def test_distinct_inputs_are_fine(self):
+        result = run(self._agent(), ["alpha", "beta", "gamma"])
+        assert result.blindness is not None
+        assert result.blindness.inputs == 3
+
+    def test_a_varying_agent_is_not_reported_constant(self):
+        """The bug this guards: cached duplicates made a flipping agent BLIND.
+
+        With reuse on, every copy of a duplicated input resolved to one cached
+        observation, so an agent alternating A/B on four probes reported 100%
+        skew and BLIND instead of 50% and ok.
+        """
+        import itertools
+
+        counter = itertools.count()
+
+        def flipping(x: str) -> dict:
+            return {"text": x, "verdict": "A" if next(counter) % 2 == 0 else "B"}
+
+        with pytest.raises(ValueError, match="must be distinct"):
+            run(from_callable(flipping), ["same", "same", "same", "same"])
+
+
+class TestVacuousRelationHasNoRate:
+    """A relation that never ran has no rate, and must not report 0.0."""
+
+    def test_violation_rate_is_none_when_nothing_exercised(self):
+        result = run(
+            from_callable(lambda x: {"text": x, "verdict": "x"}), ["alpha", "beta"]
+        )
+        vacuous = [rr for rr in result.relation_results if rr.is_vacuous]
+        assert vacuous, "expected normalisation-invariance to be a no-op here"
+        for rr in vacuous:
+            assert rr.violation_rate is None
+
+    def test_exercised_relation_still_reports_a_float(self):
+        result = run(
+            from_callable(lambda x: {"text": x, "verdict": "x"}), ["alpha", "beta"]
+        )
+        exercised = [rr for rr in result.relation_results if not rr.is_vacuous]
+        assert exercised
+        for rr in exercised:
+            assert isinstance(rr.violation_rate, float)
+
+    def test_summary_renders_without_formatting_a_none(self):
+        result = run(
+            from_callable(lambda x: {"text": x, "verdict": "x"}), ["alpha", "beta"]
+        )
+        assert "n/a" in result.summary()

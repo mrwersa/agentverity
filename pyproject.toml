@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentverity"
-version = "0.2.0"
+version = "0.3.0"
 description = "Measure-first testing for non-deterministic LLM agents"
 readme = "README.md"
 license = "Apache-2.0"
@@ -40,7 +40,6 @@ dependencies = []
 
 [project.optional-dependencies]
 strands = ["strands-agents>=1.0"]
-langgraph = ["langgraph>=0.2"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
