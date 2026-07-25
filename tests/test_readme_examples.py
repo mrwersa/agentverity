@@ -1,0 +1,46 @@
+"""The README's evidence-gate output must match what the example prints.
+
+The payment-dispute block is the strongest thing in the README: two suites,
+both scoring 6/6, one refused. A stale copy of that output would undercut the
+exact claim the library makes about vacuous green results.
+"""
+
+from __future__ import annotations
+
+import pathlib
+import runpy
+import sys
+from io import StringIO
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+
+def _run_example() -> str:
+    # The example parses argv, so pytest's own flags must not reach it.
+    captured_out, sys.stdout = sys.stdout, StringIO()
+    captured_argv, sys.argv = sys.argv, ["payment_dispute_gate.py"]
+    try:
+        runpy.run_path(str(ROOT / "examples" / "payment_dispute_gate.py"),
+                       run_name="__main__")
+        return sys.stdout.getvalue().strip()
+    finally:
+        sys.stdout = captured_out
+        sys.argv = captured_argv
+
+
+def test_readme_shows_the_real_gate_output():
+    printed = _run_example()
+    readme = (ROOT / "README.md").read_text()
+    assert printed in readme, (
+        "README's evidence-gate block has drifted from what the example "
+        "prints. Re-copy it from `python examples/payment_dispute_gate.py`."
+    )
+
+
+def test_the_gate_actually_refuses_then_admits():
+    """Guards the claim itself, not just the transcript."""
+    printed = _run_example()
+    assert "Exact-match evaluator: 6/6 correct" in printed
+    assert "REFUSED" in printed
+    assert "ADMITTED" in printed
+    assert printed.index("REFUSED") < printed.index("ADMITTED")

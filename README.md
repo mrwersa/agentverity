@@ -90,6 +90,25 @@ example runs the same router against two probe sets:
 python examples/payment_dispute_gate.py
 ```
 
+```
+PAYMENT-DISPUTE ROUTER: THE EVIDENCE GATE
+==========================================
+
+BEFORE: narrow probe set
+------------------------
+Exact-match evaluator: 6/6 correct
+Verdict mix: duplicate_charge=6
+AgentVerity: NOT TRUSTWORTHY - the agent answered 'duplicate_charge' on 100% of the probes, so a pass says more about the probe set than about the agent.
+Baseline: REFUSED - probe set is blind; add inputs that cross a decision boundary
+
+AFTER: repaired probe set
+-------------------------
+Exact-match evaluator: 6/6 correct
+Verdict mix: duplicate_charge=1, refund_delay=1, card_security=1, merchant_dispute=1, cash_withdrawal=1, transfer_delay=1
+AgentVerity: TRUSTWORTHY - the verdict held across every identical rerun and the probes cross a decision boundary.
+Baseline: ADMITTED - evidence is complete, stable, and non-blind
+```
+
 Both sets score 6/6 against their expected routes. The narrow set produces one
 verdict, so snapshot creation is refused. The repaired set crosses six routing
 categories and is admitted. The evaluator remains green while the evidence
