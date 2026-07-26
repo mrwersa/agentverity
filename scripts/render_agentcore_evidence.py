@@ -115,7 +115,7 @@ def render(
     eyebrow="EVIDENCE · AGENTVERITY",
     headline=f"{cloud['pair_flips']} / {cloud['pair_trials']} flips",
     detail_1=f"{cloud['distinct_routes']} of {method['reviewed_cases']} routes reached",
-    detail_2="Stable and non-blind decisions",
+    detail_2="Decision stability and coverage checked",
     badge="BASELINE ADMITTED",
     accent="#4ade80",
 )}
