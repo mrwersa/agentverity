@@ -12,6 +12,8 @@ import runpy
 import sys
 from io import StringIO
 
+from agentverity import plan_repeats
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
@@ -65,3 +67,14 @@ def test_readme_comparison_table_matches_the_example():
     readme = (ROOT / "README.md").read_text()
     for row in rows:
         assert row in readme, f"README is missing table row: {row}"
+
+
+def test_readme_call_budget_matches_the_planner():
+    """Keep practical cost guidance tied to the executable planner."""
+    inputs = 20
+    cheap_calls = inputs + inputs * plan_repeats(inputs, 0.10)
+    balanced_calls = inputs + inputs * plan_repeats(inputs, 0.05)
+    readme = (ROOT / "README.md").read_text()
+
+    assert f"Twenty would plan\n{cheap_calls}" in readme
+    assert f"twenty cases plan {balanced_calls} calls" in readme

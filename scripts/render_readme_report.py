@@ -92,8 +92,8 @@ def render(output: Path = DEFAULT_OUTPUT) -> str:
 <rect x="984" y="114" width="162" height="52" rx="6" class="route"/>
 {_text(167, 147, "REPEAT EACH CASE", css="routeText")}
 {_text(477, 147, "VARY THE INPUTS", css="routeText")}
-{_text(787, 147, "THEN SCORE IT", css="routeText")}
-{_text(1065, 147, "TEST", css="routeText")}
+{_text(787, 147, "QUALIFY EVIDENCE", css="routeText")}
+{_text(1065, 147, "CHOOSE TEST", css="routeText")}
 <line x1="298" y1="140" x2="338" y2="140" class="flow"/>
 <path d="M 338 135 L 348 140 L 338 145 z" fill="#64748b"/>
 <line x1="608" y1="140" x2="648" y2="140" class="flow"/>

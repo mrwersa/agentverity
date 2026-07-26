@@ -48,6 +48,26 @@ The factory may reuse a stateless model client, but it must return a new agent
 session. Reusing one stateful instance can turn conversation accumulation into
 apparent verdict instability.
 
+## Multi-agent systems
+
+Choose the scope that owns the decision you need to protect. This mirrors the
+split enterprise platforms use between
+[system and process evaluation](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators):
+
+- **System level:** wrap the whole pipeline to measure its end-to-end decision.
+- **Step level:** wrap one agent to measure that step independently.
+
+Run both for critical paths. The bundled
+[`bugfix_pipeline.py`](../examples/bugfix_pipeline.py) produces different
+diagnoses at the two scopes. Its supervisor pipeline is verdict-stochastic,
+while the triage step inside it is verdict-deterministic and blind. Measuring
+only the pipeline exposes instability but misses the blind step. Measuring
+only triage misses the stochastic supervisor.
+
+Use `Observation.tools` or `layer="tools"` when the ordered handoff path is
+the contract. A pipeline can preserve its final verdict while changing which
+agent or tool acts along the way.
+
 ## CI reporting
 
 Text is for a person, JSON is for code, and JUnit is for the test-report
