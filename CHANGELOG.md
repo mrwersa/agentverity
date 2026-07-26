@@ -8,6 +8,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Changed
+
+- The README and `DESIGN.md` state that both checks are dynamic, placing
+  AgentVerity beside `coverage.py` and mutation testing rather than beside a
+  linter. "Why not just lint it?" is a reasonable first question, and the
+  answer was implied rather than written: an LLM agent's decision is a string
+  returned from a provider call, so there are no branches to instrument, and
+  stability lives in the runtime distribution rather than in any source text.
+  The docs also concede where a static rule genuinely would work, counting
+  declared expected labels, and say what it still cannot reach.
+
 ## [0.8.0] - 2026-07-26
 
 ### Added

@@ -72,6 +72,26 @@ gates, and supervisors that select the next agent or tool. The implementation
 can be rules-based or LLM-based. It does not replace DeepEval, promptfoo, or
 AgentCore Evaluations. It tells you how much evidence their scores rest on.
 
+### Why a linter cannot do this
+
+Both checks are dynamic. They run the agent and measure what comes back, which
+puts AgentVerity beside `coverage.py` and mutation testing rather than beside
+Ruff or mypy.
+
+A static analyser reads source. All it sees of an LLM routing decision is a
+string returned from a network call, so there are no branches to instrument and
+no six routes to find. Stability is worse: two agents with identical
+signatures, identical types, and identical lint output can measure
+`verdict-stochastic` and `verdict-deterministic`. That difference exists only
+across repeated runs.
+
+One caveat worth stating. If your cases carry expected labels, a static rule
+*could* count them and warn that six cases declare one route, in milliseconds
+rather than minutes. That is a good idea and a fair substitute for part of the
+coverage check. It still cannot compare what you expected against what the
+agent did, it has nothing to count when the cases are unlabelled, and it cannot
+reach stability at all.
+
 ## Try it
 
 ```bash
