@@ -9,12 +9,16 @@ decision makes any coverage number unrepeatable. The target may be a
 deterministic gate or an LLM agent. This document records the technical
 boundaries and the reasons behind them.
 
-Both checks are dynamic by necessity. Static analysis reads source, and an LLM
-agent's decision is not in the source: it is a string returned from a provider
-call. There are no branches to instrument, and stability is a property of the
-runtime distribution rather than of any text. That places AgentVerity with
-`coverage.py` and mutation testing, not with Ruff or mypy, and it is why a run
-costs real agent calls.
+Both checks are dynamic by design. Static analysis can inspect orchestration
+branches, route schemas, and expected labels. For a source-available
+deterministic gate, a static proof may even be cheaper and stronger than a
+sampled run. A hosted model's route choice is different: source can declare
+the allowed routes but cannot establish which route the provider returns for
+each input or whether identical reruns disagree. AgentVerity treats either
+target as a callable and measures those execution properties through one
+interface. That places it with dynamic adequacy tools such as `coverage.py`
+and mutation testing rather than with Ruff or mypy, and it is why model-backed
+runs cost real agent calls.
 
 ## Identity
 
