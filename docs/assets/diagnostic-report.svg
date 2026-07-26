@@ -24,8 +24,8 @@
   .footer { fill: #64748b; font-size: 13px; font-weight: 400; }
 </style>
 <rect width="1200" height="660" class="bg"/>
-<text x="54" y="54" class="headline">AgentVerity asks whether the test is trustworthy first.</text>
-<text x="54" y="84" class="subhead">One executable example. Two defects. Two different testing decisions.</text>
+<text x="54" y="54" class="headline">AgentVerity checks what a green agent test can support.</text>
+<text x="54" y="84" class="subhead">One multi-agent workflow. Two hidden defects. Two testing strategies.</text>
 <rect x="54" y="114" width="226" height="52" rx="6" class="route"/>
 <rect x="364" y="114" width="226" height="52" rx="6" class="route"/>
 <rect x="674" y="114" width="226" height="52" rx="6" class="route"/>
@@ -52,10 +52,10 @@
 <text x="324" y="360" class="label">DECISION COVERAGE</text>
 <text x="324" y="391" class="value">100.0% · one decision</text>
 <text x="86" y="447" class="label">WHAT TO DO</text>
-<text x="86" y="480" class="decision">A green score proves little here</text>
+<text x="86" y="480" class="decision">Evidence covers one decision path</text>
 <line x1="86" y1="512" x2="542" y2="512" class="rule"/>
 <text x="86" y="548" class="label">NEXT ACTION</text>
-<text x="86" y="579" class="action">Vary test inputs before adding checks</text>
+<text x="86" y="579" class="action">Add inputs that reach other decisions</text>
 <text x="658" y="234" class="eyebrow">FULL SUPERVISOR PIPELINE</text>
 <rect x="966" y="207" width="142" height="34" rx="5" class="warning"/>
 <text x="1037" y="230" class="badge">STOCHASTIC</text>

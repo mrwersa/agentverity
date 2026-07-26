@@ -84,8 +84,8 @@ def render(output: Path = DEFAULT_OUTPUT) -> str:
   .footer {{ fill: #64748b; font-size: 13px; font-weight: 400; }}
 </style>
 <rect width="1200" height="660" class="bg"/>
-{_text(54, 54, "AgentVerity asks whether the test is trustworthy first.", css="headline")}
-{_text(54, 84, "One executable example. Two defects. Two different testing decisions.", css="subhead")}
+{_text(54, 54, "AgentVerity checks what a green agent test can support.", css="headline")}
+{_text(54, 84, "One multi-agent workflow. Two hidden defects. Two testing strategies.", css="subhead")}
 <rect x="54" y="114" width="226" height="52" rx="6" class="route"/>
 <rect x="364" y="114" width="226" height="52" rx="6" class="route"/>
 <rect x="674" y="114" width="226" height="52" rx="6" class="route"/>
@@ -113,8 +113,8 @@ def render(output: Path = DEFAULT_OUTPUT) -> str:
         f"({triage.meter.pair_flips}/{triage.meter.pair_trials})"
     ),
     skew=f"{triage.blindness.skew:.1%} · one decision",
-    oracle="A green score proves little here",
-    action="Vary test inputs before adding checks",
+    oracle="Evidence covers one decision path",
+    action="Add inputs that reach other decisions",
 )}
 {_panel(
     x=626,

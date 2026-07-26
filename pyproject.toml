@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "agentverity"
 version = "0.7.0"
-description = "Measure-first testing for non-deterministic LLM agents"
+description = "Decision stability and coverage checks for AI agent tests"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]

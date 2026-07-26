@@ -1,20 +1,26 @@
-# Production-stack showcase
+# Production-stack example
 
-This example keeps quality evaluation and evidence qualification separate:
+This example keeps quality evaluation and evidence qualification separate. The
+two runners make their own calls to the same target:
 
 ```text
-payment ticket
-      |
-      v
-Strands routing agent ----> specialist route
-      |                         |
-      |                         +---- DeepEval: was the route correct?
-      |
-      +---- AgentVerity: was the decision stable, and did the cases
-                         exercise more than one route?
-      |
-      +---- OTEL ----> AgentCore Observability / CloudWatch
+reviewed payment cases
+   +-- one labelled call per case --> Strands routing agent --> DeepEval
+   |                                                          route quality
+   |
+   +-- isolated repeated calls ----> Strands routing agent --> AgentVerity
+                                                              stability + coverage
+                                                                      |
+                                                        aggregate OTEL span
+                                                                      |
+                                             AgentCore Observability / CloudWatch
+
+quality passed + evidence qualified + human approval --> admit baseline
 ```
+
+Here, the baseline is the reviewed set of expected route decisions used to
+detect changes in later versions. AgentVerity saves an approved baseline as a
+versioned snapshot file.
 
 It uses real model calls. The repository's
 [`payment_dispute_gate.py`](../payment_dispute_gate.py) remains the fast,
@@ -57,12 +63,12 @@ DeepEval applies its deterministic exact-match metric to six reviewed routing
 labels. AgentVerity then repeats those six cases from clean Strands sessions,
 checks whether the route is stable, and verifies that the cases cross a
 decision boundary. A failed labelled check stops before the repeat budget is
-spent. Both gates must pass before the script admits a reference. Stable but
+spent. Both checks must pass before the script admits a reference. Stable but
 incorrect routing is still a failed run. The canary permits four concurrent
 calls by default. Pass `--max-workers 1` for a sequential run.
 
-The script does not save a baseline by default. Review the outputs before
-explicitly admitting one:
+The script does not save a snapshot by default. Review the outputs before
+explicitly admitting the baseline:
 
 ```bash
 python examples/production_stack/evaluate_stack.py \
@@ -138,7 +144,7 @@ The output directory contains a JUnit report and `stack-evidence.json`. The
 JSON records labelled-route accuracy, AgentVerity's aggregate evidence, and
 end-to-end p50 and p95 latency without storing ticket text or model responses.
 
-## What each component proves
+## What each component answers
 
 | Component | Question |
 |---|---|

@@ -1,29 +1,59 @@
 # AgentVerity
 
-> **Can you trust this green agent test?**
+> **How many times do you rerun a flaky agent test before you believe it?**
 
 [![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
-Run the same agent case again and it can reach a different decision. Give it a
-varied-looking test suite and every case can still follow one decision path.
+Most teams pick a rerun count by feel. Three, maybe five. Here is roughly what
+you would write to check whether that is enough:
 
-AgentVerity runs two pre-flight checks before you trust a green result:
+```python
+def looks_stable(agent, cases, k=12, tolerance=0.05):
+    flips = trials = 0
+    for case in cases:
+        answers = [agent(case) for _ in range(k)]
+        for i in range(0, k - 1, 2):
+            trials += 1
+            flips += answers[i] != answers[i + 1]
+    p, z = flips / trials, 1.96
+    d = 1 + z * z / trials
+    centre = (p + z * z / (2 * trials)) / d
+    margin = z * math.sqrt((p * (1 - p) + z * z / (4 * trials)) / trials) / d
+    return min(1, centre + margin) < tolerance
+```
 
-- **Decision stability:** how consistently does the agent reach the same
-  categorical `verdict` across repeated runs of one case?
-- **Decision coverage:** do the test inputs exercise more than one verdict?
+Fourteen lines, and the statistics are right. Run it against a router with no
+randomness in it at all, six cases at twelve repeats:
 
-Pass cases through `inputs=`. Together, those cases form the **probe set** used
-by the coverage check. A deliberately varied probe set is necessary for a
-reusable baseline. A narrow set may still test one path correctly, but it
-cannot justify that broader claim.
+```
+flip rate 0.0    upper bound 0.096    tolerance 0.05    ->  NOT STABLE
+```
 
-It does not replace DeepEval, promptfoo, AgentCore Evaluations, or your quality
-metrics. It checks two conditions that can make those scores misleading before
-you trust them.
+Wrong, and nothing says so. Thirty-six comparisons cannot clear a 5% bound no
+matter how well the agent behaves. You need seventy-three. Nobody works that
+out, so the rerun count gets picked by feel and the answer is quietly
+unreliable.
+
+AgentVerity does the arithmetic, then answers two questions:
+
+- **Decision stability:** does the agent reach the same named decision, exposed
+  as `verdict`, across repeated runs of one case? It sizes the repeats from the
+  tolerance you ask for rather than making you guess.
+- **Decision coverage:** do the test cases reach more than one decision?
+
+The second one you cannot feel. A suite where every case takes the same path
+scores 6/6 and proves nothing about the paths it never touched.
+
+Use it on agents that choose from a known set: routers, approval or policy
+gates, and supervisors that select the next agent or tool. The implementation
+can be rules-based or LLM-based. It does not replace DeepEval, promptfoo, or
+AgentCore Evaluations. It tells you how much evidence their scores rest on.
+
+The report below shows both checks on a multi-agent pipeline, where the
+supervisor and the triage step inside it need different testing strategies.
 
 ![AgentVerity diagnoses poor decision coverage in a triage step and unstable decisions in a supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
 
@@ -61,6 +91,9 @@ NOT TRUSTWORTHY - the agent answered 'general' on 100% of the probes,
 so a pass says more about the probe set than about the agent.
 ```
 
+The four test inputs form the **probe set**: deliberately varied cases used by
+the coverage check.
+
 The default `balanced` precision sizes the repeat count automatically. A
 default run answers rather than leaving a deterministic function as
 `undecided`.
@@ -74,6 +107,19 @@ agentverity run \
   --agent examples/support_router.py:build_agent \
   --inputs examples/support_tickets.txt
 ```
+
+## Choosing a testing strategy
+
+The two answers point at different tools. A stable, well-covered decision can
+use a reviewed baseline and ordinary comparison. A variable one needs repeated
+rates read against measured noise.
+
+**Metamorphic testing** is the third option, for when no single expected answer
+fits. It changes an input in a controlled way and checks the relationship
+between the two decisions: rephrasing a duplicate-charge complaint should not
+change its route. AgentVerity ships relation checks for this, but treats them
+as one option rather than the default, because a relation can pass on every
+case while every case takes the same path.
 
 ## What it catches
 
@@ -93,9 +139,11 @@ approval.
 
 ## The evidence gate
 
-AgentVerity will not freeze a baseline it cannot justify. The
+AgentVerity will not freeze a baseline it cannot justify. A **baseline** is the
+reviewed set of expected decisions that future versions are compared against.
+The accompanying
 [`payment_dispute_gate.py`](https://github.com/mrwersa/agentverity/blob/main/examples/payment_dispute_gate.py)
-example runs the same router against two probe sets:
+runs the same router against two probe sets:
 
 ```bash
 python examples/payment_dispute_gate.py
@@ -110,6 +158,9 @@ Both sets score 6/6 against their expected routes. The narrow set produces one
 verdict, so snapshot creation is refused. The repaired set crosses six routing
 categories and is admitted. The evaluator remains green while the evidence
 gate distinguishes a focused unit test from a system-wide baseline.
+
+A snapshot is the versioned file that stores the approved baseline for later
+comparison.
 
 <details>
 <summary>See the exact terminal output</summary>
@@ -155,52 +206,78 @@ decision boundary, and a person must approve the outputs. The same admission
 checks run again before `agentverity check` reports differences as regressions.
 Snapshot files retain SHA-256 input fingerprints rather than raw prompts.
 
-## Where it runs
+## Where AgentVerity fits
 
-Evaluation is usually split into
-[offline and online](https://docs.langchain.com/langsmith/evaluation-concepts):
-offline scores a curated set before release, online scores live traffic after
-it. **AgentVerity operates on controlled evaluation traffic, not sampled
-customer traffic.** Both checks issue calls of their own, repeating one case
-and varying the inputs. A canary may target the deployed endpoint, but it still
-uses a reviewed probe set.
-
-| Lifecycle phase | Run it? | Budget |
-|---|---|---|
-| Experimentation | Yes | `precision="cheap"`, a handful of cases |
-| Build, on each pull request | Only a fast subset | `precision="cheap"`, few cases, local or stubbed agent |
-| Release gate, before deploy | **Yes, this is the main one** | `precision="balanced"`, the full probe set |
-| Operational steady state | As a scheduled synthetic canary against the deployed endpoint | Nightly, not per request |
-
-Budget it before you wire it in. On a managed runtime a remote trial can take
-far longer than model execution: in the [measured AgentCore
-canary](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
-the runtime executed in 0.58s at p50 while the isolated caller observed 5.87s
-end to end. Six cases at `cheap` precision planned 78 calls. Twenty would plan
-100 because the repeat planner uses evidence across the whole probe set.
-At `balanced` precision, twenty cases plan 180 calls. Inspect the printed call
-count and measured latency before choosing the CI cadence.
-
-## Where it fits
+AgentVerity is an **evaluation runner**, not middleware in the serving path. It
+makes isolated calls with reviewed test inputs so it can compare repeated
+decisions and the decisions reached across the set. A quality evaluator makes
+its own calls against reviewed labels. Your release policy combines the two
+results.
 
 ```text
-agent or workflow
-       |
-       +---- quality evaluator
-       |     DeepEval / promptfoo / AgentCore Evaluations
-       |
-       +---- AgentVerity evidence qualification
-                    |
-                    +---- text for people
-                    +---- JSON for code
-                    +---- JUnit XML for CI
-                    +---- OTEL span for CloudWatch / Phoenix / LangSmith
+CONTROLLED EVALUATION PATH
 
-release decision = quality result + qualified evidence
+reviewed test inputs
+       |
+       +-- labelled calls -----> agent or workflow -----> quality evaluator
+       |                                                "Was it correct?"
+       |
+       +-- isolated repeats ---> agent or workflow -----> AgentVerity
+                                                        "Is the evidence
+                                                         stable and varied?"
+                                                                |
+                         quality result + qualified evidence ----+
+                                                                v
+                                                       release policy
+                                                  snapshot / deploy decision
+
+DEPLOYED TARGET
+
+customer request ------------> deployed agent ------------> response
+reviewed canary input --------^
+       (controlled evaluation, never sampled customer traffic)
 ```
 
-AgentVerity is deliberately small at this boundary. The core has no runtime
-dependencies, no hosted account, and no dashboard to adopt.
+The target can be a local callable, a staging endpoint, or the deployed agent.
+When a release check or scheduled canary targets the deployed endpoint, it
+still uses controlled inputs rather than sampled customer requests.
+
+### When to run it
+
+Evaluation platforms often split work into
+[offline and online](https://docs.langchain.com/langsmith/evaluation-concepts)
+runs. AgentVerity belongs in the controlled part of either workflow:
+
+| Lifecycle phase | Recommended use | Typical budget |
+|---|---|---|
+| Experimentation | Diagnose a local agent while the decision contract is changing | `precision="cheap"`, a handful of cases |
+| Pull request | Exercise a fast, representative subset | `precision="cheap"`, local or stubbed target |
+| Release gate | Qualify the full reviewed set before admitting a snapshot or deploying | `precision="balanced"`, full probe set |
+| Operations | Run a scheduled synthetic canary against the deployed endpoint | Measured cadence, never per request |
+
+Budget the run before wiring it into delivery. On a managed runtime a remote
+trial can take far longer than model execution: in the [measured AgentCore
+canary](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
+the median runtime execution was 0.58s while the isolated caller's median
+end-to-end time was 5.87s. Six cases at `cheap` precision planned 78 calls.
+Twenty would plan 100 because the repeat planner uses evidence across the whole
+probe set.
+At `balanced` precision, twenty cases plan 180 calls. Inspect the printed call
+count and measured latency before choosing the cadence.
+
+### Where the result goes
+
+```text
+AgentVerity RunResult
+       |
+       +---- terminal text ----> developer or reviewer
+       +---- versioned JSON ---> automation or retained evidence
+       +---- JUnit XML --------> GitHub / Jenkins / GitLab / Azure DevOps
+       +---- OTEL span --------> CloudWatch / Phoenix / LangSmith / OTLP
+```
+
+AgentVerity is deliberately small at these boundaries. The core has no runtime
+dependencies, hosted account, or dashboard to adopt.
 
 ### CI reporting
 
@@ -243,7 +320,7 @@ messages. OTLP can carry the span into Amazon Bedrock AgentCore Observability
 and CloudWatch, Phoenix, LangSmith, or another collector.
 
 Run this at the release gate or as a scheduled canary, per
-[Where it runs](#where-it-runs) above.
+[Where AgentVerity fits](#where-agentverity-fits) above.
 
 [Integration guide and AgentCore validation result](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 
@@ -274,7 +351,7 @@ The live run prints its planned call count before starting. It is separate
 from the zero-credential quickstart so a first run remains fast and
 reproducible.
 
-[Run or deploy the production-stack showcase](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
+[Run or deploy the production-stack example](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
 [Read the measured canary result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
 
 ## Multi-agent systems
@@ -333,7 +410,7 @@ become passing verdicts.
 
 ## Examples
 
-Each one belongs to a phase in [Where it runs](#where-it-runs).
+Each one belongs to a phase in [Where AgentVerity fits](#where-agentverity-fits).
 
 | Example | Phase | What it shows |
 |---|---|---|
