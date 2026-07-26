@@ -72,6 +72,12 @@ while the triage step inside it is verdict-deterministic and blind. Measuring
 only the pipeline exposes instability but misses the blind step. Measuring
 only triage misses the stochastic supervisor.
 
+![AgentVerity diagnoses poor decision coverage in a triage step and unstable decisions in a supervisor pipeline](assets/diagnostic-report.svg)
+
+*This report is regenerated from the executable
+[`bugfix_pipeline.py`](../examples/bugfix_pipeline.py) example and tested
+against its current results.*
+
 Use `Observation.tools` or `layer="tools"` when the ordered handoff path is
 the contract. A pipeline can preserve its final verdict while changing which
 agent or tool acts along the way.
