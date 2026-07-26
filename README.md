@@ -1,24 +1,19 @@
 # AgentVerity
 
-> **Test adequacy for AI agents. Coverage, for a thing that can answer
-> differently on a rerun.**
+> **Two test-adequacy checks for agent decisions: did you rerun enough, and did
+> your cases reach more than one decision?**
 
 [![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
-Statement coverage, branch coverage, and mutation score are
-[test adequacy criteria](https://arxiv.org/abs/2212.06118). None of them claims
-your program is correct. Each answers a narrower question: were your tests
-worth reading? AgentVerity is that measurement for agents, and it has to answer
-one extra question first, because the thing under test can decide differently
-on a rerun.
-
-Start with the rerun. Most teams pick a count by feel, three or maybe five.
+Start with the rerun. An ad hoc check might pick three repeats, or perhaps five.
 Here is roughly what you would write to check whether that is enough:
 
 ```python
+import math
+
 def looks_stable(agent, cases, k=12, tolerance=0.05):
     flips = trials = 0
     for case in cases:
@@ -33,27 +28,33 @@ def looks_stable(agent, cases, k=12, tolerance=0.05):
     return min(1, centre + margin) < tolerance
 ```
 
-Fourteen lines, and the statistics are right. Run it against a router with no
-randomness in it at all, six cases at twelve repeats:
+A small helper. The Wilson calculation is right, but the Boolean return value
+forces every underpowered result into `False`. Run it against a router with no
+randomness in it, using 6 cases at 12 repeats:
 
 ```
 flip rate 0.0    upper bound 0.096    tolerance 0.05    ->  NOT STABLE
 ```
 
-Wrong, and nothing says so. Thirty-six comparisons cannot clear a 5% bound no
-matter how well the agent behaves. You need seventy-three. Nobody works that
-out, so the rerun count gets picked by feel and the answer is quietly
-unreliable.
+The label is wrong. Zero flips in 36 comparisons means **undecided** at a 5%
+tolerance, not unstable. Certification needs 73 zero-flip disjoint pairs. That
+arithmetic is easy to miss when the rerun count is chosen by convention.
 
-AgentVerity does the arithmetic, then answers the two adequacy questions:
+AgentVerity preserves that third answer and sizes the repeats before answering
+the two adequacy questions:
 
 - **Decision stability:** does the agent reach the same named decision, exposed
   as `verdict`, across repeated runs of one case? It sizes the repeats from the
   tolerance you ask for rather than making you guess.
 - **Decision coverage:** do the test cases reach more than one decision?
 
-The second one you cannot feel. A suite where every case takes the same path
-scores 6/6 and proves nothing about the paths it never touched.
+Coverage is easier to miss. A suite where every case takes the same path scores
+6/6 but says nothing about the paths it never touched.
+
+These are two scoped [test adequacy
+checks](https://arxiv.org/abs/2212.06118). Like statement coverage, branch
+coverage, or mutation score, they measure the test evidence rather than
+claiming that the program is correct.
 
 Use it on agents that choose from a known set: routers, approval or policy
 gates, and supervisors that select the next agent or tool. The implementation

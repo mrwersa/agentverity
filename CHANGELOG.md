@@ -27,7 +27,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 - Public documentation now presents AgentVerity as an evaluation runner for
   agents with named decisions, including deterministic gates and LLM agents.
-  It defines baselines and snapshots at first use and aligns the README,
+  It frames stability and decision coverage as two scoped test-adequacy checks,
+  defines baselines and snapshots at first use, and aligns the README,
   integration diagrams, package metadata, and generated reports.
 - Terminal guidance now says `WHAT TO DO NEXT` and `test strategy` instead of
   reintroducing the retired research term `oracle`.

@@ -12,7 +12,7 @@ import runpy
 import sys
 from io import StringIO
 
-from agentverity import plan_repeats
+from agentverity import pairs_for_deterministic_call, plan_repeats
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -80,22 +80,25 @@ def test_readme_call_budget_matches_the_planner():
     assert f"twenty cases plan {balanced_calls} calls" in readme
 
 
-def test_readme_hook_snippet_really_gets_it_wrong():
-    """The opening argument rests on that snippet returning the wrong answer.
+def test_readme_hook_exposes_underpowered_as_not_stable():
+    """The opening argument rests on the Boolean snippet losing undecided.
 
-    It is the naive version a developer would write: fourteen lines, correct
-    statistics, and a false negative on an agent with no randomness in it.
-    If it ever starts returning True the README's whole opening collapses, so
-    the claim is executed rather than asserted in prose.
+    It is the small version a developer would write: correct interval
+    arithmetic and no representation for insufficient evidence. Execute the
+    exact self-contained block a reader sees, rather than helping it through
+    the test namespace.
     """
-    import math
     import re
 
     readme = (ROOT / "README.md").read_text()
-    match = re.search(r"```python\n(def looks_stable.*?)\n```", readme, re.DOTALL)
+    match = re.search(
+        r"```python\n(import math\n\ndef looks_stable.*?)\n```",
+        readme,
+        re.DOTALL,
+    )
     assert match, "the README hook snippet is missing"
 
-    namespace: dict = {"math": math}
+    namespace: dict = {}
     exec(match.group(1), namespace)  # noqa: S102 - executing our own README
 
     def router(text: str) -> str:
@@ -108,5 +111,6 @@ def test_readme_hook_snippet_really_gets_it_wrong():
         "refund late", "app crashes", "cannot login",
     ]
     assert namespace["looks_stable"](router, cases) is False, (
-        "the naive snippet now passes, so the README's opening no longer holds"
+        "the Boolean helper now passes, so the README's opening no longer holds"
     )
+    assert pairs_for_deterministic_call(0.05) == 73
