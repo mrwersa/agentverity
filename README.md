@@ -72,25 +72,17 @@ gates, and supervisors that select the next agent or tool. The implementation
 can be rules-based or LLM-based. It does not replace DeepEval, promptfoo, or
 AgentCore Evaluations. It tells you how much evidence their scores rest on.
 
-### Why a linter cannot do this
+### Why this needs a runtime check
 
-Both checks are dynamic. They run the agent and measure what comes back, which
-puts AgentVerity beside `coverage.py` and mutation testing rather than beside
-Ruff or mypy.
+Static tools can inspect orchestration code, types, allowed route labels, and
+expected labels in a test set. A quick rule that warns when six labelled cases
+all declare one route is useful. Use it.
 
-A static analyser reads source. All it sees of an LLM routing decision is a
-string returned from a network call, so there are no branches to instrument and
-no six routes to find. Stability is worse: two agents with identical
-signatures, identical types, and identical lint output can measure
-`verdict-stochastic` and `verdict-deterministic`. That difference exists only
-across repeated runs.
-
-One caveat worth stating. If your cases carry expected labels, a static rule
-*could* count them and warn that six cases declare one route, in milliseconds
-rather than minutes. That is a good idea and a fair substitute for part of the
-coverage check. It still cannot compare what you expected against what the
-agent did, it has nothing to count when the cases are unlabelled, and it cannot
-reach stability at all.
+A hosted model's route choice still arrives at runtime. Source can list six
+allowed routes, but it cannot show which route the model returns for each case
+or whether identical reruns disagree. AgentVerity measures those execution
+properties. That makes it a dynamic adequacy check, closer to code coverage or
+mutation testing than to Ruff or mypy.
 
 ## Try it
 
