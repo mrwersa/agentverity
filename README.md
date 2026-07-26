@@ -9,7 +9,9 @@
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
 Start with the rerun. An ad hoc check might pick three repeats, or perhaps five.
-Here is roughly what you would write to check whether that is enough:
+Here is roughly what you would write to check whether that is enough. It pairs
+separate runs and counts a **flip** whenever the same case reaches two
+different decisions:
 
 ```python
 import math

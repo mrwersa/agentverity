@@ -18,7 +18,7 @@ def test_agentcore_evidence_asset_matches_sanitised_results(tmp_path: Path) -> N
     assert output.read_text(encoding="utf-8") == svg
     assert DEFAULT_OUTPUT.read_text(encoding="utf-8") == svg
     assert "6 / 6 correct" in svg
-    assert "0 / 36 flips" in svg
+    assert "0 / 36 route changes" in svg
     assert "78 successful" in svg
     assert "BASELINE ADMITTED" in svg
     assert "AGENTCORE RUNTIME" in svg
