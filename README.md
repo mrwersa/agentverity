@@ -1,14 +1,22 @@
 # AgentVerity
 
-> **How many times do you rerun a flaky agent test before you believe it?**
+> **Test adequacy for AI agents. Coverage, for a thing that can answer
+> differently on a rerun.**
 
 [![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
-Most teams pick a rerun count by feel. Three, maybe five. Here is roughly what
-you would write to check whether that is enough:
+Statement coverage, branch coverage, and mutation score are
+[test adequacy criteria](https://arxiv.org/abs/2212.06118). None of them claims
+your program is correct. Each answers a narrower question: were your tests
+worth reading? AgentVerity is that measurement for agents, and it has to answer
+one extra question first, because the thing under test can decide differently
+on a rerun.
+
+Start with the rerun. Most teams pick a count by feel, three or maybe five.
+Here is roughly what you would write to check whether that is enough:
 
 ```python
 def looks_stable(agent, cases, k=12, tolerance=0.05):
@@ -37,7 +45,7 @@ matter how well the agent behaves. You need seventy-three. Nobody works that
 out, so the rerun count gets picked by feel and the answer is quietly
 unreliable.
 
-AgentVerity does the arithmetic, then answers two questions:
+AgentVerity does the arithmetic, then answers the two adequacy questions:
 
 - **Decision stability:** does the agent reach the same named decision, exposed
   as `verdict`, across repeated runs of one case? It sizes the repeats from the

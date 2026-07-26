@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "agentverity"
 version = "0.7.0"
-description = "Decision stability and coverage checks for AI agent tests"
+description = "Test adequacy for AI agents: decision stability and coverage checks"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -22,6 +22,8 @@ keywords = [
     "verdict-stochasticity",
     "agent-testing",
     "suite-quality",
+    "test-adequacy",
+    "code-coverage",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

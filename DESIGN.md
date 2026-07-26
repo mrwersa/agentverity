@@ -1,8 +1,11 @@
 # AgentVerity design
 
-AgentVerity is an open-source pre-flight testing library for agents that choose
-among named decisions. It checks whether those decisions are stable across
-repeats and whether test inputs reach more than one path. The target may be a
+AgentVerity is a test adequacy tool for agents that choose among named
+decisions. Adequacy criteria measure the test suite rather than the program:
+statement coverage, branch coverage, and mutation score all ask whether the
+tests were worth reading. Decision coverage is the same question for an agent,
+and decision stability is the precondition it needs, because an unstable
+decision makes any coverage number unrepeatable. The target may be a
 deterministic gate or an LLM agent. This document records the technical
 boundaries and the reasons behind them.
 
