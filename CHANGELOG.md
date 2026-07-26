@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-07-26
+
 ### Changed
 
 - The README and `DESIGN.md` distinguish declared structure from observed

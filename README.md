@@ -14,7 +14,7 @@ changes in explanation text.
 
 Use another evaluator for open-ended chat with no reviewed decision or ordered
 tool-path contract. AgentVerity is alpha, with
-[documented pre-1.0 guarantees](STABILITY.md).
+[documented pre-1.0 guarantees](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md).
 
 ## Try it
 
@@ -68,7 +68,7 @@ AgentVerity preserves `deterministic`, `stochastic`, and `undecided`, then
 calculates the repeat budget before the run. The default `balanced` precision
 does this automatically.
 
-[See the executable helper, arithmetic, and exact API mapping](docs/decision-stability.md).
+[See the executable helper, arithmetic, and exact API mapping](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md).
 
 ## The evidence gate
 
@@ -122,7 +122,7 @@ Use it while developing, on a pull request, before release, or as a scheduled
 synthetic canary. Do not repeat live customer requests. Results can leave as
 text, JSON, JUnit XML, or one privacy-minimised OpenTelemetry span.
 
-[See CI, telemetry, lifecycle, and multi-agent integration](docs/integrations.md).
+[See CI, telemetry, lifecycle, and multi-agent integration](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md).
 
 ### Measured AgentCore canary
 
@@ -140,8 +140,8 @@ requires both quality and evidence before snapshot admission.
 This is deployment proof, not an AWS requirement. The zero-dependency callable
 works with any stack.
 
-[Run the production example](examples/production_stack) ·
-[Read the measured result](examples/production_stack/RESULTS.md)
+[Run the production example](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
+[Read the measured result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
 
 ## Scope
 
@@ -159,14 +159,14 @@ model-backed or black-box target actually returns.
 
 ## Documentation
 
-- [Why arbitrary rerun counts fail](docs/decision-stability.md)
-- [Integrations and AgentCore validation](docs/integrations.md)
-- [API guide](docs/api.md)
-- [Design decisions](DESIGN.md)
-- [API stability and path to 1.0](STABILITY.md)
-- [Security and data handling](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
-- [Release process](RELEASING.md)
+- [Why arbitrary rerun counts fail](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
+- [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
+- [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
+- [Design decisions](https://github.com/mrwersa/agentverity/blob/main/DESIGN.md)
+- [API stability and path to 1.0](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)
+- [Security and data handling](https://github.com/mrwersa/agentverity/blob/main/SECURITY.md)
+- [Contributing](https://github.com/mrwersa/agentverity/blob/main/CONTRIBUTING.md)
+- [Release process](https://github.com/mrwersa/agentverity/blob/main/RELEASING.md)
 
 ## Development
 
