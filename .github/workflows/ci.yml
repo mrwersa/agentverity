@@ -52,6 +52,24 @@ jobs:
       - name: Lint
         run: ruff check .
 
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Enforce statement coverage
+        run: >-
+          python -m pytest -q
+          --cov=agentverity
+          --cov-report=term-missing
+          --cov-fail-under=90
+
   package:
     name: Package
     runs-on: ubuntu-latest
@@ -83,6 +101,7 @@ jobs:
     needs:
       - test
       - lint
+      - coverage
       - package
     # Runs even when a needed job fails, so the gate reports a real failure
     # instead of being skipped and leaving the required check pending forever.
@@ -92,12 +111,18 @@ jobs:
         env:
           TEST_RESULT: ${{ needs.test.result }}
           LINT_RESULT: ${{ needs.lint.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
           PACKAGE_RESULT: ${{ needs.package.result }}
         run: |
           echo "test:    ${TEST_RESULT}"
           echo "lint:    ${LINT_RESULT}"
+          echo "coverage: ${COVERAGE_RESULT}"
           echo "package: ${PACKAGE_RESULT}"
-          for result in "${TEST_RESULT}" "${LINT_RESULT}" "${PACKAGE_RESULT}"; do
+          for result in \
+            "${TEST_RESULT}" \
+            "${LINT_RESULT}" \
+            "${COVERAGE_RESULT}" \
+            "${PACKAGE_RESULT}"; do
             if [ "${result}" != "success" ]; then
               echo "::error::a required job did not succeed"
               exit 1

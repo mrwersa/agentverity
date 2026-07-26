@@ -87,3 +87,25 @@ def test_raise_policy_propagates_original_exception():
             max_workers=1,
             error_policy="raise",
         )
+
+
+@pytest.mark.parametrize(
+    ("max_workers", "error_policy", "message"),
+    [
+        (0, "raise", "max_workers"),
+        (1, "ignore", "error_policy"),
+    ],
+)
+def test_invalid_execution_configuration_is_rejected(
+    max_workers,
+    error_policy,
+    message,
+):
+    with pytest.raises(ValueError, match=message):
+        map_inputs(
+            ["case"],
+            lambda _index, text: text,
+            phase="meter",
+            max_workers=max_workers,
+            error_policy=error_policy,
+        )

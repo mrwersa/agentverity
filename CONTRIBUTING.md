@@ -16,6 +16,7 @@ AgentVerity uses a pull-request-only workflow for `main`.
 
    ```bash
    python -m pytest -q
+   python -m pytest -q --cov=agentverity --cov-fail-under=90
    ruff check .
    ```
 

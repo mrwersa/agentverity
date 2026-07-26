@@ -28,3 +28,7 @@ class TestObservationConstruction:
         obs = Observation(text="hi")
         with pytest.raises(FrozenInstanceError):
             obs.text = "no"
+
+    def test_unknown_comparison_layer_is_rejected(self):
+        with pytest.raises(ValueError, match="unknown observation layer"):
+            Observation(text="hi").key("embedding")
