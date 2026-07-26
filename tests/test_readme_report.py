@@ -19,5 +19,7 @@ def test_readme_report_renders_real_diagnostics(tmp_path):
     # to use the same words rather than the retired instrument names.
     assert "DECISION STABILITY" in svg
     assert "DECISION COVERAGE" in svg
+    assert "QUALIFY EVIDENCE" in svg
+    assert "CHOOSE TEST" in svg
     for retired in ("VERDICT METER", "VERDICT SKEW", "SCAN FOR SKEW", "oracle"):
         assert retired not in svg, f"retired vocabulary in the hero image: {retired}"

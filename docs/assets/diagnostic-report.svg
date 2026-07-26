@@ -32,8 +32,8 @@
 <rect x="984" y="114" width="162" height="52" rx="6" class="route"/>
 <text x="167" y="147" class="routeText">REPEAT EACH CASE</text>
 <text x="477" y="147" class="routeText">VARY THE INPUTS</text>
-<text x="787" y="147" class="routeText">THEN SCORE IT</text>
-<text x="1065" y="147" class="routeText">TEST</text>
+<text x="787" y="147" class="routeText">QUALIFY EVIDENCE</text>
+<text x="1065" y="147" class="routeText">CHOOSE TEST</text>
 <line x1="298" y1="140" x2="338" y2="140" class="flow"/>
 <path d="M 338 135 L 348 140 L 338 145 z" fill="#64748b"/>
 <line x1="608" y1="140" x2="648" y2="140" class="flow"/>

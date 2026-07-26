@@ -25,30 +25,6 @@ It does not replace DeepEval, promptfoo, AgentCore Evaluations, or your quality
 metrics. It checks two conditions that can make those scores misleading before
 you trust them.
 
-## Where it runs
-
-Evaluation is usually split into
-[offline and online](https://docs.langchain.com/langsmith/evaluation-concepts):
-offline scores a curated set before release, online scores live traffic after
-it. **AgentVerity is offline only.** Both its checks work by issuing calls of
-their own, repeating one case and varying the inputs, so it can never read
-production traffic the way an online evaluator does.
-
-| Lifecycle phase | Run it? | Budget |
-|---|---|---|
-| Experimentation | Yes | `precision="cheap"`, a handful of cases |
-| Build, on each pull request | Only a fast subset | `precision="cheap"`, few cases, local or stubbed agent |
-| Release gate, before deploy | **Yes, this is the main one** | `precision="balanced"`, the full probe set |
-| Operational steady state | As a scheduled canary against production | Nightly, not per request |
-
-Budget it before you wire it in. On a managed runtime a single call costs far
-more than the agent does: in the [measured AgentCore
-canary](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
-the agent answered in 0.58s while the caller waited 5.87s, because statistical
-independence needs a fresh session per call. Six cases at twelve repeats took
-78 calls and about eight minutes. Twenty cases would take roughly twenty-five.
-That is a nightly job or a release gate, not a per-commit check.
-
 ![AgentVerity diagnoses poor decision coverage in a triage step and unstable decisions in a supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
 
 *This report is regenerated from the executable
@@ -179,6 +155,32 @@ decision boundary, and a person must approve the outputs. The same admission
 checks run again before `agentverity check` reports differences as regressions.
 Snapshot files retain SHA-256 input fingerprints rather than raw prompts.
 
+## Where it runs
+
+Evaluation is usually split into
+[offline and online](https://docs.langchain.com/langsmith/evaluation-concepts):
+offline scores a curated set before release, online scores live traffic after
+it. **AgentVerity operates on controlled evaluation traffic, not sampled
+customer traffic.** Both checks issue calls of their own, repeating one case
+and varying the inputs. A canary may target the deployed endpoint, but it still
+uses a reviewed probe set.
+
+| Lifecycle phase | Run it? | Budget |
+|---|---|---|
+| Experimentation | Yes | `precision="cheap"`, a handful of cases |
+| Build, on each pull request | Only a fast subset | `precision="cheap"`, few cases, local or stubbed agent |
+| Release gate, before deploy | **Yes, this is the main one** | `precision="balanced"`, the full probe set |
+| Operational steady state | As a scheduled synthetic canary against the deployed endpoint | Nightly, not per request |
+
+Budget it before you wire it in. On a managed runtime a remote trial can take
+far longer than model execution: in the [measured AgentCore
+canary](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
+the runtime executed in 0.58s at p50 while the isolated caller observed 5.87s
+end to end. Six cases at `cheap` precision planned 78 calls. Twenty would plan
+100 because the repeat planner uses evidence across the whole probe set.
+At `balanced` precision, twenty cases plan 180 calls. Inspect the printed call
+count and measured latency before choosing the CI cadence.
+
 ## Where it fits
 
 ```text
@@ -243,9 +245,9 @@ and CloudWatch, Phoenix, LangSmith, or another collector.
 Run this at the release gate or as a scheduled canary, per
 [Where it runs](#where-it-runs) above.
 
-[Integration examples and the AgentCore validation plan](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
+[Integration guide and AgentCore validation result](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 
-### Production-stack showcase
+### Production-stack example
 
 The repository contains a payment-dispute router built with Strands and Amazon
 Bedrock. DeepEval checks labelled route quality. AgentVerity decides whether
@@ -256,8 +258,8 @@ Runtime, with operational evidence in CloudWatch.
 
 The redacted London canary made 78 isolated calls through Nova Micro. All six
 reviewed routes were correct, no flips appeared in 36 repeat pairs, all six
-routes were reached, and CloudWatch recorded no errors or throttles. More
-importantly, the first run had been stable but only 5/6 correct. The example
+routes were reached, and CloudWatch recorded no errors or throttles. The first
+run had been stable but only 5/6 correct. The example
 now refuses snapshot admission unless quality and evidence both pass.
 
 ```bash
@@ -277,24 +279,13 @@ reproducible.
 
 ## Multi-agent systems
 
-Point `run()` at whatever you want to hold to account. That choice mirrors the
-split enterprise platforms already use between
-[system and process evaluation](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators):
-
-- **System level.** Wrap the whole pipeline. You learn whether the end-to-end
-  decision is stable and whether the inputs move it.
-- **Step level.** Wrap one agent inside the pipeline. You learn the same two
-  things about that step alone.
-
-Run both and the answers can disagree, which is the useful part.
+Measure the whole pipeline and its critical steps separately. In
 [`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py)
-measures a triage step and its supervisor separately: the pipeline's decision
-is unstable while the triage step inside it is perfectly stable and completely
-blind. A system-level score alone would have shown neither.
+the whole supervisor is stochastic while its triage step is stable and blind.
+Either scope alone misses one failure. Use `layer="tools"` when the ordered
+handoff path is the contract.
 
-Set `layer="tools"` to hold the ordered tool trajectory to account instead of
-the final decision, which is how a handoff changes shape without the answer
-changing.
+[Multi-agent and step-level integration guidance](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md#multi-agent-systems)
 
 ## Observation layers
 
