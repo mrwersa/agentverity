@@ -1,12 +1,18 @@
 # AgentVerity
 
-> **Two test-adequacy checks for agent decisions: did you rerun enough, and did
-> your cases reach more than one decision?**
+> **Check whether an agent's decisions repeat and whether your test cases reach
+> more than one path.**
 
 [![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
+
+AgentVerity tests agents that choose from a known set of decisions. Consider a
+payment-dispute router: it reads a complaint and returns a label such as
+`duplicate_charge` or `missing_refund`. That label is the **route**, the next
+specialist workflow that receives the case. AgentVerity compares this named
+decision, exposed as `verdict`, rather than comparing explanation text.
 
 Start with the rerun. An ad hoc check might pick three repeats, or perhaps five.
 Here is roughly what you would write to check whether that is enough. It pairs
@@ -30,17 +36,20 @@ def looks_stable(agent, cases, k=12, tolerance=0.05):
     return min(1, centre + margin) < tolerance
 ```
 
-A small helper. The Wilson calculation is right, but the Boolean return value
-forces every underpowered result into `False`. Run it against a router with no
-randomness in it, using 6 cases at 12 repeats:
+A small helper. Here, `tolerance=0.05` means that you want to certify a route
+change rate below 5%. The formula makes a cautious estimate from the sample,
+but the yes-or-no return value forces every underpowered result into `False`.
+Run it against a router with no randomness in it, using 6 cases at 12 repeats:
 
 ```
 flip rate 0.0    upper bound 0.096    tolerance 0.05    ->  NOT STABLE
 ```
 
-The label is wrong. Zero flips in 36 comparisons means **undecided** at a 5%
-tolerance, not unstable. Certification needs 73 zero-flip disjoint pairs. That
-arithmetic is easy to miss when the rerun count is chosen by convention.
+The displayed `upper bound` is the highest change rate that this small sample
+cannot yet rule out. At 9.6%, it misses the requested 5% threshold. The label is
+still wrong: zero flips in 36 pairs means **undecided**, not unstable.
+Certification needs 73 pairs with no flips. That arithmetic is easy to miss
+when the rerun count is chosen by convention.
 
 AgentVerity preserves that third answer and sizes the repeats before answering
 the two adequacy questions:
