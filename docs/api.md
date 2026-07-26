@@ -24,6 +24,9 @@ from agentverity import Observation, RunConfig, from_callable, run
 
 ## Snapshots
 
+A snapshot is a versioned file containing the reviewed expected decisions used
+as a baseline for later runs.
+
 - `create_snapshot` admits a reviewed reference only when the evidence permits.
 - `compare_snapshot` rechecks admission before comparing current outputs.
 - `save_snapshot` and `load_snapshot` persist versioned snapshot JSON.

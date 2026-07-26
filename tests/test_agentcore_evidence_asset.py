@@ -21,6 +21,10 @@ def test_agentcore_evidence_asset_matches_sanitised_results(tmp_path: Path) -> N
     assert "0 / 36 flips" in svg
     assert "78 successful" in svg
     assert "BASELINE ADMITTED" in svg
+    assert "AGENTCORE RUNTIME" in svg
+    assert "3 INDEPENDENT CHECKS" in svg
+    assert "RELEASE POLICY" in svg
+    assert "Median end-to-end" in svg
     assert "Quality was 5/6 while the decision was stable." in svg
     assert data["region"] in svg
     assert "arn:aws:" not in svg

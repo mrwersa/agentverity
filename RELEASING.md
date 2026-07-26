@@ -40,7 +40,7 @@ account plan permits it.
 ## Publish
 
 1. Create a GitHub Release targeting the merged `main` commit.
-2. Use a tag matching the package version, such as `v0.6.0`.
+2. Use a `v`-prefixed tag that exactly matches the package version.
 3. Copy the matching changelog section into the release notes.
 4. Publish the GitHub Release.
 
@@ -54,7 +54,7 @@ After the workflow succeeds, install the release in a clean environment:
 
 ```bash
 python -m venv /tmp/agentverity-release
-VERSION=0.6.0
+VERSION="$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)"
 /tmp/agentverity-release/bin/pip install "agentverity==$VERSION"
 /tmp/agentverity-release/bin/agentverity --help
 ```

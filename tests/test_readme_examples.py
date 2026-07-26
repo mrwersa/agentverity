@@ -74,7 +74,39 @@ def test_readme_call_budget_matches_the_planner():
     inputs = 20
     cheap_calls = inputs + inputs * plan_repeats(inputs, 0.10)
     balanced_calls = inputs + inputs * plan_repeats(inputs, 0.05)
-    readme = (ROOT / "README.md").read_text()
+    readme = " ".join((ROOT / "README.md").read_text().split())
 
-    assert f"Twenty would plan\n{cheap_calls}" in readme
+    assert f"Twenty would plan {cheap_calls}" in readme
     assert f"twenty cases plan {balanced_calls} calls" in readme
+
+
+def test_readme_hook_snippet_really_gets_it_wrong():
+    """The opening argument rests on that snippet returning the wrong answer.
+
+    It is the naive version a developer would write: fourteen lines, correct
+    statistics, and a false negative on an agent with no randomness in it.
+    If it ever starts returning True the README's whole opening collapses, so
+    the claim is executed rather than asserted in prose.
+    """
+    import math
+    import re
+
+    readme = (ROOT / "README.md").read_text()
+    match = re.search(r"```python\n(def looks_stable.*?)\n```", readme, re.DOTALL)
+    assert match, "the README hook snippet is missing"
+
+    namespace: dict = {"math": math}
+    exec(match.group(1), namespace)  # noqa: S102 - executing our own README
+
+    def router(text: str) -> str:
+        if "charg" in text:
+            return "billing"
+        return "refund" if "refund" in text else "tech"
+
+    cases = [
+        "card charged twice", "charged again", "where is my refund",
+        "refund late", "app crashes", "cannot login",
+    ]
+    assert namespace["looks_stable"](router, cases) is False, (
+        "the naive snippet now passes, so the README's opening no longer holds"
+    )

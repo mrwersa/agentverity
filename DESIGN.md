@@ -1,38 +1,40 @@
-# agentverity — design
+# AgentVerity design
 
-A side project, NOT a research paper: an open-source framework for
-**measure-first testing of non-deterministic LLM agents**. Created 2026-07-05.
-Career artifact: "I build reusable tooling for testing agentic AI."
+AgentVerity is an open-source pre-flight testing library for agents that choose
+among named decisions. It checks whether those decisions are stable across
+repeats and whether test inputs reach more than one path. The target may be a
+deterministic gate or an LLM agent. This document records the technical
+boundaries and the reasons behind them.
 
 ## Identity
 
-**Name:** `agentverity` — "agent" + "verity" (truth). The tool tells you the
-truth about whether your test suite is meaningful before you trust it.
+**Name:** `agentverity`, from "agent" and "verity". The library checks whether
+the evidence behind an agent test is stable and covers more than one decision
+before that test is treated as a reusable baseline.
 
-**Wedge:** not "run metamorphic relations" but "diagnose whether your agent
-test suite is lying to you" — suite-quality diagnostics for non-deterministic
-agents. Compete on non-determinism honesty, NOT on breadth (lose to
-DeepEval/promptfoo) or on the MR taxonomy (CheckList).
+**Boundary:** AgentVerity qualifies test evidence. It does not compete with
+quality evaluators on metric breadth or with observability systems on trace
+storage and dashboards.
 
-## Prior-art landscape (researched 2026-07-06)
+## Related approaches (reviewed 2026-07-06)
 
-| Tool | Stars | Non-determinism | Metamorphic | Suite-quality diagnostic | License |
-|---|---|---|---|---|---|
-| DeepEval | 16.7k | Repeated runs | No | No | Apache-2.0 |
-| promptfoo | 22.9k | Repeated runs | No | Red-team coverage only | MIT |
-| agentevals (langchain) | 636 | No | No | No | MIT |
-| CheckList | 2k | Assumes deterministic | INV/DIR (owns it) | No | MIT |
-| AgentAssay | paper | Yes (Wilson CIs) | Yes | Mutation testing | AGPL |
-| agentrial | 17 | Yes (Wilson CIs) | No | No | MIT |
-| **agentverity** | — | **Yes + measure-first** | **Yes (inherited)** | **Meter + blindness** | **Apache-2.0** |
+| Tool | Non-determinism | Relation checks | Suite-quality diagnostic | License |
+|---|---|---|---|---|
+| DeepEval | Repeated runs | No | No | Apache-2.0 |
+| promptfoo | Repeated runs | No | Red-team coverage | MIT |
+| agentevals (LangChain) | No | No | No | MIT |
+| CheckList | Assumes deterministic | Invariance and directional checks | No | MIT |
+| AgentAssay | Wilson intervals | Yes | Mutation testing | AGPL |
+| agentrial | Wilson intervals | No | No | MIT |
+| **AgentVerity** | **Tri-state stability check** | **Optional** | **Decision stability and coverage** | **Apache-2.0** |
 
-**The three differentiators that survive the research:**
+**Four design choices:**
 
 1. **Verdict-layer oracle selection.** Existing tools repeat tests, report
    uncertainty, and in AgentAssay's case calibrate trial budgets. AgentVerity
    asks whether the chosen categorical decision layer is stable enough that a
-   frozen baseline dominates MRs. The novelty claim is this oracle-selection
-   use, not awareness that agents are non-deterministic.
+   frozen baseline is supportable. The distinctive use is test-strategy
+   selection, not awareness that agents are non-deterministic.
 
 2. **Constant-gate-blindness detector.** A gate that returns `"allow"` on 96%
    of a probe set can satisfy many invariance checks without exercising a
@@ -48,45 +50,47 @@ DeepEval/promptfoo) or on the MR taxonomy (CheckList).
    but "tell you if your tests are meaningful before you trust them." The
    report leads with the diagnostics, then per-relation results.
 
-**Borrowed, established (cite in README):**
+**Established foundations:**
 - **Metamorphic relations** (Chen et al. 1998): assert a law between two runs
-  (transform input, check the outputs relate correctly) — no golden output
-  needed. The escape from the oracle problem for non-deterministic systems.
+  (transform input, check the outputs relate correctly). They support testing
+  when no complete golden output is available.
 - **Semantic-invariance transforms** (CheckList / LLMORPH): normalisation,
   casing, whitespace.
 - **Wilson CIs** (AgentAssay, agentrial use them for pass-rate CIs; we use
   them for verdict-stability certification — same primitive, different use).
 
-**Apache-2.0** is an adoption edge over AgentAssay's AGPL.
-
 ---
 
-## 1. What it is (one line)
+## 1. What it is
 
-`agentverity` runs two diagnostics before any test relation: does the agent's
-verdict flip across identical reruns (meter), and does the agent return a
-near-constant verdict across a diverse input set (blindness). The first guides
-oracle selection. The second warns when green relation results may be vacuous.
+AgentVerity runs two diagnostics before a green result becomes a reusable
+baseline. The stability check asks whether a categorical decision changes
+across isolated identical reruns. The coverage check asks whether a deliberately
+varied probe set reaches more than one decision. Optional relations run after
+those checks.
 
 ## 2. Architecture (three layers)
 
-```
-your agent (Strands / LangGraph / any callable)
-        |  adapter: normalise to Observation
+```text
+reviewed test inputs
+        |
         v
-  agentverity.core
-    |
-    ├── meter.py        — verdict-stochasticity meter (headline #1)
-    ├── blindness.py    — constant-gate-blindness detector (headline #2)
-    ├── execution.py    — bounded concurrency, progress, explicit failures
-    ├── reporting.py    — versioned machine report
-    ├── snapshot.py     — evidence-gated baseline admission and comparison
-    ├── relations.py     — typed metamorphic relations (the vehicle)
-    ├── runner.py        — orchestrates meter -> blindness -> relations
-    └── cli.py           — `agentverity run` entry point
+adapter: target call -> Observation(text, verdict, tools)
+        |
+        v
+runner
+  +-- execution.py    bounded calls, progress, explicit failures
+  +-- meter.py        decision stability
+  +-- blindness.py    decision coverage
+  +-- relations.py    optional relation checks
+        |
+        v
+RunResult
+  +-- reporting.py    terminal, JSON, JUnit, and OTEL handoff
+  +-- snapshot.py     reviewed baseline admission and comparison
 ```
 
-### 3a. Adapter layer (`agentverity/adapters/`)
+### Adapter layer (`agentverity/adapters/`)
 Turns a real agent into a uniform `run(input) -> Observation`. `Observation`
 carries what relations can assert over:
 - `text`   — final response string
@@ -99,12 +103,12 @@ Adapters:
   the final message text and the tool-use blocks for `tools`.
 - **LangGraph:** compiled graph `.invoke(state)` (planned).
 - **callable:** any `fn(input) -> str | dict | Observation` for non-library agents.
-Adapters are OPTIONAL imports — the core installs without any agent library.
+Adapters are optional imports. The core installs without any agent library.
 
-### 3b. Core (`agentverity/`)
+### Core (`agentverity/`)
 - `relations.py` — Relation = (name, type, transform, check). Built-in
   catalogue: normalisation, casing, whitespace invariance (text-level);
-  tool-selection-invariance (agent-specific, our emphasis).
+  tool-selection-invariance (agent-specific).
 - `meter.py` — verdict-stochasticity meter. Tri-state call with Wilson CI.
 - `blindness.py` — constant-gate-blindness detector. Skew scan + warning.
 - `runner.py` — orchestrates meter -> blindness -> relations. Returns RunResult.
@@ -116,12 +120,11 @@ Adapters are OPTIONAL imports — the core installs without any agent library.
 ## 3. Scope discipline (what it is NOT)
 
 - Not a benchmark, not a leaderboard, not an LLM-judge scorer.
-- Not correctness testing — it tests *relations*, and explicitly warns it cannot
-  tell a correct agent from an indifferent one (blindness detector).
-- Not tied to any provider or the research programme's own gate.
-- Zero dependency on the `mnem`/sibling-paper code. Fully standalone.
+- Not a replacement for labelled correctness tests or model-based judges.
+- Not tied to any provider, agent framework, or application-specific gate.
+- No dependency on an external research codebase.
 
-## 4. Status (2026-07-25)
+## 4. Status (2026-07-26)
 
 - M1 core: DONE — observation, meter, blindness, relations, runner, CLI.
 - M2 Strands adapter: DONE — adapter written, tested, worked example runs.

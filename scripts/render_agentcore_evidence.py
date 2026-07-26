@@ -85,15 +85,15 @@ def render(
 </style>
 <rect width="1200" height="690" class="bg"/>
 {_text(54, 52, "A green agent test, qualified before release.", css="headline")}
-{_text(54, 82, "Real payment-routing canary · Strands + Nova Micro + AgentCore Runtime", css="subhead")}
+{_text(54, 82, "Separate quality, evidence, and operational checks · combined only at release", css="subhead")}
 <rect x="54" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="357" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="660" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="963" y="112" width="183" height="52" rx="6" class="step"/>
 {_text(173, 144, "6 REVIEWED CASES", css="stepText")}
-{_text(476, 144, "DEEPEVAL QUALITY", css="stepText")}
-{_text(779, 144, "AGENTVERITY EVIDENCE", css="stepText")}
-{_text(1055, 144, "RELEASE", css="stepText")}
+{_text(476, 144, "AGENTCORE RUNTIME", css="stepText")}
+{_text(779, 144, "3 INDEPENDENT CHECKS", css="stepText")}
+{_text(1055, 144, "RELEASE POLICY", css="stepText")}
 <line x1="309" y1="138" x2="337" y2="138" class="flow"/>
 <path d="M 337 133 L 347 138 L 337 143 z" fill="#64748b"/>
 <line x1="612" y1="138" x2="640" y2="138" class="flow"/>
@@ -124,7 +124,7 @@ def render(
     eyebrow="OPERATIONS · AGENTCORE",
     headline=f"{cloud['successful_invocations']} successful",
     detail_1=f"{cloud['errors']} errors · {cloud['throttles']} throttles",
-    detail_2=f"End-to-end p50 {cloud['end_to_end_p50_seconds']:.2f}s",
+    detail_2=f"Median end-to-end {cloud['end_to_end_p50_seconds']:.2f}s",
     badge="CANARY HEALTHY",
     accent="#a78bfa",
 )}
@@ -132,7 +132,7 @@ def render(
 {_text(80, 558, "WHAT THE FIRST RUN CAUGHT", css="lessonTitle")}
 {_text(80, 590, f"Quality was {failure['quality_passed']}/{failure['quality_total']} while the decision was stable.", css="lesson")}
 {_text(642, 590, failure["lesson"], css="lesson")}
-{_text(54, 662, f"Redacted evidence · {data['captured_at']} · runtime p50 {cloud['runtime_p50_seconds']:.3f}s · end-to-end p95 {cloud['end_to_end_p95_seconds']:.2f}s", css="footer")}
+{_text(54, 662, f"Redacted evidence · {data['captured_at']} · runtime median {cloud['runtime_p50_seconds']:.3f}s · end-to-end 95th percentile {cloud['end_to_end_p95_seconds']:.2f}s", css="footer")}
 </svg>
 """
     output_path.parent.mkdir(parents=True, exist_ok=True)

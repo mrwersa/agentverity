@@ -15,6 +15,8 @@ def test_readme_report_renders_real_diagnostics(tmp_path):
     assert "42.3% (33/78)" in svg          # pipeline flips, measured over 78 pairs
     assert "BLIND" in svg
     assert "STOCHASTIC" in svg
+    assert "Evidence covers one decision path" in svg
+    assert "Add inputs that reach other decisions" in svg
     # The hero image sits directly under the README's own vocabulary, so it has
     # to use the same words rather than the retired instrument names.
     assert "DECISION STABILITY" in svg

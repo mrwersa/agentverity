@@ -2,21 +2,29 @@
 
 AgentVerity owns one step: checking whether repeated decisions are stable and
 whether the test inputs exercise more than one decision. Together, those
-deliberately selected inputs form the probe set. AgentVerity should sit beside
-quality evaluators and observability platforms, not replace them.
+deliberately selected inputs form the probe set. AgentVerity actively invokes
+the target with that set. It sits beside quality evaluators and observability
+platforms, not inside the customer request path and not in place of them.
 
 ```text
-agent or workflow
-       |
-       +---- AgentVerity ----> JUnit XML to CI
-       |         |
-       |         +---- OTEL summary span
-       |
-       +---- DeepEval / promptfoo / AgentCore Evaluations
-                            |
-                            +---- quality scores
+CONTROLLED EVALUATION
 
-release decision = quality result + qualified evidence
+reviewed inputs
+   +-- labelled calls -----> agent target -----> quality evaluator
+   +-- isolated repeats ---> agent target -----> AgentVerity
+                                                      |
+                           +--------------------------+-----------+
+                           |                          |           |
+                       terminal / JSON             JUnit        OTEL
+                           |                          |           |
+quality result + qualified evidence              CI gate   observability
+                  |
+                  v
+       team release policy
+
+CUSTOMER SERVING PATH
+
+customer request ----------> deployed agent ----------> response
 ```
 
 ## Agent interfaces
@@ -188,16 +196,18 @@ would in CI or a scheduled canary:
 
 ```text
 reviewed cases
-      |
-      +---- DeepEval: is each route correct?
-      |
-      +---- AgentVerity: is that result stable and non-blind?
+   +-- labelled calls -----> AgentCore Runtime -----> DeepEval quality
+   +-- isolated repeats ---> AgentCore Runtime -----> AgentVerity evidence
+                                  |                         |
+                                  |                         +--> OTEL summary
+                                  +--> runtime logs              |
+                                          |                      |
+                                          +----> CloudWatch <----+
+
+quality passed + evidence qualified + human approval
                          |
                          v
                 admit or refuse baseline
-      |
-      v
-AgentCore Runtime ----> CloudWatch operational evidence
 ```
 
 The final canary produced 6/6 correct routes, 0/36 verdict flips, six distinct

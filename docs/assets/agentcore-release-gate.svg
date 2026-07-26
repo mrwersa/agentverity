@@ -23,15 +23,15 @@
 </style>
 <rect width="1200" height="690" class="bg"/>
 <text x="54" y="52" class="headline">A green agent test, qualified before release.</text>
-<text x="54" y="82" class="subhead">Real payment-routing canary · Strands + Nova Micro + AgentCore Runtime</text>
+<text x="54" y="82" class="subhead">Separate quality, evidence, and operational checks · combined only at release</text>
 <rect x="54" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="357" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="660" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="963" y="112" width="183" height="52" rx="6" class="step"/>
 <text x="173" y="144" class="stepText">6 REVIEWED CASES</text>
-<text x="476" y="144" class="stepText">DEEPEVAL QUALITY</text>
-<text x="779" y="144" class="stepText">AGENTVERITY EVIDENCE</text>
-<text x="1055" y="144" class="stepText">RELEASE</text>
+<text x="476" y="144" class="stepText">AGENTCORE RUNTIME</text>
+<text x="779" y="144" class="stepText">3 INDEPENDENT CHECKS</text>
+<text x="1055" y="144" class="stepText">RELEASE POLICY</text>
 <line x1="309" y1="138" x2="337" y2="138" class="flow"/>
 <path d="M 337 133 L 347 138 L 337 143 z" fill="#64748b"/>
 <line x1="612" y1="138" x2="640" y2="138" class="flow"/>
@@ -60,12 +60,12 @@
 <text x="828" y="286" class="eyebrow">OPERATIONS · AGENTCORE</text>
 <text x="828" y="338" class="metric">78 successful</text>
 <text x="828" y="382" class="detail">0 errors · 0 throttles</text>
-<text x="828" y="414" class="detail">End-to-end p50 5.87s</text>
+<text x="828" y="414" class="detail">Median end-to-end 5.87s</text>
 <rect x="828" y="446" width="192" height="30" rx="4" fill="#a78bfa"/>
 <text x="924" y="467" class="badge">CANARY HEALTHY</text>
 <rect x="54" y="526" width="1092" height="98" rx="8" class="lessonBox"/>
 <text x="80" y="558" class="lessonTitle">WHAT THE FIRST RUN CAUGHT</text>
 <text x="80" y="590" class="lesson">Quality was 5/6 while the decision was stable.</text>
 <text x="642" y="590" class="lesson">Stability cannot override correctness.</text>
-<text x="54" y="662" class="footer">Redacted evidence · 2026-07-25 · runtime p50 0.576s · end-to-end p95 7.59s</text>
+<text x="54" y="662" class="footer">Redacted evidence · 2026-07-25 · runtime median 0.576s · end-to-end 95th percentile 7.59s</text>
 </svg>
