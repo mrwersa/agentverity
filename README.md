@@ -5,6 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
+[![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25%2B-brightgreen.svg)](#development)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
 AgentVerity tests agents that choose from a known set of decisions: routers,
@@ -25,7 +26,7 @@ pip install agentverity
 ```python
 from agentverity import from_callable, run
 
-def route(ticket: str) -> dict:
+def route(ticket: str) -> dict[str, str]:
     # Deliberate defect: every ticket takes the same route.
     return {"text": "route: general", "verdict": "general"}
 
@@ -163,6 +164,7 @@ model-backed or black-box target actually returns.
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - [Design decisions](https://github.com/mrwersa/agentverity/blob/main/DESIGN.md)
+- [ADR: compare named decisions, not generated text](https://github.com/mrwersa/agentverity/blob/main/docs/adr/0001-compare-named-decisions.md)
 - [API stability and path to 1.0](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)
 - [Security and data handling](https://github.com/mrwersa/agentverity/blob/main/SECURITY.md)
 - [Contributing](https://github.com/mrwersa/agentverity/blob/main/CONTRIBUTING.md)
@@ -177,7 +179,8 @@ ruff check .
 ```
 
 CI covers Python 3.10 through 3.14, lint, package construction, and the
-generated README evidence.
+generated README evidence. A separate required job enforces at least 90%
+statement coverage.
 
 ## Status and licence
 

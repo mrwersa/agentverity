@@ -41,6 +41,23 @@ With no observed changes, a 5% threshold needs 73 independent pairs.
 `pairs_for_deterministic_call(0.05)` returns that number, while `plan_repeats`
 translates it into repeats per input before calls begin.
 
+The built-in precision levels therefore imply these minimum evidence budgets
+when no changes are observed:
+
+| Precision | Maximum tolerated change rate | Independent pairs |
+|---|---:|---:|
+| `cheap` | 10% | 35 |
+| `balanced` | 5% | 73 |
+| `strict` | 1% | 381 |
+
+These are target-call budgets, not library-throughput benchmarks. Wall time is
+normally dominated by the supplied agent or remote endpoint. A local
+calls-per-second figure would therefore say little about the cost of a real
+evaluation. `plan_repeats` exposes the budget that teams can price before a
+run, while the measured
+[AgentCore canary](../examples/production_stack/RESULTS.md) reports the
+end-to-end latency of one real deployment path.
+
 AgentVerity keeps three outcomes:
 
 - `deterministic`: enough evidence supports the requested tolerance

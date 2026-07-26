@@ -110,3 +110,16 @@ class TestScoreOnCollectedObservations:
 
         with pytest.raises(ValueError, match="threshold"):
             score([Observation(text="a", verdict="a")], threshold=0)
+
+    def test_sequence_verdicts_are_compared_as_hashable_values(self):
+        from agentverity.blindness import score
+        from agentverity.observation import Observation
+
+        result = score([
+            Observation(verdict=["search", "answer"]),
+            Observation(verdict=["search", "answer"]),
+            Observation(verdict=["escalate"]),
+        ])
+
+        assert result.distinct == 2
+        assert result.majority_verdict == ("search", "answer")

@@ -8,6 +8,25 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-07-26
+
+### Added
+
+- A required CI coverage job and a badge backed by a 90% statement-coverage
+  floor.
+- An architecture decision record explaining why AgentVerity compares named
+  decisions rather than generated text.
+- A call-budget table for the three precision levels, with explicit guidance
+  on why target-call budgets are more useful than a synthetic local throughput
+  benchmark.
+
+### Changed
+
+- The README quickstart now shows a fully parameterised return type and links
+  directly to the decision-layer ADR.
+- Edge-case tests now cover invalid observation layers, execution
+  configuration, sequence verdicts, and nested report values.
+
 ## [0.8.1] - 2026-07-26
 
 ### Changed

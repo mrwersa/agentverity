@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from enum import Enum
 from xml.etree import ElementTree as ET
 
 import pytest
@@ -74,6 +75,24 @@ def test_write_run_json_round_trips(tmp_path):
 def test_json_value_refuses_lossy_fallback():
     with pytest.raises(TypeError, match="not JSON-compatible"):
         json_value(object())
+
+
+def test_json_value_preserves_supported_nested_values():
+    class Decision(Enum):
+        ALLOW = "allow"
+
+    assert json_value({
+        "route": Decision.ALLOW,
+        "tools": ("search", "answer"),
+    }) == {
+        "route": "allow",
+        "tools": ["search", "answer"],
+    }
+
+
+def test_json_value_rejects_non_string_mapping_keys():
+    with pytest.raises(TypeError, match="string keys"):
+        json_value({1: "allow"})
 
 
 def test_junit_report_maps_blindness_and_vacuous_relations_without_raw_inputs():
