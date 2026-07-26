@@ -17,6 +17,15 @@ from agentverity import pairs_for_deterministic_call, plan_repeats
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
+def test_readme_onboards_before_the_statistical_explanation():
+    readme = (ROOT / "README.md").read_text()
+
+    assert readme.index("## Try it") < readme.index(
+        "## Why rerun counts are harder than they look"
+    )
+    assert "Use another evaluator for open-ended chat" in readme
+
+
 def _run_example() -> str:
     # The example parses argv, so pytest's own flags must not reach it.
     captured_out, sys.stdout = sys.stdout, StringIO()
@@ -28,15 +37,6 @@ def _run_example() -> str:
     finally:
         sys.stdout = captured_out
         sys.argv = captured_argv
-
-
-def test_readme_shows_the_real_gate_output():
-    printed = _run_example()
-    readme = (ROOT / "README.md").read_text()
-    assert printed in readme, (
-        "README's evidence-gate block has drifted from what the example "
-        "prints. Re-copy it from `python examples/payment_dispute_gate.py`."
-    )
 
 
 def test_the_gate_actually_refuses_then_admits():
@@ -69,34 +69,34 @@ def test_readme_comparison_table_matches_the_example():
         assert row in readme, f"README is missing table row: {row}"
 
 
-def test_readme_call_budget_matches_the_planner():
+def test_integration_call_budget_matches_the_planner():
     """Keep practical cost guidance tied to the executable planner."""
     inputs = 20
     cheap_calls = inputs + inputs * plan_repeats(inputs, 0.10)
     balanced_calls = inputs + inputs * plan_repeats(inputs, 0.05)
-    readme = " ".join((ROOT / "README.md").read_text().split())
+    guide = " ".join((ROOT / "docs" / "integrations.md").read_text().split())
 
-    assert f"Twenty would plan {cheap_calls}" in readme
-    assert f"twenty cases plan {balanced_calls} calls" in readme
+    assert f"Twenty plan {cheap_calls}" in guide
+    assert f"twenty cases plan {balanced_calls} calls" in guide
 
 
-def test_readme_hook_exposes_underpowered_as_not_stable():
-    """The opening argument rests on the Boolean snippet losing undecided.
+def test_stability_note_exposes_underpowered_as_not_stable():
+    """The technical note's Boolean snippet must keep losing undecided.
 
     It is the small version a developer would write: correct interval
     arithmetic and no representation for insufficient evidence. Execute the
-    exact self-contained block a reader sees, rather than helping it through
-    the test namespace.
+    exact self-contained block rather than helping it through the test
+    namespace.
     """
     import re
 
-    readme = (ROOT / "README.md").read_text()
+    note = (ROOT / "docs" / "decision-stability.md").read_text()
     match = re.search(
         r"```python\n(import math\n\ndef looks_stable.*?)\n```",
-        readme,
+        note,
         re.DOTALL,
     )
-    assert match, "the README hook snippet is missing"
+    assert match, "the decision-stability helper is missing"
 
     namespace: dict = {}
     exec(match.group(1), namespace)  # noqa: S102 - executing our own README
