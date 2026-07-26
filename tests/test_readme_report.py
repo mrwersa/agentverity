@@ -1,4 +1,4 @@
-"""The README image must stay generated from the executable example."""
+"""The multi-agent diagnostic must stay tied to its executable example."""
 
 from __future__ import annotations
 
@@ -17,8 +17,8 @@ def test_readme_report_renders_real_diagnostics(tmp_path):
     assert "STOCHASTIC" in svg
     assert "Evidence covers one decision path" in svg
     assert "Add inputs that reach other decisions" in svg
-    # The hero image sits directly under the README's own vocabulary, so it has
-    # to use the same words rather than the retired instrument names.
+    # The integration visual uses the public vocabulary, not retired instrument
+    # names.
     assert "DECISION STABILITY" in svg
     assert "DECISION COVERAGE" in svg
     assert "QUALIFY EVIDENCE" in svg

@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-26
+
 ### Added
 
 - `from_strands_factory`, which builds a fresh Strands agent for each trial so
@@ -30,6 +32,9 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   It frames stability and decision coverage as two scoped test-adequacy checks,
   defines baselines and snapshots at first use, and aligns the README,
   integration diagrams, package metadata, and generated reports.
+- The README now keeps the measured AgentCore canary as its single visual
+  showcase. The multi-agent diagnostic remains in the integration guide,
+  beside the step-level guidance it supports.
 - Terminal guidance now says `WHAT TO DO NEXT` and `test strategy` instead of
   reintroducing the retired research term `oracle`.
 - The production showcase defaults to low-cost Amazon Nova Micro and separates

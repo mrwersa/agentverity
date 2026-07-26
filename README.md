@@ -72,16 +72,6 @@ gates, and supervisors that select the next agent or tool. The implementation
 can be rules-based or LLM-based. It does not replace DeepEval, promptfoo, or
 AgentCore Evaluations. It tells you how much evidence their scores rest on.
 
-The report below shows both checks on a multi-agent pipeline, where the
-supervisor and the triage step inside it need different testing strategies.
-
-![AgentVerity diagnoses poor decision coverage in a triage step and unstable decisions in a supervisor pipeline](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/diagnostic-report.svg)
-
-*This report is regenerated from the executable
-[`bugfix_pipeline.py`](https://github.com/mrwersa/agentverity/blob/main/examples/bugfix_pipeline.py)
-example and tested against
-its current results.*
-
 ## Try it
 
 ```bash
