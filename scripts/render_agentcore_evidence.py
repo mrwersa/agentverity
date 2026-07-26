@@ -113,7 +113,7 @@ def render(
 {_card(
     x=428,
     eyebrow="EVIDENCE · AGENTVERITY",
-    headline=f"{cloud['pair_flips']} / {cloud['pair_trials']} flips",
+    headline=f"{cloud['pair_flips']} / {cloud['pair_trials']} route changes",
     detail_1=f"{cloud['distinct_routes']} of {method['reviewed_cases']} routes reached",
     detail_2="Decision stability and coverage checked",
     badge="BASELINE ADMITTED",

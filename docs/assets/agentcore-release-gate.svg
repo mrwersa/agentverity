@@ -50,7 +50,7 @@
 <rect x="428" y="244" width="344" height="250" rx="8" class="card"/>
 <rect x="428" y="244" width="344" height="5" rx="2" fill="#4ade80"/>
 <text x="454" y="286" class="eyebrow">EVIDENCE · AGENTVERITY</text>
-<text x="454" y="338" class="metric">0 / 36 flips</text>
+<text x="454" y="338" class="metric">0 / 36 route changes</text>
 <text x="454" y="382" class="detail">6 of 6 routes reached</text>
 <text x="454" y="414" class="detail">Decision stability and coverage checked</text>
 <rect x="454" y="446" width="192" height="30" rx="4" fill="#4ade80"/>
