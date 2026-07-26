@@ -339,7 +339,7 @@ def _check_command(args: argparse.Namespace) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agentverity",
-        description="Measure-first testing for non-deterministic LLM agents.",
+        description="Decision stability and coverage checks for AI agent tests.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

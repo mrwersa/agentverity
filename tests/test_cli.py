@@ -17,6 +17,16 @@ def _write_inputs(path: str, lines: list[str]) -> None:
 
 
 class TestCLI:
+    def test_help_uses_public_description(self, capsys):
+        with pytest.raises(SystemExit) as raised:
+            main(["--help"])
+
+        assert raised.value.code == 0
+        assert (
+            "Decision stability and coverage checks for AI agent tests."
+            in capsys.readouterr().out
+        )
+
     def test_run_deterministic_agent(self, capsys, tmp_path):
         inputs_file = tmp_path / "inputs.txt"
         # 100 inputs, balanced so the blindness detector does not fire,

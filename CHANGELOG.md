@@ -14,6 +14,13 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   behaviour. Static tools can inspect orchestration branches, route schemas,
   and expected labels. AgentVerity measures which decisions a model-backed or
   black-box target actually returns and whether identical reruns disagree.
+- The README now puts a runnable zero-credential example before the statistical
+  explanation, states the open-ended-agent non-fit explicitly, and describes
+  relation execution as an optional convenience rather than the contribution.
+- The package and CLI descriptions now use the same decision-stability and
+  coverage language as the README.
+- A pre-1.0 stability policy documents patch compatibility, versioned schema
+  handling, safe pinning, and concrete exit criteria for 1.0.
 
 ## [0.8.0] - 2026-07-26
 

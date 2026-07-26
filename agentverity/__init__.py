@@ -1,29 +1,26 @@
-"""agentverity — measure-first testing for non-deterministic LLM agents.
+"""Decision stability and coverage checks for AI agent tests.
 
-Before trusting any test suite, agentverity tells you whether your agent's
-verdict is stable enough to test against, and whether a passing relation is
-trivially satisfied by an indifferent agent. Two headline diagnostics:
+Before trusting a green run, AgentVerity checks whether the agent's named
+decision is stable across reruns and whether the test inputs reach more than
+one decision. Two headline diagnostics:
 
   1. **Verdict-stochasticity meter** — does the agent's decision flip across
-     identical reruns? If not, a frozen-output diff dominates and metamorphic
-     relations add little.
+     identical reruns? A stable decision can support a reviewed baseline.
   2. **Constant-gate-blindness detector** — does the agent return a near-constant
-     verdict across a diverse input set? If so, every relation passes
-     trivially and the suite is lying to you.
+     verdict across a diverse input set? If so, a green result supports that
+     path rather than the wider decision contract.
 
-Metamorphic relations are the vehicle; the diagnostics are the product.
-When those diagnostics support frozen-baseline testing, evidence-gated
+Metamorphic relations are an optional strategy, not the product. Evidence-gated
 snapshots refuse to freeze an incomplete, underpowered, blind, or unapproved
 reference.
 
 Quickstart::
 
-    from agentverity import run, from_callable
-    from agentverity.relations import builtin_relations
+    from agentverity import from_callable, run
 
     agent = from_callable(my_agent_fn)
-    result = run(agent, inputs=["hello", "world"], relations=builtin_relations())
-    print(result.summary())
+    result = run(agent, inputs=["hello", "world"])
+    print(result.headline)
 """
 
 from importlib.metadata import PackageNotFoundError, version

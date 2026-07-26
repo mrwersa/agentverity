@@ -17,6 +17,15 @@ from agentverity import pairs_for_deterministic_call, plan_repeats
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
+def test_readme_onboards_before_the_statistical_explanation():
+    readme = (ROOT / "README.md").read_text()
+
+    assert readme.index("## Try it") < readme.index(
+        "## Why rerun counts are harder than they look"
+    )
+    assert "AgentVerity is not the right evaluator" in readme
+
+
 def _run_example() -> str:
     # The example parses argv, so pytest's own flags must not reach it.
     captured_out, sys.stdout = sys.stdout, StringIO()

@@ -14,6 +14,55 @@ payment-dispute router: it reads a complaint and returns a label such as
 specialist workflow that receives the case. AgentVerity compares this named
 decision, exposed as `verdict`, rather than comparing explanation text.
 
+It also measures an ordered tool path through `Observation.tools`. If the
+system produces only open-ended text and has no reviewed decision or trajectory
+contract, AgentVerity is not the right evaluator.
+
+## Try it
+
+```bash
+pip install agentverity
+```
+
+```python
+from agentverity import from_callable, run
+
+def route(ticket: str) -> dict:
+    # Deliberate defect: the input is ignored.
+    return {"text": "route: general", "verdict": "general"}
+
+agent = from_callable(route)
+result = run(agent, inputs=[
+    "my card was charged twice",
+    "the app crashes on login",
+    "where is my refund",
+    "the checkout button is the wrong colour",
+])
+
+print(result.headline)
+```
+
+```text
+NOT TRUSTWORTHY - the agent answered 'general' on 100% of the probes,
+so a pass says more about the probe set than about the agent.
+```
+
+The four test inputs form the **probe set**: deliberately varied cases used by
+the coverage check. The default `balanced` precision sizes the repeat count
+automatically.
+
+From a repository checkout, run the same example directly:
+
+```bash
+python examples/support_router.py
+
+agentverity run \
+  --agent examples/support_router.py:build_agent \
+  --inputs examples/support_tickets.txt
+```
+
+## Why rerun counts are harder than they look
+
 Start with the rerun. An ad hoc check might pick three repeats, or perhaps five.
 Here is roughly what you would write to check whether that is enough. It pairs
 separate runs and counts a **flip** whenever the same case reaches two
@@ -84,52 +133,6 @@ or whether identical reruns disagree. AgentVerity measures those execution
 properties. That makes it a dynamic adequacy check, closer to code coverage or
 mutation testing than to Ruff or mypy.
 
-## Try it
-
-```bash
-pip install agentverity
-```
-
-```python
-from agentverity import from_callable, run
-
-def route(ticket: str) -> dict:
-    # Deliberate defect: the input is ignored.
-    return {"text": "route: general", "verdict": "general"}
-
-agent = from_callable(route)
-result = run(agent, inputs=[
-    "my card was charged twice",
-    "the app crashes on login",
-    "where is my refund",
-    "the checkout button is the wrong colour",
-])
-
-print(result.headline)
-```
-
-```text
-NOT TRUSTWORTHY - the agent answered 'general' on 100% of the probes,
-so a pass says more about the probe set than about the agent.
-```
-
-The four test inputs form the **probe set**: deliberately varied cases used by
-the coverage check.
-
-The default `balanced` precision sizes the repeat count automatically. A
-default run answers rather than leaving a deterministic function as
-`undecided`.
-
-From a repository checkout, the same example is directly runnable:
-
-```bash
-python examples/support_router.py
-
-agentverity run \
-  --agent examples/support_router.py:build_agent \
-  --inputs examples/support_tickets.txt
-```
-
 ## Choosing a testing strategy
 
 The two answers point at different tools. A stable, well-covered decision can
@@ -142,6 +145,10 @@ between the two decisions: rephrasing a duplicate-charge complaint should not
 change its route. AgentVerity ships relation checks for this, but treats them
 as one option rather than the default, because a relation can pass on every
 case while every case takes the same path.
+
+The bundled relation runner is a convenience, not the differentiator. Keep an
+existing relation implementation if it already works. AgentVerity's role is to
+check whether stability and coverage make that result interpretable.
 
 ## What it catches
 
@@ -475,6 +482,7 @@ coverage before interpreting the ordinary test result.
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - [Design decisions](https://github.com/mrwersa/agentverity/blob/main/DESIGN.md)
+- [API stability and path to 1.0](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)
 - [Security and data handling](https://github.com/mrwersa/agentverity/blob/main/SECURITY.md)
 - [Contributing](https://github.com/mrwersa/agentverity/blob/main/CONTRIBUTING.md)
 - [Release process](https://github.com/mrwersa/agentverity/blob/main/RELEASING.md)
@@ -492,6 +500,8 @@ generated README diagnostic.
 
 ## Status and licence
 
-Alpha. Public APIs may change before 1.0.
+Alpha. Pin a minor series for production use, for example
+`agentverity~=0.8.0`. Patch releases preserve its public API. See the
+[stability policy](STABILITY.md) for the pre-1.0 guarantees and exit criteria.
 
 Apache-2.0. Contributions are welcome through the pull-request workflow.
