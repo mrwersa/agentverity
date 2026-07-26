@@ -162,7 +162,7 @@ attributes must agree on these cases:
 
 - incomplete or undecided evidence is unsupported, never green
 - blind probes and wholly vacuous relation catalogues are failed test evidence
-- stochasticity is oracle guidance, not automatically a defective agent
+- stochasticity is test-strategy guidance, not automatically a defective agent
 - violated relations fail
 - transforms that changed no input are skipped, not passed
 

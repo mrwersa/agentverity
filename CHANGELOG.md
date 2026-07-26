@@ -17,6 +17,9 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 - The README now puts a runnable zero-credential example before the statistical
   explanation, states the open-ended-agent non-fit explicitly, and describes
   relation execution as an optional convenience rather than the contribution.
+- The README is now a short first-use path. Statistical derivation and
+  integration mechanics live in focused guides instead of competing with the
+  quickstart.
 - The package and CLI descriptions now use the same decision-stability and
   coverage language as the README.
 - A pre-1.0 stability policy documents patch compatibility, versioned schema
