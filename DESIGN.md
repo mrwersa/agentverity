@@ -9,6 +9,13 @@ decision makes any coverage number unrepeatable. The target may be a
 deterministic gate or an LLM agent. This document records the technical
 boundaries and the reasons behind them.
 
+Both checks are dynamic by necessity. Static analysis reads source, and an LLM
+agent's decision is not in the source: it is a string returned from a provider
+call. There are no branches to instrument, and stability is a property of the
+runtime distribution rather than of any text. That places AgentVerity with
+`coverage.py` and mutation testing, not with Ruff or mypy, and it is why a run
+costs real agent calls.
+
 ## Identity
 
 **Name:** `agentverity`, from "agent" and "verity". The library checks whether
