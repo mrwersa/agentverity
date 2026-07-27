@@ -67,14 +67,26 @@ Together, the checks guard against two failure modes:
 ## Why rerun counts are harder than they look
 
 Three or five reruns chosen by convention can support the wrong conclusion.
-In one deterministic example, 36 independent pairs produced no decision
-changes. That was still too little evidence to certify a change rate below 5%.
-The honest result was **undecided**, not unstable. Certifying that threshold
-with no observed changes needed 73 pairs.
+In one deterministic example, 36 non-overlapping rerun comparisons produced no
+decision changes. That was still too little evidence to certify a change rate
+below 5%. The honest result was **undecided**, not unstable. Certifying that
+threshold with no observed changes needed 73 comparisons.
 
-AgentVerity preserves `deterministic`, `stochastic`, and `undecided`, then
-calculates the repeat budget before the run. The default `balanced` precision
-does this automatically.
+The decision rule is:
+
+- pair reruns without reusing an output
+- calculate a 95% Wilson interval around the observed decision-change rate
+- report `deterministic` when the upper bound is below the tolerated rate
+- report `stochastic` when the lower bound is above the tolerated rate
+- report `undecided` when the interval spans that tolerance
+
+Wilson intervals are established statistics. AgentVerity's design choice is
+to use one as a three-outcome release rule rather than force an underpowered
+run into stable or unstable. Non-overlapping pairs avoid making the sample
+look larger than the target calls justify, while the requested tolerance
+determines the call budget before execution.
+
+The default `balanced` precision calculates that budget automatically.
 
 [See the executable helper, arithmetic, and exact API mapping](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md).
 
