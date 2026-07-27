@@ -198,8 +198,8 @@ ruff check .
 ```
 
 CI covers Python 3.10 through 3.14, lint, package construction, and the
-generated README evidence. A separate required job enforces at least 90%
-statement coverage.
+generated README evidence. A coverage job enforces at least 90% statement
+coverage, and the branch-protection `CI gate` requires that job to pass.
 
 ## Status and licence
 
