@@ -15,6 +15,45 @@ reviewed inputs
 customer request ----------> deployed agent ----------> response
 ```
 
+## Recommended test and release pipeline
+
+No single evaluator qualifies an agent. Use layers:
+
+1. Define allowed decisions, tool schemas, approval boundaries, and measurable
+   success criteria.
+2. Test deterministic orchestration, authorisation, schemas, idempotency, and
+   tools with ordinary unit and integration tests.
+3. Run reviewed cases through a quality evaluator for final answers, routes,
+   tool selection, arguments, and task completion.
+4. Test important agent steps separately, then the end-to-end tool or handoff
+   path.
+5. Stop on failed quality. When quality passes, run AgentVerity before saving a
+   regression baseline.
+6. Red-team prompt injection, data leakage, unsafe agency, tenant isolation,
+   and exhausted step or cost budgets.
+7. Combine quality, AgentVerity, security, latency, cost, and operational
+   health in one release policy.
+8. Use shadow traffic or a synthetic canary, trace the deployed workflow, and
+   feed reviewed incidents back into the test dataset.
+
+AgentVerity owns step 5. It does not replace the surrounding quality, security,
+or operational checks. Running the cheaper labelled quality check first also
+avoids spending on repeated calls for an agent already known to be wrong.
+
+One AWS-oriented stack might use
+[`pytest`](https://docs.pytest.org/en/stable/how-to/parametrize.html) for
+deterministic contracts,
+[DeepEval](https://deepeval.com/docs/evaluation-unit-testing-in-ci-cd) for
+labelled quality, AgentVerity for evidence qualification,
+[promptfoo](https://www.promptfoo.dev/docs/red-team/quickstart/) for
+adversarial probes,
+[AgentCore Evaluations](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluations-types.html)
+for managed assessment, and
+[OpenTelemetry](https://opentelemetry.io/docs/what-is-opentelemetry/) plus
+[CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AgentCore-GettingStarted.html)
+for operations. These are replaceable components. Keep datasets, decision
+contracts, and release policy outside one vendor dashboard.
+
 ## Connect an agent
 
 | Stack | Connection |
