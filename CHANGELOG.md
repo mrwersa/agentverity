@@ -8,6 +8,20 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-07-27
+
+### Added
+
+- Public PNG versions of the evidence-gate comparison and AgentCore
+  release-gate figures for publishing surfaces that do not preserve SVG or
+  HTML tables.
+
+### Changed
+
+- The README states the complete tri-state stability rule, explains why
+  reruns are paired without reuse, and distinguishes established Wilson
+  statistics from AgentVerity's evidence-gated release design.
+
 ## [0.8.3] - 2026-07-27
 
 ### Changed
