@@ -8,6 +8,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-07-27
+
+### Changed
+
+- The README names the two consequences of weak test evidence: a vacuous green
+  result and the regression trap created when that narrow run becomes a
+  baseline.
+- The integration guide documents a layered agent test and release pipeline,
+  places AgentVerity after labelled quality evaluation and before baseline
+  admission, and gives one replaceable AWS-oriented tool stack.
+
 ## [0.8.2] - 2026-07-26
 
 ### Added
