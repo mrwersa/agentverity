@@ -17,6 +17,9 @@ Use another evaluator for open-ended chat with no reviewed decision or ordered
 tool-path contract. AgentVerity is alpha, with
 [documented pre-1.0 guarantees](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md).
 
+Read the design story:
+[Introducing AgentVerity: What Does a Green Agent Test Prove?](https://mrwersa.medium.com/introducing-agentverity-what-does-a-green-agent-test-prove-fa6ebbfda2d3)
+
 ## Try it
 
 ```bash
