@@ -8,6 +8,15 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.8.5] - 2026-07-27
+
+### Changed
+
+- The README now describes the exact branch-protection topology: the Coverage
+  job enforces the 90% floor and the required `CI gate` depends on it.
+- Local coverage data is ignored so the documented development command leaves
+  the working tree clean.
+
 ## [0.8.4] - 2026-07-27
 
 ### Added
