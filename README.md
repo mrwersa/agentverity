@@ -57,6 +57,13 @@ answers were right. AgentVerity checks how much evidence that score rests on.
 It complements DeepEval, promptfoo, AgentCore Evaluations, and ordinary
 assertions rather than replacing them.
 
+Together, the checks guard against two failure modes:
+
+- **Vacuous green:** every supplied assertion passes, but the test inputs reach
+  only one decision.
+- **Regression trap:** that narrow run becomes the baseline, so later changes
+  to untested decisions remain invisible.
+
 ## Why rerun counts are harder than they look
 
 Three or five reruns chosen by convention can support the wrong conclusion.
