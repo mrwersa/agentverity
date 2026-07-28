@@ -365,6 +365,44 @@ class TestLoadingReportsMalformedSuitesConsistently:
         with pytest.raises(ValueError, match="invalid decision case"):
             load_decision_suite(path)
 
+    @pytest.mark.parametrize(
+        ("payload", "message"),
+        [
+            ([], "decision suite root must be an object"),
+            (
+                {
+                    "schema": DECISION_SUITE_SCHEMA,
+                    "contract": [],
+                    "cases": [],
+                },
+                "decision contract must be an object",
+            ),
+            (
+                {
+                    "schema": DECISION_SUITE_SCHEMA,
+                    "contract": {"allowed": ["a"]},
+                    "cases": {},
+                },
+                "decision suite cases must be a list",
+            ),
+            (
+                {
+                    "schema": DECISION_SUITE_SCHEMA,
+                    "contract": {"allowed": "a"},
+                    "cases": [{"input": "x", "expected": "a"}],
+                },
+                "allowed must be a collection",
+            ),
+        ],
+    )
+    def test_every_malformed_file_has_one_error_contract(
+        self, tmp_path, payload, message
+    ):
+        path = self._write(tmp_path, payload)
+
+        with pytest.raises(ValueError, match=message):
+            load_decision_suite(path)
+
     def test_from_dict_still_rejects_a_non_object_contract_by_type(self):
         """Handing the wrong kind of object straight to from_dict is a
         programming error, so it keeps raising TypeError."""

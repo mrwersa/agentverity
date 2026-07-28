@@ -332,7 +332,10 @@ def load_decision_suite(path: str | Path) -> DecisionSuite:
         value = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"cannot load decision suite: {exc}") from exc
-    return DecisionSuite.from_dict(value)
+    try:
+        return DecisionSuite.from_dict(value)
+    except TypeError as exc:
+        raise ValueError(f"invalid decision suite: {exc}") from exc
 
 
 def save_decision_suite(suite: DecisionSuite, path: str | Path) -> None:
