@@ -39,7 +39,8 @@ result = run(agent, suite=suite)
   exercise.
 - `DecisionSuite` validates the contract and cases before any agent call.
 - `RunResult.decision_coverage` reports intended, observed, missing, unknown,
-  and missing-critical labels.
+  and missing-critical labels. Its `intended_counts` and `observed_counts`
+  hold `DecisionCount` values, so that name is exported for annotations.
 
 The contract path is available for the `verdict` layer. It checks coverage,
 not per-case correctness. Keep labelled assertions or a quality evaluator

@@ -306,3 +306,129 @@ def test_existing_generator_inputs_are_consumed_once():
     )
 
     assert result.requested_inputs == 2
+
+
+class TestLoadingReportsMalformedSuitesConsistently:
+    """A loader with two error types makes callers write two except clauses,
+    so every malformed suite file has to surface as ValueError."""
+
+    @staticmethod
+    def _write(tmp_path, payload):
+        path = tmp_path / "suite.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        return path
+
+    def test_a_missing_contract_is_a_value_error(self, tmp_path):
+        path = self._write(
+            tmp_path,
+            {
+                "schema": DECISION_SUITE_SCHEMA,
+                "cases": [{"input": "x", "expected": "a"}],
+            },
+        )
+        with pytest.raises(ValueError, match="missing 'contract'"):
+            load_decision_suite(path)
+
+    def test_a_contract_without_allowed_is_a_value_error(self, tmp_path):
+        path = self._write(
+            tmp_path,
+            {
+                "schema": DECISION_SUITE_SCHEMA,
+                "contract": {},
+                "cases": [{"input": "x", "expected": "a"}],
+            },
+        )
+        with pytest.raises(ValueError, match="missing 'allowed'"):
+            load_decision_suite(path)
+
+    def test_a_case_missing_a_key_is_a_value_error(self, tmp_path):
+        path = self._write(
+            tmp_path,
+            {
+                "schema": DECISION_SUITE_SCHEMA,
+                "contract": {"allowed": ["a"]},
+                "cases": [{"input": "x"}],
+            },
+        )
+        with pytest.raises(ValueError, match="invalid decision case"):
+            load_decision_suite(path)
+
+    def test_a_non_object_case_is_a_value_error(self, tmp_path):
+        path = self._write(
+            tmp_path,
+            {
+                "schema": DECISION_SUITE_SCHEMA,
+                "contract": {"allowed": ["a"]},
+                "cases": ["not an object"],
+            },
+        )
+        with pytest.raises(ValueError, match="invalid decision case"):
+            load_decision_suite(path)
+
+    def test_from_dict_still_rejects_a_non_object_contract_by_type(self):
+        """Handing the wrong kind of object straight to from_dict is a
+        programming error, so it keeps raising TypeError."""
+        with pytest.raises(TypeError, match="must be an object"):
+            DecisionContract.from_dict(["allowed"])
+
+
+def test_an_empty_required_set_is_rejected():
+    with pytest.raises(ValueError, match="required must contain at least one"):
+        DecisionContract(allowed={"approve"}, required=set())
+
+
+def test_missing_required_cases_lists_routes_with_no_case():
+    suite = DecisionSuite(
+        contract=DecisionContract(allowed={"approve", "review", "deny"}),
+        cases=(DecisionCase("routine", "approve"),),
+    )
+
+    assert suite.missing_required_cases == ("deny", "review")
+
+
+def test_observed_decisions_must_align_with_the_suite():
+    suite = DecisionSuite(
+        contract=DecisionContract(allowed={"approve"}),
+        cases=(DecisionCase("routine", "approve"),),
+    )
+
+    with pytest.raises(ValueError, match="align with decision suite cases"):
+        assess_decision_coverage(suite, ("approve", "approve"))
+
+
+class TestAdviceNamesTheNextAction:
+    """The advice string is what a reader acts on, so each branch is pinned."""
+
+    suite = DecisionSuite(
+        contract=DecisionContract(allowed={"approve", "deny"}),
+        cases=(DecisionCase("routine", "approve"), DecisionCase("bad", "deny")),
+    )
+
+    def test_an_out_of_contract_label_is_named(self):
+        result = assess_decision_coverage(self.suite, ("approve", "escalate"))
+
+        assert result.satisfied is False
+        assert result.advice == (
+            "the agent emitted decisions outside the contract: escalate"
+        )
+
+    def test_a_required_route_that_never_returned_is_named(self):
+        result = assess_decision_coverage(self.suite, ("approve", None))
+
+        assert result.satisfied is False
+        assert result.advice == (
+            "required decisions were represented by cases but not returned: deny"
+        )
+
+    def test_an_out_of_contract_label_outranks_a_missing_route(self):
+        """Both are wrong, but a label outside the contract is the more
+        urgent repair because it means the contract is stale."""
+        result = assess_decision_coverage(self.suite, ("escalate", None))
+
+        assert "outside the contract" in result.advice
+
+    def test_a_complete_run_says_so(self):
+        result = assess_decision_coverage(self.suite, ("approve", "deny"))
+
+        assert result.satisfied is True
+        assert result.advice == "all required decisions were represented and observed"

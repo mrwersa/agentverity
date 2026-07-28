@@ -8,6 +8,21 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- A decision-suite file with no `contract` key raised `TypeError` while every
+  other malformed suite raised `ValueError`, so a caller had to write two
+  except clauses to load one file. Loading now reports every malformed suite
+  as `ValueError`. `DecisionContract.from_dict` still raises `TypeError` when
+  handed the wrong kind of object directly, which is a programming error
+  rather than bad input.
+
+### Added
+
+- `DecisionCount` is now exported. It is the element type of
+  `DecisionCoverageResult.intended_counts` and `observed_counts`, both public,
+  so it could be received but not imported for an annotation.
+
 ## [0.9.0] - 2026-07-28
 
 ### Added
