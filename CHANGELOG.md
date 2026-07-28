@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-07-28
+
 ### Changed
 
 - The README now follows a developer decision path: a fully green Promptfoo
