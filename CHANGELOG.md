@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-28
+
 ### Added
 
 - `DecisionContract.stability_targets` gives a route its own flip-rate
