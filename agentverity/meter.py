@@ -72,6 +72,23 @@ test. Pass ``epsilon`` directly to override.
 """
 
 
+def classify_call(ci_low: float, ci_high: float, epsilon: float) -> str:
+    """Classify a flip rate from its confidence bound, never from the estimate.
+
+    Shared by the pooled meter and the per-route view so the two cannot drift
+    apart. The distinction matters more than it looks: one flip in thirteen
+    pairs is an observed rate of 7.7%, which is above a 5% threshold, and the
+    interval still runs from 0.014 to 0.333. Reading the point estimate as a
+    verdict is the exact error this package exists to stop, so an interval
+    straddling epsilon is ``undecided`` however suggestive the rate looks.
+    """
+    if ci_low > epsilon:
+        return "verdict-stochastic"
+    if ci_high < epsilon:
+        return "verdict-deterministic"
+    return "undecided (add repeats or inputs)"
+
+
 def resolve_epsilon(precision: str, epsilon: float | None) -> float:
     """Return the flip-rate threshold, with an explicit epsilon winning.
 
@@ -241,11 +258,7 @@ class MeterResult:
             with an underpowered probe, so an interval straddling epsilon is
             ``"undecided"``.
         """
-        if self.ci_low > self.epsilon:
-            return "verdict-stochastic"
-        if self.ci_high < self.epsilon:
-            return "verdict-deterministic"
-        return "undecided (add repeats or inputs)"
+        return classify_call(self.ci_low, self.ci_high, self.epsilon)
 
     @property
     def advice(self) -> str:

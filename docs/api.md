@@ -41,6 +41,11 @@ result = run(agent, suite=suite)
 - `RunResult.decision_coverage` reports intended, observed, missing, unknown,
   and missing-critical labels. Its `intended_counts` and `observed_counts`
   hold `DecisionCount` values, so that name is exported for annotations.
+- `RunResult.route_stability` splits stability by each case's intended
+  decision, using the calls the run already made. Each `RouteStability` carries
+  cases, pairs, flips, a Wilson interval, and the same tri-state `call` as the
+  pooled meter. `flip_pairs` records the unordered decision pairs behind those
+  flips.
 
 The contract path is available for the `verdict` layer. It checks coverage,
 not per-case correctness. Keep labelled assertions or a quality evaluator
@@ -59,6 +64,11 @@ The CLI accepts the same versioned structure with `--suite suite.json`.
 - `run_result_to_otel_attributes` returns privacy-minimised aggregate fields.
 - `record_otel_run` emits those fields as one optional OpenTelemetry span.
 
+JSON includes the complete route table. The route-stability checks in JUnit
+and OpenTelemetry carry aggregate route counts. OpenTelemetry remains
+label-free and low-cardinality, while JUnit may name decisions in actionable
+failure guidance elsewhere in the report.
+
 ## Snapshots
 
 A snapshot is a versioned file containing the reviewed expected decisions used
@@ -68,6 +78,11 @@ declared contract and each case's intended decision.
 - `create_snapshot` admits a reviewed reference only when the evidence permits.
 - `compare_snapshot` rechecks admission before comparing current outputs.
 - `save_snapshot` and `load_snapshot` persist versioned snapshot JSON.
+
+A route proven stochastic blocks snapshot admission even when the pooled meter
+looks deterministic. An undecided route remains a diagnostic in this release,
+not an independent route-level certification requirement. The pooled meter
+still governs whether the overall run has enough stability evidence.
 
 The CLI exposes the same path through `agentverity snapshot` and
 `agentverity check`.

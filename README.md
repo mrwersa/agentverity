@@ -167,6 +167,28 @@ result = run(agent, suite=suite)
 checks intended and observed route coverage separately. Your assertions or
 quality evaluator still decide whether each returned route was correct.
 
+Declaring a suite also splits stability by route, from the calls the run
+already made:
+
+```text
+4. STABILITY BY ROUTE
+   route              cases  pairs  flips  95% CI            result
+   approve                2     26      0  [0.000, 0.129]    undecided
+   deny                   2     26      0  [0.000, 0.129]    undecided
+   review                 2     26     10  [0.224, 0.575]    stochastic
+   flip pairs:
+     deny <-> review  x10
+```
+
+The pooled meter said 12.8% across the whole set. One route is the reason. The
+other two are not clean, they are unmeasured: 26 pairs bounds them at 12.9%,
+and 73 pairs are needed to certify at 5%.
+
+A route proven stochastic blocks snapshot admission even when the pooled meter
+looks deterministic. Undecided route rows remain visible limits in this
+release. They do not silently trigger the much larger call budget needed to
+certify every route independently.
+
 Create one through the CLI:
 
 ```bash

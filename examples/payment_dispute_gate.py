@@ -224,7 +224,8 @@ def main() -> None:
 
     repaired_snapshot = create_snapshot(repaired, approved=True)
     repaired_state = (
-        "ADMITTED - evidence is complete, stable, and covers the contract"
+        "ADMITTED - pooled stability and declared coverage passed; "
+        "route-level intervals remain undecided"
     )
 
     print("PAYMENT-DISPUTE ROUTER: THE EVIDENCE GATE")

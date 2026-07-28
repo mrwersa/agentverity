@@ -45,6 +45,7 @@ def test_the_gate_actually_refuses_then_admits():
     assert "Exact-match evaluator: 6/6 correct" in printed
     assert "REFUSED" in printed
     assert "ADMITTED" in printed
+    assert "route-level intervals remain undecided" in printed
     assert printed.index("REFUSED") < printed.index("ADMITTED")
 
 

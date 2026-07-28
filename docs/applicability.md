@@ -150,3 +150,33 @@ universal safety grades.
 See [decision stability](decision-stability.md) for the arithmetic and
 [integrations](integrations.md) for placement in CI, release, and canary
 workflows.
+
+## Independence, and which way the error runs
+
+Trials are treated as independent Bernoulli draws. Starting each trial from a
+fresh conversation, agent instance, or remote session removes history leakage,
+but it cannot remove provider caching, shared infrastructure state, model
+rollouts, routing changes, or correlated external tool state.
+
+Positive dependence between trials, a plausible effect of shared caching or
+infrastructure state, reduces the effective sample size and can make the
+interval too narrow. The practical consequence is worth stating plainly:
+where the assumption fails this way, the tool is **overconfident** rather than
+cautious, so a clean result deserves more suspicion than a dirty one. Provider
+rollouts, routing changes, and other non-stationarity can create different
+dependence structures with different effects.
+
+Treat the intervals as a practical diagnostic, not as laboratory evidence.
+
+## Per-route intervals are not a joint guarantee
+
+When a decision suite is declared, stability is also reported per route. Each
+route's interval is its own 95% statement. Six of them together are not a 95%
+statement about the suite, and the report does not claim otherwise. Read the
+table as six separate findings.
+
+A route proven stochastic blocks snapshot admission because pooling cannot
+erase a conclusive subgroup finding. An undecided route does not yet block a
+pooled baseline. Certifying every route independently would require a larger,
+route-aware call budget, which this release does not silently spend. Treat
+undecided rows as an explicit limit on the baseline, not as clean routes.

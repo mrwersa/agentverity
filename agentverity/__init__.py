@@ -69,6 +69,12 @@ from agentverity.snapshot import (
     load_snapshot,
     save_snapshot,
 )
+from agentverity.stratified import (
+    FlipPair,
+    RouteStability,
+    StratifiedStability,
+    stratify_runs,
+)
 from agentverity.telemetry import (
     TELEMETRY_SCHEMA,
     record_otel_run,
@@ -88,11 +94,13 @@ __all__ = [
     "DecisionCount",
     "DecisionCoverageResult",
     "DecisionSuite",
+    "FlipPair",
     "MeterResult",
     "Observation",
     "ProgressEvent",
     "Relation",
     "RelationResult",
+    "RouteStability",
     "RunConfig",
     "RunError",
     "RunResult",
@@ -102,6 +110,7 @@ __all__ = [
     "SnapshotDiff",
     "SnapshotProbe",
     "SnapshotRefused",
+    "StratifiedStability",
     "builtin_relations",
     "compare_snapshot",
     "create_snapshot",
@@ -120,6 +129,7 @@ __all__ = [
     "run_result_to_otel_attributes",
     "save_decision_suite",
     "save_snapshot",
+    "stratify_runs",
     "write_junit_xml",
     "write_run_json",
 ]

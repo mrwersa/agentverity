@@ -91,6 +91,12 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
             "advice": coverage.advice,
         }
 
+    route_stability = (
+        result.route_stability.to_dict()
+        if result.route_stability is not None
+        else None
+    )
+
     return {
         "schema": RUN_SCHEMA,
         "status": result.status,
@@ -111,6 +117,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         "meter": meter,
         "blindness": blindness,
         "decision_contract": decision_contract,
+        "route_stability": route_stability,
         "relations": [
             {
                 "name": relation.relation.name,
@@ -140,6 +147,16 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         "guidance": {
             "is_stochastic": result.is_stochastic,
             "is_blind": result.is_blind,
+            "stochastic_routes": (
+                len(result.route_stability.stochastic)
+                if result.route_stability is not None
+                else None
+            ),
+            "undecided_routes": (
+                len(result.route_stability.undecided)
+                if result.route_stability is not None
+                else None
+            ),
             "decision_contract_satisfied": (
                 result.decision_coverage.satisfied
                 if result.decision_coverage is not None
@@ -259,6 +276,21 @@ def run_result_to_junit_xml(
             ).text = detail
         else:
             ET.SubElement(contract_case, "system-out").text = detail
+
+    if result.route_stability is not None:
+        stability = result.route_stability
+        route_case = _junit_case(
+            root,
+            "preflight.route_stability",
+            classname=suite_name,
+        )
+        ET.SubElement(route_case, "system-out").text = (
+            f"routes={len(stability.routes)} "
+            f"deterministic={len(stability.deterministic)} "
+            f"stochastic={len(stability.stochastic)} "
+            f"undecided={len(stability.undecided)} "
+            f"flips={sum(route.pair_flips for route in stability.routes)}"
+        )
 
     # A caller who passed no relations did not ask for this check, so reporting
     # it as skipped is noise in every consuming dashboard. Say nothing instead.
