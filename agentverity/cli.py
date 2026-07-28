@@ -13,7 +13,7 @@ from pathlib import Path
 from agentverity.adapters.callable_adapter import from_callable
 from agentverity.decision_contract import DecisionSuite, load_decision_suite
 from agentverity.drift import compare_evidence
-from agentverity.evidence import assess_evidence, load_evidence
+from agentverity.evidence import EvidenceError, assess_evidence, load_evidence
 from agentverity.execution import ProgressEvent
 from agentverity.integrations.promptfoo import load_promptfoo
 from agentverity.meter import (
@@ -542,11 +542,17 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _compare_evidence_command(args: argparse.Namespace) -> int:
     """Report how two independently collected windows differ."""
-    drift = compare_evidence(
-        load_evidence(args.before),
-        load_evidence(args.after),
-        epsilon=args.epsilon,
-    )
+    try:
+        drift = compare_evidence(
+            load_evidence(args.before),
+            load_evidence(args.after),
+            epsilon=args.epsilon,
+        )
+    except (EvidenceError, ValueError) as exc:
+        # A malformed file or an incompatible pair is the caller's input
+        # problem, and a traceback tells them less than the sentence does.
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     print(drift.render())
     if args.json_path:
         Path(args.json_path).write_text(

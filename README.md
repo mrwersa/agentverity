@@ -10,8 +10,9 @@
 
 ## The 60-second problem
 
-Consider a **routing workflow**: a model classifies each payment dispute and
-hands it to one of six specialist queues.
+Consider a [**routing workflow**](https://www.anthropic.com/engineering/building-effective-agents):
+a model classifies each payment dispute and directs it to one of six specialist
+queues.
 [Promptfoo](https://www.promptfoo.dev/) runs six cases 26 times. Its configured
 quality checks accept either fraud queue for one ambiguous card-security case.
 All **156/156 assertions pass**.
@@ -129,8 +130,8 @@ Use it when:
 - repeated runs can start from equivalent isolated state
 - you can write deliberately varied cases for the decisions that matter
 
-It fits the agent patterns whose value is a named choice rather than open
-prose:
+It fits the [agent workflow patterns](https://www.anthropic.com/engineering/building-effective-agents)
+whose value is a named choice rather than open prose:
 
 | Pattern | The decision under test |
 |---|---|

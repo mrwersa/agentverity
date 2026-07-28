@@ -49,12 +49,15 @@ class TestTheVerdictMoveIsTheEvent:
         card = next(r for r in drift.routes if r.decision == "card_security")
 
         assert card.verdict_changed is False
-        assert card.direction == "wider"
+        assert card.direction == "higher"
 
-    def test_a_route_settling_down_is_tighter(self):
+    def test_a_route_settling_down_is_lower(self):
+        """`higher` and `lower` describe the observed change rate. They
+        deliberately do not say `wider` or `tighter`, which would suggest a
+        statement about interval width that this comparison does not make."""
         drift = compare_evidence(window(11), window(9), epsilon=0.05)
         card = next(r for r in drift.routes if r.decision == "card_security")
-        assert card.direction == "tighter"
+        assert card.direction == "lower"
 
 
 class TestIndependenceIsNeverClaimed:
@@ -230,3 +233,80 @@ def test_the_rendered_output_lists_every_provenance_change():
     assert "provenance:" in rendered
     assert "model: 'a' -> 'b'" in rendered
     assert "prompt: 'p1' -> 'p2'" in rendered
+
+
+class TestWhatCountsAsDrift:
+    """Printed but ignored is the worst outcome for a gate: a reader sees the
+    change and the exit code says nothing happened."""
+
+    def test_a_volatile_timestamp_is_shown_but_never_counted(self):
+        """A Promptfoo export stamps its collection time, so counting it would
+        report every real comparison as drifted and make the command useless
+        on exactly the data it exists for."""
+        before = EvidenceSet(cases=window(0).cases, provenance={"collected_at": "2026-07-01"})
+        after = EvidenceSet(cases=window(0).cases, provenance={"collected_at": "2026-08-01"})
+        drift = compare_evidence(before, after)
+
+        assert drift.drifted is False
+        assert drift.informational_changes == (
+            ("collected_at", "2026-07-01", "2026-08-01"),
+        )
+        assert drift.provenance_changes == ()
+        assert "not counted as drift" in drift.render()
+
+    def test_a_new_flip_pair_counts_as_drift(self):
+        """A new confusion between two routes is a behavioural change even
+        when both routes keep the same tri-state result."""
+        drift = compare_evidence(window(0), window(2))
+
+        assert drift.changed_routes == ()
+        assert drift.gained_flip_pairs != ()
+        assert drift.drifted is True
+
+    def test_a_resolved_flip_pair_counts_as_drift(self):
+        assert compare_evidence(window(2), window(0)).drifted is True
+
+    def test_a_change_of_isolation_counts_as_drift(self):
+        """It changes what the evidence means, which is why printing it and
+        then ignoring it would be worse than not printing it."""
+        drift = compare_evidence(
+            window(0, isolation="fresh-session"),
+            window(0, isolation="shared-session"),
+        )
+
+        assert drift.isolation_changed is True
+        assert drift.drifted is True
+        assert "the evidence means something different" in drift.render()
+
+    def test_identical_windows_do_not_drift(self):
+        assert compare_evidence(window(0), window(0)).drifted is False
+
+
+def test_evidence_on_different_layers_cannot_be_compared():
+    """A verdict and a tool path are not the same observation, so a difference
+    between them is not drift."""
+    verdict = EvidenceSet(cases=window(0).cases, layer="verdict")
+    text = EvidenceSet(cases=window(0).cases, layer="text")
+
+    with pytest.raises(ValueError, match="different layers"):
+        compare_evidence(verdict, text)
+
+
+class TestCliInputErrors:
+    def test_a_malformed_evidence_file_is_a_usage_error(self, tmp_path, capsys):
+        bad = tmp_path / "bad.json"
+        bad.write_text("{not json", encoding="utf-8")
+
+        assert main(["compare-evidence", str(bad), str(bad)]) == 2
+        assert "error:" in capsys.readouterr().err
+
+    def test_incompatible_layers_are_a_usage_error(self, tmp_path, capsys):
+        from agentverity import save_evidence
+
+        left = tmp_path / "l.json"
+        right = tmp_path / "r.json"
+        save_evidence(EvidenceSet(cases=window(0).cases, layer="verdict"), left)
+        save_evidence(EvidenceSet(cases=window(0).cases, layer="text"), right)
+
+        assert main(["compare-evidence", str(left), str(right)]) == 2
+        assert "different layers" in capsys.readouterr().err

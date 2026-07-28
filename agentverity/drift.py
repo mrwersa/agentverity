@@ -27,10 +27,21 @@ from .evidence import EvidenceSet
 from .meter import classify_call, wilson_ci
 from .stratified import StratifiedStability, stratify_runs
 
-WIDER = "wider"
-TIGHTER = "tighter"
+# The observed change rate went up or down. Deliberately not "wider" and
+# "tighter", which describe interval width and would suggest the comparison
+# says something about precision when it compares rates.
+HIGHER = "higher"
+LOWER = "lower"
 UNCHANGED = "unchanged"
 INCOMPARABLE = "incomparable"
+
+# Provenance keys that differ between any two windows by construction. A
+# Promptfoo export stamps its collection time, so counting these as drift
+# would report every real comparison as changed and make the command useless
+# on exactly the data it exists for. They are still shown, never counted.
+VOLATILE_PROVENANCE = frozenset(
+    {"collected_at", "timestamp", "started_at", "finished_at", "run_id", "eval_id"}
+)
 
 
 @dataclass(frozen=True)
@@ -71,7 +82,7 @@ class RouteDrift:
         after = self.after_rate or 0.0
         if before == after:
             return UNCHANGED
-        return WIDER if after > before else TIGHTER
+        return HIGHER if after > before else LOWER
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -101,6 +112,7 @@ class EvidenceDrift:
     gained_flip_pairs: tuple[str, ...]
     lost_flip_pairs: tuple[str, ...]
     provenance_changes: tuple[tuple[str, Any, Any], ...]
+    informational_changes: tuple[tuple[str, Any, Any], ...]
     isolation_before: str
     isolation_after: str
 
@@ -110,12 +122,31 @@ class EvidenceDrift:
         return tuple(r.decision for r in self.routes if r.verdict_changed)
 
     @property
+    def isolation_changed(self) -> bool:
+        """Whether the two windows were collected under different isolation.
+
+        This changes what the evidence means rather than what the agent did,
+        which is precisely why it must not be printed and then ignored.
+        """
+        return self.isolation_before != self.isolation_after
+
+    @property
     def drifted(self) -> bool:
+        """Whether anything material moved.
+
+        Flip pairs count. A new confusion between two routes is a behavioural
+        change even when both routes keep the same tri-state result. Volatile
+        provenance such as a collection timestamp does not, because it differs
+        between any two windows by construction.
+        """
         return bool(
             self.changed_routes
             or self.gained_decisions
             or self.lost_decisions
+            or self.gained_flip_pairs
+            or self.lost_flip_pairs
             or self.provenance_changes
+            or self.isolation_changed
         )
 
     @property
@@ -157,9 +188,19 @@ class EvidenceDrift:
             if values:
                 lines.append(f"  {label}: " + ", ".join(values))
 
+        if self.isolation_changed:
+            lines.append(
+                f"  isolation: {self.isolation_before!r} -> "
+                f"{self.isolation_after!r} (the evidence means something "
+                "different)"
+            )
         if self.provenance_changes:
             lines.append("  provenance:")
             for key, before, after in self.provenance_changes:
+                lines.append(f"    {key}: {before!r} -> {after!r}")
+        if self.informational_changes:
+            lines.append("  provenance (not counted as drift):")
+            for key, before, after in self.informational_changes:
                 lines.append(f"    {key}: {before!r} -> {after!r}")
 
         lines.append("")
@@ -182,6 +223,11 @@ class EvidenceDrift:
                 {"key": key, "before": before, "after": after}
                 for key, before, after in self.provenance_changes
             ],
+            "informational_changes": [
+                {"key": key, "before": before, "after": after}
+                for key, before, after in self.informational_changes
+            ],
+            "isolation_changed": self.isolation_changed,
             "isolation": {
                 "before": self.isolation_before,
                 "after": self.isolation_after,
@@ -219,6 +265,12 @@ def compare_evidence(
         ValueError: If either window lacks the intended decisions needed to
             split evidence by route.
     """
+    if before.layer != after.layer:
+        raise ValueError(
+            f"cannot compare evidence on different layers: {before.layer!r} "
+            f"and {after.layer!r}. A verdict and a tool path are not the same "
+            "observation, so a difference between them is not drift."
+        )
     lhs = _stability(before, epsilon)
     rhs = _stability(after, epsilon)
     if lhs is None or rhs is None:
@@ -253,10 +305,16 @@ def compare_evidence(
     rhs_pairs = {pair.render() for pair in rhs.flip_pairs}
 
     keys = set(before.provenance) | set(after.provenance)
-    provenance_changes = tuple(
+    changed = [
         (key, before.provenance.get(key), after.provenance.get(key))
         for key in sorted(keys)
         if before.provenance.get(key) != after.provenance.get(key)
+    ]
+    provenance_changes = tuple(
+        row for row in changed if row[0] not in VOLATILE_PROVENANCE
+    )
+    informational_changes = tuple(
+        row for row in changed if row[0] in VOLATILE_PROVENANCE
     )
 
     return EvidenceDrift(
@@ -266,6 +324,7 @@ def compare_evidence(
         gained_flip_pairs=tuple(sorted(rhs_pairs - lhs_pairs)),
         lost_flip_pairs=tuple(sorted(lhs_pairs - rhs_pairs)),
         provenance_changes=provenance_changes,
+        informational_changes=informational_changes,
         isolation_before=before.isolation,
         isolation_after=after.isolation,
     )

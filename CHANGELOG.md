@@ -15,11 +15,22 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   intervals, decisions that appeared or disappeared, flip-pair structure, and
   any model, prompt, or harness difference recorded in provenance.
 - The reportable event is a tri-state result changing rather than a rate
-  wandering. A route drifting inside one conclusion is noise; a route crossing
-  from deterministic to stochastic is a release event.
+  wandering. A route drifting inside one conclusion is noise, reported as
+  `higher` or `lower`; a route crossing from deterministic to stochastic is a
+  release event. The direction names describe the observed change rate rather
+  than interval width.
 - A provenance change counts as drift even when every decision held, because a
   model swap is the fact you most want beside a comparison.
 - `compare_evidence`, `EvidenceDrift`, and `RouteDrift` are exported.
+- Volatile provenance keys such as `collected_at` are shown separately and not
+  counted as drift. A Promptfoo export stamps its collection time, so counting
+  it would report every real comparison as drifted.
+- A changed flip pair and a changed isolation level both count as drift.
+  Printing a change and then leaving the exit code silent is worse for a gate
+  than not printing it.
+- Comparing two windows on different observation layers is refused. A verdict
+  and a tool path are not the same observation.
+- Malformed evidence files produce a usage error rather than a traceback.
 
 ### Changed
 

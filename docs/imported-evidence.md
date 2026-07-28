@@ -244,14 +244,24 @@ crossing from deterministic to stochastic is a release event.
 | Reported | Meaning |
 |---|---|
 | `undecided -> stochastic` | The verdict moved. Investigate |
-| `wider` / `tighter` | The rate moved inside one verdict |
+| `higher` / `lower` | The observed change rate moved inside one verdict |
 | `incomparable` | One window had no usable pairs for that route |
 | decisions gained or lost | A route appeared or disappeared entirely |
 | flip pairs gained or lost | A new confusion appeared, or an old one resolved |
 | provenance | A model, prompt, or harness difference between the files |
+| isolation | The two windows were collected under different isolation, so the evidence means something different |
 
 A provenance change alone counts as drift even when every decision held. A
 model swap is the fact you most want beside a comparison, not a footnote.
+
+Volatile keys are the exception. `collected_at`, `run_id`, and similar differ
+between any two windows by construction, so they are shown under
+`provenance (not counted as drift)` rather than reported as a change. Counting
+them would mark every real Promptfoo comparison as drifted and make the command
+useless on exactly the data it exists for.
+
+Both windows must use the same observation layer. A verdict and a tool path are
+not the same observation, so a difference between them is not drift.
 
 Exit code is `1` on drift and `0` on none. Drift is a finding to review rather
 than a failure to block on: whether a moved route is a regression, an
