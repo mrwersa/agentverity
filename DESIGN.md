@@ -3,11 +3,15 @@
 AgentVerity is a test adequacy tool for agents that choose among named
 decisions. Adequacy criteria measure the test suite rather than the program:
 statement coverage, branch coverage, and mutation score all ask whether the
-tests were worth reading. Decision coverage is the same question for an agent,
-and decision stability is the precondition it needs, because an unstable
-decision makes any coverage number unrepeatable. The target may be a
-deterministic gate or an LLM agent. This document records the technical
-boundaries and the reasons behind them.
+tests were worth reading. AgentVerity asks the same kind of question for an
+agent, but its current decision-coverage check is a lower bound rather than an
+equivalent of branch coverage. It detects a probe set that collapses onto one
+highly dominant observed decision. It does not know whether every declared
+decision or important boundary was exercised. Decision stability is a
+precondition for that dynamic signal because unstable decisions make the
+observed distribution unrepeatable. The target may be a deterministic gate or
+an LLM agent. This document records the technical boundaries and the reasons
+behind them.
 
 Both checks are dynamic by design. Static analysis can inspect orchestration
 branches, route schemas, and expected labels. For a source-available
@@ -28,7 +32,8 @@ before that test is treated as a reusable baseline.
 
 **Boundary:** AgentVerity qualifies test evidence. It does not compete with
 quality evaluators on metric breadth or with observability systems on trace
-storage and dashboards.
+storage and dashboards. It qualifies one observed run, not the correctness,
+safety, or complete route coverage of the agent.
 
 ## Related approaches (reviewed 2026-07-06)
 
@@ -80,8 +85,9 @@ storage and dashboards.
 AgentVerity runs two diagnostics before a green result becomes a reusable
 baseline. The stability check asks whether a categorical decision changes
 across isolated identical reruns. The coverage check asks whether a deliberately
-varied probe set reaches more than one decision. Optional relations run after
-those checks.
+varied probe set avoids collapsing onto one highly dominant decision. It is a
+minimum diversity and skew check, not a percentage of a declared decision
+universe. Optional relations run after those checks.
 
 ## 2. Architecture (three layers)
 
@@ -138,6 +144,13 @@ Adapters are optional imports. The core installs without any agent library.
 - Not tied to any provider, agent framework, or application-specific gate.
 - No dependency on an external research codebase.
 
+The intended target exposes a finite categorical decision or a reviewed
+ordered tool path, can be reset to equivalent starting state between trials,
+and has a deliberately varied probe set. A step inside a multi-agent system is
+a valid target when that step owns a release contract. Open-ended answer or
+trajectory quality is outside scope unless the system also exposes a reviewed
+decision layer. See `docs/applicability.md`.
+
 ## 4. Status (2026-07-26)
 
 - M1 core: DONE — observation, meter, blindness, relations, runner, CLI.
@@ -153,6 +166,12 @@ Adapters are optional imports. The core installs without any agent library.
 - M7 delivery-stack handoff: DONE after v0.5.0 — JUnit XML for CI and one
   privacy-minimised OpenTelemetry summary span for an existing monitoring
   pipeline.
+- M8 declared decision contracts: CANDIDATE, not implemented. An optional
+  contract would preserve the current skew warning while separately reporting
+  required, observed, and missing decisions. A later policy layer could apply
+  stricter stability tolerances to critical decisions or reviewed case
+  strata. Correctness would remain the responsibility of labelled assertions
+  or another evaluator.
 
 ## 5. Reporting boundary
 

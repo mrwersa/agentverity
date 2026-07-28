@@ -8,10 +8,11 @@
 [![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25%2B-brightgreen.svg)](#development)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
-AgentVerity tests agents that choose from a known set of decisions: routers,
-approval or policy gates, and supervisors that select the next agent or tool.
-It compares the named decision, exposed as `verdict`, rather than harmless
-changes in explanation text.
+AgentVerity qualifies tests for model-backed components that choose from a
+finite, reviewed set of decisions. Examples include routers, approval or
+policy gates, and supervisors that select the next agent or tool. It compares
+the named decision, exposed as `verdict`, rather than harmless changes in
+explanation text.
 
 Use another evaluator for open-ended chat with no reviewed decision or ordered
 tool-path contract. AgentVerity is alpha, with
@@ -19,6 +20,27 @@ tool-path contract. AgentVerity is alpha, with
 
 Read the design story:
 [Introducing AgentVerity: What Does a Green Agent Test Prove?](https://mrwersa.medium.com/introducing-agentverity-what-does-a-green-agent-test-prove-fa6ebbfda2d3)
+
+## Is it a fit?
+
+AgentVerity fits when all three conditions hold:
+
+- each run exposes a named decision or a reviewed tool or handoff path
+- repeated trials can start from equivalent state in isolated sessions
+- you can supply deliberately varied test inputs that should reach different
+  valid decisions
+
+Good targets include support and payment routers, fraud triage, approval and
+policy gates, incident routing, multi-agent supervisors, and bounded tool
+selectors. In a larger agent, test the step that owns the decision or the
+final pipeline decision. Test both when each is a release contract.
+
+It is not an end-to-end quality evaluator for chat, RAG answers, generated
+content, coding agents, or research agents. If one of those systems also emits
+a reviewed route, approval, escalation, or tool path, AgentVerity can qualify
+that decision layer, not the open-ended work around it.
+
+[See the applicability checklist and exact limits](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md).
 
 ## Try it
 
@@ -66,6 +88,9 @@ Together, the checks guard against two failure modes:
   only one decision.
 - **Regression trap:** that narrow run becomes the baseline, so later changes
   to untested decisions remain invisible.
+
+AgentVerity qualifies the evidence from this run. It does not certify the
+agent as correct, safe, or fully covered.
 
 ## Why rerun counts are harder than they look
 
@@ -168,20 +193,30 @@ works with any stack.
 
 ## Scope
 
-AgentVerity provides:
+A trustworthy AgentVerity result means that, for the supplied probe set and
+chosen tolerance:
 
-- pre-flight stability and decision-coverage checks
-- evidence-gated snapshots for reviewed decisions
-- JSON, JUnit, and optional OpenTelemetry handoffs
-- optional metamorphic relations for controlled input changes
+- repeated isolated calls provided enough evidence about decision stability
+- observed decisions did not collapse onto one highly dominant route
+- execution completed and any requested relation checks were meaningful
 
-It does not judge answer correctness, store traces, host a dashboard, or
-monitor production traffic. Static tools remain useful for declared branches,
-route schemas, and expected labels. AgentVerity measures the decisions a
-model-backed or black-box target actually returns.
+That is a minimum dynamic adequacy check, not exhaustive branch coverage.
+AgentVerity does not establish that every declared decision, rare boundary, or
+high-risk case was tested. Pair it with a declared route inventory, labelled
+correctness cases, and stricter separate runs for critical decisions.
+
+The next adequacy extension under consideration is an optional declared
+decision contract. It would report required, observed, and missing decisions
+separately from the current skew warning. It is not part of the current API.
+
+It also does not judge answer correctness, prove safety, store traces, host a
+dashboard, or monitor production traffic. Static tools remain useful for
+declared branches, route schemas, and expected labels. AgentVerity measures
+the decisions a model-backed or black-box target actually returns.
 
 ## Documentation
 
+- [Which agents fit, and what the result does not prove](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md)
 - [Why arbitrary rerun counts fail](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)

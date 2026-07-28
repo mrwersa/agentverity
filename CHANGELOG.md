@@ -8,6 +8,23 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.8.6] - 2026-07-28
+
+### Added
+
+- An applicability guide that identifies the bounded decision points
+  AgentVerity can assess, including steps inside multi-agent and otherwise
+  open-ended systems.
+
+### Changed
+
+- The README now gives a three-part fit test: a finite reviewed decision
+  contract, equivalent starting state across trials, and deliberately varied
+  test inputs.
+- The README and design guide now define decision coverage as a minimum
+  dynamic skew and diversity check rather than exhaustive coverage of every
+  declared route or important boundary.
+
 ## [0.8.5] - 2026-07-27
 
 ### Changed
