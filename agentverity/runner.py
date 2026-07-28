@@ -31,6 +31,11 @@ from typing import Any, Literal
 
 from agentverity.blindness import BlindnessResult
 from agentverity.blindness import score as blindness_score
+from agentverity.decision_contract import (
+    DecisionCoverageResult,
+    DecisionSuite,
+    assess_decision_coverage,
+)
 from agentverity.execution import (
     ErrorPolicy,
     ProgressCallback,
@@ -55,6 +60,7 @@ from agentverity.relations import (
 AgentFn = Callable[[str], Observation]
 RunStatus = Literal[
     "incomplete",
+    "contract",
     "blind",
     "vacuous",
     "undecided",
@@ -228,11 +234,15 @@ class RunResult:
     Attributes:
         meter: The verdict-stochasticity meter result, or None if not run.
         blindness: The constant-gate-blindness result, or None if not run.
+        decision_coverage: Declared decision-contract result, or None when the
+            caller supplied ordinary unlabelled inputs.
         relation_results: Per-relation results, in the order they were run.
         config: The RunConfig used.
         errors: Failures retained under the ``"record"`` error policy.
         input_fingerprints: SHA-256 identifiers for the ordered probe set.
         observed_keys: One source-layer value per input, when available.
+        intended_decisions: One reviewed intended decision per input for a
+            declared suite, otherwise an empty tuple.
         requested_inputs: Number of distinct inputs requested.
     """
 
@@ -240,9 +250,11 @@ class RunResult:
     blindness: BlindnessResult | None
     relation_results: list[RelationResult]
     config: RunConfig
+    decision_coverage: DecisionCoverageResult | None = None
     errors: tuple[RunError, ...] = ()
     input_fingerprints: tuple[str, ...] = ()
     observed_keys: tuple[Any | None, ...] = ()
+    intended_decisions: tuple[str, ...] = ()
     requested_inputs: int = 0
     duration_seconds: float = 0.0
 
@@ -270,6 +282,11 @@ class RunResult:
         """
         if not self.complete:
             return "incomplete"
+        if (
+            self.decision_coverage is not None
+            and not self.decision_coverage.satisfied
+        ):
+            return "contract"
         if self.is_blind:
             return "blind"
         if self.relation_results and not self.suite_is_meaningful:
@@ -334,6 +351,14 @@ class RunResult:
                 f"INCOMPLETE - {failed} call{'s' if failed != 1 else ''} failed, "
                 "so this run is not evidence of anything."
             )
+        if (
+            self.decision_coverage is not None
+            and not self.decision_coverage.satisfied
+        ):
+            return (
+                "NOT TRUSTWORTHY - the declared decision contract is "
+                f"incomplete: {self.decision_coverage.advice}."
+            )
         if self.is_blind and self.blindness is not None:
             return (
                 "NOT TRUSTWORTHY - the agent answered "
@@ -362,6 +387,13 @@ class RunResult:
                 if vacuous
                 else ""
             )
+            if self.decision_coverage is not None:
+                required = len(self.decision_coverage.contract.required or ())
+                return (
+                    "TRUSTWORTHY - the verdict held across every identical "
+                    f"rerun and all {required} required decisions were "
+                    f"represented and observed.{trailer}"
+                )
             return (
                 "TRUSTWORTHY - the verdict held across every identical rerun "
                 f"and the probes cross a decision boundary.{trailer}"
@@ -427,8 +459,53 @@ class RunResult:
                 lines.append(f"   warning:     {b.warning}")
             lines.append("")
 
-        lines.append("3. WHAT TO DO NEXT")
-        if self.is_blind:
+        next_section = 3
+        if self.decision_coverage is not None:
+            coverage = self.decision_coverage
+            lines.append("3. DECLARED DECISION CONTRACT")
+            lines.append(
+                f"   call:        {'SATISFIED' if coverage.satisfied else 'INCOMPLETE'}"
+            )
+            lines.append(
+                f"   intended:    {coverage.intended_coverage:.0%} of required decisions"
+            )
+            lines.append(
+                f"   observed:    {coverage.observed_coverage:.0%} of required decisions"
+            )
+            if coverage.missing_intended:
+                lines.append(
+                    "   missing cases: "
+                    + ", ".join(coverage.missing_intended)
+                )
+            if coverage.missing_observed:
+                lines.append(
+                    "   not observed:  "
+                    + ", ".join(coverage.missing_observed)
+                )
+            if coverage.unknown_observed:
+                lines.append(
+                    "   unknown:       "
+                    + ", ".join(coverage.unknown_observed)
+                )
+            if coverage.missing_critical:
+                lines.append(
+                    "   critical:      "
+                    + ", ".join(coverage.missing_critical)
+                )
+            lines.append(f"   advice:      {coverage.advice}")
+            lines.append("")
+            next_section = 4
+
+        lines.append(f"{next_section}. WHAT TO DO NEXT")
+        if (
+            self.decision_coverage is not None
+            and not self.decision_coverage.satisfied
+        ):
+            lines.append(
+                "   CONTRACT — repair the declared suite or out-of-contract "
+                "agent decision before saving a baseline."
+            )
+        elif self.is_blind:
             lines.append("   BLIND — green relation results may be vacuous.")
         elif self.meter is not None and self.meter.call == "verdict-deterministic":
             lines.append("   STABLE — prefer frozen-baseline diffing when a reference is available.")
@@ -441,7 +518,7 @@ class RunResult:
         lines.append("")
 
         if self.relation_results:
-            lines.append("4. RELATION RESULTS")
+            lines.append(f"{next_section + 1}. RELATION RESULTS")
             lines.append(
                 f"   {'relation':<28} {'type':<11} {'held':>5} {'violated':>8} "
                 f"{'skipped':>7} {'errors':>6} {'rate':>7}"
@@ -519,8 +596,9 @@ def _resolve(config: RunConfig, inputs: Iterable[str]) -> RunConfig:
 
 def run(
     agent: AgentFn,
-    inputs: Iterable[str],
+    inputs: Iterable[str] | None = None,
     *,
+    suite: DecisionSuite | None = None,
     relations: list[Relation] | None = None,
     config: RunConfig | None = None,
     on_progress: ProgressCallback | None = None,
@@ -532,7 +610,11 @@ def run(
 
     Args:
         agent: An agent function ``run(input) -> Observation``.
-        inputs: An iterable of input strings to test against.
+        inputs: An iterable of input strings to test against. Mutually
+            exclusive with ``suite``.
+        suite: A declared decision contract and its reviewed cases. The
+            contract applies to the ``verdict`` layer and is assessed without
+            replacing per-case correctness evaluation.
         relations: Custom relation list. If None, uses :func:`builtin_relations`.
         config: Run configuration. If None, uses defaults.
         on_progress: Optional callback invoked after each input completes a
@@ -542,15 +624,25 @@ def run(
         A :class:`RunResult` with meter, blindness, and per-relation results.
     """
     started = time.perf_counter()
-    config = _resolve(config or RunConfig(), inputs)
-    inputs = list(inputs)
+    if (inputs is None) == (suite is None):
+        raise ValueError("provide exactly one of inputs or suite")
+    if suite is not None:
+        inputs = list(suite.inputs)
+        intended_decisions = suite.expected
+    else:
+        inputs = list(inputs or ())
+        intended_decisions = ()
     if not inputs:
         raise ValueError("inputs must not be empty")
     _reject_duplicates(inputs)
+    config = _resolve(config or RunConfig(), inputs)
+    if suite is not None and config.layer != "verdict":
+        raise ValueError("decision contracts require the verdict observation layer")
     if relations is None:
         relations = builtin_relations()
 
     source_observations: list[Observation | None] = [None] * len(inputs)
+    repeated_observations: list[Observation] = []
     errors: list[RunError] = []
 
     # 1. Meter
@@ -570,6 +662,11 @@ def run(
             for observations in meter_work.values
             if observations is not None
         ]
+        repeated_observations = [
+            observation
+            for observations in complete_series
+            for observation in observations
+        ]
         if complete_series:
             meter_result = score_runs(
                 complete_series,
@@ -584,7 +681,7 @@ def run(
 
     # 2. Blindness
     blindness_result = None
-    if config.run_blindness:
+    if config.run_blindness or suite is not None:
         if not config.reuse_unchanged_calls:
             source_observations = [None] * len(inputs)
         missing = [
@@ -598,7 +695,7 @@ def run(
             source_work = map_indexed_inputs(
                 missing,
                 lambda _index, text: agent(text),
-                phase="blindness",
+                phase="blindness" if config.run_blindness else "decision_contract",
                 max_workers=config.max_workers,
                 error_policy=config.error_policy,
                 on_progress=on_progress,
@@ -614,7 +711,7 @@ def run(
             for observation in source_observations
             if observation is not None
         ]
-        if available:
+        if available and config.run_blindness:
             blindness_result = blindness_score(
                 available,
                 layer=config.layer,
@@ -703,12 +800,26 @@ def run(
         observation.key(config.layer) if observation is not None else None
         for observation in source_observations
     )
+    decision_coverage = (
+        assess_decision_coverage(
+            suite,
+            observed_keys,
+            all_observed=tuple(
+                observation.key(config.layer)
+                for observation in repeated_observations
+            )
+            + observed_keys,
+        )
+        if suite is not None
+        else None
+    )
 
     return RunResult(
         meter=meter_result,
         blindness=blindness_result,
         relation_results=relation_results,
         config=config,
+        decision_coverage=decision_coverage,
         errors=tuple(
             sorted(
                 errors,
@@ -721,6 +832,7 @@ def run(
         ),
         input_fingerprints=tuple(input_fingerprint(text) for text in inputs),
         observed_keys=observed_keys,
+        intended_decisions=intended_decisions,
         requested_inputs=len(inputs),
         duration_seconds=time.perf_counter() - started,
     )

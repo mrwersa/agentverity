@@ -9,7 +9,7 @@ reviewed payment cases
    |                                                          route quality
    |
    +-- isolated repeated calls ----> Strands routing agent --> AgentVerity
-                                                              stability + coverage
+                                                     stability + declared coverage
                                                                       |
                                                         aggregate OTEL span
                                                                       |
@@ -27,7 +27,8 @@ It uses real model calls. The repository's
 zero-credential version of the same evidence-gate idea.
 
 [Read the measured London canary result](RESULTS.md), including the first
-stable-but-wrong run that led to the fail-fast quality gate.
+stable-but-wrong run that led to the fail-fast quality gate and the later v0.9
+declared-contract check.
 
 ## 1. Install
 
@@ -61,11 +62,13 @@ python examples/production_stack/evaluate_stack.py \
 
 DeepEval applies its deterministic exact-match metric to six reviewed routing
 labels. AgentVerity then repeats those six cases from clean Strands sessions,
-checks whether the route is stable, and verifies that the cases cross a
-decision boundary. A failed labelled check stops before the repeat budget is
-spent. Both checks must pass before the script admits a reference. Stable but
-incorrect routing is still a failed run. The canary permits four concurrent
-calls by default. Pass `--max-workers 1` for a sequential run.
+checks whether the route is stable, and verifies that every route declared as
+required was represented and observed. `card_security` is marked critical, so
+a missing critical route is named separately in the report. A failed labelled
+check stops before the repeat budget is spent. Both checks must pass before
+the script admits a reference. Stable but incorrect routing is still a failed
+run. The canary permits four concurrent calls by default. Pass
+`--max-workers 1` for a sequential run.
 
 The script does not save a snapshot by default. Review the outputs before
 explicitly admitting the baseline:
@@ -150,7 +153,7 @@ end-to-end p50 and p95 latency without storing ticket text or model responses.
 |---|---|
 | Strands + Bedrock | Can the agent produce a structured payment route? |
 | DeepEval | Does each sampled route match its reviewed label? |
-| AgentVerity | Are route decisions stable, and do the cases exercise several routes? |
+| AgentVerity | Are route decisions stable, and were all six required routes intended and observed? |
 | Evidence gate | Is the result strong enough to freeze as a reviewed reference? |
 | AgentCore + OTEL | Can the deployed canary be traced and operated in the existing stack? |
 

@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 
-from agentverity import from_callable, run
+from agentverity import (
+    DecisionCase,
+    DecisionContract,
+    DecisionSuite,
+    from_callable,
+    run,
+)
 from agentverity.runner import RunConfig
 from agentverity.telemetry import (
     TELEMETRY_SCHEMA,
@@ -64,3 +70,32 @@ def test_record_otel_run_uses_injected_tracer_without_runtime_dependency():
     assert tracer.name == "agentverity.run"
     assert tracer.span.attributes["agentverity.meter.flip_rate"] == 0.0
     assert tracer.span.attributes["agentverity.blindness.distinct"] == 2
+
+
+def test_contract_telemetry_contains_counts_not_decision_labels():
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed={"allow", "secret-review"},
+            critical={"secret-review"},
+        ),
+        cases=(
+            DecisionCase("ordinary", "allow"),
+            DecisionCase("sensitive", "secret-review"),
+        ),
+    )
+    result = run(
+        from_callable(
+            lambda text: {
+                "verdict": "secret-review" if text == "sensitive" else "allow"
+            }
+        ),
+        suite=suite,
+        relations=[],
+        config=RunConfig(k=4, epsilon=0.5),
+    )
+    attributes = run_result_to_otel_attributes(result)
+
+    assert attributes["agentverity.contract.satisfied"] is True
+    assert attributes["agentverity.contract.required"] == 2
+    assert attributes["agentverity.contract.observed_coverage"] == 1.0
+    assert "secret-review" not in repr(attributes)

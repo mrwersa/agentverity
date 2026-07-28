@@ -76,6 +76,9 @@ Those deliberately varied test inputs form the **probe set**. AgentVerity asks:
 - **Decision stability:** does one case reach the same decision across
   isolated reruns?
 - **Decision coverage:** do the cases reach more than one decision?
+- **Declared coverage:** when you supply a decision contract, did the suite
+  include every required decision, did the agent return them, and did it emit
+  an unknown decision?
 
 A green quality score answers a different question: whether the selected
 answers were right. AgentVerity checks how much evidence that score rests on.
@@ -131,21 +134,45 @@ The bundled payment-dispute example runs two test sets:
 python examples/payment_dispute_gate.py
 ```
 
-| Probe set | Exact-match | Verdict stability | Probe coverage | Baseline |
+| Probe set | Exact-match | Verdict stability | Declared coverage | Baseline |
 |---|---|---|---|---|
-| Narrow, 6 duplicate-charge cases | ✅ 6/6 | ✅ verdict-deterministic | ❌ blind, 1 route | ❌ REFUSED |
-| Repaired, 6 dispute categories | ✅ 6/6 | ✅ verdict-deterministic | ✅ 6 routes | ✅ ADMITTED |
+| Narrow, 6 duplicate-charge cases | ✅ 6/6 | ✅ verdict-deterministic | ❌ 1/6 required routes | ❌ REFUSED |
+| Repaired, 6 dispute categories | ✅ 6/6 | ✅ verdict-deterministic | ✅ 6/6 required routes | ✅ ADMITTED |
 
-Both score 6/6. The narrow set correctly tests one route, but it cannot justify
-a system-wide baseline. The repaired set reaches all six routes and can be
-saved as a versioned snapshot.
+Both score 6/6. The narrow set correctly tests one route, but it covers only
+one of the six routes declared as required. The repaired set reaches all six
+and can be saved as a versioned snapshot.
+
+Declare that test contract in Python:
+
+```python
+from agentverity import DecisionCase, DecisionContract, DecisionSuite, run
+
+suite = DecisionSuite(
+    contract=DecisionContract(
+        allowed={"duplicate_charge", "refund_delay", "card_security"},
+        critical={"card_security"},
+    ),
+    cases=(
+        DecisionCase("I was charged twice", "duplicate_charge"),
+        DecisionCase("My refund is late", "refund_delay"),
+        DecisionCase("I do not recognise this card payment", "card_security"),
+    ),
+)
+
+result = run(agent, suite=suite)
+```
+
+`expected` records the route each case is intended to exercise. AgentVerity
+checks intended and observed route coverage separately. Your assertions or
+quality evaluator still decide whether each returned route was correct.
 
 Create one through the CLI:
 
 ```bash
 agentverity snapshot \
-  --agent mymod:build_agent \
-  --inputs seeds.txt \
+  --agent examples/payment_dispute_gate.py:build_agent \
+  --suite examples/payment_decisions.json \
   --output baseline.json \
   --accept-reference
 ```
@@ -185,6 +212,10 @@ pairs, all six routes reached, and 78 successful cloud calls with no errors or
 throttles. Its first run was stable but only 5/6 correct, so the example now
 requires both quality and evidence before snapshot admission.
 
+The v0.9 contract path was then rerun directly through Bedrock after the old
+runtime was removed. It again scored 6/6 with 0/36 route changes, and reported
+all six required routes intended and observed with no unknown decision.
+
 This is deployment proof, not an AWS requirement. The zero-dependency callable
 works with any stack.
 
@@ -193,21 +224,21 @@ works with any stack.
 
 ## Scope
 
-A trustworthy AgentVerity result means that, for the supplied probe set and
-chosen tolerance:
+A trustworthy AgentVerity result means that, for the supplied probe set,
+optional decision contract, and chosen tolerance:
 
 - repeated isolated calls provided enough evidence about decision stability
 - observed decisions did not collapse onto one highly dominant route
+- every required decision was intended and observed when a contract was given
+- no observed decision fell outside that contract
 - execution completed and any requested relation checks were meaningful
 
 That is a minimum dynamic adequacy check, not exhaustive branch coverage.
-AgentVerity does not establish that every declared decision, rare boundary, or
-high-risk case was tested. Pair it with a declared route inventory, labelled
-correctness cases, and stricter separate runs for critical decisions.
-
-The next adequacy extension under consideration is an optional declared
-decision contract. It would report required, observed, and missing decisions
-separately from the current skew warning. It is not part of the current API.
+Without a decision contract, AgentVerity only checks observed diversity. With
+one, it reports required, intended, observed, missing, and unknown decisions.
+It still does not establish that every boundary was tested or that critical
+routes meet their own stability target. Keep labelled correctness cases and
+run critical groups separately when their risk warrants a tighter tolerance.
 
 It also does not judge answer correctness, prove safety, store traces, host a
 dashboard, or monitor production traffic. Static tools remain useful for
@@ -242,6 +273,6 @@ coverage, and the branch-protection `CI gate` requires that job to pass.
 ## Status and licence
 
 Alpha. Pin a minor series for production use, for example
-`agentverity~=0.8.0`. Patch releases preserve the public API.
+`agentverity~=0.9.0`. Patch releases preserve the public API.
 
 Apache-2.0. Contributions are welcome through the pull-request workflow.

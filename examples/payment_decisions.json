@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "expected": "duplicate_charge",
+      "input": "My card was charged twice for the same order."
+    },
+    {
+      "expected": "refund_delay",
+      "input": "The shop promised a refund but it has not arrived."
+    },
+    {
+      "expected": "card_security",
+      "input": "I do not recognise this card purchase."
+    },
+    {
+      "expected": "merchant_dispute",
+      "input": "The merchant charged more than the agreed amount."
+    },
+    {
+      "expected": "cash_withdrawal",
+      "input": "Cash came out of my balance but the ATM dispensed nothing."
+    },
+    {
+      "expected": "transfer_delay",
+      "input": "The transfer is still pending after two days."
+    }
+  ],
+  "contract": {
+    "allowed": [
+      "card_security",
+      "cash_withdrawal",
+      "duplicate_charge",
+      "merchant_dispute",
+      "refund_delay",
+      "transfer_delay"
+    ],
+    "critical": [
+      "card_security"
+    ],
+    "required": [
+      "card_security",
+      "cash_withdrawal",
+      "duplicate_charge",
+      "merchant_dispute",
+      "refund_delay",
+      "transfer_delay"
+    ]
+  },
+  "schema": "agentverity.decision-suite/v1"
+}

@@ -22,6 +22,9 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 from agentverity import (
+    DecisionCase,
+    DecisionContract,
+    DecisionSuite,
     RunResult,
     SnapshotRefused,
     create_snapshot,
@@ -50,6 +53,11 @@ DIVERSE_CASES: tuple[Case, ...] = (
     ("The merchant charged more than the agreed amount.", "merchant_dispute"),
     ("Cash came out of my balance but the ATM dispensed nothing.", "cash_withdrawal"),
     ("The transfer is still pending after two days.", "transfer_delay"),
+)
+
+DECISION_CONTRACT = DecisionContract(
+    allowed={expected for _, expected in DIVERSE_CASES},
+    critical={"card_security"},
 )
 
 
@@ -82,8 +90,14 @@ def _evaluate(cases: tuple[Case, ...]) -> tuple[int, int]:
 
 
 def _run_suite(cases: tuple[Case, ...]):
-    inputs = [text for text, _ in cases]
-    return run(from_callable(route_dispute), inputs=inputs, relations=[])
+    suite = DecisionSuite(
+        contract=DECISION_CONTRACT,
+        cases=tuple(
+            DecisionCase(input=text, expected=expected)
+            for text, expected in cases
+        ),
+    )
+    return run(from_callable(route_dispute), suite=suite, relations=[])
 
 
 def _quality_junit_xml(suite_name: str, cases: tuple[Case, ...]) -> str:
@@ -137,13 +151,22 @@ def _print_suite(
 def _markdown_row(label: str, result: RunResult, cases: tuple[Case, ...]) -> str:
     """One probe set as a single comparison row."""
     correct, total = _evaluate(cases)
-    routes = len(Counter(str(key) for key in result.observed_keys))
     stability = result.meter.call if result.meter else "not measured"
-    coverage = (
-        f"❌ blind, {routes} route" if result.is_blind
-        else f"✅ {routes} routes"
+    assert result.decision_coverage is not None
+    observed = len(DECISION_CONTRACT.required or ()) - len(
+        result.decision_coverage.missing_observed
     )
-    baseline = "❌ REFUSED" if result.is_blind else "✅ ADMITTED"
+    required = len(DECISION_CONTRACT.required or ())
+    coverage = (
+        f"✅ {observed}/{required} required routes"
+        if result.decision_coverage.satisfied
+        else f"❌ {observed}/{required} required routes"
+    )
+    baseline = (
+        "✅ ADMITTED"
+        if result.decision_coverage.satisfied and not result.is_blind
+        else "❌ REFUSED"
+    )
     return (
         f"| {label} | ✅ {correct}/{total} | ✅ {stability} | {coverage} "
         f"| {baseline} |"
@@ -162,7 +185,7 @@ def _markdown_report(narrow: RunResult, repaired: RunResult) -> str:
     that numbering reads as four sections rather than two.
     """
     return "\n".join([
-        "| Probe set | Exact-match | Verdict stability | Probe coverage | Baseline |",
+        "| Probe set | Exact-match | Verdict stability | Declared coverage | Baseline |",
         "|---|---|---|---|---|",
         _markdown_row("Narrow, 6 duplicate-charge cases", narrow, NARROW_CASES),
         _markdown_row("Repaired, 6 dispute categories", repaired, DIVERSE_CASES),
@@ -200,7 +223,9 @@ def main() -> None:
         narrow_state = "ADMITTED (unexpected)"
 
     repaired_snapshot = create_snapshot(repaired, approved=True)
-    repaired_state = "ADMITTED - evidence is complete, stable, and non-blind"
+    repaired_state = (
+        "ADMITTED - evidence is complete, stable, and covers the contract"
+    )
 
     print("PAYMENT-DISPUTE ROUTER: THE EVIDENCE GATE")
     print("=" * 42)

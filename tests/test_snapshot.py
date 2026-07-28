@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from agentverity import from_callable, run
+from agentverity import (
+    DecisionCase,
+    DecisionContract,
+    DecisionSuite,
+    from_callable,
+    run,
+)
 from agentverity.runner import RunConfig
 from agentverity.snapshot import (
     SNAPSHOT_SCHEMA,
@@ -154,6 +160,94 @@ def test_snapshot_round_trip(tmp_path):
     path = tmp_path / "baseline.json"
     save_snapshot(snapshot, path)
     assert load_snapshot(path) == snapshot
+
+
+def test_contract_snapshot_records_intent_and_rechecks_the_contract():
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed={"allow", "review", "deny"},
+            critical={"deny"},
+        ),
+        cases=(
+            DecisionCase("allow-a", "allow"),
+            DecisionCase("review-a", "review"),
+            DecisionCase("block-a", "deny"),
+        ),
+    )
+
+    def contract_gate(text: str) -> dict:
+        if text.startswith("allow"):
+            return {"verdict": "allow"}
+        if text.startswith("review"):
+            return {"verdict": "review"}
+        return {"verdict": "deny"}
+
+    result = run(
+        from_callable(contract_gate),
+        suite=suite,
+        relations=[],
+        config=RunConfig(k=4, epsilon=0.5),
+    )
+    snapshot = create_snapshot(result, approved=True)
+    value = snapshot.to_dict()
+
+    assert value["decision_contract"]["critical"] == ["deny"]
+    assert [probe["intended"] for probe in value["probes"]] == [
+        "allow",
+        "review",
+        "deny",
+    ]
+    assert compare_snapshot(snapshot, result).clean
+
+    changed_intent = DecisionSuite(
+        contract=suite.contract,
+        cases=(
+            DecisionCase("allow-a", "review"),
+            DecisionCase("review-a", "allow"),
+            DecisionCase("block-a", "deny"),
+        ),
+    )
+    changed_result = run(
+        from_callable(contract_gate),
+        suite=changed_intent,
+        relations=[],
+        config=RunConfig(k=4, epsilon=0.5),
+    )
+    with pytest.raises(SnapshotCompatibilityError, match="intended decisions"):
+        compare_snapshot(snapshot, changed_result)
+
+
+def test_snapshot_refuses_an_incomplete_declared_contract():
+    suite = DecisionSuite(
+        contract=DecisionContract(allowed={"allow", "review", "deny"}),
+        cases=(
+            DecisionCase("allow-a", "allow"),
+            DecisionCase("block-a", "deny"),
+        ),
+    )
+    result = run(
+        from_callable(_gate),
+        suite=suite,
+        relations=[],
+        config=RunConfig(k=4, epsilon=0.5),
+    )
+
+    with pytest.raises(SnapshotRefused, match="decision contract"):
+        create_snapshot(result, approved=True)
+
+
+def test_snapshot_loader_migrates_v1_without_a_contract():
+    value = create_snapshot(_result(), approved=True).to_dict()
+    value["schema"] = "agentverity.snapshot/v1"
+    value.pop("decision_contract")
+    for probe in value["probes"]:
+        probe.pop("intended")
+
+    loaded = type(create_snapshot(_result(), approved=True)).from_dict(value)
+
+    assert loaded.schema == SNAPSHOT_SCHEMA
+    assert loaded.decision_contract is None
+    assert all(probe.intended is None for probe in loaded.probes)
 
 
 class TestDocumentedSizingIsPinned:

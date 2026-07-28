@@ -8,7 +8,14 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
-from agentverity import Relation, from_callable, run
+from agentverity import (
+    DecisionCase,
+    DecisionContract,
+    DecisionSuite,
+    Relation,
+    from_callable,
+    run,
+)
 from agentverity.reporting import (
     JUNIT_SUITE_NAME,
     RUN_SCHEMA,
@@ -184,3 +191,74 @@ def test_relation_coverage_is_absent_when_no_relations_were_requested():
     root = ET.fromstring(run_result_to_junit_xml(result))
     assert root.find("./testcase[@name='preflight.relation_coverage']") is None
     assert root.attrib["skipped"] == "0"
+
+
+def test_declared_contract_is_reported_without_raw_case_inputs():
+    sensitive = "customer account 123 should be reviewed"
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed={"allow", "review", "deny"},
+            critical={"deny"},
+        ),
+        cases=(
+            DecisionCase("ordinary request", "allow"),
+            DecisionCase(sensitive, "review"),
+            DecisionCase("known attack", "deny"),
+        ),
+    )
+    result = run(
+        from_callable(
+            lambda text: {
+                "verdict": (
+                    "deny" if "attack" in text
+                    else "review" if "123" in text
+                    else "allow"
+                )
+            }
+        ),
+        suite=suite,
+        relations=[],
+        config=RunConfig(k=4, epsilon=0.5),
+    )
+
+    report = run_result_to_dict(result)
+    contract = report["decision_contract"]
+    assert contract["satisfied"] is True
+    assert contract["intended_coverage"] == 1.0
+    assert contract["observed_coverage"] == 1.0
+    assert contract["critical"] == ["deny"]
+    assert sensitive not in json.dumps(report)
+
+    root = ET.fromstring(run_result_to_junit_xml(result))
+    case = root.find(
+        "./testcase[@name='preflight.declared_decision_coverage']"
+    )
+    assert case is not None
+    assert case.find("failure") is None
+
+
+def test_junit_contract_failure_is_a_failed_release_check():
+    suite = DecisionSuite(
+        contract=DecisionContract(allowed={"allow", "review", "deny"}),
+        cases=(
+            DecisionCase("ordinary", "allow"),
+            DecisionCase("attack", "deny"),
+        ),
+    )
+    result = run(
+        from_callable(
+            lambda text: {"verdict": "deny" if text == "attack" else "allow"}
+        ),
+        suite=suite,
+        relations=[],
+        config=RunConfig(k=4, epsilon=0.5),
+    )
+
+    root = ET.fromstring(run_result_to_junit_xml(result))
+    case = root.find(
+        "./testcase[@name='preflight.declared_decision_coverage']/failure"
+    )
+    assert result.status == "contract"
+    assert root.attrib["failures"] == "1"
+    assert case is not None
+    assert "add reviewed cases" in case.attrib["message"]

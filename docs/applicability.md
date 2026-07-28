@@ -64,64 +64,71 @@ A trustworthy result supports this bounded statement:
 
 > For these test inputs, observation layer, isolated trial method, and
 > tolerance, the run produced enough stability evidence and did not collapse
-> onto one highly dominant observed decision.
+> onto one highly dominant observed decision. When a decision contract was
+> supplied, every required decision was intended and observed.
 
 It does not prove:
 
 - that the selected decisions were correct
-- that every allowed decision or important boundary was tested
+- that every important boundary within a decision was tested
 - that the inputs were semantically diverse
 - that the agent is safe, secure, unbiased, or reliable on production traffic
 - that provider calls were statistically independent
 - that the result generalises beyond the tested model, prompt, tools, state,
   provider version, or environment
 
-Use labelled assertions or another evaluator for correctness. Use static
-analysis and a declared route inventory for known branches and missing labels.
+Use labelled assertions or another evaluator for correctness. Use a declared
+decision contract for known labels. Static analysis remains useful for local
+branches and paths that the runtime interface does not expose.
 Use security tests for prompt injection, unsafe agency, data leakage, and
 authorisation boundaries.
 
 ## What decision coverage means here
 
-AgentVerity's current coverage check is deliberately a minimum dynamic
-diagnostic. It reports observed decision count and skew, then warns when one
-decision dominates the probe set above the configured threshold.
+Without a declared contract, AgentVerity's coverage check is deliberately a
+minimum dynamic diagnostic. It reports observed decision count and skew, then
+warns when one decision dominates the probe set above the configured
+threshold.
 
 This catches a vacuous green suite that exercises one route. It is not the same
 as measuring all declared routes. Two observed decisions out of twenty may
 avoid the blindness warning while still being inadequate.
 
-For release decisions:
-
-- compare observed labels with the application's declared decision set
-- keep reviewed examples for each required and high-risk decision
-- run critical cases as a separate stratum with an appropriate stability
-  tolerance
-- treat AgentVerity as one release condition beside correctness, security,
-  latency, cost, and operational health
-
-## Candidate next feature: declared decision contracts
-
-The strongest extension to this model is not semantic scoring or another
-dashboard. It is an optional declared decision contract supplied by the
-application.
-
-Such a contract could distinguish three separate results:
+For release decisions, add a `DecisionSuite`. It distinguishes:
 
 - **Observed diversity:** does one decision dominate the current probe set?
 - **Declared coverage:** which required decisions were observed or missing?
-- **Critical-case stability:** did each high-risk decision stratum meet its
-  own tolerance?
+- **Intended coverage:** did the reviewed cases include every required
+  decision?
+- **Contract drift:** did the agent emit a decision outside the allowed set?
 
-This would turn a warning such as "the suite did not collapse onto one route"
+This turns a warning such as "the suite did not collapse onto one route"
 into the stronger but still bounded statement "the suite exercised every
-decision this application declared as required". It would not prove that the
+decision this application declared as required". It does not prove that the
 labels were correct, the inputs were semantically representative, or unknown
 behaviour was impossible.
 
-No such contract exists in the current API. Until it does, keep the decision
-inventory in the application or quality-evaluation dataset and run critical
-case groups separately.
+```python
+from agentverity import DecisionCase, DecisionContract, DecisionSuite
+
+suite = DecisionSuite(
+    contract=DecisionContract(
+        allowed={"approve", "review", "deny"},
+        critical={"deny"},
+    ),
+    cases=(
+        DecisionCase("routine request", "approve"),
+        DecisionCase("ambiguous request", "review"),
+        DecisionCase("prohibited request", "deny"),
+    ),
+)
+```
+
+Version 0.9 records critical decisions and reports when one is missing. It
+does not assign a separate statistical threshold to each route. Run critical
+cases as a separate stratum when they need a stricter tolerance. Treat
+AgentVerity as one release condition beside correctness, security, latency,
+cost, and operational health.
 
 ## Trial assumptions and cost
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
@@ -72,3 +73,31 @@ def test_showcase_never_uses_stability_to_override_quality():
 
     assert quality_guard < stability_run
     assert quality_guard < snapshot
+
+
+def test_showcase_uses_a_declared_contract_before_snapshot_admission():
+    source = (EXAMPLE / "evaluate_stack.py").read_text(encoding="utf-8")
+
+    assert "DecisionContract(" in source
+    assert 'critical={"card_security"}' in source
+    assert "suite=DECISION_SUITE" in source
+    assert source.index("suite=DECISION_SUITE") < source.index(
+        "snapshot = create_snapshot"
+    )
+
+
+def test_contract_canary_is_redacted_and_supports_the_public_claim():
+    path = EXAMPLE / "results" / "bedrock-contract-canary.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    serialised = json.dumps(data)
+
+    assert data["region"] == "eu-west-2"
+    assert data["quality"]["passed"] == data["quality"]["total"] == 6
+    assert data["stability"]["pair_flips"] == 0
+    assert data["stability"]["pair_trials"] == 36
+    assert data["contract"]["satisfied"] is True
+    assert data["contract"]["required"] == 6
+    assert data["contract"]["missing_critical"] == 0
+    assert data["contract"]["unknown_observed"] == 0
+    assert "225754039891" not in serialised
+    assert "arn:aws:" not in serialised

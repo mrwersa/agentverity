@@ -1,6 +1,6 @@
 # API guide
 
-Most users need four names:
+Most runs without a declared decision contract need four names:
 
 ```python
 from agentverity import Observation, RunConfig, from_callable, run
@@ -11,6 +11,42 @@ from agentverity import Observation, RunConfig, from_callable, run
   optional relations.
 - `Observation` separates text, verdict, and tool-path layers.
 - `RunConfig` controls precision, call budget, concurrency, and failures.
+
+## Declared decision coverage
+
+Use three additional types when the application has a finite route inventory:
+
+```python
+from agentverity import DecisionCase, DecisionContract, DecisionSuite, run
+
+suite = DecisionSuite(
+    contract=DecisionContract(
+        allowed={"approve", "review", "deny"},
+        critical={"deny"},
+    ),
+    cases=(
+        DecisionCase("routine request", "approve"),
+        DecisionCase("ambiguous request", "review"),
+        DecisionCase("prohibited request", "deny"),
+    ),
+)
+result = run(agent, suite=suite)
+```
+
+- `DecisionContract` declares allowed, required, and critical labels.
+  `required` defaults to every allowed label.
+- `DecisionCase` pairs one raw input with the decision it is intended to
+  exercise.
+- `DecisionSuite` validates the contract and cases before any agent call.
+- `RunResult.decision_coverage` reports intended, observed, missing, unknown,
+  and missing-critical labels.
+
+The contract path is available for the `verdict` layer. It checks coverage,
+not per-case correctness. Keep labelled assertions or a quality evaluator
+beside it.
+
+The CLI accepts the same versioned structure with `--suite suite.json`.
+`--suite` and `--inputs` are mutually exclusive.
 
 ## Results and reports
 
@@ -25,7 +61,8 @@ from agentverity import Observation, RunConfig, from_callable, run
 ## Snapshots
 
 A snapshot is a versioned file containing the reviewed expected decisions used
-as a baseline for later runs.
+as a baseline for later runs. Contract-aware snapshots also preserve the
+declared contract and each case's intended decision.
 
 - `create_snapshot` admits a reviewed reference only when the evidence permits.
 - `compare_snapshot` rechecks admission before comparing current outputs.
