@@ -19,16 +19,16 @@ customer request ----------> deployed agent ----------> response
 
 No single evaluator qualifies an agent. Use layers:
 
-1. Define allowed decisions, tool schemas, approval boundaries, and measurable
-   success criteria.
+1. Define allowed decisions, required routes, critical labels, tool schemas,
+   approval boundaries, and measurable success criteria.
 2. Test deterministic orchestration, authorisation, schemas, idempotency, and
    tools with ordinary unit and integration tests.
 3. Run reviewed cases through a quality evaluator for final answers, routes,
    tool selection, arguments, and task completion.
 4. Test important agent steps separately, then the end-to-end tool or handoff
    path.
-5. Stop on failed quality. When quality passes, run AgentVerity before saving a
-   regression baseline.
+5. Stop on failed quality. When quality passes, run AgentVerity with the
+   declared decision suite before saving a regression baseline.
 6. Red-team prompt injection, data leakage, unsafe agency, tenant isolation,
    and exhausted step or cost budgets.
 7. Combine quality, AgentVerity, security, latency, cost, and operational
@@ -105,8 +105,8 @@ JUnit reaches the report surface a team already uses:
 
 ```bash
 agentverity run \
-  --agent examples/support_router.py:build_agent \
-  --inputs examples/support_tickets.txt \
+  --agent examples/payment_dispute_gate.py:build_agent \
+  --suite examples/payment_decisions.json \
   --format junit \
   --output agentverity.xml
 ```
@@ -116,7 +116,7 @@ Exit codes and JUnit share one interpretation:
 | Code | Meaning |
 |---:|---|
 | 0 | Evidence is interpretable and no requested relation failed |
-| 1 | Poor coverage, an ineffective or failed relation, or snapshot drift |
+| 1 | Poor or incomplete declared coverage, an ineffective or failed relation, or snapshot drift |
 | 2 | Incomplete, undecided, or unsupported evidence |
 
 An unstable decision changes the test strategy. It does not by itself prove

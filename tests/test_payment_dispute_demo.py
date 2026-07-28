@@ -40,14 +40,18 @@ def test_narrow_suite_is_refused_and_repaired_suite_is_admitted():
     narrow = demo._run_suite(demo.NARROW_CASES)
     repaired = demo._run_suite(demo.DIVERSE_CASES)
 
-    assert narrow.status == "blind"
+    assert narrow.status == "contract"
+    assert narrow.decision_coverage is not None
+    assert narrow.decision_coverage.intended_coverage == pytest.approx(1 / 6)
     with pytest.raises(SnapshotRefused):
         create_snapshot(narrow, approved=True)
 
     assert repaired.status == "deterministic"
+    assert repaired.decision_coverage is not None
+    assert repaired.decision_coverage.satisfied
     assert create_snapshot(repaired, approved=True)
 
     narrow_xml = ET.fromstring(run_result_to_junit_xml(narrow))
     repaired_xml = ET.fromstring(run_result_to_junit_xml(repaired))
-    assert narrow_xml.attrib["failures"] == "1"
+    assert narrow_xml.attrib["failures"] == "2"
     assert repaired_xml.attrib["failures"] == "0"

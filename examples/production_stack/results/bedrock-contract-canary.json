@@ -1,0 +1,36 @@
+{
+  "captured_at": "2026-07-28",
+  "contract": {
+    "allowed": 6,
+    "critical": 1,
+    "intended_coverage": 1.0,
+    "missing_critical": 0,
+    "missing_intended": 0,
+    "missing_observed": 0,
+    "observed_coverage": 1.0,
+    "required": 6,
+    "satisfied": true,
+    "unknown_observed": 0
+  },
+  "latency_seconds": {
+    "calls": 78,
+    "p50": 0.545349032006925,
+    "p95": 1.1595146679901518
+  },
+  "model_id": "amazon.nova-micro-v1:0",
+  "quality": {
+    "metric": "DeepEval ExactMatchMetric",
+    "passed": 6,
+    "total": 6
+  },
+  "region": "eu-west-2",
+  "schema": "agentverity.contract-canary/v1",
+  "stability": {
+    "call": "verdict-deterministic",
+    "epsilon": 0.1,
+    "pair_flips": 0,
+    "pair_trials": 36,
+    "repeats_per_case": 12
+  },
+  "target": "Strands direct to Amazon Bedrock"
+}

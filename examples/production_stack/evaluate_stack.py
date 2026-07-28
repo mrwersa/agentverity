@@ -23,6 +23,9 @@ from runtime_client import build_runtime_router
 
 from agentverity import (
     PRECISION_LEVELS,
+    DecisionCase,
+    DecisionContract,
+    DecisionSuite,
     RunConfig,
     SnapshotRefused,
     create_snapshot,
@@ -32,6 +35,18 @@ from agentverity import (
     run_result_to_dict,
     save_snapshot,
     write_junit_xml,
+)
+
+DECISION_CONTRACT = DecisionContract(
+    allowed={expected for _, expected in CASES},
+    critical={"card_security"},
+)
+DECISION_SUITE = DecisionSuite(
+    contract=DECISION_CONTRACT,
+    cases=tuple(
+        DecisionCase(input=ticket, expected=expected)
+        for ticket, expected in CASES
+    ),
 )
 
 
@@ -153,7 +168,7 @@ def main() -> None:
 
     result = run(
         agent,
-        inputs=[ticket for ticket, _ in CASES],
+        suite=DECISION_SUITE,
         relations=[],
         config=RunConfig(
             precision=args.precision,
@@ -173,7 +188,7 @@ def main() -> None:
             suite_name=f"payment-triage.{args.target}.agentverity",
         )
         evidence = {
-            "schema": "agentverity.showcase/v1",
+            "schema": "agentverity.showcase/v2",
             "target": args.target,
             "model_id": os.environ.get("BEDROCK_MODEL_ID", DEFAULT_MODEL_ID),
             "precision": args.precision,

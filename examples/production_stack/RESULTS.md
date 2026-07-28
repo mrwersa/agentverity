@@ -69,3 +69,22 @@ asset is regenerated from that file:
 ```bash
 python scripts/render_agentcore_evidence.py
 ```
+
+## Declared-contract canary
+
+The v0.9 decision-contract path was exercised separately on 28 July 2026. The
+old AgentCore runtime had already been removed, so this run used the same
+Strands router and Nova Micro model directly through Bedrock in London rather
+than redeploying infrastructure for a library-side change.
+
+The 78-call run passed all three release conditions:
+
+- DeepEval scored 6/6 reviewed routes
+- AgentVerity observed 0 changes in 36 non-overlapping pairs
+- all six required routes were intended and observed, with no unknown or
+  missing critical decision
+
+Median end-to-end latency was 0.545 seconds and p95 was 1.160 seconds. The
+redacted [`bedrock-contract-canary.json`](results/bedrock-contract-canary.json)
+records the aggregate result without prompts, outputs, account identifiers, or
+credentials.

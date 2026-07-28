@@ -10,7 +10,7 @@ from xml.etree import ElementTree as ET
 
 from agentverity.runner import RunResult
 
-RUN_SCHEMA = "agentverity.run/v1"
+RUN_SCHEMA = "agentverity.run/v2"
 JUNIT_SUITE_NAME = "agentverity"
 
 
@@ -68,6 +68,29 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
             "warning": result.blindness.warning,
         }
 
+    decision_contract = None
+    if result.decision_coverage is not None:
+        coverage = result.decision_coverage
+        decision_contract = {
+            **coverage.contract.to_dict(),
+            "intended_counts": {
+                item.decision: item.count
+                for item in coverage.intended_counts
+            },
+            "observed_counts": {
+                item.decision: item.count
+                for item in coverage.observed_counts
+            },
+            "intended_coverage": coverage.intended_coverage,
+            "observed_coverage": coverage.observed_coverage,
+            "missing_intended": list(coverage.missing_intended),
+            "missing_observed": list(coverage.missing_observed),
+            "missing_critical": list(coverage.missing_critical),
+            "unknown_observed": list(coverage.unknown_observed),
+            "satisfied": coverage.satisfied,
+            "advice": coverage.advice,
+        }
+
     return {
         "schema": RUN_SCHEMA,
         "status": result.status,
@@ -87,6 +110,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         },
         "meter": meter,
         "blindness": blindness,
+        "decision_contract": decision_contract,
         "relations": [
             {
                 "name": relation.relation.name,
@@ -116,6 +140,11 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         "guidance": {
             "is_stochastic": result.is_stochastic,
             "is_blind": result.is_blind,
+            "decision_contract_satisfied": (
+                result.decision_coverage.satisfied
+                if result.decision_coverage is not None
+                else None
+            ),
             "suite_is_meaningful": result.suite_is_meaningful,
         },
     }
@@ -206,6 +235,30 @@ def run_result_to_junit_xml(
             f"distinct={result.blindness.distinct} "
             f"threshold={result.blindness.threshold}"
         )
+
+    if result.decision_coverage is not None:
+        coverage = result.decision_coverage
+        contract_case = _junit_case(
+            root,
+            "preflight.declared_decision_coverage",
+            classname=suite_name,
+        )
+        detail = (
+            f"intended={coverage.intended_coverage:.6f} "
+            f"observed={coverage.observed_coverage:.6f} "
+            f"missing_intended={len(coverage.missing_intended)} "
+            f"missing_observed={len(coverage.missing_observed)} "
+            f"unknown_observed={len(coverage.unknown_observed)}"
+        )
+        if not coverage.satisfied:
+            failures += 1
+            ET.SubElement(
+                contract_case,
+                "failure",
+                {"message": coverage.advice},
+            ).text = detail
+        else:
+            ET.SubElement(contract_case, "system-out").text = detail
 
     # A caller who passed no relations did not ask for this check, so reporting
     # it as skipped is noise in every consuming dashboard. Say nothing instead.

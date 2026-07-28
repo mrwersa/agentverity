@@ -4,10 +4,12 @@ AgentVerity is a test adequacy tool for agents that choose among named
 decisions. Adequacy criteria measure the test suite rather than the program:
 statement coverage, branch coverage, and mutation score all ask whether the
 tests were worth reading. AgentVerity asks the same kind of question for an
-agent, but its current decision-coverage check is a lower bound rather than an
-equivalent of branch coverage. It detects a probe set that collapses onto one
-highly dominant observed decision. It does not know whether every declared
-decision or important boundary was exercised. Decision stability is a
+agent. Its diversity check is a lower bound rather than an equivalent of
+branch coverage. It detects a probe set that collapses onto one highly
+dominant observed decision. An optional decision contract separately checks
+whether every required label was intended and observed. Neither check knows
+whether every important boundary within a decision was exercised. Decision
+stability is a
 precondition for that dynamic signal because unstable decisions make the
 observed distribution unrepeatable. The target may be a deterministic gate or
 an LLM agent. This document records the technical boundaries and the reasons
@@ -166,12 +168,12 @@ decision layer. See `docs/applicability.md`.
 - M7 delivery-stack handoff: DONE after v0.5.0 — JUnit XML for CI and one
   privacy-minimised OpenTelemetry summary span for an existing monitoring
   pipeline.
-- M8 declared decision contracts: CANDIDATE, not implemented. An optional
-  contract would preserve the current skew warning while separately reporting
-  required, observed, and missing decisions. A later policy layer could apply
-  stricter stability tolerances to critical decisions or reviewed case
-  strata. Correctness would remain the responsibility of labelled assertions
-  or another evaluator.
+- M8 declared decision contracts: DONE in v0.9.0. The optional contract
+  preserves the skew warning while separately reporting required, intended,
+  observed, missing, critical, and unknown decisions. Correctness remains the
+  responsibility of labelled assertions or another evaluator. Per-critical
+  stability tolerances remain future work because they require separate
+  sampling and cost policy.
 
 ## 5. Reporting boundary
 

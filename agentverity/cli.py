@@ -11,6 +11,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from agentverity.adapters.callable_adapter import from_callable
+from agentverity.decision_contract import DecisionSuite, load_decision_suite
 from agentverity.execution import ProgressEvent
 from agentverity.meter import (
     PRECISION_LEVELS,
@@ -77,10 +78,17 @@ def _add_agent_inputs(parser: argparse.ArgumentParser) -> None:
             "(str) -> Observation."
         ),
     )
-    parser.add_argument(
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument(
         "--inputs",
-        required=True,
         help="Path to a UTF-8 text file with one input per line.",
+    )
+    source.add_argument(
+        "--suite",
+        help=(
+            "Path to a versioned decision-suite JSON file containing the "
+            "declared contract and reviewed cases."
+        ),
     )
 
 
@@ -168,9 +176,13 @@ def _progress(event: ProgressEvent) -> None:
     )
 
 
-def _agent_and_inputs(args: argparse.Namespace) -> tuple[Callable, list[str]]:
+def _agent_and_inputs(
+    args: argparse.Namespace,
+) -> tuple[Callable, list[str] | None, DecisionSuite | None]:
     factory = _load_agent(args.agent)
-    return from_callable(factory()), _load_inputs(args.inputs)
+    if args.suite:
+        return from_callable(factory()), None, load_decision_suite(args.suite)
+    return from_callable(factory()), _load_inputs(args.inputs), None
 
 
 def _exit_code(result: RunResult) -> int:
@@ -178,13 +190,13 @@ def _exit_code(result: RunResult) -> int:
         return 2
     if result.status == "undecided":
         return 2
-    if result.status in {"blind", "vacuous", "violations"}:
+    if result.status in {"blind", "contract", "vacuous", "violations"}:
         return 1
     return 0
 
 
 def _run_command(args: argparse.Namespace) -> int:
-    agent, inputs = _agent_and_inputs(args)
+    agent, inputs, suite = _agent_and_inputs(args)
     config = RunConfig(
         k=args.k,
         epsilon=args.epsilon,
@@ -198,6 +210,7 @@ def _run_command(args: argparse.Namespace) -> int:
     result = run(
         agent,
         inputs,
+        suite=suite,
         relations=[] if args.no_relations else None,
         config=config,
         on_progress=_progress if args.progress else None,
@@ -257,9 +270,10 @@ def _snapshot_command(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 2
-    agent, inputs = _agent_and_inputs(args)
+    agent, inputs, suite = _agent_and_inputs(args)
+    input_count = len(suite.cases) if suite is not None else len(inputs or ())
     infeasible = _infeasible_reason(
-        len(inputs),
+        input_count,
         args.k,
         resolve_epsilon(args.precision, args.epsilon),
     )
@@ -272,6 +286,7 @@ def _snapshot_command(args: argparse.Namespace) -> int:
     result = run(
         agent,
         inputs,
+        suite=suite,
         relations=[],
         config=RunConfig(
             budget=args.budget,
@@ -304,10 +319,18 @@ def _check_command(args: argparse.Namespace) -> int:
     except SnapshotCompatibilityError as exc:
         print(f"snapshot check refused: {exc}", file=sys.stderr)
         return 2
-    agent, inputs = _agent_and_inputs(args)
+    agent, inputs, suite = _agent_and_inputs(args)
+    if (snapshot.decision_contract is None) != (suite is None):
+        print(
+            "snapshot check refused: current decision-suite mode does not "
+            "match the snapshot",
+            file=sys.stderr,
+        )
+        return 2
     result = run(
         agent,
         inputs,
+        suite=suite,
         relations=[],
         config=RunConfig(
             k=snapshot.k,

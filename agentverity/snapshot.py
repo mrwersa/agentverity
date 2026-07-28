@@ -15,11 +15,13 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
+from agentverity.decision_contract import DecisionContract
 from agentverity.meter import MeterResult, pairs_for_deterministic_call
 from agentverity.reporting import json_value
 from agentverity.runner import RunResult
 
-SNAPSHOT_SCHEMA = "agentverity.snapshot/v1"
+SNAPSHOT_SCHEMA = "agentverity.snapshot/v2"
+LEGACY_SNAPSHOT_SCHEMA = "agentverity.snapshot/v1"
 
 
 class SnapshotRefused(ValueError):
@@ -36,6 +38,7 @@ class SnapshotProbe:
 
     input_fingerprint: str
     expected: Any
+    intended: str | None = None
 
 
 @dataclass(frozen=True)
@@ -53,6 +56,7 @@ class Snapshot:
     meter_ci_high: float
     blindness_skew: float
     blindness_distinct: int
+    decision_contract: DecisionContract | None
     probes: tuple[SnapshotProbe, ...]
 
     def to_dict(self) -> dict[str, Any]:
@@ -75,10 +79,16 @@ class Snapshot:
                 "blindness_distinct": self.blindness_distinct,
                 "reference_approved": True,
             },
+            "decision_contract": (
+                self.decision_contract.to_dict()
+                if self.decision_contract is not None
+                else None
+            ),
             "probes": [
                 {
                     "input_fingerprint": probe.input_fingerprint,
                     "expected": probe.expected,
+                    "intended": probe.intended,
                 }
                 for probe in self.probes
             ],
@@ -87,9 +97,10 @@ class Snapshot:
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> Snapshot:
         """Parse and validate a snapshot dictionary."""
-        if value.get("schema") != SNAPSHOT_SCHEMA:
+        schema = value.get("schema")
+        if schema not in {SNAPSHOT_SCHEMA, LEGACY_SNAPSHOT_SCHEMA}:
             raise SnapshotCompatibilityError(
-                f"unsupported snapshot schema: {value.get('schema')!r}"
+                f"unsupported snapshot schema: {schema!r}"
             )
         config = value.get("config")
         evidence = value.get("admission_evidence")
@@ -105,13 +116,30 @@ class Snapshot:
                 "snapshot was not admitted by deterministic-at-epsilon evidence"
             )
         try:
+            raw_contract = value.get("decision_contract")
+            decision_contract = (
+                DecisionContract.from_dict(raw_contract)
+                if raw_contract is not None
+                else None
+            )
             parsed_probes = tuple(
                 SnapshotProbe(
                     input_fingerprint=str(probe["input_fingerprint"]),
                     expected=json_value(probe["expected"]),
+                    intended=(
+                        str(probe["intended"])
+                        if probe.get("intended") is not None
+                        else None
+                    ),
                 )
                 for probe in probes
             )
+            if decision_contract is not None and any(
+                probe.intended is None for probe in parsed_probes
+            ):
+                raise SnapshotCompatibilityError(
+                    "contract snapshot probes require intended decisions"
+                )
             return cls(
                 schema=SNAPSHOT_SCHEMA,
                 created_at=str(value["created_at"]),
@@ -124,8 +152,11 @@ class Snapshot:
                 meter_ci_high=float(evidence["meter_ci_high"]),
                 blindness_skew=float(evidence["blindness_skew"]),
                 blindness_distinct=int(evidence["blindness_distinct"]),
+                decision_contract=decision_contract,
                 probes=parsed_probes,
             )
+        except SnapshotCompatibilityError:
+            raise
         except (KeyError, TypeError, ValueError) as exc:
             raise SnapshotCompatibilityError(
                 f"invalid snapshot structure: {exc}"
@@ -220,6 +251,14 @@ def _require_snapshot_evidence(result: RunResult) -> None:
         raise SnapshotRefused(_underpowered_message(result.meter))
     if result.meter.inputs != result.requested_inputs:
         raise SnapshotRefused("meter did not cover every requested input")
+    if (
+        result.decision_coverage is not None
+        and not result.decision_coverage.satisfied
+    ):
+        raise SnapshotRefused(
+            "declared decision contract is incomplete: "
+            + result.decision_coverage.advice
+        )
     if result.blindness is None:
         raise SnapshotRefused("the constant-gate-blindness detector must be enabled")
     if result.blindness.inputs != result.requested_inputs:
@@ -241,11 +280,17 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
         )
     assert result.meter is not None
     assert result.blindness is not None
+    intended = (
+        result.intended_decisions
+        if result.decision_coverage is not None
+        else (None,) * len(result.input_fingerprints)
+    )
     probes = tuple(
-        SnapshotProbe(fingerprint, json_value(observed))
-        for fingerprint, observed in zip(
+        SnapshotProbe(fingerprint, json_value(observed), intended_decision)
+        for fingerprint, observed, intended_decision in zip(
             result.input_fingerprints,
             result.observed_keys,
+            intended,
             strict=True,
         )
     )
@@ -261,6 +306,11 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
         meter_ci_high=result.meter.ci_high,
         blindness_skew=result.blindness.skew,
         blindness_distinct=result.blindness.distinct,
+        decision_contract=(
+            result.decision_coverage.contract
+            if result.decision_coverage is not None
+            else None
+        ),
         probes=probes,
     )
 
@@ -284,6 +334,15 @@ def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
         raise SnapshotCompatibilityError(
             "current run configuration does not match the snapshot"
         )
+    current_contract = (
+        result.decision_coverage.contract
+        if result.decision_coverage is not None
+        else None
+    )
+    if current_contract != snapshot.decision_contract:
+        raise SnapshotCompatibilityError(
+            "current decision contract does not match the snapshot"
+        )
 
     expected = {
         probe.input_fingerprint: probe.expected
@@ -300,6 +359,26 @@ def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
     if actual.keys() != expected.keys():
         raise SnapshotCompatibilityError(
             "current probe fingerprints do not match the snapshot"
+        )
+    snapshot_intended = {
+        probe.input_fingerprint: probe.intended
+        for probe in snapshot.probes
+    }
+    current_intended = {
+        fingerprint: intended
+        for fingerprint, intended in zip(
+            result.input_fingerprints,
+            (
+                result.intended_decisions
+                if result.decision_coverage is not None
+                else (None,) * len(result.input_fingerprints)
+            ),
+            strict=True,
+        )
+    }
+    if current_intended != snapshot_intended:
+        raise SnapshotCompatibilityError(
+            "current intended decisions do not match the snapshot"
         )
 
     changes = tuple(

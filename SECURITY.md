@@ -25,6 +25,11 @@ relation names, and exception messages. Exporters, collectors, and monitoring
 backends remain outside AgentVerity's control. Review their retention and
 access policy before enabling the bridge.
 
+Decision-suite JSON files are different. They are source test datasets and
+contain each raw input plus its intended decision. Treat them like test
+fixtures, not privacy-minimised reports. The generated JSON, JUnit, snapshot,
+and OpenTelemetry outputs do not copy those raw inputs.
+
 ## Concurrent execution
 
 Concurrency is disabled by default. `max_workers` overlaps distinct inputs but

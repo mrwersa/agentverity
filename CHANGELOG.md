@@ -8,6 +8,27 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-28
+
+### Added
+
+- Optional `DecisionContract`, `DecisionCase`, and `DecisionSuite` types for
+  applications with finite reviewed decisions.
+- Separate intended and observed coverage, missing-required and
+  missing-critical decisions, and detection of outputs outside the allowed
+  contract.
+- Contract-aware Python and `--suite` CLI paths, JUnit release checks,
+  privacy-minimised OpenTelemetry attributes, and snapshot admission.
+
+### Changed
+
+- JSON reports and OpenTelemetry attributes now use their v2 schemas.
+- Snapshots now use `agentverity.snapshot/v2` and retain the decision contract
+  plus each case's intended label. The loader remains compatible with v1
+  snapshots.
+- The payment-dispute and AgentCore examples now require all six declared
+  routes before admitting a baseline.
+
 ## [0.8.6] - 2026-07-28
 
 ### Added

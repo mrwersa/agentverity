@@ -12,7 +12,7 @@ from typing import Any
 
 from agentverity.runner import RunResult
 
-TELEMETRY_SCHEMA = "agentverity.telemetry/v1"
+TELEMETRY_SCHEMA = "agentverity.telemetry/v2"
 
 
 def _package_version() -> str:
@@ -63,6 +63,35 @@ def run_result_to_otel_attributes(result: RunResult) -> dict[str, Any]:
                 "agentverity.blindness.skew": result.blindness.skew,
                 "agentverity.blindness.distinct": result.blindness.distinct,
                 "agentverity.blindness.threshold": result.blindness.threshold,
+            }
+        )
+    if result.decision_coverage is not None:
+        coverage = result.decision_coverage
+        attributes.update(
+            {
+                "agentverity.contract.satisfied": coverage.satisfied,
+                "agentverity.contract.allowed": len(coverage.contract.allowed),
+                "agentverity.contract.required": len(
+                    coverage.contract.required or ()
+                ),
+                "agentverity.contract.critical": len(
+                    coverage.contract.critical
+                ),
+                "agentverity.contract.intended_coverage": (
+                    coverage.intended_coverage
+                ),
+                "agentverity.contract.observed_coverage": (
+                    coverage.observed_coverage
+                ),
+                "agentverity.contract.missing_intended": len(
+                    coverage.missing_intended
+                ),
+                "agentverity.contract.missing_observed": len(
+                    coverage.missing_observed
+                ),
+                "agentverity.contract.unknown_observed": len(
+                    coverage.unknown_observed
+                ),
             }
         )
     return attributes

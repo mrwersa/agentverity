@@ -27,6 +27,15 @@ from importlib.metadata import PackageNotFoundError, version
 
 from agentverity.adapters import from_callable
 from agentverity.blindness import BlindnessResult, detect
+from agentverity.decision_contract import (
+    DECISION_SUITE_SCHEMA,
+    DecisionCase,
+    DecisionContract,
+    DecisionCoverageResult,
+    DecisionSuite,
+    load_decision_suite,
+    save_decision_suite,
+)
 from agentverity.execution import ProgressEvent, RunError, input_fingerprint
 from agentverity.meter import (
     PRECISION_LEVELS,
@@ -66,12 +75,17 @@ from agentverity.telemetry import (
 )
 
 __all__ = [
+    "DECISION_SUITE_SCHEMA",
     "JUNIT_SUITE_NAME",
     "PRECISION_LEVELS",
     "RUN_SCHEMA",
     "SNAPSHOT_SCHEMA",
     "TELEMETRY_SCHEMA",
     "BlindnessResult",
+    "DecisionCase",
+    "DecisionContract",
+    "DecisionCoverageResult",
+    "DecisionSuite",
     "MeterResult",
     "Observation",
     "ProgressEvent",
@@ -92,6 +106,7 @@ __all__ = [
     "detect",
     "from_callable",
     "input_fingerprint",
+    "load_decision_suite",
     "load_snapshot",
     "measure",
     "pairs_for_deterministic_call",
@@ -101,6 +116,7 @@ __all__ = [
     "run_result_to_dict",
     "run_result_to_junit_xml",
     "run_result_to_otel_attributes",
+    "save_decision_suite",
     "save_snapshot",
     "write_junit_xml",
     "write_run_json",

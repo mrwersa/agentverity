@@ -8,6 +8,12 @@ import sys
 import pytest
 
 from agentverity.cli import main
+from agentverity.decision_contract import (
+    DecisionCase,
+    DecisionContract,
+    DecisionSuite,
+    save_decision_suite,
+)
 from agentverity.observation import Observation
 
 
@@ -125,7 +131,7 @@ class TestCLI:
         ])
         report = json.loads(capsys.readouterr().out)
         assert exit_code == 0
-        assert report["schema"] == "agentverity.run/v1"
+        assert report["schema"] == "agentverity.run/v2"
         assert report["relations"] == []
         assert report["complete"] is True
 
@@ -264,6 +270,69 @@ class TestCLI:
         captured = capsys.readouterr()
         assert exit_code == 2
         assert "run is incomplete" in captured.err
+
+    def test_run_accepts_a_declared_decision_suite(self, capsys, tmp_path):
+        suite_file = tmp_path / "suite.json"
+        save_decision_suite(
+            DecisionSuite(
+                contract=DecisionContract(allowed={"allow", "block"}),
+                cases=(
+                    DecisionCase("ordinary request", "allow"),
+                    DecisionCase("contains a secret", "block"),
+                ),
+            ),
+            suite_file,
+        )
+
+        exit_code = main([
+            "run",
+            "--agent", "examples.toy_agent:deterministic_gate",
+            "--suite", str(suite_file),
+            "--k", "4",
+            "--epsilon", "0.5",
+            "--no-relations",
+            "--format", "json",
+        ])
+        report = json.loads(capsys.readouterr().out)
+
+        assert exit_code == 0
+        assert report["decision_contract"]["satisfied"] is True
+        assert report["decision_contract"]["observed_coverage"] == 1.0
+
+    def test_suite_snapshot_then_check(self, capsys, tmp_path):
+        suite_file = tmp_path / "suite.json"
+        snapshot_file = tmp_path / "baseline.json"
+        save_decision_suite(
+            DecisionSuite(
+                contract=DecisionContract(allowed={"allow", "block"}),
+                cases=(
+                    DecisionCase("ordinary request", "allow"),
+                    DecisionCase("contains a secret", "block"),
+                ),
+            ),
+            suite_file,
+        )
+
+        snapshot_exit = main([
+            "snapshot",
+            "--agent", "examples.toy_agent:deterministic_gate",
+            "--suite", str(suite_file),
+            "--output", str(snapshot_file),
+            "--k", "4",
+            "--epsilon", "0.5",
+            "--accept-reference",
+        ])
+        assert snapshot_exit == 0
+        capsys.readouterr()
+
+        check_exit = main([
+            "check",
+            "--agent", "examples.toy_agent:deterministic_gate",
+            "--suite", str(suite_file),
+            "--snapshot", str(snapshot_file),
+        ])
+        assert check_exit == 0
+        assert "snapshot clean" in capsys.readouterr().out
 
 
 def test_snapshot_refuses_impossible_config_without_calling_the_agent(tmp_path):

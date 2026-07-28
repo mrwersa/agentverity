@@ -12,7 +12,7 @@ import runpy
 import sys
 from io import StringIO
 
-from agentverity import pairs_for_deterministic_call, plan_repeats
+from agentverity import load_decision_suite, pairs_for_deterministic_call, plan_repeats
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -67,6 +67,14 @@ def test_readme_comparison_table_matches_the_example():
     readme = (ROOT / "README.md").read_text()
     for row in rows:
         assert row in readme, f"README is missing table row: {row}"
+
+
+def test_documented_decision_suite_is_valid():
+    suite = load_decision_suite(ROOT / "examples" / "payment_decisions.json")
+
+    assert len(suite.cases) == 6
+    assert suite.missing_required_cases == ()
+    assert suite.contract.critical == {"card_security"}
 
 
 def test_integration_call_budget_matches_the_planner():
