@@ -37,6 +37,15 @@ from agentverity.decision_contract import (
     load_decision_suite,
     save_decision_suite,
 )
+from agentverity.evidence import (
+    EVIDENCE_SCHEMA,
+    EvidenceCase,
+    EvidenceError,
+    EvidenceSet,
+    assess_evidence,
+    load_evidence,
+    save_evidence,
+)
 from agentverity.execution import ProgressEvent, RunError, input_fingerprint
 from agentverity.meter import (
     PRECISION_LEVELS,
@@ -88,6 +97,7 @@ from agentverity.telemetry import (
 
 __all__ = [
     "DECISION_SUITE_SCHEMA",
+    "EVIDENCE_SCHEMA",
     "JUNIT_SUITE_NAME",
     "PRECISION_LEVELS",
     "RUN_SCHEMA",
@@ -99,6 +109,9 @@ __all__ = [
     "DecisionCount",
     "DecisionCoverageResult",
     "DecisionSuite",
+    "EvidenceCase",
+    "EvidenceError",
+    "EvidenceSet",
     "FlipPair",
     "MeterResult",
     "Observation",
@@ -119,6 +132,7 @@ __all__ = [
     "SnapshotProbe",
     "SnapshotRefused",
     "StratifiedStability",
+    "assess_evidence",
     "builtin_relations",
     "compare_snapshot",
     "create_snapshot",
@@ -126,6 +140,7 @@ __all__ = [
     "from_callable",
     "input_fingerprint",
     "load_decision_suite",
+    "load_evidence",
     "load_snapshot",
     "measure",
     "pairs_for_deterministic_call",
@@ -137,6 +152,7 @@ __all__ = [
     "run_result_to_junit_xml",
     "run_result_to_otel_attributes",
     "save_decision_suite",
+    "save_evidence",
     "save_snapshot",
     "stratify_relations",
     "stratify_runs",

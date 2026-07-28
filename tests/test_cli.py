@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 
 import pytest
 
 from agentverity.cli import main
+
+EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 from agentverity.decision_contract import (
     DecisionCase,
     DecisionContract,
@@ -440,3 +443,44 @@ def test_run_refuses_an_underfunded_route_plan_before_agent_calls(
     assert exit_code == 2
     assert calls == []
     assert "above budget=10" in capsys.readouterr().err
+
+
+def test_assess_reports_on_imported_evidence_without_calling_anything(capsys):
+    """The point of the command: a team that already ran their agent gets an
+    admission decision without paying for the calls twice."""
+    path = EXAMPLES / "imported_evidence.json"
+
+    assert main(["assess", "--evidence", str(path), "--epsilon", "0.05"]) == 0
+    out = capsys.readouterr().out
+    assert "STABILITY BY ROUTE" in out
+    assert "card_security" in out
+
+
+def test_assess_prints_the_independence_caveat_when_isolation_is_unknown(
+    tmp_path, capsys
+):
+    payload = {
+        "schema": "agentverity.evidence/v1",
+        "cases": [
+            {"input": "a", "observations": ["approve", "approve"]},
+            {"input": "b", "observations": ["deny", "deny"]},
+        ],
+    }
+    path = tmp_path / "runs.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    main(["assess", "--evidence", str(path)])
+    assert "assumed rather than established" in capsys.readouterr().out
+
+
+def test_assess_writes_the_same_json_report_a_live_run_would(tmp_path):
+    out = tmp_path / "report.json"
+    main([
+        "assess",
+        "--evidence", str(EXAMPLES / "imported_evidence.json"),
+        "--json", str(out),
+    ])
+    payload = json.loads(out.read_text())
+
+    assert "meter" in payload
+    assert payload["schema"].startswith("agentverity.run/")

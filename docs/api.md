@@ -134,3 +134,21 @@ unless the caller explicitly supplies `k`.
 
 See docstrings for the typed return objects and `DESIGN.md` for the statistical
 and privacy decisions behind the API.
+
+## Assessing evidence collected elsewhere
+
+```python
+from agentverity import assess_evidence, load_evidence, load_decision_suite
+
+result = assess_evidence(
+    load_evidence("runs.json"),
+    load_decision_suite("suite.json"),
+    epsilon=0.05,
+)
+print(result.summary())
+```
+
+`assess_evidence` returns the same `RunResult` a live run produces, so the
+report, JSON, JUnit, OpenTelemetry, and snapshot paths work unchanged.
+`relation_results` is empty, because a relation needs calls no imported file
+contains. See [imported evidence](imported-evidence.md).

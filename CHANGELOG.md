@@ -8,6 +8,33 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `agentverity assess --evidence runs.json` applies the admission checks to
+  repeated runs collected by another harness, making no model calls. Most
+  teams already run their agent repeatedly through promptfoo, DeepEval,
+  LangSmith, or a script of their own, and paying twice for the same
+  information is the main reason not to adopt a second tool.
+- An `agentverity.evidence/v1` schema carrying individual observations grouped
+  per case and kept in order, with optional intended decisions, error counts,
+  and provenance. `EvidenceSet`, `EvidenceCase`, `assess_evidence`,
+  `load_evidence`, and `save_evidence` are exported.
+- Aggregates are refused with the reason rather than a bare error. A flip rate
+  cannot be turned back into the disjoint pairs it came from, and a pooled
+  number cannot be split by route.
+- `isolation` records how trials were separated. An imported file can break
+  independence in ways a self-run cannot, so a shared session or an unrecorded
+  method is reported rather than silently assumed away.
+- `docs/imported-evidence.md` covers the format, the refusal, the isolation
+  levels, and what an import cannot check.
+
+### Changed
+
+- An assessment from imported evidence reports no relation results. A relation
+  needs the agent to answer a transformed question, and those calls do not
+  exist in an imported file. Claiming a relation held when it never ran would
+  be the vacuous green this package exists to name.
+
 ## [0.11.0] - 2026-07-28
 
 ### Added
