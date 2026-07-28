@@ -8,6 +8,48 @@
 [![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25%2B-brightgreen.svg)](#development)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
+Your evaluator says the agent behaved correctly. AgentVerity asks a different
+question: would the same case reach the same decision if you ran it again?
+When you declare the required decisions, it also checks which ones the test
+set actually reached.
+
+```text
+4. STABILITY BY ROUTE
+   route              cases  pairs  flips  95% CI            result
+   card_security          1     13      8  [0.355, 0.823]    stochastic
+   cash_withdrawal        1     13      0  [0.000, 0.228]    undecided
+   duplicate_charge       1     13      0  [0.000, 0.228]    undecided
+   ...
+   flip pairs:
+     card_security <-> merchant_dispute  x8
+```
+
+The pooled decision-change rate was 10.3%, and the contract check passed. The
+route-level view isolates the problem: `card_security` changes to
+`merchant_dispute` in 8 of 13 paired reruns. The other five routes did not
+change, but 13 pairs are too few to certify them at the declared 5% tolerance.
+
+## Already running promptfoo or DeepEval?
+
+You have the repeats. Point AgentVerity at the saved results:
+
+```bash
+agentverity assess --promptfoo results.json --suite decision-suite.json
+```
+
+That assessment makes no model calls. Keep your evaluator for correctness.
+AgentVerity decides whether the evidence is repeatable enough to freeze as a
+baseline.
+
+DeepEval users share the same collected outputs through
+`evidence_from_deepeval`, and any other harness can export the
+[neutral evidence format](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
+The repository includes a
+[recorded Promptfoo run](https://github.com/mrwersa/agentverity/tree/main/examples/promptfoo_bridge)
+that you can assess without installing Promptfoo.
+
+## What it is
+
 AgentVerity qualifies tests for model-backed components that choose from a
 finite, reviewed set of decisions. Examples include routers, approval or
 policy gates, and supervisors that select the next agent or tool. It compares
@@ -244,22 +286,11 @@ text, JSON, JUnit XML, or one privacy-minimised OpenTelemetry span.
 
 Already have repeated outputs? Reuse them without another target call:
 
-```bash
-# Direct Promptfoo import
-promptfoo eval --repeat 26 --output results.json
-agentverity assess \
-  --promptfoo results.json \
-  --suite decision-suite.json
-
-# Any harness can emit the small versioned interchange format
-agentverity assess \
-  --evidence agentverity-evidence.json \
-  --suite decision-suite.json
-```
-
-DeepEval users can pass the same precomputed `LLMTestCase` objects to
-`evidence_from_deepeval`. DeepEval keeps ownership of correctness and trace
-quality. AgentVerity makes the suite-level stability and admission decision.
+Promptfoo users import its JSON export. DeepEval users pass the same
+precomputed `LLMTestCase` objects to `evidence_from_deepeval`. Other harnesses
+can emit the small versioned interchange format. In each path, the existing
+evaluator keeps ownership of correctness and trace quality while AgentVerity
+makes the suite-level stability and admission decision.
 
 [Use imported evidence with Promptfoo, DeepEval, or another harness](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
 

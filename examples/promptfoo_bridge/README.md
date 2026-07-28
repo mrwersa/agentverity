@@ -4,7 +4,7 @@ Promptfoo owns case-level quality assertions. AgentVerity reuses its repeated
 outputs to decide whether those results are stable and cover the reviewed
 decision contract.
 
-From this directory:
+From this directory, regenerate the sample with Promptfoo:
 
 ```bash
 npx promptfoo@latest eval \
@@ -15,18 +15,46 @@ npx promptfoo@latest eval \
 agentverity assess \
   --promptfoo results.json \
   --suite ../payment_decisions.json \
-  --isolation fresh-session
+  --isolation unknown
 ```
 
-The second command makes no model or provider calls. Assertion failures remain
-observations because Promptfoo owns correctness. Provider errors make the
-AgentVerity result incomplete.
+The first command calls the included local Python provider. The second command
+makes no model or provider calls. Failed assertions remain decision
+observations because Promptfoo owns correctness. Provider or runtime errors
+make the AgentVerity result incomplete.
 
-This 26-repeat example certifies the pooled 5% check. It deliberately leaves
-each one-case route undecided because 13 pairs do not support the same claim
-route by route. `agentverity plan --suite ../payment_decisions.json` shows the
-larger zero-change budget before you spend it.
+This 26-repeat example classifies the pooled decision-change rate above the 5%
+tolerance. It deliberately leaves each quiet one-case route undecided because
+13 pairs do not support a separate stability claim. `agentverity plan --suite
+../payment_decisions.json` shows the larger zero-change budget before you
+spend it.
 
 An export containing several providers or prompts is refused. Select one
 configuration with `--provider` and `--prompt-id` so differences between
 models or prompts are not misreported as stochasticity.
+
+## Try it without installing Promptfoo
+
+`results.json` is a recorded Promptfoo JSON export produced by the included
+local provider: 6 reviewed cases, 26 repeats each, with one deliberately
+varying route.
+
+```console
+$ agentverity assess \
+    --promptfoo results.json \
+    --suite ../payment_decisions.json \
+    --isolation unknown
+```
+
+The contract check passes and the pooled decision-change rate is 10.3%. Per
+route, `card_security` changes to `merchant_dispute` in 8 of its 13 paired
+reruns. The other five routes did not change, but remain `undecided`: 13 pairs
+bound their change rate at 22.8%, while 73 zero-change pairs are needed to
+certify the declared 5% tolerance.
+
+The fixed pseudo-random seed makes the committed fixture reproducible. The
+provider still returns different decisions across repeated calls to the
+`card_security` case. Promptfoo correctly marks the 12 changed decisions as
+failed quality assertions. AgentVerity retains those returned decisions for
+stability analysis rather than mistaking an assertion failure for a provider
+failure.

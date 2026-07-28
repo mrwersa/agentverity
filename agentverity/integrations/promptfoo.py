@@ -137,7 +137,16 @@ def evidence_from_promptfoo(
         failure_reason = row.get("failureReason")
         row_error = row.get("error")
         response_error = response.get("error") if isinstance(response, dict) else None
-        if row_error or response_error or failure_reason == 2:
+        # Promptfoo puts a failed assertion's explanation in ``error`` and
+        # marks it with failureReason=1. The returned output is still a valid
+        # decision observation. Runtime/provider failures use reason 2, while
+        # older exports may carry only an error string.
+        assertion_failure = failure_reason == 1
+        if (
+            response_error
+            or failure_reason == 2
+            or (row_error and not assertion_failure)
+        ):
             errors[test_index] += 1
             continue
         if not isinstance(response, dict) or "output" not in response:
