@@ -25,7 +25,7 @@ flip-pair table and never a confusion matrix.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -196,7 +196,7 @@ def stratify_runs(
     k: int,
     layer: str = "verdict",
     epsilon: float = 0.01,
-    targets: dict[str, float] | None = None,
+    targets: Mapping[str, float] | None = None,
 ) -> StratifiedStability:
     """Split already-collected repeat series by each case's intended decision.
 
@@ -311,34 +311,50 @@ def plan_route_repeats(
     intended: Sequence[str],
     *,
     epsilon: float,
-    targets: dict[str, float] | None = None,
+    targets: Mapping[str, float] | None = None,
+    minimum_repeats: int = 2,
 ) -> tuple[RoutePlan, ...]:
-    """Work out the repeats each route needs to reach its own tolerance.
+    """Plan the zero-flip evidence budget for each route.
 
-    Uniform repeats spend the same evidence on every route regardless of what
-    the route is worth. A suite with one case for a critical decision and five
-    for a routine one gives the critical decision the least evidence, which is
-    backwards. Sizing per route fixes the allocation without inflating the
-    whole suite to the tightest tolerance.
+    Uniform repeats spend the same evidence on every case. A route represented
+    by one case therefore receives fewer pairs than a route represented by
+    five. Sizing from each declared target fixes that allocation without
+    inflating the whole suite to the tightest tolerance.
 
     Args:
         intended: The intended decision of every case, in suite order.
         epsilon: The run's default tolerance, used where no target is declared.
         targets: Optional per-route tolerances from the decision contract.
+        minimum_repeats: Per-input floor imposed by the run configuration.
 
     Returns:
-        One plan per route, ordered by decision. ``repeats_each`` is even and
-        at least two, because a pair needs two calls.
+        One plan per route, ordered by decision. ``pairs_needed`` is the
+        best-case requirement when no pair flips. ``repeats_each`` also
+        respects ``minimum_repeats``.
     """
     if not 0 < epsilon < 1:
         raise ValueError("epsilon must be between 0 and 1")
     if not intended:
         raise ValueError("intended must not be empty")
+    if minimum_repeats < 2:
+        raise ValueError("minimum_repeats must be at least 2")
 
-    targets = targets or {}
+    targets = dict(targets or {})
     counts: dict[str, int] = {}
     for decision in intended:
         counts[decision] = counts.get(decision, 0) + 1
+    unknown = sorted(set(targets) - set(counts))
+    if unknown:
+        raise ValueError(
+            "stability targets have no intended cases: " + ", ".join(unknown)
+        )
+    for decision, target in targets.items():
+        if not isinstance(target, (int, float)) or isinstance(target, bool):
+            raise TypeError(f"stability target for {decision!r} must be a number")
+        if not 0 < float(target) < 1:
+            raise ValueError(
+                f"stability target for {decision!r} must be between 0 and 1"
+            )
 
     plans = []
     for decision in sorted(counts):
@@ -348,7 +364,7 @@ def plan_route_repeats(
         # Ceiling division, then doubled: each case contributes floor(k/2)
         # pairs, so k must be even and cover its share of the route's need.
         per_case_pairs = -(-needed // cases)
-        repeats = max(2, per_case_pairs * 2)
+        repeats = max(minimum_repeats, per_case_pairs * 2)
         plans.append(
             RoutePlan(
                 decision=decision,
@@ -362,10 +378,14 @@ def plan_route_repeats(
     return tuple(plans)
 
 
-def render_plan(plans: Sequence[RoutePlan], current_repeats: int | None = None) -> str:
-    """A budget table a reader can act on before spending anything."""
+def render_plan(
+    plans: Sequence[RoutePlan],
+    *,
+    compare_uniform: bool = False,
+) -> str:
+    """Render an actionable route budget without implying a guarantee."""
     header = (
-        f"  {'route':<18}{'cases':>6}{'target':>9}{'pairs':>7}"
+        f"  {'route':<18}{'cases':>6}{'target':>9}{'pairs*':>7}"
         f"{'repeats':>9}{'calls':>8}"
     )
     lines = [header]
@@ -376,7 +396,8 @@ def render_plan(plans: Sequence[RoutePlan], current_repeats: int | None = None) 
         )
     total = sum(plan.calls for plan in plans)
     lines.append(f"  {'total':<18}{'':>6}{'':>9}{'':>7}{'':>9}{total:>8}")
-    if current_repeats is not None:
+    lines.append("  * minimum pairs needed if no pair changes decision")
+    if compare_uniform:
         uniform = max(plan.repeats_each for plan in plans) * sum(
             plan.cases for plan in plans
         )

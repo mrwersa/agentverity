@@ -1,31 +1,32 @@
 # Evidence per route
 
-A single stability number can be reassuring and wrong at the same time. This
-page explains why, and what to do about it.
+A payment-refund agent chooses one of three decisions:
 
-## The problem, in one picture
+- `approve` sends a refund for processing
+- `review` sends the request to a specialist
+- `deny` stops a request outside policy
 
-You run a payment-dispute router with six reviewed cases. The meter says the
-verdict flips 12.8% of the time. Is that one bad route or six mediocre ones?
+The pooled stability result can hide which decision is moving. This guide
+shows how AgentVerity names that route and how to budget a tighter tolerance
+before calling the agent.
+
+## One number can hide one broken route
+
+Suppose the test suite contains two cases for each decision. Across all six
+cases, 10 of 78 repeated pairs change decision, a pooled rate of 12.8%.
 
 ```text
-POOLED                          PER ROUTE
-                                approve  ████████████████████  0 flips
-  ┌──────────────────┐          refund   ████████████████████  0 flips
-  │   12.8% flips    │   ==>    card     ████████████████████  0 flips
-  │  across 6 inputs │          cash     ████████████████████  0 flips
-  └──────────────────┘          merchant ████████████████████  0 flips
-                                transfer ██░░░░░░░░░░░░░░░░░░  10 flips
+POOLED                           BY INTENDED ROUTE
+                                 approve  0 / 26 changes
+  ┌──────────────────┐           deny     0 / 26 changes
+  │ 10 / 78 changes  │    ==>    review  10 / 26 changes
+  │      12.8%       │
+  └──────────────────┘           observed change:
+                                  deny <-> review  x10
 ```
 
-Same calls, same data. The pooled number averages one broken route across five
-healthy ones. Nobody would sign off "transfer decisions are a coin flip", but
-plenty of people sign off "12.8%".
-
-AgentVerity splits the observations it already collected by the decision each
-case was written to exercise. No extra calls.
-
-## Reading the table
+The same calls tell a more useful story when grouped by the decision each case
+was written to exercise:
 
 ```text
 4. STABILITY BY ROUTE
@@ -37,58 +38,37 @@ case was written to exercise. No extra calls.
      deny <-> review  x10
 ```
 
-Three things to notice.
+`review` is proven to change more often than the declared 5% tolerance.
+`approve` and `deny` were quiet, but 26 pairs only bound their change rate at
+12.9%. They remain `undecided`, not green.
 
-**`review` is a conclusion.** Ten flips in twenty-six pairs, and the interval
-sits entirely above the 5% tolerance. This route is unstable and needs repair.
+The flip-pair row describes what the agent returned on identical reruns. It is
+not a confusion matrix because AgentVerity does not decide which answer was
+correct.
 
-**`approve` and `deny` are not clean, they are unmeasured.** Zero flips looks
-perfect, but twenty-six pairs only bounds the true rate at 12.9%. To claim 5%
-you need seventy-three pairs. `undecided` says exactly that: not enough
-evidence, not a pass.
+## Why the observed rate is not the verdict
 
-**The flip pair says where the boundary is.** The agent is confusing `deny` with
-`review`, not with `approve`. That is a specific thing to go and look at.
+One change in thirteen pairs is an observed rate of 7.7% against a 5%
+tolerance. That looks like a failure, but its 95% interval is
+`[0.014, 0.333]`, which crosses the tolerance. The supported answer is
+`undecided`.
 
-### Why the verdict never comes from the rate
-
-One flip in thirteen pairs is a 7.7% observed rate against a 5% tolerance. It
-looks like a failure. The interval is `[0.014, 0.333]`, which straddles the
-tolerance, so the honest answer is `undecided`.
-
-| Evidence | Rate | 95% interval | At ε=0.05 |
-|---|---|---|---|
+| Evidence | Observed rate | 95% interval | At 5% |
+|---|---:|---:|---|
 | 0 / 13 | 0.0% | [0.000, 0.228] | undecided |
 | 1 / 13 | 7.7% | [0.014, 0.333] | undecided |
 | 3 / 13 | 23.1% | [0.082, 0.503] | **stochastic** |
 | 0 / 36 | 0.0% | [0.000, 0.096] | undecided |
 | 0 / 73 | 0.0% | [0.000, 0.050] | **deterministic** |
 
-Reading a point estimate as a verdict is the error this package exists to
-prevent, so it does not commit that error in its own report.
+Finding a noisy route can be cheap. Certifying a quiet route takes more
+evidence. AgentVerity keeps those outcomes separate.
 
-### Detecting is cheap, certifying is not
+## Give a route its own tolerance
 
-This asymmetry drives everything else on the page.
-
-```text
-  finding a broken route          proving a route is sound
-  ────────────────────────        ─────────────────────────
-  3 flips in 13 pairs             0 flips in 73 pairs
-  → stochastic, done              → deterministic
-  cheap                           5.6x the calls, per route
-```
-
-A route that misbehaves announces itself with very little evidence. A route
-that looks fine needs a lot of evidence before "looks fine" means anything.
-
-## Spending the budget where it matters
-
-Certifying every route at the same tight tolerance multiplies your bill by the
-number of routes. Usually that is waste: a `card_security` decision and a
-`duplicate_charge` decision do not deserve the same scrutiny.
-
-Declare a target on the routes that carry consequence:
+`critical` identifies a high-consequence decision in coverage reports. It does
+not invent a statistical policy. Declare `stability_targets` separately when
+a route needs a numerical tolerance:
 
 ```python
 from agentverity import DecisionCase, DecisionContract, DecisionSuite, run
@@ -97,90 +77,84 @@ suite = DecisionSuite(
     contract=DecisionContract(
         allowed={"approve", "review", "deny"},
         critical={"deny"},
-        stability_targets={"deny": 0.01},   # deny is held ten times tighter
+        stability_targets={"deny": 0.01},
     ),
     cases=(
-        DecisionCase("routine request", "approve"),
-        DecisionCase("ambiguous request", "review"),
-        DecisionCase("prohibited request", "deny"),
+        DecisionCase("Refund is within policy", "approve"),
+        DecisionCase("Evidence conflicts", "review"),
+        DecisionCase("Refund is outside policy", "deny"),
     ),
 )
 
 result = run(agent, suite=suite)
 ```
 
-Repeats are then sized per route rather than uniformly:
+Routes without an explicit target use the run's default tolerance. A target
+changes two things:
 
-```text
-  repeats per case      uniform k              sized per route
-  ──────────────────    ─────────────────      ─────────────────
-  approve               ██████████████ 762     ███ 146
-  review                ██████████████ 762     ███ 146
-  deny                  ██████████████ 762     ██████████████ 762
-                        ─────────────────      ─────────────────
-                        2286 calls             1054 calls
-```
+1. The run allocates enough repeats for each route to reach its tolerance in
+   the best case where no pair changes decision.
+2. A targeted route that remains `undecided` blocks snapshot admission and
+   exits CI as an incomplete measurement. A route proven above its target
+   fails the declared release policy.
 
-Same guarantee on `deny`, for less than half the bill. The saving grows with
-the number of routes that do not need the tight bound.
+An explicit `budget` remains a hard cap. If the zero-change plan does not fit,
+the run refuses before calling the agent.
 
-Without targets nothing changes: repeats stay uniform and the run behaves
-exactly as it did before. Declaring a target is what opts you in to the extra
-spend, and to the tighter bound you asked for.
+## See the bill before making calls
 
-## Knowing the cost before you spend it
+The bundled planning example is a three-case refund-approval gate:
 
 ```console
-$ agentverity plan --suite examples/payment_decisions.json --epsilon 0.05
-agentverity — call budget
-  route              cases   target  pairs  repeats   calls
-  card_security          1    0.010    381      762     762
-  cash_withdrawal        1    0.050     73      146     146
-  duplicate_charge       1    0.050     73      146     146
-  merchant_dispute       1    0.050     73      146     146
-  refund_delay           1    0.050     73      146     146
-  transfer_delay         1    0.050     73      146     146
-  total                                                1492
+$ agentverity plan --suite examples/route_stability_plan.json
+agentverity — zero-flip call plan
+  route              cases   target pairs*  repeats   calls
+  approve                1    0.050     73      146     146
+  deny                   1    0.010    381      762     762
+  review                 1    0.050     73      146     146
+  total                                                1054
+  * minimum pairs needed if no pair changes decision
 
-  sized per route: 1492 calls. one uniform k for every route: 4572 calls.
-  sizing per route saves 3080 calls by not buying a tight bound where nothing needs one.
+  sized per route: 1054 calls. one uniform k for every route: 2286 calls.
+  sizing per route saves 1232 calls by not buying a tight bound where nothing needs one.
+
+This is the minimum needed to certify quiet routes. Observed decision changes can leave a route undecided or prove it stochastic.
 ```
 
-No agent is called. This is arithmetic on the suite, so run it before you
-commit to a tolerance rather than after the invoice arrives.
+No agent is called. The plan states a best-case minimum, not a guarantee.
+Observed changes can require more evidence or prove that the route is
+stochastic.
 
-Notice `card_security` needs 762 repeats because it has **one** case. Adding a
-second case for that route roughly halves its repeat count, because the pairs
-it needs are shared across cases. Cheaper evidence often means more cases, not
-more reruns.
+Adding a second `deny` case roughly halves the repeats per case, from 762 to
+382. It does **not** halve the total call cost, which moves from 762 to 764.
+The benefit is broader test evidence rather than cheaper statistics.
 
-## What the table does not tell you
+Use a target tied to the consequence of a changed decision. A strict 1% target
+is expensive by design and should not be copied into every route.
 
-**Correctness.** A flip pair records that the agent answered `review` once and
-`deny` once for the same input. Which one was right is a question for your
-assertions or a quality evaluator. That is why this is a flip-pair table and
-never a confusion matrix.
+## What the route table does not prove
 
-**A joint guarantee.** Each route's interval is its own 95% statement. Six of
-them together are not a 95% statement about the suite. Read six findings, not
-one.
+**Correctness.** Keep reviewed assertions or a quality evaluator beside
+AgentVerity.
 
-**Semantic breadth.** A route with ten cases that are all paraphrases of the
-same request is covered on paper and barely tested in practice. Repeats
-establish that a decision is stable; distinct cases establish that a route is
-actually explored. The tool measures the first and cannot infer the second.
+**A joint guarantee.** Each route has its own 95% interval. Six intervals are
+not one 95% statement about the suite.
 
-**True independence.** See [applicability](applicability.md#independence-and-which-way-the-error-runs).
-Caching and routing create positive dependence between trials, which narrows
-the interval, so where the assumption breaks the tool is overconfident rather
-than cautious.
+**Semantic breadth.** Ten near-duplicate cases can still explore one narrow
+corner of a route. AgentVerity counts declared cases but cannot judge whether
+they represent the input space.
+
+**True independence.** Caching, provider routing, and shared state can make
+repeated pairs correlated. See
+[applicability](applicability.md#independence-and-which-way-the-error-runs).
 
 ## Quick reference
 
-| You see | It means | Do this |
+| Result | Meaning | Next action |
 |---|---|---|
-| `stochastic` | Proven to move more than the tolerance | Repair the route before trusting any relation result |
-| `undecided` with flips | Moving, not yet proven | Add repeats, or accept it will resolve as stochastic |
-| `undecided`, no flips | No evidence either way | Add repeats or cases up to the pairs the table names |
-| `deterministic` | Proven stable at its tolerance | Safe to freeze a baseline for this route |
-| A flip pair | The two decisions being confused | Look at the boundary between exactly those two |
+| targeted `stochastic` | The route is proven to change more than its declared tolerance | Release fails. Repair the route or review the policy |
+| untargeted `stochastic` | The route is proven to change more than the run tolerance | Treat it as actionable diagnostic evidence |
+| `undecided` with changes | The route moves, but the interval crosses the tolerance | Collect more evidence or expect a stochastic result |
+| `undecided` with no changes | The route was quiet but under-measured | Add repeats up to the named pair requirement |
+| `deterministic` | The route is stable enough at its declared tolerance | Review correctness before admitting a baseline |
+| A flip pair | Two decisions appeared for the same input | Inspect that decision boundary |

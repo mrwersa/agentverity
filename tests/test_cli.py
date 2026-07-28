@@ -387,6 +387,55 @@ def test_plan_prints_a_budget_without_calling_the_agent(tmp_path, capsys):
 
     assert main(["plan", "--suite", str(path), "--epsilon", "0.05"]) == 0
     out = capsys.readouterr().out
-    assert "call budget" in out
+    assert "zero-flip call plan" in out
     assert "approve" in out and "deny" in out
     assert "total" in out
+    assert "minimum needed to certify quiet routes" in out
+
+
+def test_run_refuses_an_underfunded_route_plan_before_agent_calls(
+    tmp_path,
+    capsys,
+    monkeypatch,
+):
+    calls = []
+
+    def factory():
+        def agent(text):
+            calls.append(text)
+            return {"verdict": text}
+
+        return agent
+
+    monkeypatch.setattr("agentverity.cli._load_agent", lambda _spec: factory)
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed={"approve", "deny"},
+            stability_targets={"deny": 0.05},
+        ),
+        cases=(
+            DecisionCase("approve", "approve"),
+            DecisionCase("deny", "deny"),
+        ),
+    )
+    path = tmp_path / "suite.json"
+    save_decision_suite(suite, path)
+
+    exit_code = main(
+        [
+            "run",
+            "--agent",
+            "ignored:factory",
+            "--suite",
+            str(path),
+            "--budget",
+            "10",
+            "--epsilon",
+            "0.5",
+            "--no-relations",
+        ]
+    )
+
+    assert exit_code == 2
+    assert calls == []
+    assert "above budget=10" in capsys.readouterr().err

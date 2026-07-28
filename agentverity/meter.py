@@ -223,7 +223,10 @@ class MeterResult:
         epsilon: The flip-rate threshold below which a gate is considered
             deterministic.
         inputs: Number of distinct inputs probed.
-        repeats: Number of repeated calls per input (``k``).
+        repeats: Minimum repeated calls across the inputs. This equals ``k``
+            for an ordinary uniform run.
+        max_repeats: Maximum repeated calls across the inputs. It differs from
+            ``repeats`` when a decision contract allocates evidence by route.
         pair_trials: Total independent, disjoint comparisons across all inputs.
         pair_flips: Number of disjoint comparisons where the verdict differed.
         inputs_with_flip: Number of inputs that showed at least one flip.
@@ -240,6 +243,7 @@ class MeterResult:
     inputs_with_flip: int
     ci_low: float
     ci_high: float
+    max_repeats: int | None = None
 
     @property
     def flip_rate(self) -> float:
@@ -349,6 +353,7 @@ def score_runs(
     if not runs:
         raise ValueError("runs must not be empty")
 
+    lengths = [len(observations) for observations in runs]
     pair_trials = 0
     pair_flips = 0
     inputs_with_flip = 0
@@ -381,6 +386,7 @@ def score_runs(
         inputs_with_flip=inputs_with_flip,
         ci_low=lo,
         ci_high=hi,
+        max_repeats=max(lengths),
     )
 
 

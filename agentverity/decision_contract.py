@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v1"
@@ -41,18 +43,16 @@ class DecisionContract:
     every allowed label but can omit genuinely optional routes. ``critical``
     records the high-consequence subset.
 
-    ``stability_targets`` gives a route its own flip-rate tolerance, so a
-    consequential decision can be held to a tighter bound than a routine one.
-    A route with no target uses the run's epsilon. Declaring a target is what
-    turns criticality from a label in a report into a number the run has to
-    satisfy, and it is what lets a budget be spent where consequence is rather
-    than spread evenly over routes that do not need it.
+    ``stability_targets`` gives a required route its own flip-rate tolerance.
+    A route with no target uses the run's epsilon. ``critical`` and
+    ``stability_targets`` remain separate declarations: the former identifies
+    consequence, while the latter states the numerical evidence policy.
     """
 
     allowed: frozenset[str]
     required: frozenset[str] | None = None
     critical: frozenset[str] = field(default_factory=frozenset)
-    stability_targets: dict[str, float] = field(default_factory=dict)
+    stability_targets: Mapping[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         allowed = _normalise_labels(self.allowed, field_name="allowed")
@@ -72,11 +72,13 @@ class DecisionContract:
         if not critical <= required:
             unknown = ", ".join(sorted(critical - required))
             raise ValueError(f"critical decisions must also be required: {unknown}")
-        targets = dict(self.stability_targets or {})
+        if not isinstance(self.stability_targets, Mapping):
+            raise TypeError("stability_targets must be a mapping")
+        targets = dict(self.stability_targets)
         for label, target in targets.items():
-            if label not in allowed:
+            if label not in required:
                 raise ValueError(
-                    f"stability target for a decision that is not allowed: {label}"
+                    f"stability target for a decision that is not required: {label}"
                 )
             if not isinstance(target, (int, float)) or isinstance(target, bool):
                 raise TypeError(f"stability target for {label!r} must be a number")
@@ -85,7 +87,9 @@ class DecisionContract:
                     f"stability target for {label!r} must be between 0 and 1"
                 )
         object.__setattr__(
-            self, "stability_targets", {k: float(v) for k, v in targets.items()}
+            self,
+            "stability_targets",
+            MappingProxyType({k: float(v) for k, v in targets.items()}),
         )
         object.__setattr__(self, "allowed", allowed)
         object.__setattr__(self, "required", required)
@@ -94,6 +98,17 @@ class DecisionContract:
     def target_for(self, decision: str, default: float) -> float:
         """The tolerance this route is held to, falling back to the run's."""
         return self.stability_targets.get(decision, default)
+
+    def __hash__(self) -> int:
+        """Keep a frozen contract hashable after adding policy mappings."""
+        return hash(
+            (
+                self.allowed,
+                self.required,
+                self.critical,
+                tuple(sorted(self.stability_targets.items())),
+            )
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Return a stable JSON-compatible representation."""

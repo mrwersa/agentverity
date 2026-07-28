@@ -54,6 +54,8 @@ def run_result_to_otel_attributes(result: RunResult) -> dict[str, Any]:
                 "agentverity.meter.epsilon": result.meter.epsilon,
                 "agentverity.meter.pairs": result.meter.pair_trials,
                 "agentverity.meter.repeats": result.meter.repeats,
+                "agentverity.meter.max_repeats": result.meter.max_repeats
+                or result.meter.repeats,
             }
         )
     if result.blindness is not None:
@@ -110,6 +112,21 @@ def run_result_to_otel_attributes(result: RunResult) -> dict[str, Any]:
                 ),
                 "agentverity.route_stability.flips": sum(
                     route.pair_flips for route in stability.routes
+                ),
+                "agentverity.route_stability.targeted_undecided": len(
+                    result.targeted_undecided
+                ),
+                "agentverity.route_stability.targeted_stochastic": len(
+                    result.targeted_stochastic
+                ),
+            }
+        )
+    if result.route_plans:
+        attributes.update(
+            {
+                "agentverity.route_plan.routes": len(result.route_plans),
+                "agentverity.route_plan.calls": sum(
+                    plan.calls for plan in result.route_plans
                 ),
             }
         )

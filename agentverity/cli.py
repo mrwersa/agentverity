@@ -146,7 +146,10 @@ def _add_meter_options(parser: argparse.ArgumentParser) -> None:
         "--k",
         type=int,
         default=None,
-        help="Meter repeats per input. Defaults to sizing from --budget.",
+        help=(
+            "Minimum meter repeats per input. Defaults to sizing from "
+            "--budget; declared route targets may raise it per route."
+        ),
     )
     parser.add_argument(
         "--epsilon",
@@ -191,7 +194,13 @@ def _exit_code(result: RunResult) -> int:
         return 2
     if result.status == "undecided":
         return 2
-    if result.status in {"blind", "contract", "vacuous", "violations"}:
+    if result.status in {
+        "blind",
+        "contract",
+        "target-failed",
+        "vacuous",
+        "violations",
+    }:
         return 1
     return 0
 
@@ -199,6 +208,8 @@ def _exit_code(result: RunResult) -> int:
 def _run_command(args: argparse.Namespace) -> int:
     agent, inputs, suite = _agent_and_inputs(args)
     config = RunConfig(
+        budget=args.budget,
+        precision=args.precision,
         k=args.k,
         epsilon=args.epsilon,
         blindness_threshold=args.blindness_threshold,
@@ -208,14 +219,18 @@ def _run_command(args: argparse.Namespace) -> int:
         max_workers=args.max_workers,
         error_policy=args.error_policy,
     )
-    result = run(
-        agent,
-        inputs,
-        suite=suite,
-        relations=[] if args.no_relations else None,
-        config=config,
-        on_progress=_progress if args.progress else None,
-    )
+    try:
+        result = run(
+            agent,
+            inputs,
+            suite=suite,
+            relations=[] if args.no_relations else None,
+            config=config,
+            on_progress=_progress if args.progress else None,
+        )
+    except ValueError as exc:
+        print(f"run refused: {exc}", file=sys.stderr)
+        return 2
     if args.format == "json":
         if args.output:
             write_run_json(result, args.output)
@@ -284,23 +299,27 @@ def _snapshot_command(args: argparse.Namespace) -> int:
         # already ruled out.
         print(f"snapshot refused: {infeasible}", file=sys.stderr)
         return 2
-    result = run(
-        agent,
-        inputs,
-        suite=suite,
-        relations=[],
-        config=RunConfig(
-            budget=args.budget,
-            precision=args.precision,
-            k=args.k,
-            epsilon=args.epsilon,
-            blindness_threshold=args.blindness_threshold,
-            layer=args.layer,
-            max_workers=args.max_workers,
-            error_policy=args.error_policy,
-        ),
-        on_progress=_progress if args.progress else None,
-    )
+    try:
+        result = run(
+            agent,
+            inputs,
+            suite=suite,
+            relations=[],
+            config=RunConfig(
+                budget=args.budget,
+                precision=args.precision,
+                k=args.k,
+                epsilon=args.epsilon,
+                blindness_threshold=args.blindness_threshold,
+                layer=args.layer,
+                max_workers=args.max_workers,
+                error_policy=args.error_policy,
+            ),
+            on_progress=_progress if args.progress else None,
+        )
+    except ValueError as exc:
+        print(f"snapshot refused: {exc}", file=sys.stderr)
+        return 2
     try:
         snapshot = create_snapshot(result, approved=True)
     except SnapshotRefused as exc:
@@ -402,14 +421,26 @@ def _build_parser() -> argparse.ArgumentParser:
 
     plan_parser = sub.add_parser(
         "plan",
-        help="show the call budget a declared suite needs, without calling the agent",
+        help=(
+            "show the zero-change call plan for a declared suite, without "
+            "calling the agent"
+        ),
     )
     plan_parser.add_argument("--suite", required=True, help="decision suite JSON")
     plan_parser.add_argument(
+        "--precision",
+        choices=sorted(PRECISION_LEVELS),
+        default="balanced",
+        help=(
+            "Default route tolerance: cheap (10%%), balanced (5%%), or "
+            "strict (1%%). Overridden by --epsilon."
+        ),
+    )
+    plan_parser.add_argument(
         "--epsilon",
         type=float,
-        default=0.05,
-        help="default tolerance for routes with no declared target",
+        default=None,
+        help="exact default tolerance for routes with no declared target",
     )
 
     snapshot_parser = sub.add_parser(
@@ -456,11 +487,16 @@ def _plan_command(args: argparse.Namespace) -> int:
     suite = load_decision_suite(args.suite)
     plans = plan_route_repeats(
         suite.expected,
-        epsilon=args.epsilon,
+        epsilon=resolve_epsilon(args.precision, args.epsilon),
         targets=suite.contract.stability_targets,
     )
-    print("agentverity — call budget")
-    print(render_plan(plans, current_repeats=0))
+    print("agentverity — zero-flip call plan")
+    print(render_plan(plans, compare_uniform=True))
+    print(
+        "\nThis is the minimum needed to certify quiet routes. "
+        "Observed decision changes can leave a route undecided or prove it "
+        "stochastic."
+    )
     return 0
 
 

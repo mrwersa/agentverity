@@ -71,8 +71,10 @@ from agentverity.snapshot import (
 )
 from agentverity.stratified import (
     FlipPair,
+    RoutePlan,
     RouteStability,
     StratifiedStability,
+    plan_route_repeats,
     stratify_runs,
 )
 from agentverity.telemetry import (
@@ -100,6 +102,7 @@ __all__ = [
     "ProgressEvent",
     "Relation",
     "RelationResult",
+    "RoutePlan",
     "RouteStability",
     "RunConfig",
     "RunError",
@@ -122,6 +125,7 @@ __all__ = [
     "measure",
     "pairs_for_deterministic_call",
     "plan_repeats",
+    "plan_route_repeats",
     "record_otel_run",
     "run",
     "run_result_to_dict",
