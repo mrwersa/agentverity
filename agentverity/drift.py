@@ -180,8 +180,8 @@ class EvidenceDrift:
                 lines.append(f"  {route.decision:<18}{before:>14}{after:>14}  {note}")
 
         for label, values in (
-            ("decisions gained", self.gained_decisions),
-            ("decisions lost", self.lost_decisions),
+            ("routes gained", self.gained_decisions),
+            ("routes lost", self.lost_decisions),
             ("flip pairs gained", self.gained_flip_pairs),
             ("flip pairs lost", self.lost_flip_pairs),
         ):

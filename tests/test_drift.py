@@ -202,6 +202,7 @@ def test_two_windows_with_no_shared_route_report_that_plainly():
     assert drift.routes == ()
     assert "no routes in common" in drift.render()
     assert drift.gained_decisions == ("deny",)
+    assert "routes gained: deny" in drift.render()
 
 
 def test_a_route_with_no_usable_pairs_is_incomparable_not_unchanged():

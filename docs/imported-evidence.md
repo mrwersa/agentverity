@@ -246,7 +246,7 @@ crossing from deterministic to stochastic is a release event.
 | `undecided -> stochastic` | The verdict moved. Investigate |
 | `higher` / `lower` | The observed change rate moved inside one verdict |
 | `incomparable` | One window had no usable pairs for that route |
-| decisions gained or lost | A route appeared or disappeared entirely |
+| routes gained or lost | An intended decision route appeared or disappeared entirely |
 | flip pairs gained or lost | A new confusion appeared, or an old one resolved |
 | provenance | A model, prompt, or harness difference between the files |
 | isolation | The two windows were collected under different isolation, so the evidence means something different |
@@ -263,9 +263,10 @@ useless on exactly the data it exists for.
 Both windows must use the same observation layer. A verdict and a tool path are
 not the same observation, so a difference between them is not drift.
 
-Exit code is `1` on drift and `0` on none. Drift is a finding to review rather
-than a failure to block on: whether a moved route is a regression, an
-improvement, or a relabelled taxonomy is a judgement this package does not make.
+Exit code is `1` on drift and `0` on none, so the command can gate CI. Whether
+your pipeline blocks, requests review, or records the change is your policy.
+AgentVerity reports movement without calling it a regression, an improvement,
+or a relabelled taxonomy.
 
 ### What a comparison cannot establish
 
