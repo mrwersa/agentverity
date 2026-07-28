@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-07-28
+
 ### Fixed
 
 - A decision-suite file with no `contract` key raised `TypeError` while every
