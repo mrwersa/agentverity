@@ -92,7 +92,7 @@ def render(
 <rect x="963" y="112" width="183" height="52" rx="6" class="step"/>
 {_text(173, 144, "6 REVIEWED CASES", css="stepText")}
 {_text(476, 144, "AGENTCORE RUNTIME", css="stepText")}
-{_text(779, 144, "3 INDEPENDENT CHECKS", css="stepText")}
+{_text(779, 144, "3 SEPARATE CHECKS", css="stepText")}
 {_text(1055, 144, "RELEASE POLICY", css="stepText")}
 <line x1="309" y1="138" x2="337" y2="138" class="flow"/>
 <path d="M 337 133 L 347 138 L 337 143 z" fill="#64748b"/>
