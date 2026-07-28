@@ -184,6 +184,11 @@ The pooled meter said 12.8% across the whole set. One route is the reason. The
 other two are not clean, they are unmeasured: 26 pairs bounds them at 12.9%,
 and 73 pairs are needed to certify at 5%.
 
+A route proven stochastic blocks snapshot admission even when the pooled meter
+looks deterministic. Undecided route rows remain visible limits in this
+release. They do not silently trigger the much larger call budget needed to
+certify every route independently.
+
 Create one through the CLI:
 
 ```bash

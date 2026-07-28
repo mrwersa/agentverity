@@ -21,7 +21,7 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   matrix, because this package does not judge which answer was correct.
 - `RouteStability`, `FlipPair`, `StratifiedStability`, and `stratify_runs`
   are exported. `RunResult.route_stability` is populated whenever a suite is
-  supplied, with no new flag to set.
+  supplied and the meter is enabled, with no new flag to set.
 
 ### Changed
 
@@ -33,6 +33,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 - The report distinguishes a route proven to move from a route with too little
   evidence to tell, and states that each interval is a separate 95% statement
   rather than a joint one.
+- Proven route-level stochasticity now flows into the canonical run status and
+  blocks snapshot admission even when the pooled meter looks deterministic.
+  Undecided routes remain an explicit diagnostic rather than silently
+  multiplying the default call budget.
+- JSON reports include the route table. Route-stability entries in JUnit and
+  OpenTelemetry carry privacy-minimised aggregate counts without decision
+  labels.
+- Cases whose repeated calls fail remain visible in their intended route with
+  zero usable pairs instead of disappearing from the table.
+- The payment-dispute example now labels its admitted baseline as a pooled
+  stability result and keeps undecided route-level intervals visible.
 
 ## [0.9.1] - 2026-07-28
 

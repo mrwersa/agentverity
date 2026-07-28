@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from xml.etree import ElementTree as ET
 
 import pytest
 
@@ -13,9 +14,13 @@ from agentverity import (
     RunConfig,
     from_callable,
     run,
+    run_result_to_dict,
+    run_result_to_junit_xml,
+    run_result_to_otel_attributes,
     stratify_runs,
 )
 from agentverity.observation import Observation
+from agentverity.snapshot import SnapshotRefused, create_snapshot
 
 
 def series(decision: str, keys: list[str]) -> tuple[str, list[Observation]]:
@@ -64,6 +69,10 @@ class TestTheVerdictComesFromTheBoundNotTheRate:
         route = self.route_for(0, 13)
         assert route.decided is False
         assert route.pairs_needed == 73
+
+    def test_a_route_with_a_flip_does_not_receive_a_clean_route_budget(self):
+        route = self.route_for(1, 13)
+        assert route.pairs_needed is None
 
 
 def test_per_route_trials_sum_to_the_pooled_trials():
@@ -163,6 +172,17 @@ class TestAdviceRanksAConclusionAboveAnAbsence:
         assert "lack the evidence" in result.advice
         assert "73 pairs" in result.advice
 
+    def test_a_flipping_but_undecided_route_gets_no_clean_route_budget(self):
+        result = stratify_runs(
+            [series("approve", ["a", "b"] + ["a"] * 24)],
+            k=26,
+            epsilon=0.05,
+        )
+
+        assert result.undecided == ("approve",)
+        assert "may need more evidence or resolve as stochastic" in result.advice
+        assert "73 pairs" not in result.advice
+
     def test_a_fully_certified_suite_says_so(self):
         result = stratify_runs([series("approve", ["a"] * 150)], k=150, epsilon=0.05)
 
@@ -245,12 +265,140 @@ class TestRunIntegration:
         )
         assert result.route_stability is None
 
+    def test_a_failed_meter_case_does_not_disappear_from_its_route(self):
+        def agent(text):
+            if text == "review":
+                raise RuntimeError("provider unavailable")
+            return {"verdict": "approve"}
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "review"},
+            ),
+            cases=(
+                DecisionCase("approve", "approve"),
+                DecisionCase("review", "review"),
+            ),
+        )
+        result = run(
+            from_callable(agent),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=2, epsilon=0.5, error_policy="record"),
+        )
+        review = next(
+            route
+            for route in result.route_stability.routes
+            if route.decision == "review"
+        )
+
+        assert result.status == "incomplete"
+        assert review.cases == 1
+        assert review.pair_trials == 0
+        assert review.call == "undecided (add repeats or inputs)"
+
     def test_the_report_warns_that_intervals_are_not_joint(self):
         agent, suite = self.build()
         random.seed(3)
         result = run(agent, suite=suite, relations=[], config=RunConfig(k=10, epsilon=0.05))
 
         assert "separate 95% statement" in result.summary()
+
+    def test_a_pooled_result_names_its_undecided_route_limit(self):
+        suite = DecisionSuite(
+            contract=DecisionContract(allowed={"approve", "review", "deny"}),
+            cases=(
+                DecisionCase("approve one", "approve"),
+                DecisionCase("approve two", "approve"),
+                DecisionCase("review one", "review"),
+                DecisionCase("review two", "review"),
+                DecisionCase("deny one", "deny"),
+                DecisionCase("deny two", "deny"),
+            ),
+        )
+        result = run(
+            from_callable(lambda text: {"verdict": text.split()[0]}),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=26, epsilon=0.05),
+        )
+
+        assert result.meter.call == "verdict-deterministic"
+        assert result.route_stability.undecided == ("approve", "deny", "review")
+        assert result.status == "deterministic"
+        assert result.headline.startswith("TRUSTWORTHY AT POOLED LEVEL")
+
+    def test_a_stochastic_route_overrides_a_deterministic_pool(self):
+        calls: dict[str, int] = {}
+
+        def agent(text):
+            calls[text] = calls.get(text, 0) + 1
+            if text == "review":
+                verdict = "review" if calls[text] % 2 else "deny"
+            else:
+                verdict = "approve"
+            return {"verdict": verdict}
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "review", "deny"},
+                required={"approve", "review"},
+            ),
+            cases=(
+                DecisionCase("approve one", "approve"),
+                DecisionCase("approve two", "approve"),
+                DecisionCase("approve three", "approve"),
+                DecisionCase("review", "review"),
+            ),
+        )
+        result = run(
+            from_callable(agent),
+            suite=suite,
+            relations=[],
+            config=RunConfig(
+                k=26,
+                epsilon=0.5,
+                blindness_threshold=0.99,
+            ),
+        )
+
+        assert result.meter.call == "verdict-deterministic"
+        assert result.route_stability.stochastic == ("review",)
+        assert result.is_stochastic
+        assert result.status == "stochastic"
+        assert "pooled evidence hides" in result.headline
+        with pytest.raises(SnapshotRefused, match="review"):
+            create_snapshot(result, approved=True)
+
+    def test_machine_reports_carry_route_evidence_without_labels_in_shared_surfaces(
+        self,
+    ):
+        agent, suite = self.build()
+        random.seed(3)
+        result = run(
+            agent,
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=26, epsilon=0.05),
+        )
+
+        report = run_result_to_dict(result)
+        assert report["route_stability"]["stochastic"] == ["review"]
+        assert report["guidance"]["stochastic_routes"] == 1
+        assert report["status"] == "stochastic"
+
+        junit = run_result_to_junit_xml(result)
+        assert "preflight.route_stability" in junit
+        route_case = ET.fromstring(junit).find(
+            "./testcase[@name='preflight.route_stability']/system-out"
+        )
+        assert route_case is not None
+        assert "stochastic=1" in route_case.text
+        assert "review" not in route_case.text
+
+        telemetry = run_result_to_otel_attributes(result)
+        assert telemetry["agentverity.route_stability.stochastic"] == 1
+        assert "review" not in repr(telemetry)
 
 
 def test_a_short_series_is_rejected():
@@ -266,6 +414,79 @@ def test_a_series_that_does_not_match_k_is_rejected():
 def test_an_invalid_epsilon_is_rejected():
     with pytest.raises(ValueError, match="epsilon must be between"):
         stratify_runs([series("approve", ["a", "a"])], k=2, epsilon=1.5)
+
+
+def test_an_invalid_layer_is_rejected_even_when_a_series_failed():
+    with pytest.raises(ValueError, match="unknown observation layer"):
+        stratify_runs([("approve", None)], k=2, layer="reasoning")
+
+
+def test_empty_series_is_rejected():
+    with pytest.raises(ValueError, match="must not be empty"):
+        stratify_runs([], k=2, epsilon=0.05)
+
+
+@pytest.mark.parametrize("decision", ["", None])
+def test_invalid_intended_decisions_are_rejected(decision):
+    with pytest.raises(ValueError, match="non-empty string"):
+        stratify_runs(
+            [
+                (
+                    decision,
+                    [Observation(verdict="a"), Observation(verdict="a")],
+                )
+            ],
+            k=2,
+        )
+
+
+def test_a_failed_case_remains_visible_with_no_usable_pairs():
+    result = stratify_runs(
+        [
+            series("approve", ["approve", "approve"]),
+            ("review", None),
+        ],
+        k=2,
+        epsilon=0.05,
+    )
+    review = next(route for route in result.routes if route.decision == "review")
+
+    assert review.cases == 1
+    assert review.pair_trials == 0
+    assert review.call == "undecided (add repeats or inputs)"
+
+
+def test_the_readme_example_reconciles_with_the_pooled_meter():
+    """Pin every number in the public per-route example."""
+    from agentverity.meter import score_runs
+
+    stable_approve = [series("approve", ["approve"] * 26)[1] for _ in range(2)]
+    stable_deny = [series("deny", ["deny"] * 26)[1] for _ in range(2)]
+    flipping_review = [
+        series("review", ["review", "deny"] * 5 + ["review"] * 16)[1]
+        for _ in range(2)
+    ]
+    all_series = stable_approve + stable_deny + flipping_review
+    stratified = stratify_runs(
+        [
+            *(("approve", observations) for observations in stable_approve),
+            *(("deny", observations) for observations in stable_deny),
+            *(("review", observations) for observations in flipping_review),
+        ],
+        k=26,
+        epsilon=0.05,
+    )
+    pooled = score_runs(all_series, k=26, epsilon=0.05)
+    routes = {route.decision: route for route in stratified.routes}
+
+    assert pooled.pair_trials == 78
+    assert pooled.pair_flips == 10
+    assert pooled.flip_rate == pytest.approx(10 / 78)
+    assert routes["approve"].ci_high == pytest.approx(0.128733, abs=0.000001)
+    assert routes["deny"].ci_high == pytest.approx(0.128733, abs=0.000001)
+    assert routes["review"].ci_low == pytest.approx(0.224284, abs=0.000001)
+    assert routes["review"].ci_high == pytest.approx(0.574655, abs=0.000001)
+    assert stratified.flip_pairs[0].count == 10
 
 
 def test_the_result_serialises():

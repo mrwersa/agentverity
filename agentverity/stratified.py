@@ -58,6 +58,8 @@ class RouteStability:
     @property
     def call(self) -> str:
         """Tri-state result, from the confidence bound rather than the rate."""
+        if self.pair_trials == 0:
+            return "undecided (add repeats or inputs)"
         return classify_call(self.ci_low, self.ci_high, self.epsilon)
 
     @property
@@ -70,8 +72,14 @@ class RouteStability:
         return self.call != "undecided (add repeats or inputs)"
 
     @property
-    def pairs_needed(self) -> int:
-        """Pairs a clean route needs before it can be called deterministic."""
+    def pairs_needed(self) -> int | None:
+        """Pairs a quiet route needs before it can be called deterministic.
+
+        Once a route has shown a flip, its future rate is unknown. Returning a
+        clean-route budget there would understate the evidence it may need.
+        """
+        if self.pair_flips:
+            return None
         return pairs_for_deterministic_call(self.epsilon)
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,6 +92,7 @@ class RouteStability:
             "ci_low": self.ci_low,
             "ci_high": self.ci_high,
             "call": self.call,
+            "pairs_needed": self.pairs_needed,
         }
 
 
@@ -145,15 +154,28 @@ class StratifiedStability:
                 "these routes move more than epsilon: " + ", ".join(self.stochastic)
             )
         if self.undecided:
-            needed = max(
-                (route.pairs_needed for route in self.routes if not route.decided),
-                default=0,
-            )
-            return (
+            undecided = [route for route in self.routes if not route.decided]
+            quiet_needed = {
+                route.pairs_needed
+                for route in undecided
+                if route.pairs_needed is not None
+            }
+            advice = (
                 "no route is proven unstable, but these lack the evidence to "
                 "certify: " + ", ".join(self.undecided)
-                + f" ({needed} pairs each at epsilon={self.epsilon})"
             )
+            if quiet_needed:
+                needed = max(quiet_needed)
+                advice += (
+                    f" (a route with no observed flips needs {needed} pairs "
+                    f"total at epsilon={self.epsilon})"
+                )
+            if any(route.pair_flips for route in undecided):
+                advice += (
+                    "; routes already showing flips may need more evidence or "
+                    "resolve as stochastic"
+                )
+            return advice
         return "every route carries enough evidence and none moves more than epsilon"
 
     def to_dict(self) -> dict[str, Any]:
@@ -169,7 +191,7 @@ class StratifiedStability:
 
 
 def stratify_runs(
-    series: Sequence[tuple[str, Sequence[Observation]]],
+    series: Sequence[tuple[str, Sequence[Observation] | None]],
     *,
     k: int,
     layer: str = "verdict",
@@ -178,10 +200,11 @@ def stratify_runs(
     """Split already-collected repeat series by each case's intended decision.
 
     Args:
-        series: One ``(intended decision, repeat series)`` pair per input. The
+        series: One ``(intended decision, repeat series)`` pair per input. A
+            missing series records a failed case with zero usable pairs. The
             intended decision comes from the reviewed suite, not from what the
             agent returned, so a route stays identifiable even when the agent
-            answers it wrongly.
+            answers it wrongly or fails.
         k: Repeats per input, matching the pooled meter.
         layer: Observation layer to compare.
         epsilon: Flip-rate threshold.
@@ -193,6 +216,10 @@ def stratify_runs(
         raise ValueError("k must be >= 2 to compare repeated runs")
     if not 0 < epsilon < 1:
         raise ValueError("epsilon must be between 0 and 1")
+    if not series:
+        raise ValueError("series must not be empty")
+    if layer not in {"verdict", "text", "tools"}:
+        raise ValueError(f"unknown observation layer: {layer!r}")
 
     cases: dict[str, int] = {}
     trials: dict[str, int] = {}
@@ -200,14 +227,18 @@ def stratify_runs(
     pair_counts: dict[tuple[str, str], int] = {}
 
     for decision, observations in series:
+        if not isinstance(decision, str) or not decision:
+            raise ValueError("every intended decision must be a non-empty string")
+        cases[decision] = cases.get(decision, 0) + 1
+        trials.setdefault(decision, 0)
+        flips.setdefault(decision, 0)
+        if observations is None:
+            continue
         observations = list(observations)
         if len(observations) != k:
             raise ValueError(
                 f"every repeat series must contain exactly k={k} observations"
             )
-        cases[decision] = cases.get(decision, 0) + 1
-        trials.setdefault(decision, 0)
-        flips.setdefault(decision, 0)
         keys = [observation.key(layer) for observation in observations]
         for index in range(0, k - 1, 2):
             trials[decision] += 1

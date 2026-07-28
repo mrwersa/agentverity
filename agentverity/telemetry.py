@@ -94,6 +94,25 @@ def run_result_to_otel_attributes(result: RunResult) -> dict[str, Any]:
                 ),
             }
         )
+    if result.route_stability is not None:
+        stability = result.route_stability
+        attributes.update(
+            {
+                "agentverity.route_stability.routes": len(stability.routes),
+                "agentverity.route_stability.deterministic": len(
+                    stability.deterministic
+                ),
+                "agentverity.route_stability.stochastic": len(
+                    stability.stochastic
+                ),
+                "agentverity.route_stability.undecided": len(
+                    stability.undecided
+                ),
+                "agentverity.route_stability.flips": sum(
+                    route.pair_flips for route in stability.routes
+                ),
+            }
+        )
     return attributes
 
 

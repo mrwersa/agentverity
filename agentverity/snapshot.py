@@ -247,6 +247,11 @@ def _require_snapshot_evidence(result: RunResult) -> None:
         raise SnapshotRefused("run is incomplete; failed calls cannot enter a baseline")
     if result.meter is None:
         raise SnapshotRefused("the verdict-stochasticity meter must be enabled")
+    if result.route_stability is not None and result.route_stability.stochastic:
+        raise SnapshotRefused(
+            "route-level evidence is stochastic for: "
+            + ", ".join(result.route_stability.stochastic)
+        )
     if result.meter.call != "verdict-deterministic":
         raise SnapshotRefused(_underpowered_message(result.meter))
     if result.meter.inputs != result.requested_inputs:

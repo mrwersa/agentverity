@@ -236,8 +236,8 @@ class RunResult:
         meter: The verdict-stochasticity meter result, or None if not run.
         blindness: The constant-gate-blindness result, or None if not run.
         route_stability: Per-route stability split from the same observations
-            the pooled meter used, or None when no suite was declared. Costs no
-            extra calls.
+            the pooled meter used, or None when no suite was declared or the
+            meter was disabled. Costs no extra calls.
         decision_coverage: Declared decision-contract result, or None when the
             caller supplied ordinary unlabelled inputs.
         relation_results: Per-relation results, in the order they were run.
@@ -270,8 +270,13 @@ class RunResult:
 
     @property
     def is_stochastic(self) -> bool:
-        """True if the meter determined the agent is verdict-stochastic."""
-        return self.meter is not None and self.meter.call == "verdict-stochastic"
+        """True if pooled or per-route evidence proves stochasticity."""
+        pooled = self.meter is not None and self.meter.call == "verdict-stochastic"
+        stratified = (
+            self.route_stability is not None
+            and bool(self.route_stability.stochastic)
+        )
+        return pooled or stratified
 
     @property
     def is_blind(self) -> bool:
@@ -296,6 +301,11 @@ class RunResult:
             return "blind"
         if self.relation_results and not self.suite_is_meaningful:
             return "vacuous"
+        if (
+            self.route_stability is not None
+            and self.route_stability.stochastic
+        ):
+            return "stochastic"
         if self.meter is not None and self.meter.call.startswith("undecided"):
             return "undecided"
         if any(relation.violated for relation in self.relation_results):
@@ -379,6 +389,17 @@ class RunResult:
             )
         if self.meter is None:
             return "NO VERDICT MEASURED - the meter was disabled for this run."
+        if self.route_stability is not None and self.route_stability.stochastic:
+            routes = ", ".join(self.route_stability.stochastic)
+            if self.meter.call == "verdict-deterministic":
+                return (
+                    "TRUSTWORTHY WITH CARE - pooled evidence hides decision "
+                    f"changes above tolerance on these routes: {routes}."
+                )
+            return (
+                "TRUSTWORTHY WITH CARE - decision changes above tolerance "
+                f"are concentrated on these routes: {routes}."
+            )
         if self.meter.call == "verdict-stochastic":
             return (
                 "TRUSTWORTHY WITH CARE - the verdict changed on "
@@ -386,6 +407,25 @@ class RunResult:
                 "relation rates against that noise, not against zero."
             )
         if self.meter.call == "verdict-deterministic":
+            if (
+                self.route_stability is not None
+                and self.route_stability.undecided
+            ):
+                routes = ", ".join(self.route_stability.undecided)
+                contract = ""
+                if self.decision_coverage is not None:
+                    required = len(
+                        self.decision_coverage.contract.required or ()
+                    )
+                    contract = (
+                        f" and all {required} required decisions were "
+                        "represented and observed"
+                    )
+                return (
+                    "TRUSTWORTHY AT POOLED LEVEL - the verdict held across "
+                    f"the combined reruns{contract}, but route-level evidence "
+                    f"remains undecided for: {routes}."
+                )
             trailer = (
                 f" {len(vacuous)} relation{'s' if len(vacuous) != 1 else ''} "
                 "tested nothing and are marked n/a."
@@ -721,21 +761,15 @@ def run(
                 layer=config.layer,
                 epsilon=config.epsilon,
             )
-            if suite is not None:
-                # The intended decision is carried alongside each series rather
-                # than looked up by position later, because complete_series
-                # drops inputs whose calls failed and the indexes stop lining
-                # up the moment one does.
-                route_stability = stratify_runs(
-                    [
-                        (intended_decisions[index], observations)
-                        for index, observations in enumerate(meter_work.values)
-                        if observations is not None
-                    ],
-                    k=config.k,
-                    layer=config.layer,
-                    epsilon=config.epsilon,
-                )
+        if suite is not None:
+            # Carry failed series too. They count as cases with no usable pairs,
+            # rather than disappearing from the route table.
+            route_stability = stratify_runs(
+                list(zip(intended_decisions, meter_work.values, strict=True)),
+                k=config.k,
+                layer=config.layer,
+                epsilon=config.epsilon,
+            )
         if config.reuse_unchanged_calls:
             for index, observations in enumerate(meter_work.values):
                 if observations:
