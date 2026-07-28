@@ -181,11 +181,11 @@ decision layer. See `docs/applicability.md`.
   coverage names intended routes that no transform actually changed, while
   `minimum_cases` enforces a separately reviewed case-count policy without
   pretending to infer semantic diversity.
-- M11 evidence interchange: DONE for the next minor release. The versioned
+- M11 evidence interchange: DONE in v0.12.0. The versioned
   schema keeps ordered individual decisions, route identity, errors,
   isolation, and provenance so an existing harness can supply the evidence
   without another target run. Aggregate-only exports are refused.
-- M12 evaluator bridges: DONE for the next minor release. Promptfoo has a
+- M12 evaluator bridges: DONE in v0.12.0. Promptfoo has a
   direct JSON importer and DeepEval has a zero-dependency shared-test-case
   bridge. Both preserve correctness as the evaluator's responsibility.
 
