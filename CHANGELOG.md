@@ -8,6 +8,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-07-28
+
+### Changed
+
+- The README opens with the developer's rerun question, defines a regression
+  baseline in plain language, and shows how AgentVerity complements Promptfoo,
+  DeepEval, and observability before introducing the detailed workflow.
+
 ## [0.13.0] - 2026-07-28
 
 ### Added
