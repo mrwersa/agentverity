@@ -41,6 +41,12 @@ result = run(agent, suite=suite)
 - `RunResult.decision_coverage` reports intended, observed, missing, unknown,
   and missing-critical labels. Its `intended_counts` and `observed_counts`
   hold `DecisionCount` values, so that name is exported for annotations.
+- `RunResult.route_stability` splits stability by each case's intended
+  decision, using the calls the run already made. Each `RouteStability` carries
+  cases, pairs, flips, a Wilson interval, and the same tri-state `call` as the
+  pooled meter. `flip_pairs` records the unordered decision pairs behind those
+  flips. Its `intended_counts` and `observed_counts`
+  hold `DecisionCount` values, so that name is exported for annotations.
 
 The contract path is available for the `verdict` layer. It checks coverage,
 not per-case correctness. Keep labelled assertions or a quality evaluator

@@ -8,6 +8,32 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- Per-route stability. When a decision suite is declared, the same repeated
+  observations the pooled meter uses are split by each case's intended
+  decision, so a route that misbehaves is named instead of averaged away.
+  A pooled interval of 12.8% across six routes can be one route flipping
+  constantly and five that never move. No extra agent calls: per-route trials
+  sum to the pooled total, and a test asserts it.
+- A flip-pair table recording the unordered pair of decisions the agent
+  returned for one input, such as `deny <-> review`. It is not a confusion
+  matrix, because this package does not judge which answer was correct.
+- `RouteStability`, `FlipPair`, `StratifiedStability`, and `stratify_runs`
+  are exported. `RunResult.route_stability` is populated whenever a suite is
+  supplied, with no new flag to set.
+
+### Changed
+
+- The tri-state rule moved into `classify_call`, shared by the pooled meter
+  and the per-route view so the two cannot drift apart. A route is classified
+  from its confidence bound, never from its observed rate: one flip in
+  thirteen pairs is a rate of 7.7% against a 5% threshold and an interval of
+  [0.014, 0.333], which is undecided rather than stochastic.
+- The report distinguishes a route proven to move from a route with too little
+  evidence to tell, and states that each interval is a separate 95% statement
+  rather than a joint one.
+
 ## [0.9.1] - 2026-07-28
 
 ### Fixed

@@ -150,3 +150,26 @@ universal safety grades.
 See [decision stability](decision-stability.md) for the arithmetic and
 [integrations](integrations.md) for placement in CI, release, and canary
 workflows.
+
+## Independence, and which way the error runs
+
+Trials are treated as independent Bernoulli draws. Starting each trial from a
+fresh conversation, agent instance, or remote session removes history leakage,
+but it cannot remove provider caching, shared infrastructure state, model
+rollouts, routing changes, or correlated external tool state.
+
+Positive dependence between trials, which is what those mechanisms produce,
+reduces the effective sample size and can make the interval too narrow. The
+practical consequence is worth stating plainly: where the assumption fails this
+way, the tool is **overconfident** rather than cautious, so a clean result
+deserves more suspicion than a dirty one. Other dependence structures affect
+coverage differently.
+
+Treat the intervals as a practical diagnostic, not as laboratory evidence.
+
+## Per-route intervals are not a joint guarantee
+
+When a decision suite is declared, stability is also reported per route. Each
+route's interval is its own 95% statement. Six of them together are not a 95%
+statement about the suite, and the report does not claim otherwise. Read the
+table as six separate findings.

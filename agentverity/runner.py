@@ -56,6 +56,7 @@ from agentverity.relations import (
     Relation,
     builtin_relations,
 )
+from agentverity.stratified import StratifiedStability, stratify_runs
 
 AgentFn = Callable[[str], Observation]
 RunStatus = Literal[
@@ -234,6 +235,9 @@ class RunResult:
     Attributes:
         meter: The verdict-stochasticity meter result, or None if not run.
         blindness: The constant-gate-blindness result, or None if not run.
+        route_stability: Per-route stability split from the same observations
+            the pooled meter used, or None when no suite was declared. Costs no
+            extra calls.
         decision_coverage: Declared decision-contract result, or None when the
             caller supplied ordinary unlabelled inputs.
         relation_results: Per-relation results, in the order they were run.
@@ -251,6 +255,7 @@ class RunResult:
     relation_results: list[RelationResult]
     config: RunConfig
     decision_coverage: DecisionCoverageResult | None = None
+    route_stability: StratifiedStability | None = None
     errors: tuple[RunError, ...] = ()
     input_fingerprints: tuple[str, ...] = ()
     observed_keys: tuple[Any | None, ...] = ()
@@ -496,6 +501,41 @@ class RunResult:
             lines.append("")
             next_section = 4
 
+        if self.route_stability is not None and self.route_stability.routes:
+            stability = self.route_stability
+            lines.append(f"{next_section}. STABILITY BY ROUTE")
+            lines.append(
+                "   split from the same calls, so this costs nothing extra"
+            )
+            lines.append(
+                f"   {'route':<18}{'cases':>6}{'pairs':>7}{'flips':>7}"
+                f"  {'95% CI':<18}result"
+            )
+            for route in stability.routes:
+                interval = f"[{route.ci_low:.3f}, {route.ci_high:.3f}]"
+                verdict = (
+                    "undecided" if not route.decided
+                    else route.call.replace("verdict-", "")
+                )
+                lines.append(
+                    f"   {route.decision:<18}{route.cases:>6}{route.pair_trials:>7}"
+                    f"{route.pair_flips:>7}  {interval:<18}{verdict}"
+                )
+            if stability.flip_pairs:
+                lines.append("   flip pairs:")
+                for pair in stability.flip_pairs:
+                    lines.append(f"     {pair.render()}  x{pair.count}")
+            lines.append(f"   advice:      {stability.advice}")
+            # Each interval is its own 95% statement. Six of them together are
+            # not a 95% statement about the suite, and a reader who assumes
+            # otherwise would over-trust a clean table.
+            lines.append(
+                "   note:        each interval is a separate 95% statement, "
+                "not a joint one"
+            )
+            lines.append("")
+            next_section += 1
+
         lines.append(f"{next_section}. WHAT TO DO NEXT")
         if (
             self.decision_coverage is not None
@@ -504,6 +544,12 @@ class RunResult:
             lines.append(
                 "   CONTRACT — repair the declared suite or out-of-contract "
                 "agent decision before saving a baseline."
+            )
+        elif self.route_stability is not None and self.route_stability.stochastic:
+            lines.append(
+                "   ROUTE — these routes move more than epsilon: "
+                + ", ".join(self.route_stability.stochastic)
+                + ". Repair them before reading any relation result."
             )
         elif self.is_blind:
             lines.append("   BLIND — green relation results may be vacuous.")
@@ -643,6 +689,7 @@ def run(
 
     source_observations: list[Observation | None] = [None] * len(inputs)
     repeated_observations: list[Observation] = []
+    route_stability: StratifiedStability | None = None
     errors: list[RunError] = []
 
     # 1. Meter
@@ -674,6 +721,21 @@ def run(
                 layer=config.layer,
                 epsilon=config.epsilon,
             )
+            if suite is not None:
+                # The intended decision is carried alongside each series rather
+                # than looked up by position later, because complete_series
+                # drops inputs whose calls failed and the indexes stop lining
+                # up the moment one does.
+                route_stability = stratify_runs(
+                    [
+                        (intended_decisions[index], observations)
+                        for index, observations in enumerate(meter_work.values)
+                        if observations is not None
+                    ],
+                    k=config.k,
+                    layer=config.layer,
+                    epsilon=config.epsilon,
+                )
         if config.reuse_unchanged_calls:
             for index, observations in enumerate(meter_work.values):
                 if observations:
@@ -820,6 +882,7 @@ def run(
         relation_results=relation_results,
         config=config,
         decision_coverage=decision_coverage,
+        route_stability=route_stability,
         errors=tuple(
             sorted(
                 errors,
