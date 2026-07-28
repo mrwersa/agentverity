@@ -1,0 +1,2820 @@
+{
+  "version": 3,
+  "results": {
+    "results": [
+      {
+        "testIdx": 0,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 1,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 2,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 3,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 4,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 5,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 6,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 7,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 8,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 9,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 10,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 11,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 12,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 13,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 14,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 15,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 16,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 17,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 18,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 19,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 20,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 21,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 22,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 23,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 24,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 25,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "My card was charged twice for the same order.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "duplicate_charge"
+        },
+        "vars": {
+          "ticket": "My card was charged twice for the same order."
+        }
+      },
+      {
+        "testIdx": 26,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 27,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 28,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 29,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 30,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 31,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 32,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 33,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 34,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 35,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 36,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 37,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 38,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 39,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 40,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 41,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 42,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 43,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 44,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 45,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 46,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 47,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 48,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 49,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 50,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 51,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The shop promised a refund but it has not arrived.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "refund_delay"
+        },
+        "vars": {
+          "ticket": "The shop promised a refund but it has not arrived."
+        }
+      },
+      {
+        "testIdx": 52,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 53,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 54,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 55,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 56,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 57,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 58,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 59,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 60,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 61,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 62,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 63,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 64,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 65,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 66,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 67,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 68,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 69,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 70,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 71,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 72,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 73,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 74,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 75,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 76,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "card_security"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 77,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "I do not recognise this card purchase.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "I do not recognise this card purchase."
+        }
+      },
+      {
+        "testIdx": 78,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 79,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 80,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 81,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 82,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 83,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 84,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 85,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 86,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 87,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 88,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 89,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 90,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 91,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 92,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 93,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 94,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 95,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 96,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 97,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 98,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 99,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 100,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 101,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 102,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 103,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The merchant charged more than the agreed amount.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "merchant_dispute"
+        },
+        "vars": {
+          "ticket": "The merchant charged more than the agreed amount."
+        }
+      },
+      {
+        "testIdx": 104,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 105,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 106,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 107,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 108,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 109,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 110,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 111,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 112,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 113,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 114,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 115,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 116,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 117,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 118,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 119,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 120,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 121,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 122,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 123,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 124,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 125,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 126,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 127,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 128,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 129,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "Cash came out of my balance but the ATM dispensed nothing.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "cash_withdrawal"
+        },
+        "vars": {
+          "ticket": "Cash came out of my balance but the ATM dispensed nothing."
+        }
+      },
+      {
+        "testIdx": 130,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 131,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 132,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 133,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 134,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 135,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 136,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 137,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 138,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 139,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 140,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 141,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 142,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 143,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 144,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 145,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 146,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 147,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 148,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 149,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 150,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 151,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 152,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 153,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 154,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      },
+      {
+        "testIdx": 155,
+        "promptIdx": 0,
+        "success": true,
+        "prompt": {
+          "raw": "The transfer is still pending after two days.",
+          "id": "route-v3"
+        },
+        "provider": {
+          "id": "openai:gpt-4o-mini"
+        },
+        "response": {
+          "output": "transfer_delay"
+        },
+        "vars": {
+          "ticket": "The transfer is still pending after two days."
+        }
+      }
+    ]
+  },
+  "config": {
+    "providers": [
+      "openai:gpt-4o-mini"
+    ]
+  }
+}

@@ -292,3 +292,32 @@ def test_the_suite_type_is_checked():
 def test_malformed_exports_are_refused(payload, message):
     with pytest.raises(EvidenceError, match=message):
         evidence_from_promptfoo(payload, suite())
+
+
+def test_the_shipped_promptfoo_export_reproduces_the_readme_numbers():
+    """The README opens with this table. A doc that drifts from the code
+    teaches the wrong thing confidently, so the figures are generated."""
+    from pathlib import Path
+
+    from agentverity import assess_evidence, load_decision_suite, load_promptfoo
+
+    root = Path(__file__).resolve().parent.parent
+    suite = load_decision_suite(root / "examples/payment_decisions.json")
+    evidence = load_promptfoo(
+        root / "examples/promptfoo_bridge/results.json", suite
+    )
+    result = assess_evidence(evidence, suite, epsilon=0.05)
+
+    assert result.meter.pair_trials == 78
+    assert result.meter.pair_flips == 9
+    assert result.route_stability.stochastic == ("card_security",)
+    by_route = {r.decision: r for r in result.route_stability.routes}
+    assert by_route["card_security"].pair_flips == 9
+    assert by_route["card_security"].pair_trials == 13
+    assert result.route_stability.flip_pairs[0].decisions == (
+        "card_security",
+        "merchant_dispute",
+    )
+    # The contract check passes, which is the point: it would not have caught
+    # the unstable route on its own.
+    assert result.decision_coverage.satisfied is True

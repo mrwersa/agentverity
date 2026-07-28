@@ -8,6 +8,21 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `examples/promptfoo_bridge/results.json`, a recorded Promptfoo export in the
+  real shape, so `agentverity assess --promptfoo` can be tried without
+  installing Promptfoo or spending a single model call. Six reviewed cases,
+  26 repeats each, one route deliberately unstable.
+
+### Changed
+
+- The README leads with what the tool catches and with the import path. A
+  developer already running promptfoo or DeepEval previously had to read five
+  paragraphs of scope before finding out they do not need to re-run anything.
+  The careful positioning is unchanged, it now sits below the finding rather
+  than in front of it.
+
 ## [0.12.0] - 2026-07-28
 
 ### Added

@@ -8,6 +8,43 @@
 [![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25%2B-brightgreen.svg)](#development)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
+Your evaluator says the agent behaved correctly. AgentVerity asks a different
+question: would you get the same answer if you ran it again, and did the test
+set reach every decision you care about?
+
+```text
+4. STABILITY BY ROUTE
+   route              cases  pairs  flips  95% CI            result
+   card_security          1     13      9  [0.424, 0.873]    stochastic
+   cash_withdrawal        1     13      0  [0.000, 0.228]    undecided
+   duplicate_charge       1     13      0  [0.000, 0.228]    undecided
+   ...
+   flip pairs:
+     card_security <-> merchant_dispute  x9
+```
+
+The pooled number for that run was 11.5%, and the contract check passed. One
+route is a coin flip between `card_security` and `merchant_dispute`, and the
+other five are not clean, they are unmeasured.
+
+## Already running promptfoo or DeepEval?
+
+You have the repeats. Point AgentVerity at them and pay for nothing extra:
+
+```bash
+promptfoo eval --repeat 26 --output results.json
+agentverity assess --promptfoo results.json --suite decision-suite.json
+```
+
+No model calls. Keep your evaluator for correctness. This one decides whether
+the evidence is repeatable enough to freeze as a baseline.
+
+DeepEval users share the same collected outputs through
+`evidence_from_deepeval`, and any other harness can export the
+[neutral evidence format](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
+
+## What it is
+
 AgentVerity qualifies tests for model-backed components that choose from a
 finite, reviewed set of decisions. Examples include routers, approval or
 policy gates, and supervisors that select the next agent or tool. It compares
