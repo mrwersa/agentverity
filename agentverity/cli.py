@@ -12,7 +12,8 @@ from pathlib import Path
 
 from agentverity.adapters.callable_adapter import from_callable
 from agentverity.decision_contract import DecisionSuite, load_decision_suite
-from agentverity.evidence import assess_evidence, load_evidence
+from agentverity.drift import compare_evidence
+from agentverity.evidence import EvidenceError, assess_evidence, load_evidence
 from agentverity.execution import ProgressEvent
 from agentverity.integrations.promptfoo import load_promptfoo
 from agentverity.meter import (
@@ -493,6 +494,17 @@ def _build_parser() -> argparse.ArgumentParser:
         "--json", dest="json_path", default=None, help="write the JSON report here"
     )
 
+    drift_parser = sub.add_parser(
+        "compare-evidence",
+        help="compare two evidence windows collected at different times",
+    )
+    drift_parser.add_argument("before", help="the earlier evidence file")
+    drift_parser.add_argument("after", help="the later evidence file")
+    drift_parser.add_argument("--epsilon", type=float, default=0.05)
+    drift_parser.add_argument(
+        "--json", dest="json_path", default=None, help="write the drift JSON here"
+    )
+
     snapshot_parser = sub.add_parser(
         "snapshot",
         help="Create an approved baseline when the evidence supports one.",
@@ -526,6 +538,31 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Path to a snapshot created by 'agentverity snapshot'.",
     )
     return parser
+
+
+def _compare_evidence_command(args: argparse.Namespace) -> int:
+    """Report how two independently collected windows differ."""
+    try:
+        drift = compare_evidence(
+            load_evidence(args.before),
+            load_evidence(args.after),
+            epsilon=args.epsilon,
+        )
+    except (EvidenceError, ValueError) as exc:
+        # A malformed file or an incompatible pair is the caller's input
+        # problem, and a traceback tells them less than the sentence does.
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(drift.render())
+    if args.json_path:
+        Path(args.json_path).write_text(
+            json.dumps(drift.to_dict(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    # Drift is a finding to review, not a failure to block on. Whether a moved
+    # route is a regression, an improvement, or a relabelled taxonomy is a
+    # judgement this package does not make.
+    return 1 if drift.drifted else 0
 
 
 def _assess_command(args: argparse.Namespace) -> int:
@@ -586,6 +623,8 @@ def _plan_command(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     """Run the AgentVerity CLI."""
     args = _build_parser().parse_args(argv)
+    if args.command == "compare-evidence":
+        return _compare_evidence_command(args)
     if args.command == "assess":
         return _assess_command(args)
     if args.command == "plan":

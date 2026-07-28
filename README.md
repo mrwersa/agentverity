@@ -10,7 +10,9 @@
 
 ## The 60-second problem
 
-Consider an LLM payment router that sends each dispute to one of six queues.
+Consider a [**routing workflow**](https://www.anthropic.com/engineering/building-effective-agents):
+a model classifies each payment dispute and directs it to one of six specialist
+queues.
 [Promptfoo](https://www.promptfoo.dev/) runs six cases 26 times. Its configured
 quality checks accept either fraud queue for one ambiguous card-security case.
 All **156/156 assertions pass**.
@@ -128,8 +130,20 @@ Use it when:
 - repeated runs can start from equivalent isolated state
 - you can write deliberately varied cases for the decisions that matter
 
-Good targets include support routers, fraud triage, policy gates, approval
-flows, incident routing, and multi-agent supervisors.
+It fits the [agent workflow patterns](https://www.anthropic.com/engineering/building-effective-agents)
+whose value is a named choice rather than open prose:
+
+| Pattern | The decision under test |
+|---|---|
+| **Routing** | Which specialist path or queue an input is classified into |
+| **Orchestrator-workers** | Which worker the orchestrator dispatches to next |
+| **Evaluator-optimiser** | Whether the evaluator accepts, revises, or rejects |
+| **Tool use** | Which tool is selected, and the ordered tool path taken |
+| **Multi-agent supervisor** | Which agent receives the handoff |
+| **Guardrail or policy gate** | Approve, review, escalate, or deny |
+
+Concrete examples: support and payment routing, fraud triage, incident
+dispatch, approval flows, and bounded tool selection.
 
 Use another evaluator for open-ended chat, RAG quality, generated content, or
 coding-agent output. If such a system also emits a reviewed route or approval,
@@ -205,7 +219,7 @@ cases support breadth. AgentVerity keeps those two claims separate.
 
 ## Measured production example
 
-The optional production example combines a Strands payment router on Amazon
+The optional production example combines a Strands routing agent on Amazon
 Bedrock, DeepEval route-quality checks, AgentVerity, AgentCore Runtime, and
 CloudWatch.
 
