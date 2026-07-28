@@ -8,6 +8,23 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- Relation probing per route. A relation whose transform returns the input
+  unchanged has tested nothing, and pooled totals hide which routes that
+  happened to. On plain ASCII inputs the accent and tool-selection relations
+  are no-ops, so a suite can report a flawless pass while two of three routes
+  were never perturbed at all. Unprobed routes are now named, and their
+  violation rate reads as absent rather than as zero.
+- `DecisionContract.minimum_cases` asks for a number of distinct reviewed
+  cases on a route. It is a declaration, not a calculation: repeats establish
+  that one input's decision is stable, distinct cases establish that a route
+  was approached from more than one angle, and no bound turns the first into
+  the second. A shortfall is reported as a contract finding and counted from
+  the cases that were written rather than from what the agent returned.
+- `ProbeCoverage`, `RouteProbing`, and `stratify_relations` are exported, and
+  `RunResult.probe_coverage` is populated whenever a suite is declared.
+
 ## [0.10.0] - 2026-07-28
 
 ### Added

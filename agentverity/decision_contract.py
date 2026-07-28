@@ -53,6 +53,7 @@ class DecisionContract:
     required: frozenset[str] | None = None
     critical: frozenset[str] = field(default_factory=frozenset)
     stability_targets: Mapping[str, float] = field(default_factory=dict)
+    minimum_cases: Mapping[str, int] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         allowed = _normalise_labels(self.allowed, field_name="allowed")
@@ -91,6 +92,20 @@ class DecisionContract:
             "stability_targets",
             MappingProxyType({k: float(v) for k, v in targets.items()}),
         )
+        if not isinstance(self.minimum_cases, Mapping):
+            raise TypeError("minimum_cases must be a mapping")
+        minimums = dict(self.minimum_cases)
+        for label, minimum in minimums.items():
+            if label not in required:
+                raise ValueError(
+                    f"minimum cases for a decision that is not required: {label}"
+                )
+            # bool is an int subclass, and True would silently mean one case.
+            if not isinstance(minimum, int) or isinstance(minimum, bool):
+                raise TypeError(f"minimum cases for {label!r} must be an integer")
+            if minimum < 1:
+                raise ValueError(f"minimum cases for {label!r} must be at least 1")
+        object.__setattr__(self, "minimum_cases", MappingProxyType(minimums))
         object.__setattr__(self, "allowed", allowed)
         object.__setattr__(self, "required", required)
         object.__setattr__(self, "critical", critical)
@@ -120,6 +135,8 @@ class DecisionContract:
         }
         if self.stability_targets:
             payload["stability_targets"] = dict(sorted(self.stability_targets.items()))
+        if self.minimum_cases:
+            payload["minimum_cases"] = dict(sorted(self.minimum_cases.items()))
         return payload
 
     @classmethod
@@ -133,6 +150,7 @@ class DecisionContract:
                 required=value.get("required"),
                 critical=value.get("critical", ()),
                 stability_targets=value.get("stability_targets", {}),
+                minimum_cases=value.get("minimum_cases", {}),
             )
         except KeyError as exc:
             raise ValueError("decision contract is missing 'allowed'") from exc
@@ -266,6 +284,8 @@ class DecisionCoverageResult:
     missing_intended: tuple[str, ...]
     missing_observed: tuple[str, ...]
     unknown_observed: tuple[str, ...]
+    # (decision, cases written, cases the contract asks for)
+    under_cased: tuple[tuple[str, int, int], ...] = ()
 
     @property
     def satisfied(self) -> bool:
@@ -274,6 +294,7 @@ class DecisionCoverageResult:
             self.missing_intended
             or self.missing_observed
             or self.unknown_observed
+            or self.under_cased
         )
 
     @property
@@ -305,6 +326,15 @@ class DecisionCoverageResult:
             return (
                 "add reviewed cases for required decisions: "
                 + ", ".join(self.missing_intended)
+            )
+        if self.under_cased:
+            shortfalls = ", ".join(
+                f"{decision} has {have} of {want}"
+                for decision, have, want in self.under_cased
+            )
+            return (
+                "these routes carry fewer reviewed cases than the contract "
+                "declares: " + shortfalls
             )
         if self.unknown_observed:
             return (
@@ -366,6 +396,14 @@ def assess_decision_coverage(
         ),
         unknown_observed=tuple(
             sorted(frozenset(every_label) - suite.contract.allowed)
+        ),
+        # Counted from reviewed cases rather than from what the agent returned.
+        # The declaration is about how thoroughly a route was written, and an
+        # agent answering a route often does not make the suite explore it.
+        under_cased=tuple(
+            (decision, intended_counter[decision], minimum)
+            for decision, minimum in sorted(suite.contract.minimum_cases.items())
+            if intended_counter[decision] < minimum
         ),
     )
 

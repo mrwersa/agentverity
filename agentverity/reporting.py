@@ -87,6 +87,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
             "missing_intended": list(coverage.missing_intended),
             "missing_observed": list(coverage.missing_observed),
             "missing_critical": list(coverage.missing_critical),
+            "under_cased": [list(row) for row in coverage.under_cased],
             "unknown_observed": list(coverage.unknown_observed),
             "satisfied": coverage.satisfied,
             "advice": coverage.advice,

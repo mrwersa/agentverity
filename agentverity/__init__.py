@@ -71,10 +71,13 @@ from agentverity.snapshot import (
 )
 from agentverity.stratified import (
     FlipPair,
+    ProbeCoverage,
     RoutePlan,
+    RouteProbing,
     RouteStability,
     StratifiedStability,
     plan_route_repeats,
+    stratify_relations,
     stratify_runs,
 )
 from agentverity.telemetry import (
@@ -99,10 +102,12 @@ __all__ = [
     "FlipPair",
     "MeterResult",
     "Observation",
+    "ProbeCoverage",
     "ProgressEvent",
     "Relation",
     "RelationResult",
     "RoutePlan",
+    "RouteProbing",
     "RouteStability",
     "RunConfig",
     "RunError",
@@ -133,6 +138,7 @@ __all__ = [
     "run_result_to_otel_attributes",
     "save_decision_suite",
     "save_snapshot",
+    "stratify_relations",
     "stratify_runs",
     "write_junit_xml",
     "write_run_json",

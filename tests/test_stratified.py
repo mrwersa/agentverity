@@ -13,6 +13,7 @@ from agentverity import (
     DecisionContract,
     DecisionSuite,
     RunConfig,
+    builtin_relations,
     from_callable,
     load_decision_suite,
     run,
@@ -23,7 +24,11 @@ from agentverity import (
 )
 from agentverity.observation import Observation
 from agentverity.snapshot import SnapshotRefused, create_snapshot
-from agentverity.stratified import plan_route_repeats, render_plan
+from agentverity.stratified import (
+    plan_route_repeats,
+    render_plan,
+    stratify_relations,
+)
 
 
 def series(decision: str, keys: list[str]) -> tuple[str, list[Observation]]:
@@ -855,3 +860,237 @@ class TestTheDocumentedNumbersAreReal:
         assert shown in (root / "docs/route-evidence.md").read_text(
             encoding="utf-8"
         )
+
+
+class TestProbeCoverage:
+    """A relation whose transform returns the input unchanged has tested
+    nothing. Counted per route, that becomes an answerable question: was this
+    decision ever actually probed, or only appeared to be?"""
+
+    def test_a_route_every_relation_left_alone_is_not_probed(self):
+        coverage = stratify_relations(
+            ["approve", "deny"],
+            [["held", "held"], ["skipped", "skipped"]],
+        )
+        by_route = {route.decision: route for route in coverage.routes}
+
+        assert by_route["approve"].probed is True
+        assert by_route["deny"].probed is False
+        assert coverage.unprobed == ("deny",)
+
+    def test_an_unprobed_route_has_no_violation_rate_rather_than_zero(self):
+        """Zero would hand a caller the same false green the report refuses
+        to print."""
+        coverage = stratify_relations(["deny"], [["skipped", "skipped"]])
+
+        assert coverage.routes[0].violation_rate is None
+        assert coverage.routes[0].exercised == 0
+
+    def test_violation_rate_counts_only_genuinely_exercised_pairs(self):
+        coverage = stratify_relations(
+            ["approve"], [["held", "violated", "skipped", "skipped"]]
+        )
+        route = coverage.routes[0]
+
+        assert route.exercised == 2
+        assert route.skipped == 2
+        assert route.violation_rate == 0.5
+
+    def test_the_advice_names_vacuous_routes_before_violations(self):
+        coverage = stratify_relations(
+            ["approve", "deny"],
+            [["violated"], ["skipped"]],
+        )
+        assert "vacuous" in coverage.advice
+        assert "deny" in coverage.advice
+
+    def test_violations_are_reported_when_everything_was_probed(self):
+        coverage = stratify_relations(["approve"], [["violated"]])
+        assert coverage.advice == "relations were violated on: approve"
+
+    def test_a_fully_probed_holding_suite_says_so(self):
+        coverage = stratify_relations(["approve"], [["held"]])
+        assert coverage.advice == "every route was genuinely perturbed and held"
+
+    def test_no_relations_at_all_is_reported_as_such(self):
+        assert stratify_relations([], []).advice == "no relations were run"
+
+    def test_a_failed_input_does_not_count_as_probing(self):
+        coverage = stratify_relations(["approve"], [None])
+        assert coverage.routes[0].probed is False
+        assert coverage.routes[0].cases == 1
+
+    def test_errors_are_counted_and_never_count_as_held(self):
+        coverage = stratify_relations(["approve"], [["error", "held"]])
+        route = coverage.routes[0]
+
+        assert route.errors == 1
+        assert route.exercised == 1
+
+    def test_misaligned_outcomes_are_rejected(self):
+        with pytest.raises(ValueError, match="align with intended"):
+            stratify_relations(["approve", "deny"], [["held"]])
+
+    def test_probe_coverage_serialises(self):
+        payload = stratify_relations(["deny"], [["skipped"]]).to_dict()
+        assert payload["unprobed"] == ["deny"]
+        assert payload["routes"][0]["probed"] is False
+
+
+class TestProbeCoverageThroughARun:
+    """The scenario this exists for: relations that no-op on plain ASCII while
+    the pooled table reports a flawless pass."""
+
+    @staticmethod
+    def build():
+        rels = [
+            relation
+            for relation in builtin_relations()
+            if relation.name
+            in {"normalisation-invariance", "tool-selection-invariance"}
+        ]
+
+        def agent(text):
+            if "prohibited" in text:
+                return {"verdict": "deny"}
+            if "caf" in text:
+                return {"verdict": "review"}
+            return {"verdict": "approve"}
+
+        suite = DecisionSuite(
+            contract=DecisionContract(allowed={"approve", "review", "deny"}),
+            cases=(
+                DecisionCase("routine request", "approve"),
+                DecisionCase("café dispute", "review"),
+                DecisionCase("prohibited request", "deny"),
+            ),
+        )
+        return from_callable(agent), suite, rels
+
+    def test_pooled_relations_look_clean_while_two_routes_were_never_probed(self):
+        agent, suite, rels = self.build()
+        result = run(agent, suite=suite, relations=rels, config=RunConfig(k=4, epsilon=0.5))
+
+        assert all(r.violation_rate in (None, 0.0) for r in result.relation_results)
+        assert set(result.probe_coverage.unprobed) == {"approve", "deny"}
+
+    def test_the_next_step_names_the_unprobed_routes(self):
+        agent, suite, rels = self.build()
+        result = run(agent, suite=suite, relations=rels, config=RunConfig(k=4, epsilon=0.5))
+        summary = result.summary()
+
+        assert "NOT PROBED" in summary
+        assert "NOT EXERCISED" in summary
+
+    def test_a_run_without_a_suite_has_no_probe_coverage(self):
+        result = run(
+            from_callable(lambda text: {"verdict": "approve"}),
+            ["a", "b"],
+            config=RunConfig(k=4, epsilon=0.5),
+        )
+        assert result.probe_coverage is None
+
+
+class TestMinimumCases:
+    """Repeats establish that one input's decision is stable. Distinct cases
+    establish that a route was approached from more than one angle. Nothing in
+    the statistics can infer the second from the first."""
+
+    @staticmethod
+    def suite_with(minimum, cases):
+        return DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "deny"},
+                critical={"deny"},
+                minimum_cases=minimum,
+            ),
+            cases=cases,
+        )
+
+    def test_a_route_below_its_declared_minimum_is_reported(self):
+        suite = self.suite_with(
+            {"deny": 3},
+            (DecisionCase("routine", "approve"), DecisionCase("prohibited", "deny")),
+        )
+        result = run(
+            from_callable(lambda t: {"verdict": "deny" if "proh" in t else "approve"}),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=4, epsilon=0.5),
+        )
+        coverage = result.decision_coverage
+
+        assert coverage.under_cased == (("deny", 1, 3),)
+        assert coverage.satisfied is False
+        assert "deny has 1 of 3" in coverage.advice
+
+    def test_meeting_the_minimum_satisfies_the_contract(self):
+        suite = self.suite_with(
+            {"deny": 2},
+            (
+                DecisionCase("routine", "approve"),
+                DecisionCase("prohibited one", "deny"),
+                DecisionCase("prohibited two", "deny"),
+            ),
+        )
+        result = run(
+            from_callable(lambda t: {"verdict": "deny" if "proh" in t else "approve"}),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=4, epsilon=0.5),
+        )
+
+        assert result.decision_coverage.under_cased == ()
+        assert result.decision_coverage.satisfied is True
+
+    def test_the_shortfall_is_counted_from_reviewed_cases_not_observations(self):
+        """An agent answering a route often does not mean the suite explores
+        it, so the count comes from the cases that were written."""
+        suite = self.suite_with(
+            {"approve": 2},
+            (DecisionCase("routine", "approve"), DecisionCase("prohibited", "deny")),
+        )
+        # The agent answers `approve` for both inputs, but only one case
+        # intends it.
+        result = run(
+            from_callable(lambda t: {"verdict": "approve"}),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=4, epsilon=0.5),
+        )
+
+        assert result.decision_coverage.under_cased == (("approve", 1, 2),)
+
+
+def test_the_probing_walkthrough_in_the_docs_still_holds():
+    """docs/route-evidence.md shows two of three routes unprobed with a clean
+    pooled table. A doc that drifts from the code teaches the wrong thing."""
+    rels = [
+        relation
+        for relation in builtin_relations()
+        if relation.name in {"normalisation-invariance", "tool-selection-invariance"}
+    ]
+
+    def agent(text):
+        if "prohibited" in text:
+            return {"verdict": "deny"}
+        if "caf" in text:
+            return {"verdict": "review"}
+        return {"verdict": "approve"}
+
+    suite = DecisionSuite(
+        contract=DecisionContract(allowed={"approve", "review", "deny"}),
+        cases=(
+            DecisionCase("routine request", "approve"),
+            DecisionCase("café dispute", "review"),
+            DecisionCase("prohibited request", "deny"),
+        ),
+    )
+    result = run(from_callable(agent), suite=suite, relations=rels,
+                 config=RunConfig(k=4, epsilon=0.5))
+
+    by_route = {r.decision: r for r in result.probe_coverage.routes}
+    assert by_route["approve"].exercised == 0 and by_route["approve"].skipped == 2
+    assert by_route["deny"].exercised == 0 and by_route["deny"].skipped == 2
+    assert by_route["review"].exercised == 2 and by_route["review"].skipped == 0
+    assert all(r.violation_rate in (None, 0.0) for r in result.relation_results)

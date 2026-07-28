@@ -57,10 +57,12 @@ from agentverity.relations import (
     builtin_relations,
 )
 from agentverity.stratified import (
+    ProbeCoverage,
     RoutePlan,
     StratifiedStability,
     plan_route_repeats,
     render_plan,
+    stratify_relations,
     stratify_runs,
 )
 
@@ -267,6 +269,7 @@ class RunResult:
     decision_coverage: DecisionCoverageResult | None = None
     route_stability: StratifiedStability | None = None
     route_plans: tuple[RoutePlan, ...] = ()
+    probe_coverage: ProbeCoverage | None = None
     errors: tuple[RunError, ...] = ()
     input_fingerprints: tuple[str, ...] = ()
     observed_keys: tuple[Any | None, ...] = ()
@@ -591,6 +594,14 @@ class RunResult:
                     "   unknown:       "
                     + ", ".join(coverage.unknown_observed)
                 )
+            if coverage.under_cased:
+                lines.append(
+                    "   under-cased:   "
+                    + ", ".join(
+                        f"{decision} {have}/{want}"
+                        for decision, have, want in coverage.under_cased
+                    )
+                )
             if coverage.missing_critical:
                 lines.append(
                     "   critical:      "
@@ -606,6 +617,30 @@ class RunResult:
                 "   declared targets size repeat counts before execution"
             )
             lines.append(render_plan(self.route_plans))
+            lines.append("")
+            next_section += 1
+
+        if self.probe_coverage is not None and self.probe_coverage.routes:
+            probing = self.probe_coverage
+            lines.append(f"{next_section}. RELATION PROBING BY ROUTE")
+            lines.append(
+                "   a transform that returns the input unchanged tests nothing"
+            )
+            lines.append(
+                f"   {'route':<18}{'cases':>6}{'probed':>8}{'no-op':>7}"
+                f"{'violated':>10}  result"
+            )
+            for route in probing.routes:
+                rate = (
+                    "  -" if route.violation_rate is None
+                    else f"{route.violation_rate:.0%}"
+                )
+                verdict = "exercised" if route.probed else "NOT EXERCISED"
+                lines.append(
+                    f"   {route.decision:<18}{route.cases:>6}{route.exercised:>8}"
+                    f"{route.skipped:>7}{rate:>10}  {verdict}"
+                )
+            lines.append(f"   advice:      {probing.advice}")
             lines.append("")
             next_section += 1
 
@@ -670,6 +705,13 @@ class RunResult:
                 "   TARGET — declared tolerances remain undecided for: "
                 + ", ".join(self.targeted_undecided)
                 + ". Do not freeze a baseline yet."
+            )
+        elif self.probe_coverage is not None and self.probe_coverage.unprobed:
+            lines.append(
+                "   NOT PROBED — every relation left these routes unchanged, so "
+                "their green relation results prove nothing: "
+                + ", ".join(self.probe_coverage.unprobed)
+                + ". Add a relation that perturbs them."
             )
         elif self.is_blind:
             lines.append("   BLIND — green relation results may be vacuous.")
@@ -931,6 +973,7 @@ def run(
             )
 
     # 3. Relations
+    probe_coverage: ProbeCoverage | None = None
     relation_results = [
         RelationResult(relation=relation, total=len(inputs), held=0, violated=0)
         for relation in relations
@@ -996,6 +1039,14 @@ def run(
             errors.extend(local_errors)
             for index, outcome in enumerate(outcomes):
                 counts[index][outcome] += 1
+        if suite is not None:
+            probe_coverage = stratify_relations(
+                intended_decisions,
+                [
+                    None if value is None else value[0]
+                    for value in relation_work.values
+                ],
+            )
         relation_results = [
             RelationResult(
                 relation=relation,
@@ -1034,6 +1085,7 @@ def run(
         decision_coverage=decision_coverage,
         route_stability=route_stability,
         route_plans=route_plans,
+        probe_coverage=probe_coverage,
         errors=tuple(
             sorted(
                 errors,

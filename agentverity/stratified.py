@@ -412,3 +412,133 @@ def render_plan(
                 "buying a tight bound where nothing needs one."
             )
     return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class RouteProbing:
+    """Whether one route's cases were genuinely perturbed by any relation.
+
+    A relation whose transform hands the agent back its own input has not
+    tested anything. It reports a pass because the follow-up is byte-identical
+    to the source, which measures rerun stability rather than the relation.
+    Counted per route, that becomes a specific and answerable question: was
+    this decision ever actually probed, or only appeared to be?
+    """
+
+    decision: str
+    cases: int
+    exercised: int
+    skipped: int
+    held: int
+    violated: int
+    errors: int = 0
+
+    @property
+    def probed(self) -> bool:
+        """Whether any relation produced a real source/follow-up pair here."""
+        return self.exercised > 0
+
+    @property
+    def violation_rate(self) -> float | None:
+        """Violations among genuinely exercised pairs, or None if none were.
+
+        Returning 0.0 for an unprobed route would hand a caller the same false
+        green the report refuses to print.
+        """
+        if not self.exercised:
+            return None
+        return self.violated / self.exercised
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "decision": self.decision,
+            "cases": self.cases,
+            "exercised": self.exercised,
+            "skipped": self.skipped,
+            "held": self.held,
+            "violated": self.violated,
+            "errors": self.errors,
+            "probed": self.probed,
+            "violation_rate": self.violation_rate,
+        }
+
+
+@dataclass(frozen=True)
+class ProbeCoverage:
+    """Which routes the relation suite actually perturbed."""
+
+    routes: tuple[RouteProbing, ...]
+
+    @property
+    def unprobed(self) -> tuple[str, ...]:
+        """Routes where every relation left the input unchanged."""
+        return tuple(route.decision for route in self.routes if not route.probed)
+
+    @property
+    def probed(self) -> tuple[str, ...]:
+        return tuple(route.decision for route in self.routes if route.probed)
+
+    @property
+    def advice(self) -> str:
+        if not self.routes:
+            return "no relations were run"
+        if self.unprobed:
+            return (
+                "every relation left these routes unchanged, so their relation "
+                "results are vacuous: " + ", ".join(self.unprobed)
+            )
+        violating = [route.decision for route in self.routes if route.violated]
+        if violating:
+            return "relations were violated on: " + ", ".join(sorted(violating))
+        return "every route was genuinely perturbed and held"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "routes": [route.to_dict() for route in self.routes],
+            "unprobed": list(self.unprobed),
+            "probed": list(self.probed),
+        }
+
+
+def stratify_relations(
+    intended: Sequence[str],
+    outcomes: Sequence[Sequence[str] | None],
+) -> ProbeCoverage:
+    """Group per-input relation outcomes by each case's intended decision.
+
+    Args:
+        intended: The intended decision of every case, in suite order.
+        outcomes: One list of outcomes per input, each entry being ``held``,
+            ``violated``, ``skipped``, or ``error``, in relation order. A
+            ``None`` entry marks an input whose relation phase failed outright.
+
+    Returns:
+        Probing coverage per route, ordered by decision.
+    """
+    if len(intended) != len(outcomes):
+        raise ValueError("outcomes must align with intended decisions")
+
+    tally: dict[str, dict[str, int]] = {}
+    for decision, per_input in zip(intended, outcomes, strict=True):
+        bucket = tally.setdefault(
+            decision,
+            {"cases": 0, "held": 0, "violated": 0, "skipped": 0, "error": 0},
+        )
+        bucket["cases"] += 1
+        for outcome in per_input or ():
+            if outcome in bucket:
+                bucket[outcome] += 1
+
+    routes = tuple(
+        RouteProbing(
+            decision=decision,
+            cases=bucket["cases"],
+            exercised=bucket["held"] + bucket["violated"],
+            skipped=bucket["skipped"],
+            held=bucket["held"],
+            violated=bucket["violated"],
+            errors=bucket["error"],
+        )
+        for decision, bucket in sorted(tally.items())
+    )
+    return ProbeCoverage(routes=routes)
