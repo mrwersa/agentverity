@@ -1,12 +1,29 @@
 # AgentVerity
 
-> **Conservative baseline admission for AI agents with bounded decisions.**
+> **Your agent test passed. Would it pass again?**
 
 [![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml/badge.svg)](https://github.com/mrwersa/agentverity/actions/workflows/ci.yml)
 [![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25%2B-brightgreen.svg)](#development)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
+
+A Python library and CLI that reruns the decisions your agent makes and reports
+whether they are repeatable enough, and varied enough, to trust as a **regression
+baseline**: the reviewed run you save as expected behaviour and compare future
+releases against.
+
+Keep using [Promptfoo](https://www.promptfoo.dev/), DeepEval, or your own
+assertions to decide whether each answer is *correct*. AgentVerity reuses those
+same results to find unstable routes, missing decisions, and runs too small to
+support a reliable baseline. It can read runs you already collected, so you do
+not pay for the same calls twice.
+
+| What you run | Question it answers |
+|---|---|
+| Promptfoo, DeepEval, your assertions | Was this answer acceptable? |
+| **AgentVerity** | **Are the repeated answers stable and covered enough to save as expected behaviour?** |
+| LangSmith, AgentCore, your observability | What happened during this run, and in production? |
 
 ## The 60-second problem
 
@@ -67,7 +84,7 @@ Already using [DeepEval](https://deepeval.com/)? Pass the same precomputed
 [small neutral evidence format](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
 
 Keep your existing evaluator for correctness and trajectory quality.
-AgentVerity qualifies whether its repeated decision evidence is suitable for a
+AgentVerity checks whether the repeated results are stable and complete enough for a
 regression baseline.
 
 ## Where to integrate it
@@ -94,7 +111,7 @@ before release, or on a schedule.
 1. **Evaluate quality.** Keep Promptfoo, DeepEval, or your current assertions.
 2. **Reuse the outputs.** Import repeated decisions into AgentVerity without
    calling the model again.
-3. **Repair the evidence.** Fix moving routes, add missing cases, or collect
+3. **Fix what is missing.** Repair moving routes, add missing cases, or collect
    the reruns needed for an honest conclusion.
 4. **Freeze a baseline.** A human approves the reference only after the
    evidence gate admits it.
