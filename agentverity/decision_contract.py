@@ -179,6 +179,12 @@ class DecisionSuite:
             raise ValueError(
                 f"unsupported decision suite schema: {value.get('schema')!r}"
             )
+        # A missing key is malformed input, not a type error. Loading reports
+        # every malformed suite as ValueError so one except clause covers a
+        # bad file, while DecisionContract.from_dict keeps raising TypeError
+        # for a caller who hands it the wrong kind of object directly.
+        if "contract" not in value:
+            raise ValueError("decision suite is missing 'contract'")
         raw_cases = value.get("cases")
         if not isinstance(raw_cases, list):
             raise TypeError("decision suite cases must be a list")
@@ -326,7 +332,10 @@ def load_decision_suite(path: str | Path) -> DecisionSuite:
         value = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"cannot load decision suite: {exc}") from exc
-    return DecisionSuite.from_dict(value)
+    try:
+        return DecisionSuite.from_dict(value)
+    except TypeError as exc:
+        raise ValueError(f"invalid decision suite: {exc}") from exc
 
 
 def save_decision_suite(suite: DecisionSuite, path: str | Path) -> None:
