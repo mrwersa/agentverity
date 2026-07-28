@@ -91,14 +91,28 @@ def test_current_promptfoo_repeat_indices_are_mapped_by_rendered_input():
 
 def test_assertion_failures_remain_observations_because_promptfoo_owns_correctness():
     payload = export(
-        row(0, "approve", success=False),
-        row(0, "approve", success=False),
+        row(
+            0,
+            "review",
+            success=False,
+            error='Expected output "review" to equal "approve"',
+            failureReason=1,
+            gradingResult={"pass": False},
+        ),
+        row(
+            0,
+            "approve",
+            success=False,
+            error="quality assertion failed",
+            failureReason=1,
+            gradingResult={"pass": False},
+        ),
         row(1, "review"),
         row(1, "review"),
     )
     evidence = evidence_from_promptfoo(payload, suite())
 
-    assert evidence.cases[0].observations == ("approve", "approve")
+    assert evidence.cases[0].observations == ("review", "approve")
     assert evidence.cases[0].errors == 0
 
 
@@ -296,7 +310,7 @@ def test_malformed_exports_are_refused(payload, message):
 
 def test_the_shipped_promptfoo_export_reproduces_the_readme_numbers():
     """The README opens with this table. A doc that drifts from the code
-    teaches the wrong thing confidently, so the figures are generated."""
+    teaches the wrong thing confidently, so the figures are recomputed."""
     from pathlib import Path
 
     from agentverity import assess_evidence, load_decision_suite, load_promptfoo
@@ -307,12 +321,19 @@ def test_the_shipped_promptfoo_export_reproduces_the_readme_numbers():
         root / "examples/promptfoo_bridge/results.json", suite
     )
     result = assess_evidence(evidence, suite, epsilon=0.05)
+    payload = json.loads(
+        (root / "examples/promptfoo_bridge/results.json").read_text()
+    )
+    rows = payload["results"]["results"]
 
     assert result.meter.pair_trials == 78
-    assert result.meter.pair_flips == 9
+    assert evidence.provenance["provider"] == "file://flaky_router.py"
+    assert sum(row["success"] is False for row in rows) == 12
+    assert all(case.errors == 0 for case in evidence.cases)
+    assert result.meter.pair_flips == 8
     assert result.route_stability.stochastic == ("card_security",)
     by_route = {r.decision: r for r in result.route_stability.routes}
-    assert by_route["card_security"].pair_flips == 9
+    assert by_route["card_security"].pair_flips == 8
     assert by_route["card_security"].pair_trials == 13
     assert result.route_stability.flip_pairs[0].decisions == (
         "card_security",

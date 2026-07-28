@@ -1,7 +1,7 @@
 # One Promptfoo quality run becomes AgentVerity evidence without another call.
 providers:
-  - id: file://router.py
-    label: payment-router
+  - id: file://flaky_router.py
+    label: payment-router-with-one-unstable-boundary
 
 prompts:
   - "{{ticket}}"

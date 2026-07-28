@@ -35,6 +35,11 @@ suite input. Current Promptfoo releases assign a distinct `testIdx` to each
 repeat, so the importer does not treat that index as a case identity. If the
 reviewed input is stored elsewhere, point to it explicitly:
 
+Promptfoo assertion failures still carry the decision that failed its quality
+check, so they remain observations for stability analysis. Provider and
+runtime failures carry no usable decision and make the AgentVerity assessment
+incomplete.
+
 ```console
 $ agentverity assess \
     --promptfoo results.json \
