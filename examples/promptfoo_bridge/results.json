@@ -1,8 +1,8 @@
 {
-  "evalId": "eval-9jQ-2026-07-28T14:13:43",
+  "evalId": "eval-vaW-2026-07-28T14:32:43",
   "results": {
     "version": 3,
-    "timestamp": "2026-07-28T14:13:43.538Z",
+    "timestamp": "2026-07-28T14:32:43.436Z",
     "prompts": [
       {
         "id": "4cf05d7e2584f59894b56192d86ecc4bb78e42fef311a9ae439299a50394b256",
@@ -10,13 +10,13 @@
         "label": "{{ticket}}",
         "provider": "payment-router-with-one-unstable-boundary",
         "metrics": {
-          "score": 144,
-          "testPassCount": 144,
-          "testFailCount": 12,
+          "score": 156,
+          "testPassCount": 156,
+          "testFailCount": 0,
           "testErrorCount": 0,
-          "assertPassCount": 144,
-          "assertFailCount": 12,
-          "totalLatencyMs": 25505,
+          "assertPassCount": 156,
+          "assertFailCount": 0,
+          "totalLatencyMs": 3199,
           "tokenUsage": {
             "prompt": 0,
             "completion": 0,
@@ -79,8 +79,8 @@
             }
           ]
         },
-        "id": "d347afab-a556-4cf6-8b5d-90deef164530",
-        "latencyMs": 592,
+        "id": "b24b368f-59d7-43d2-9dcf-c2353460ce12",
+        "latencyMs": 218,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -175,8 +175,8 @@
             }
           ]
         },
-        "id": "8d4f990f-a9af-4301-98f3-9db5d789d389",
-        "latencyMs": 590,
+        "id": "c5edbaca-8f3c-4d3f-9b3f-0bcdc37c14f5",
+        "latencyMs": 22,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -271,8 +271,8 @@
             }
           ]
         },
-        "id": "ad878d27-5901-44c2-b8e8-332b2b9a865f",
-        "latencyMs": 589,
+        "id": "c3d225af-9980-437e-b188-a9aaeced191b",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -367,8 +367,8 @@
             }
           ]
         },
-        "id": "2600b21d-8f59-41f3-bb41-1749bf8956c1",
-        "latencyMs": 589,
+        "id": "da6eebfa-4255-43ed-bd39-22dbca4f5e28",
+        "latencyMs": 22,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -463,8 +463,8 @@
             }
           ]
         },
-        "id": "d26ce586-d100-431a-9733-7e87cde40329",
-        "latencyMs": 162,
+        "id": "e5e5aa41-59b1-45ba-8816-1dc20f53bf46",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -559,8 +559,8 @@
             }
           ]
         },
-        "id": "824956c6-6e0c-468a-b0bd-888eeff01ea7",
-        "latencyMs": 154,
+        "id": "bd3882dc-87e3-49d4-9d41-8450533296a8",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -655,8 +655,8 @@
             }
           ]
         },
-        "id": "89913a1c-0479-480e-a480-1d38675e6dba",
-        "latencyMs": 151,
+        "id": "eba7e947-36df-40e5-a5dd-3593960ed8a3",
+        "latencyMs": 15,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -751,8 +751,8 @@
             }
           ]
         },
-        "id": "7c398caf-e657-437d-a86e-89468a8abe3d",
-        "latencyMs": 148,
+        "id": "bfe33720-46f5-49be-b691-06075cbf7788",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -847,8 +847,8 @@
             }
           ]
         },
-        "id": "723c819f-9fc3-413c-8e0b-aec9f0512ebe",
-        "latencyMs": 168,
+        "id": "af868447-a916-4947-acd8-e1087a9ef8f3",
+        "latencyMs": 24,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -943,8 +943,8 @@
             }
           ]
         },
-        "id": "04cc8e16-e2b9-4ae4-ad64-f0121a75167f",
-        "latencyMs": 162,
+        "id": "1aa34067-dc74-458a-9a19-352303b7f25a",
+        "latencyMs": 33,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1039,8 +1039,8 @@
             }
           ]
         },
-        "id": "d1c21eba-a9dd-4b2e-aba3-a02c8a74e438",
-        "latencyMs": 157,
+        "id": "d3937959-863a-4c00-90ec-3f2e1a3a9fb7",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1135,8 +1135,8 @@
             }
           ]
         },
-        "id": "a3e3f7ac-27f5-4952-a794-10b669d35f99",
-        "latencyMs": 153,
+        "id": "0942ad54-bbb9-4638-984c-7d9e5fe76aa5",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1231,8 +1231,8 @@
             }
           ]
         },
-        "id": "3f022cd1-69d1-4d3d-b5ad-52fdf6218824",
-        "latencyMs": 154,
+        "id": "60058fba-720a-4676-9cb9-a8a0b8d23594",
+        "latencyMs": 25,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1327,8 +1327,8 @@
             }
           ]
         },
-        "id": "f56fc71f-d95b-4a04-b5e8-ad0bc3403970",
-        "latencyMs": 151,
+        "id": "383ba9b4-9c4e-4b0c-b478-656eab00073b",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1423,8 +1423,8 @@
             }
           ]
         },
-        "id": "35ab78c3-9710-4994-8d9e-b66d28bb33fc",
-        "latencyMs": 148,
+        "id": "a8f20692-9998-4b06-a530-1e4db48a246e",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1519,8 +1519,8 @@
             }
           ]
         },
-        "id": "85ebba8a-ac2d-41b0-b01d-d5bade7bbce9",
-        "latencyMs": 145,
+        "id": "9df0ba1a-146c-4b23-a91f-c0b0a13451fc",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1615,8 +1615,8 @@
             }
           ]
         },
-        "id": "a8f7cd5a-4825-4176-bc6f-5898d6d0b2d3",
-        "latencyMs": 186,
+        "id": "e207b9fa-d58b-4762-a4a7-26edbd68fe04",
+        "latencyMs": 25,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1711,8 +1711,8 @@
             }
           ]
         },
-        "id": "df29fa7d-41da-4f36-82bc-6ad99d2edb3a",
-        "latencyMs": 182,
+        "id": "7af7506c-7281-4110-a381-fb52d232de7b",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1807,8 +1807,8 @@
             }
           ]
         },
-        "id": "a2ddfea8-dce5-4546-93d5-77c718f182e2",
-        "latencyMs": 177,
+        "id": "1363a408-9683-4aee-b8c2-32c553197a50",
+        "latencyMs": 22,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1903,8 +1903,8 @@
             }
           ]
         },
-        "id": "037bf90c-a9a9-4dec-90ea-f7a69834947e",
-        "latencyMs": 172,
+        "id": "dba599cc-94d2-438e-9176-3eb4d45c73db",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -1999,8 +1999,8 @@
             }
           ]
         },
-        "id": "347802de-73dd-49a5-b670-fa1f19b91126",
-        "latencyMs": 160,
+        "id": "4668fa86-31b1-4230-a9d6-6aea439820aa",
+        "latencyMs": 22,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -2095,8 +2095,8 @@
             }
           ]
         },
-        "id": "f2f26b14-8f55-441e-8172-5c9a20fe78f6",
-        "latencyMs": 154,
+        "id": "9419850d-1a1c-4b4c-8b32-33aa3a5cf491",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -2191,8 +2191,8 @@
             }
           ]
         },
-        "id": "ca5a8a0c-258e-4b12-962a-35eede283189",
-        "latencyMs": 151,
+        "id": "418ddefd-836f-4b99-b8f7-be7921ecbc12",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -2287,8 +2287,8 @@
             }
           ]
         },
-        "id": "8723ad57-b5f4-4700-8b19-68d721ac61fd",
-        "latencyMs": 149,
+        "id": "1ff39aa3-603b-4a6a-adf9-190a74860e2e",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -2383,8 +2383,8 @@
             }
           ]
         },
-        "id": "d0e11231-95ac-45bb-85c1-a4a84d094e4e",
-        "latencyMs": 149,
+        "id": "f3389810-0a4e-436a-9382-fcc0694417c1",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -2479,8 +2479,8 @@
             }
           ]
         },
-        "id": "540eb617-b9a6-41ad-becf-b963a9da8dff",
-        "latencyMs": 146,
+        "id": "90e3cac4-aa47-4127-9f0c-d25638770267",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "My card was charged twice for the same order.",
@@ -2575,8 +2575,8 @@
             }
           ]
         },
-        "id": "9d9234b2-8b58-45a2-a932-c962023d9aa8",
-        "latencyMs": 142,
+        "id": "91f70be9-0286-4b9b-9406-4a26210cdaa0",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -2671,8 +2671,8 @@
             }
           ]
         },
-        "id": "8d633144-30e5-4e8a-b98d-2285190c11fb",
-        "latencyMs": 138,
+        "id": "005320f6-99b7-4912-aec1-a7a69b9e2611",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -2767,8 +2767,8 @@
             }
           ]
         },
-        "id": "1a746288-7fec-4331-887d-1697cb1533c5",
-        "latencyMs": 159,
+        "id": "c65482db-52a3-492b-9ee1-7feb66688ad5",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -2863,8 +2863,8 @@
             }
           ]
         },
-        "id": "1185d8ce-156f-4278-b097-13330819f209",
-        "latencyMs": 155,
+        "id": "260767f3-d461-4f6d-99d0-676a013a618c",
+        "latencyMs": 25,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -2959,8 +2959,8 @@
             }
           ]
         },
-        "id": "26af3d3d-fc50-4edf-a5da-1b350cd883e5",
-        "latencyMs": 150,
+        "id": "1c43dc71-19ce-458d-81ec-0a4417652a2e",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3055,8 +3055,8 @@
             }
           ]
         },
-        "id": "8e9799b5-73b8-4031-8adb-67a41bdf6a8f",
-        "latencyMs": 146,
+        "id": "8415ef0c-f609-44db-8a4c-c5eb9e4912b3",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3151,8 +3151,8 @@
             }
           ]
         },
-        "id": "57320f13-0721-4211-a970-84e5d48683c7",
-        "latencyMs": 161,
+        "id": "9d975132-f5a3-4709-b96c-4904c4847c68",
+        "latencyMs": 13,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3247,8 +3247,8 @@
             }
           ]
         },
-        "id": "f05d52c7-56f1-45a9-8701-e2c17a3ca443",
-        "latencyMs": 157,
+        "id": "c1a55931-8f0d-4095-840e-c842abfef356",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3343,8 +3343,8 @@
             }
           ]
         },
-        "id": "8e6a4cc2-2da8-4a4e-9798-be93bdcba46d",
-        "latencyMs": 151,
+        "id": "acda232c-bf53-407f-81e4-57099da8e5c2",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3439,8 +3439,8 @@
             }
           ]
         },
-        "id": "0ccf01c8-9075-45af-b8cb-f284f73cdb89",
-        "latencyMs": 147,
+        "id": "2dc18c51-da06-40f8-b770-8c850ff03fa3",
+        "latencyMs": 23,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3535,8 +3535,8 @@
             }
           ]
         },
-        "id": "6e145f5b-a5f2-4b71-b41f-2b33f6cb3d5c",
-        "latencyMs": 160,
+        "id": "9817eb1e-9a13-4a84-b15b-c6f307e78e46",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3631,8 +3631,8 @@
             }
           ]
         },
-        "id": "ec947e69-01e5-45cd-9f7c-8387cae1867d",
-        "latencyMs": 156,
+        "id": "410b6d7f-98f8-4583-844d-c62ec8841564",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3727,8 +3727,8 @@
             }
           ]
         },
-        "id": "777905f1-bba9-410f-94f7-8e4078be34de",
-        "latencyMs": 152,
+        "id": "27aefc55-253b-492d-b4c5-30ec9a166884",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3823,8 +3823,8 @@
             }
           ]
         },
-        "id": "ed53c16e-1510-4fde-8f99-386a1d3ed858",
-        "latencyMs": 148,
+        "id": "1d114b38-8b8e-4401-a713-6aada35c4754",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -3919,8 +3919,8 @@
             }
           ]
         },
-        "id": "59823d3d-48f7-456e-b62a-d8780d0b1a6f",
-        "latencyMs": 156,
+        "id": "d4e4d7c5-28fa-46ff-a5c2-013e1efbdf4c",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4015,8 +4015,8 @@
             }
           ]
         },
-        "id": "31584e23-bf9b-4fcf-bd07-8a50b16f1639",
-        "latencyMs": 149,
+        "id": "f76aa805-bc45-4505-9e82-590af95048c1",
+        "latencyMs": 25,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4111,8 +4111,8 @@
             }
           ]
         },
-        "id": "8607d3fa-0ff2-4235-83f5-5235b9d08d66",
-        "latencyMs": 145,
+        "id": "062b9903-c996-4fa0-ab6e-a989ea157f61",
+        "latencyMs": 28,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4207,8 +4207,8 @@
             }
           ]
         },
-        "id": "510f16e9-0dd4-482f-9f69-a245739ef07f",
-        "latencyMs": 143,
+        "id": "eae7bb7d-0919-445b-9fb3-ae508be5bb56",
+        "latencyMs": 27,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4303,8 +4303,8 @@
             }
           ]
         },
-        "id": "26823691-327f-4249-93a3-96e1705c7688",
-        "latencyMs": 159,
+        "id": "41ba00e2-fd07-4f8c-b267-53518b895742",
+        "latencyMs": 28,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4399,8 +4399,8 @@
             }
           ]
         },
-        "id": "685c2179-7d28-402d-82b6-ff38a59312f4",
-        "latencyMs": 155,
+        "id": "e2c572e5-cbe7-492d-aee2-7560a435e058",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4495,8 +4495,8 @@
             }
           ]
         },
-        "id": "7bc0ffff-8010-4167-a65e-8cbf88faa354",
-        "latencyMs": 151,
+        "id": "8f967a2b-6ce3-4efb-bfd2-21e92a034772",
+        "latencyMs": 25,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4591,8 +4591,8 @@
             }
           ]
         },
-        "id": "c0f34b47-b3a9-403d-a1b7-eefdf301730b",
-        "latencyMs": 146,
+        "id": "edc5c9e2-a1f1-4bf2-a198-ad1af37a217b",
+        "latencyMs": 25,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4687,8 +4687,8 @@
             }
           ]
         },
-        "id": "b163e425-3a94-4d7d-95ef-de84d0774e05",
-        "latencyMs": 160,
+        "id": "e0ab9e2f-56e3-4b17-b85f-fc7a7852b06f",
+        "latencyMs": 28,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4783,8 +4783,8 @@
             }
           ]
         },
-        "id": "55507743-155d-4104-b9ef-83bd3b9993ca",
-        "latencyMs": 157,
+        "id": "c50b19cd-bf79-4032-9fad-1f7f0991c4c8",
+        "latencyMs": 26,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4879,8 +4879,8 @@
             }
           ]
         },
-        "id": "c0455e38-57fa-420f-8fe6-73a16b3dadaf",
-        "latencyMs": 152,
+        "id": "ffc19cc2-38c8-47cb-99b3-da7d1341e0c2",
+        "latencyMs": 26,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -4975,8 +4975,8 @@
             }
           ]
         },
-        "id": "6aee2718-f974-4332-a1bc-9f8fe932e865",
-        "latencyMs": 147,
+        "id": "1e2c2e99-5052-4742-b821-ff1f89754d7d",
+        "latencyMs": 22,
         "namedScores": {},
         "prompt": {
           "raw": "The shop promised a refund but it has not arrived.",
@@ -5065,14 +5065,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "527329db-97fc-40be-9afd-7067452214a8",
-        "latencyMs": 162,
+        "id": "20e65ae3-5db1-4ea6-91b3-95a617215a66",
+        "latencyMs": 28,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5097,8 +5097,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5143,11 +5143,10 @@
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -5158,18 +5157,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "177a507a-6d0a-41ba-81d2-911590974c86",
-        "latencyMs": 158,
+        "id": "cbd75b7a-4078-45e5-ad83-c85c45b12a3d",
+        "latencyMs": 27,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5186,16 +5185,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5236,7 +5235,7 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
@@ -5258,14 +5257,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "3c3ba01d-95f9-413f-a6bd-12ea754429f1",
-        "latencyMs": 153,
+        "id": "855aa268-8987-4af0-a048-c12e58b12e37",
+        "latencyMs": 28,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5290,8 +5289,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5336,11 +5335,10 @@
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -5351,18 +5349,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "9e8dc074-932f-4294-b257-504213633117",
-        "latencyMs": 149,
+        "id": "005196fd-58c8-48a3-bb37-688b3bad2f0c",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5379,16 +5377,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5429,15 +5427,14 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -5448,18 +5445,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "5b20feda-39d8-47a7-a569-b176adbf2292",
-        "latencyMs": 162,
+        "id": "64bb60c0-9fb9-4f76-a0f0-674451ad8389",
+        "latencyMs": 28,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5476,16 +5473,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5526,7 +5523,7 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
@@ -5548,14 +5545,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "26db9cb7-5408-48ca-b17e-43257053ad02",
-        "latencyMs": 158,
+        "id": "4d353523-091b-4e6c-bf68-a690d0c941d6",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5580,8 +5577,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5644,14 +5641,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "117230a9-1afa-4092-8994-cb814c7447e8",
-        "latencyMs": 154,
+        "id": "26a4dfe5-cec1-45b1-a80a-a6469036f378",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5676,8 +5673,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5740,14 +5737,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "64fbb7c4-d6b2-4645-b6ea-3ed6575072e4",
-        "latencyMs": 149,
+        "id": "fa58c831-2d22-4127-ab79-a61f70bcf5f7",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5772,8 +5769,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5836,14 +5833,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "9d7869e0-0852-4c38-ad95-b3d7358194e0",
-        "latencyMs": 156,
+        "id": "62e0b788-15fd-471a-9784-69a73fde1496",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5868,8 +5865,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -5914,11 +5911,10 @@
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -5929,18 +5925,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "83b37689-5821-4fef-bab0-c2270acece11",
-        "latencyMs": 150,
+        "id": "b5e20d50-401c-440f-b87e-258018122ebf",
+        "latencyMs": 24,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -5957,16 +5953,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6007,15 +6003,14 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -6026,18 +6021,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "4749f21e-95f3-4367-adb4-8588b374f944",
-        "latencyMs": 147,
+        "id": "d6823302-1d2b-4a83-9056-28d322a642fc",
+        "latencyMs": 24,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6054,16 +6049,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6104,7 +6099,7 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
@@ -6126,14 +6121,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "31b18961-f922-4303-85fe-af0522439b98",
-        "latencyMs": 145,
+        "id": "9b5243a8-d6fe-447a-a5ae-866901d6630d",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6158,8 +6153,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6222,14 +6217,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "0a4cf646-bb12-4bb0-a6ac-598fa2fb2f05",
-        "latencyMs": 168,
+        "id": "1dbf3cd2-16ca-42df-82ef-4a6644b24603",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6254,8 +6249,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6300,11 +6295,10 @@
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -6315,18 +6309,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "9901b1a4-279b-45ad-aba5-aa5ef67c4787",
-        "latencyMs": 164,
+        "id": "b916a214-2343-42c4-bea4-dd6eca25e62b",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6343,16 +6337,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6393,15 +6387,14 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -6412,18 +6405,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "25ff7f88-9372-4ed5-90fd-74902a916bcf",
-        "latencyMs": 160,
+        "id": "6c3a9654-d8fc-4ba5-a482-cd1a1d7b6b58",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6440,16 +6433,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6490,7 +6483,7 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
@@ -6512,14 +6505,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "a6972825-56f9-47bd-97b7-ba40ad849c51",
-        "latencyMs": 155,
+        "id": "19377249-7695-4959-b440-c66f96c27dbf",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6544,8 +6537,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6608,14 +6601,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "c4cca297-1d90-437d-ad0e-5991275037b2",
-        "latencyMs": 154,
+        "id": "0e23075a-3496-420a-b620-0180d41c771f",
+        "latencyMs": 23,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6640,8 +6633,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6686,11 +6679,10 @@
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -6701,18 +6693,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "b8405402-6389-4371-9182-da87e734ce5e",
-        "latencyMs": 151,
+        "id": "e01538c1-a542-40ae-8d64-3e030a7a9f19",
+        "latencyMs": 23,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6729,16 +6721,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6779,7 +6771,7 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
@@ -6801,14 +6793,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "69c202f7-fd34-4b0c-80d7-56dcd026ffd6",
-        "latencyMs": 147,
+        "id": "ee71b0d0-db76-4beb-8307-9c4c41363ef8",
+        "latencyMs": 23,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6833,8 +6825,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6897,14 +6889,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "b30fa1cd-3015-4d01-8121-a6a58a445e08",
-        "latencyMs": 142,
+        "id": "a9350f40-b883-411d-a022-29094e745272",
+        "latencyMs": 26,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -6929,8 +6921,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -6975,11 +6967,10 @@
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -6990,18 +6981,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "c7b09e1d-1b85-4343-89b4-5f549341f706",
-        "latencyMs": 156,
+        "id": "8c23772f-b85b-4e4d-81cb-9f0876afd64e",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -7018,16 +7009,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -7068,15 +7059,14 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -7087,18 +7077,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "354ce328-3962-4042-b057-0adcc6fb6dda",
-        "latencyMs": 153,
+        "id": "37e27957-a961-48ff-850f-f035d2d9a963",
+        "latencyMs": 25,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -7115,16 +7105,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -7165,7 +7155,7 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
@@ -7187,14 +7177,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "7625d6a8-153f-48a2-b916-80ff85113cbc",
-        "latencyMs": 149,
+        "id": "8d531d5c-c7b6-4ffb-b579-42404d7251bf",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -7219,8 +7209,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -7283,14 +7273,14 @@
               "score": 1,
               "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "f3b93223-67dc-41e9-8031-b0707026b5b7",
-        "latencyMs": 145,
+        "id": "439fb6cf-fbdb-423b-be20-07fa93d144be",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -7315,8 +7305,8 @@
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -7361,11 +7351,10 @@
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -7376,18 +7365,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "b04e4aa6-c034-412e-ac17-dd5fe7afda21",
-        "latencyMs": 155,
+        "id": "78dea7e6-830b-4145-ac9b-1573d4d90577",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -7404,16 +7393,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -7454,15 +7443,14 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
-        "error": "Expected output \"merchant_dispute\" to equal \"card_security\"",
         "gradingResult": {
-          "pass": false,
-          "score": 0,
-          "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
           "namedScores": {},
           "tokensUsed": {
             "total": 0,
@@ -7473,18 +7461,18 @@
           },
           "componentResults": [
             {
-              "pass": false,
-              "score": 0,
-              "reason": "Expected output \"merchant_dispute\" to equal \"card_security\"",
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
               "assertion": {
-                "type": "equals",
-                "value": "card_security"
+                "type": "javascript",
+                "value": "['card_security', 'merchant_dispute'].includes(output)"
               }
             }
           ]
         },
-        "id": "7b76aade-b631-42f3-af59-964ea28b3d49",
-        "latencyMs": 151,
+        "id": "98d30594-c2e2-4304-b45a-693a243c890e",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "I do not recognise this card purchase.",
@@ -7501,16 +7489,16 @@
           "output": "merchant_dispute",
           "cached": false
         },
-        "score": 0,
-        "success": false,
+        "score": 1,
+        "success": true,
         "testCase": {
           "vars": {
             "ticket": "I do not recognise this card purchase."
           },
           "assert": [
             {
-              "type": "equals",
-              "value": "card_security"
+              "type": "javascript",
+              "value": "['card_security', 'merchant_dispute'].includes(output)"
             }
           ],
           "options": {},
@@ -7551,7 +7539,7 @@
         "metadata": {
           "_promptfooFileMetadata": {}
         },
-        "failureReason": 1
+        "failureReason": 0
       },
       {
         "cost": 0,
@@ -7579,8 +7567,8 @@
             }
           ]
         },
-        "id": "3805c1dc-e107-444b-a373-0b2fa1ec557b",
-        "latencyMs": 148,
+        "id": "96b5ba6a-2ff2-4e2d-baf9-11c6c9457d51",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -7675,8 +7663,8 @@
             }
           ]
         },
-        "id": "b01d23ba-f2bc-4f39-b36c-6b288efcd6f0",
-        "latencyMs": 144,
+        "id": "e37c07be-2acf-4e29-8bec-7946c4c86585",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -7771,8 +7759,8 @@
             }
           ]
         },
-        "id": "7c3bd9d5-f556-416c-abd6-713116b5f725",
-        "latencyMs": 159,
+        "id": "80f38980-222e-47b6-a8f6-e806fb28cb8d",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -7867,8 +7855,8 @@
             }
           ]
         },
-        "id": "e05ed5ca-82cd-4964-8774-9a0122f7ca1e",
-        "latencyMs": 152,
+        "id": "6699dc97-2a89-4346-b01e-b8fdc735f164",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -7963,8 +7951,8 @@
             }
           ]
         },
-        "id": "a393a2bf-9a06-4930-8ba8-39e509c59e00",
-        "latencyMs": 150,
+        "id": "aea5c32e-7d94-431b-b756-c757f3382a9a",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8059,8 +8047,8 @@
             }
           ]
         },
-        "id": "c823fe66-ebd1-4817-b41f-42729d3b6040",
-        "latencyMs": 147,
+        "id": "89f9b739-be52-41bf-b2ff-c39a36c99696",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8155,8 +8143,8 @@
             }
           ]
         },
-        "id": "9ec8e22a-f68a-47e4-833e-1e387b11d721",
-        "latencyMs": 152,
+        "id": "a25c7fff-e212-4a7b-b2ed-f820758a266d",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8251,8 +8239,8 @@
             }
           ]
         },
-        "id": "8963af03-1fa0-4e21-b5e8-a3d5b89e31eb",
-        "latencyMs": 149,
+        "id": "e002325a-d82b-45e4-9840-2b61248f66bf",
+        "latencyMs": 15,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8347,8 +8335,8 @@
             }
           ]
         },
-        "id": "16c2d357-f2a9-4b40-8718-07c6c7e8e8fa",
-        "latencyMs": 145,
+        "id": "45db25d0-46ef-4728-9af5-38d3c75d3f33",
+        "latencyMs": 15,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8443,8 +8431,8 @@
             }
           ]
         },
-        "id": "ab05373d-b229-47d6-8dc8-45a8bff88ee7",
-        "latencyMs": 141,
+        "id": "8240c71b-4a68-4804-a6fa-45799a8751a8",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8539,8 +8527,8 @@
             }
           ]
         },
-        "id": "88abcb4e-a750-4224-b3b6-6be3348734e5",
-        "latencyMs": 143,
+        "id": "aa899da5-33f2-4ff5-8368-8a4746f8266c",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8635,8 +8623,8 @@
             }
           ]
         },
-        "id": "fcb673aa-8258-4194-8028-6eec3e039504",
-        "latencyMs": 140,
+        "id": "b9d51c90-31ee-4145-b2a4-17f8348c1358",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8731,8 +8719,8 @@
             }
           ]
         },
-        "id": "15c0b90d-3d62-4e1a-ad46-10bbffbb4fe1",
-        "latencyMs": 138,
+        "id": "9cde352c-9776-4a9f-8f51-8aa0df9e9bb5",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8827,8 +8815,8 @@
             }
           ]
         },
-        "id": "3058c644-b189-4d86-8e60-1a653fe29e95",
-        "latencyMs": 137,
+        "id": "3acab983-aa77-4071-8bea-8c9edef60425",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -8923,8 +8911,8 @@
             }
           ]
         },
-        "id": "ae611fec-91d4-475e-af5a-8bfaed113726",
-        "latencyMs": 159,
+        "id": "6773f643-dcd2-44a1-ab54-cbf456c29f52",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9019,8 +9007,8 @@
             }
           ]
         },
-        "id": "0702bfd6-9d20-41e5-ba79-956987a54e27",
-        "latencyMs": 155,
+        "id": "45a0c4ad-d4ba-4b6b-a3b1-f9fb5035c15f",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9115,8 +9103,8 @@
             }
           ]
         },
-        "id": "ddf3a25e-247e-4873-a966-a834b389bd77",
-        "latencyMs": 151,
+        "id": "83ed738a-3812-44dc-ac80-b3986ee88247",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9211,8 +9199,8 @@
             }
           ]
         },
-        "id": "fa6c6e0f-61d7-4d03-9719-a63c80f0a733",
-        "latencyMs": 148,
+        "id": "a7efaeba-9cf4-4654-afa5-dc5909f94b20",
+        "latencyMs": 15,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9307,8 +9295,8 @@
             }
           ]
         },
-        "id": "34e6f52f-3622-4776-b94d-90008c198491",
-        "latencyMs": 152,
+        "id": "6fc4c999-3eeb-4686-a0b8-3f8dc3ebeac4",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9403,8 +9391,8 @@
             }
           ]
         },
-        "id": "f0e18213-b8e1-4d1d-9834-637692749939",
-        "latencyMs": 149,
+        "id": "c0623835-70eb-4400-b419-acd5b54e21ed",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9499,8 +9487,8 @@
             }
           ]
         },
-        "id": "748b9605-146f-4ffa-b66d-d599e2f8fc0d",
-        "latencyMs": 146,
+        "id": "4ab82ef1-325f-4a19-802b-00b92261c803",
+        "latencyMs": 14,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9595,8 +9583,8 @@
             }
           ]
         },
-        "id": "d00e1b46-784d-4b58-92c6-4ad306818102",
-        "latencyMs": 144,
+        "id": "8581d64f-9a58-4a44-a19a-deb32e7fd2e7",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9691,8 +9679,8 @@
             }
           ]
         },
-        "id": "1e775c0b-3a58-4ce9-9c14-b0ac6ed239c5",
-        "latencyMs": 151,
+        "id": "0d5a3b9e-8192-45eb-8486-1ec21c4eb341",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9787,8 +9775,8 @@
             }
           ]
         },
-        "id": "f35ee8c2-21c9-463c-998d-91edc8fbd2f5",
-        "latencyMs": 142,
+        "id": "733881b1-8a8d-4253-9af3-6eab80c3e395",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9883,8 +9871,8 @@
             }
           ]
         },
-        "id": "ddcb7631-4eb3-4dbd-9e96-3ddfdacf945a",
-        "latencyMs": 139,
+        "id": "f30a2b82-0e13-47e4-bc5e-97c077e3ac08",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -9979,8 +9967,8 @@
             }
           ]
         },
-        "id": "c3cec20b-6b59-48b2-926f-ff48da44d883",
-        "latencyMs": 137,
+        "id": "5aaa2824-1430-48f8-a15a-b994f02e474b",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The merchant charged more than the agreed amount.",
@@ -10075,8 +10063,8 @@
             }
           ]
         },
-        "id": "87a45019-df58-428b-9c7a-d36879aa8017",
-        "latencyMs": 156,
+        "id": "89e8eaa1-034b-4fc5-8f89-10778685ffb6",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10171,8 +10159,8 @@
             }
           ]
         },
-        "id": "c66ae274-1b4b-4842-9e5e-f9e1fc94cbe8",
-        "latencyMs": 154,
+        "id": "f07c302d-2321-47cd-87e5-2b16370d65db",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10267,8 +10255,8 @@
             }
           ]
         },
-        "id": "ba8c216f-e482-4bf0-b4fe-b8ed9c58519a",
-        "latencyMs": 150,
+        "id": "e0fbdead-9203-4145-a48f-a4bfdc1a946c",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10363,8 +10351,8 @@
             }
           ]
         },
-        "id": "7e287ade-7070-40a0-879c-b8e75763911e",
-        "latencyMs": 146,
+        "id": "bbf5a930-9520-421c-857d-5abe97f86a0a",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10459,8 +10447,8 @@
             }
           ]
         },
-        "id": "b3839d8c-26fb-4e81-988a-aa83d9e9c915",
-        "latencyMs": 155,
+        "id": "58aa038a-1dc2-461e-b3a8-e376e2cde1f3",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10555,8 +10543,8 @@
             }
           ]
         },
-        "id": "27ec8cbf-8de7-45dd-b1b3-27000d34f858",
-        "latencyMs": 151,
+        "id": "3e8bc3ee-21a4-4fdc-ad39-46ce27dd4aad",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10651,8 +10639,8 @@
             }
           ]
         },
-        "id": "af5fa6b2-3409-4789-ad6e-5f91656dab8f",
-        "latencyMs": 147,
+        "id": "12c1f14a-f5c6-439b-9e7a-a8536f557fa8",
+        "latencyMs": 22,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10747,8 +10735,8 @@
             }
           ]
         },
-        "id": "4217c1d4-aba2-42ba-81fb-bc6d01625dda",
-        "latencyMs": 144,
+        "id": "669c5bff-75db-40bc-9a57-65ba83d80fea",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10843,8 +10831,8 @@
             }
           ]
         },
-        "id": "25b65fbe-76e5-4bd5-8eb8-5369cec542a8",
-        "latencyMs": 161,
+        "id": "01d9edee-8c58-4442-8aba-37b5630517b8",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -10939,8 +10927,8 @@
             }
           ]
         },
-        "id": "7a9f7e20-a88a-4272-a141-f4a87ecce6eb",
-        "latencyMs": 156,
+        "id": "cc6cb887-fe8f-4d84-8812-f0b5771185e2",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11035,8 +11023,8 @@
             }
           ]
         },
-        "id": "33ee96da-b0ab-466a-bb76-989bae7b9d39",
-        "latencyMs": 151,
+        "id": "fd83231d-b6ea-4820-85ac-bd8cb85b96e1",
+        "latencyMs": 25,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11131,8 +11119,8 @@
             }
           ]
         },
-        "id": "2ffa5d9e-3e10-453e-8af1-80673d230d9d",
-        "latencyMs": 147,
+        "id": "45344009-f5c6-4b15-98ca-71bd37dd69a3",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11227,8 +11215,8 @@
             }
           ]
         },
-        "id": "d235120f-af2e-489c-9fd9-4a1a48244737",
-        "latencyMs": 162,
+        "id": "8069c3db-7c6c-4f7c-92c9-073336faf0dd",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11323,8 +11311,8 @@
             }
           ]
         },
-        "id": "258f072e-b5ad-4f04-bea5-d7fe8f70f624",
-        "latencyMs": 159,
+        "id": "ba42e8ef-1194-45f9-be3b-eb7513b0afaf",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11419,8 +11407,8 @@
             }
           ]
         },
-        "id": "08e72e8d-12bb-4af6-81a5-fac0f4a7c8f4",
-        "latencyMs": 154,
+        "id": "cacda7ec-af00-45b4-bcc7-4962f1782a9a",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11515,8 +11503,8 @@
             }
           ]
         },
-        "id": "5fd9941d-7094-435d-a325-38fd1c355e17",
-        "latencyMs": 150,
+        "id": "ed913e6c-d317-435c-8bc9-963a26c9077c",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11611,8 +11599,8 @@
             }
           ]
         },
-        "id": "012bcdee-30ae-4b9d-9804-cc175673dc7b",
-        "latencyMs": 147,
+        "id": "261fdeac-069d-472c-b669-18bad086e99d",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11707,8 +11695,8 @@
             }
           ]
         },
-        "id": "a00d0095-be5c-4c56-9292-136895713e90",
-        "latencyMs": 145,
+        "id": "94166e08-87ee-4a3a-9c98-b70a4607ce00",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11803,8 +11791,8 @@
             }
           ]
         },
-        "id": "8fbd0557-72af-463b-b3e8-1ac768993c7e",
-        "latencyMs": 144,
+        "id": "971e18a6-443e-4167-aa70-8b737959713a",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11899,8 +11887,8 @@
             }
           ]
         },
-        "id": "b715e577-0f63-4e42-ba98-e46b9ca0865a",
-        "latencyMs": 143,
+        "id": "28c04063-0af5-4203-95a6-43cdf91414db",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -11995,8 +11983,8 @@
             }
           ]
         },
-        "id": "874fd719-008e-4cdb-8067-680aa0010c3a",
-        "latencyMs": 161,
+        "id": "df262b60-22bc-49fc-b3da-0833f299ae18",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -12091,8 +12079,8 @@
             }
           ]
         },
-        "id": "54325c67-62d0-4ad0-bd45-934c8bc4f312",
-        "latencyMs": 158,
+        "id": "10aeb9be-fae0-4207-9293-eb65d4457519",
+        "latencyMs": 15,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -12187,8 +12175,8 @@
             }
           ]
         },
-        "id": "e3aece12-90dc-4558-af35-93d7c75f075c",
-        "latencyMs": 154,
+        "id": "dd029e31-51b6-4122-9c07-550b3386408d",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -12283,8 +12271,8 @@
             }
           ]
         },
-        "id": "197d0192-b839-4128-90e6-f0f8ce1d5920",
-        "latencyMs": 150,
+        "id": "5f455c61-17fd-4bdd-8d3c-4cc3000f108b",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -12379,8 +12367,8 @@
             }
           ]
         },
-        "id": "7ec579aa-574b-478c-a5a2-bc90a206eee5",
-        "latencyMs": 159,
+        "id": "f18de6dc-b01a-40a2-adda-01363bb4fd92",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -12475,8 +12463,8 @@
             }
           ]
         },
-        "id": "58ea671a-e130-4e4b-b9ec-693e1544bc1a",
-        "latencyMs": 156,
+        "id": "2afcdc68-2b87-4c1e-8f77-8907c602b5ff",
+        "latencyMs": 15,
         "namedScores": {},
         "prompt": {
           "raw": "Cash came out of my balance but the ATM dispensed nothing.",
@@ -12571,8 +12559,8 @@
             }
           ]
         },
-        "id": "66963ad2-928a-4e9a-9073-5a4d2cffbf37",
-        "latencyMs": 151,
+        "id": "6435b33e-644a-4530-a36c-651f7657798f",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -12667,8 +12655,8 @@
             }
           ]
         },
-        "id": "c213c576-404a-448c-8402-8e69b7938b59",
-        "latencyMs": 147,
+        "id": "2a99054f-1fca-41cf-a0e0-45f217637c01",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -12763,8 +12751,8 @@
             }
           ]
         },
-        "id": "2cdb7b27-31aa-40eb-a64d-0121b58c5428",
-        "latencyMs": 155,
+        "id": "d185aa7c-8ec0-468c-9914-e4e8b344b26c",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -12859,8 +12847,8 @@
             }
           ]
         },
-        "id": "a23fe317-daf1-4429-a743-25e9774f6ef6",
-        "latencyMs": 151,
+        "id": "29299706-fffb-4d57-92bd-c32b6e59a2fe",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -12955,8 +12943,8 @@
             }
           ]
         },
-        "id": "7a88fd54-95aa-411d-b592-abe51da43239",
-        "latencyMs": 147,
+        "id": "3aaa013c-4069-497e-b4d8-575fe12d894f",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13051,8 +13039,8 @@
             }
           ]
         },
-        "id": "fbb8c00e-92ec-426a-ae24-e50bb17e78a9",
-        "latencyMs": 143,
+        "id": "b576ee89-ee04-4ab5-8365-7c36fe55ea82",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13147,8 +13135,8 @@
             }
           ]
         },
-        "id": "7c2dbc92-d96a-43e8-a5f8-71223ed95fbd",
-        "latencyMs": 157,
+        "id": "50009de7-9551-41b1-8c1f-13348791b3a7",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13243,8 +13231,8 @@
             }
           ]
         },
-        "id": "9471c925-2f5d-4f07-a344-8142f6c77813",
-        "latencyMs": 154,
+        "id": "7d6d4983-b473-4759-8deb-c9d439fe875c",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13339,8 +13327,8 @@
             }
           ]
         },
-        "id": "cb95a51b-84cf-4da6-a626-41668dd7aa48",
-        "latencyMs": 150,
+        "id": "a93ec9dc-1499-4985-8f14-eca5e0b5f2ba",
+        "latencyMs": 14,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13435,8 +13423,8 @@
             }
           ]
         },
-        "id": "1f483368-24ff-403a-b00d-b6f123ae18aa",
-        "latencyMs": 146,
+        "id": "7942b957-1c44-4db1-aeda-9e4f74883303",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13531,8 +13519,8 @@
             }
           ]
         },
-        "id": "bdf549f0-e2d5-4fff-bd9c-c8fa8266a10f",
-        "latencyMs": 154,
+        "id": "0eeb3262-074b-4fdb-99f9-8979ffdec0c8",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13627,8 +13615,8 @@
             }
           ]
         },
-        "id": "3df3318c-e600-4e15-8e0b-aa13bf1872c2",
-        "latencyMs": 150,
+        "id": "a1c766da-db22-4f2f-aad3-dbc77cd26609",
+        "latencyMs": 22,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13723,8 +13711,8 @@
             }
           ]
         },
-        "id": "d44450ec-6564-4c5c-bcd2-7a46be6ef767",
-        "latencyMs": 149,
+        "id": "93da13ab-6057-4bb0-a6a0-efd79438fc01",
+        "latencyMs": 14,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13819,8 +13807,8 @@
             }
           ]
         },
-        "id": "42921bcc-b161-432e-97c0-15a78c611a9c",
-        "latencyMs": 146,
+        "id": "0e1c82d3-05ce-435a-87ef-67cbf80be8f1",
+        "latencyMs": 14,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -13915,8 +13903,8 @@
             }
           ]
         },
-        "id": "71a3e176-fde0-44c3-ba2f-22d66abbfaec",
-        "latencyMs": 160,
+        "id": "f7c762ac-1e3c-4b7c-a0bf-1e0ac1cb5519",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14011,8 +13999,8 @@
             }
           ]
         },
-        "id": "23780542-7512-454e-883a-f3b1e473377b",
-        "latencyMs": 157,
+        "id": "f5f65ceb-eff6-4662-ac80-c9f321580408",
+        "latencyMs": 19,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14107,8 +14095,8 @@
             }
           ]
         },
-        "id": "2d52c920-00ac-4c6d-b49f-f491ca9f09ed",
-        "latencyMs": 153,
+        "id": "68806050-505d-4cee-8fd5-3df1082b3e54",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14203,8 +14191,8 @@
             }
           ]
         },
-        "id": "8b75cd44-0863-40da-9d1e-a9a9b36212fe",
-        "latencyMs": 149,
+        "id": "76d5c7be-9117-46f6-9b2d-d794de9857b1",
+        "latencyMs": 23,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14299,8 +14287,8 @@
             }
           ]
         },
-        "id": "77a60b8e-0492-44fd-97d7-5638b7d6a87b",
-        "latencyMs": 161,
+        "id": "c166bb9e-e1b6-4068-b255-25a136be8036",
+        "latencyMs": 17,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14395,8 +14383,8 @@
             }
           ]
         },
-        "id": "c0d0845e-c76b-4200-9129-8e8863e834f4",
-        "latencyMs": 157,
+        "id": "19aad948-0c26-4ba4-b852-ba100cd1dea1",
+        "latencyMs": 14,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14491,8 +14479,8 @@
             }
           ]
         },
-        "id": "1e0bf1f3-f55e-41b6-bd69-8b96aabdd4a2",
-        "latencyMs": 153,
+        "id": "a5591ac3-7df8-44f7-89c4-66455d9f2cf4",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14587,8 +14575,8 @@
             }
           ]
         },
-        "id": "1253f6fd-6dee-45ea-b0b1-c0fead7dd9ff",
-        "latencyMs": 150,
+        "id": "91301184-ac2f-4020-9da5-82e0ae8a124d",
+        "latencyMs": 21,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14683,8 +14671,8 @@
             }
           ]
         },
-        "id": "e452bf10-8958-4d27-8ab1-7d12193efc8c",
-        "latencyMs": 159,
+        "id": "1fff6180-c247-4940-adba-840a6c774fb6",
+        "latencyMs": 18,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14779,8 +14767,8 @@
             }
           ]
         },
-        "id": "26898500-39ff-41fd-9a80-c39bb6e412da",
-        "latencyMs": 156,
+        "id": "4da6541c-4bd7-46f9-9b43-4b29761c3fa5",
+        "latencyMs": 14,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14875,8 +14863,8 @@
             }
           ]
         },
-        "id": "8c02af1c-2015-4f9e-be0a-b3bc3f21e7ae",
-        "latencyMs": 151,
+        "id": "e813fda4-6ca0-4989-9887-a5bb7acf32ca",
+        "latencyMs": 16,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -14971,8 +14959,8 @@
             }
           ]
         },
-        "id": "5939796c-9668-4ef6-8cda-b6846b482813",
-        "latencyMs": 147,
+        "id": "fa8d96cc-1e03-46ee-b511-7c79a5d5bed3",
+        "latencyMs": 20,
         "namedScores": {},
         "prompt": {
           "raw": "The transfer is still pending after two days.",
@@ -15043,8 +15031,8 @@
       }
     ],
     "stats": {
-      "successes": 144,
-      "failures": 12,
+      "successes": 156,
+      "failures": 0,
       "errors": 0,
       "tokenUsage": {
         "prompt": 0,
@@ -15074,8 +15062,8 @@
           }
         }
       },
-      "durationMs": 9703,
-      "evaluationDurationMs": 9703
+      "durationMs": 5826,
+      "evaluationDurationMs": 5826
     }
   },
   "config": {
@@ -15117,8 +15105,8 @@
         },
         "assert": [
           {
-            "type": "equals",
-            "value": "card_security"
+            "type": "javascript",
+            "value": "['card_security', 'merchant_dispute'].includes(output)"
           }
         ]
       },
@@ -15167,8 +15155,8 @@
     "nodeVersion": "v24.15.0",
     "platform": "linux",
     "arch": "x64",
-    "exportedAt": "2026-07-28T14:13:53.482Z",
-    "evaluationCreatedAt": "2026-07-28T14:13:43.538Z"
+    "exportedAt": "2026-07-28T14:32:49.401Z",
+    "evaluationCreatedAt": "2026-07-28T14:32:43.436Z"
   },
   "vars": [
     "ticket"
@@ -15177,7 +15165,7 @@
     "eventSource": "cli",
     "showProgressBar": true,
     "repeat": 26,
-    "maxConcurrency": 4,
-    "cache": true
+    "maxConcurrency": 1,
+    "cache": false
   }
 }

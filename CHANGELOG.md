@@ -8,6 +8,16 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Changed
+
+- The README now follows a developer decision path: a fully green Promptfoo
+  run, why its moving route matters, a no-model-call trial, integration points,
+  and the baseline workflow. The measured AgentCore release-gate visual now
+  appears where the delivery-stack placement is explained.
+- The Promptfoo example's configured quality policy accepts either plausible
+  fraud queue for one ambiguous case. All 156 assertions pass, while
+  AgentVerity independently identifies the route as unstable for baseline use.
+
 ## [0.12.1] - 2026-07-28
 
 ### Added

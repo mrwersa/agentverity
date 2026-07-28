@@ -8,10 +8,16 @@
 [![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25%2B-brightgreen.svg)](#development)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
-Your evaluator says the agent behaved correctly. AgentVerity asks a different
-question: would the same case reach the same decision if you ran it again?
-When you declare the required decisions, it also checks which ones the test
-set actually reached.
+## The 60-second problem
+
+Consider an LLM payment router that sends each dispute to one of six queues.
+[Promptfoo](https://www.promptfoo.dev/) runs six cases 26 times. Its configured
+quality checks accept either fraud queue for one ambiguous card-security case.
+All **156/156 assertions pass**.
+
+Would you save that run as the expected behaviour for future releases?
+
+AgentVerity reuses the same Promptfoo export and finds this:
 
 ```text
 4. STABILITY BY ROUTE
@@ -24,165 +30,139 @@ set actually reached.
      card_security <-> merchant_dispute  x8
 ```
 
-The pooled decision-change rate was 10.3%, and the contract check passed. The
-route-level view isolates the problem: `card_security` changes to
-`merchant_dispute` in 8 of 13 paired reruns. The other five routes did not
-change, but 13 pairs are too few to certify them at the declared 5% tolerance.
+The contract check passes, but the decision switches between `card_security`
+and `merchant_dispute` in 8 of 13 paired reruns.
 
-## Already running promptfoo or DeepEval?
+## Why you should care
 
-You have the repeats. Point AgentVerity at the saved results:
+- Those labels send work to different queues, controls, and owners.
+- A moving reference makes later regression failures noisy and hard to trust.
+- One pooled score hides which route is moving.
+- Zero observed changes do not prove a quiet route is stable when the sample
+  is too small.
 
-```bash
-agentverity assess --promptfoo results.json --suite decision-suite.json
-```
+AgentVerity names the unstable route and leaves the five underpowered routes
+`undecided`. It will not freeze this run as a baseline.
 
-That assessment makes no model calls. Keep your evaluator for correctness.
-AgentVerity decides whether the evidence is repeatable enough to freeze as a
-baseline.
+## Try it without model calls
 
-DeepEval users share the same collected outputs through
-`evidence_from_deepeval`, and any other harness can export the
-[neutral evidence format](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
-The repository includes a
-[recorded Promptfoo run](https://github.com/mrwersa/agentverity/tree/main/examples/promptfoo_bridge)
-that you can assess without installing Promptfoo.
-
-## What it is
-
-AgentVerity qualifies tests for model-backed components that choose from a
-finite, reviewed set of decisions. Examples include routers, approval or
-policy gates, and supervisors that select the next agent or tool. It compares
-the named decision, exposed as `verdict`, rather than harmless changes in
-explanation text.
-
-Correctness and trajectory evaluators ask whether the agent behaved properly.
-AgentVerity asks whether that evidence is repeatable and whether the reviewed
-decision contract was exercised before the run becomes a regression baseline.
-A regression baseline is a reviewed run saved as the expected behaviour for
-testing later versions.
-
-Use another evaluator for open-ended chat with no reviewed decision or ordered
-tool-path contract. AgentVerity is alpha, with
-[documented pre-1.0 guarantees](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md).
-
-Read the design story:
-[Introducing AgentVerity: What Does a Green Agent Test Prove?](https://mrwersa.medium.com/introducing-agentverity-what-does-a-green-agent-test-prove-fa6ebbfda2d3)
-
-## Is it a fit?
-
-AgentVerity fits when all three conditions hold:
-
-- each run exposes a named decision or a reviewed tool or handoff path
-- repeated trials can start from equivalent state in isolated sessions
-- you can supply deliberately varied test inputs that should reach different
-  valid decisions
-
-Good targets include support and payment routers, fraud triage, approval and
-policy gates, incident routing, multi-agent supervisors, and bounded tool
-selectors. In a larger agent, test the step that owns the decision or the
-final pipeline decision. Test both when each is a release contract.
-
-It is not an end-to-end quality evaluator for chat, RAG answers, generated
-content, coding agents, or research agents. If one of those systems also emits
-a reviewed route, approval, escalation, or tool path, AgentVerity can qualify
-that decision layer, not the open-ended work around it.
-
-[See the applicability checklist and exact limits](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md).
-
-## Try it
+The repository includes that recorded Promptfoo run:
 
 ```bash
-pip install agentverity
+git clone --depth 1 https://github.com/mrwersa/agentverity.git
+cd agentverity
+python -m pip install agentverity
+agentverity assess \
+  --promptfoo examples/promptfoo_bridge/results.json \
+  --suite examples/payment_decisions.json
 ```
 
-```python
-from agentverity import from_callable, run
+The last command performs arithmetic over saved decisions. It makes no model
+or provider calls.
 
-def route(ticket: str) -> dict[str, str]:
-    # Deliberate defect: every ticket takes the same route.
-    return {"text": "route: general", "verdict": "general"}
+Already using [DeepEval](https://deepeval.com/)? Pass the same precomputed
+`LLMTestCase` objects to `evidence_from_deepeval`. Any harness can use the
+[small neutral evidence format](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
 
-agent = from_callable(route)
-result = run(agent, inputs=[
-    "my card was charged twice",
-    "the app crashes on login",
-    "where is my refund",
-    "the checkout button is the wrong colour",
-])
+Keep your existing evaluator for correctness and trajectory quality.
+AgentVerity qualifies whether its repeated decision evidence is suitable for a
+regression baseline.
 
-print(result.headline)
-```
+## Where to integrate it
 
-```text
-NOT TRUSTWORTHY - the agent answered 'general' on 100% of the probes,
-so a pass says more about the probe set than about the agent.
-```
+AgentVerity is a test and release step, not serving-path middleware.
 
-Those deliberately varied test inputs form the **probe set**. AgentVerity asks:
+| Stage | Use it for |
+|---|---|
+| Local development | Diagnose a moving or one-route-only test set |
+| Pull request | Qualify a candidate baseline and publish JUnit |
+| Pre-release | Refuse unstable, incomplete, or underpowered evidence |
+| Scheduled canary | Recheck reviewed synthetic cases and emit OpenTelemetry |
 
-- **Decision stability:** does one case reach the same decision across
-  isolated reruns?
-- **Observed decision spread:** do the cases reach more than one decision?
-- **Declared decision coverage:** did the suite include every required
-  decision, did the agent return them, and did it emit an unknown decision?
+One real integration combines DeepEval quality, AgentVerity evidence, and
+Amazon AgentCore health before admitting a baseline:
 
-A green quality score answers a different question: whether the selected
-answers were right. AgentVerity checks how much evidence that score rests on.
-It complements DeepEval, promptfoo, AgentCore Evaluations, and ordinary
-assertions rather than replacing them.
+![A real AgentCore canary combines DeepEval quality, AgentVerity evidence, and cloud health before baseline admission](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
 
-Together, the checks guard against two failure modes:
+Never repeat live customer requests. Use reviewed synthetic cases in CI,
+before release, or on a schedule.
 
-- **Vacuous green:** every supplied assertion passes, but the test inputs reach
-  only one decision.
-- **Regression trap:** that narrow run becomes the baseline, so later changes
-  to untested decisions remain invisible.
+## The developer workflow
 
-AgentVerity qualifies the evidence from this run. It does not certify the
-agent as correct, safe, or fully covered.
+1. **Evaluate quality.** Keep Promptfoo, DeepEval, or your current assertions.
+2. **Reuse the outputs.** Import repeated decisions into AgentVerity without
+   calling the model again.
+3. **Repair the evidence.** Fix moving routes, add missing cases, or collect
+   the reruns needed for an honest conclusion.
+4. **Freeze a baseline.** A human approves the reference only after the
+   evidence gate admits it.
+5. **Catch regressions.** `agentverity check` requalifies the current run
+   before comparing it with that baseline.
+
+The import command diagnoses decisions already collected by another
+evaluator. The `snapshot` and `check` commands below provide the same
+admission policy when AgentVerity calls your agent directly.
+
+## What it checks
+
+| Check | Developer question |
+|---|---|
+| Decision stability | Does the same case keep reaching the same decision? |
+| Observed spread | Did all test inputs collapse onto one decision? |
+| Declared coverage | Were all required decisions and critical routes represented and returned? |
+| Route evidence | Which route moves, and which quiet routes still lack enough reruns? |
+| Relation coverage | Did an input transformation genuinely exercise each route, or was it a no-op? |
+
+It keeps three outcomes separate:
+
+- **stable enough** for the declared tolerance
+- **unstable** above that tolerance
+- **undecided** because the run did not collect enough evidence
+
+## Is it for my agent?
+
+Use it when:
+
+- the component chooses from named routes, approvals, policies, tools, or
+  hand-offs
+- repeated runs can start from equivalent isolated state
+- you can write deliberately varied cases for the decisions that matter
+
+Good targets include support routers, fraud triage, policy gates, approval
+flows, incident routing, and multi-agent supervisors.
+
+Use another evaluator for open-ended chat, RAG quality, generated content, or
+coding-agent output. If such a system also emits a reviewed route or approval,
+AgentVerity can qualify that decision layer.
+
+[Check applicability and exact limits](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md).
 
 ## Why rerun counts are harder than they look
 
-Three or five reruns chosen by convention can support the wrong conclusion.
-In one deterministic example, 36 non-overlapping rerun comparisons produced no
-decision changes. That was still too little evidence to certify a change rate
-below 5%. The honest result was **undecided**, not unstable. Certifying that
-threshold with no observed changes needed 73 comparisons.
+Picking three or five reruns by convention is guesswork:
 
-The decision rule is:
+- 36 paired reruns with no changes only bound the change rate below 9.6%.
+- A claim below 5% needs 73 zero-change pairs.
+- A short quiet run is therefore `undecided`, not proven stable.
 
-- pair reruns without reusing an output
-- calculate a 95% Wilson interval around the observed decision-change rate
-- report `deterministic` when the upper bound is below the tolerated rate
-- report `stochastic` when the lower bound is above the tolerated rate
-- report `undecided` when the interval spans that tolerance
+AgentVerity sizes the run from your tolerance, uses non-overlapping pairs, and
+keeps three answers: stable enough, unstable, or undecided. The default
+`balanced` setting uses a 5% tolerance.
 
-Wilson intervals are established statistics. AgentVerity's design choice is
-to use one as a three-outcome release rule rather than force an underpowered
-run into stable or unstable. Non-overlapping pairs avoid making the sample
-look larger than the target calls justify, while the requested tolerance
-determines the call budget before execution.
+A small pytest loop can collect calls. The library packages the harder policy:
+evidence sizing, route-specific targets, and one consistent decision across
+text, JSON, JUnit, telemetry, and snapshots.
 
-The default `balanced` precision calculates that budget automatically.
-
-[See the executable helper, arithmetic, and exact API mapping](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md).
-
-### Why not write a rerun loop in pytest?
-
-A loop can collect repeated calls. The difficult part is deciding what those
-calls support: forming non-overlapping comparisons, sizing them from a
-tolerance, preserving `undecided`, enforcing stricter route targets, and
-keeping terminal, JSON, JUnit, telemetry, and snapshot admission consistent.
-If your evaluation platform already implements that policy, keep it.
-AgentVerity packages the policy for teams that would otherwise maintain it
-themselves.
+[Read the executable arithmetic and design](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md).
 
 ## The evidence gate
 
-The evidence gate refuses to save a baseline until calls complete, decisions
-are stable enough, the probe set crosses a decision boundary, and a person
-approves the reference outputs.
+The evidence gate refuses to save a baseline until:
+
+- calls complete
+- decisions are stable enough
+- the cases reach the required decisions
+- a person approves the reference outputs as correct
 
 The bundled payment-dispute example runs two test sets:
 
@@ -195,59 +175,17 @@ python examples/payment_dispute_gate.py
 | Narrow, 6 duplicate-charge cases | ✅ 6/6 | ✅ verdict-deterministic | ❌ 1/6 required routes | ❌ REFUSED |
 | Repaired, 6 dispute categories | ✅ 6/6 | ✅ verdict-deterministic | ✅ 6/6 required routes | ✅ ADMITTED |
 
-Both score 6/6. The narrow set correctly tests one route, but it covers only
-one of the six routes declared as required. The repaired set reaches all six
-and can be saved as a versioned snapshot.
+Both score 6/6. The narrow set is a valid unit test for one route, but it is
+not a system-wide baseline. The repaired set reaches all six required routes
+and can be admitted.
 
-Declare that test contract in Python:
-
-```python
-from agentverity import DecisionCase, DecisionContract, DecisionSuite, run
-
-suite = DecisionSuite(
-    contract=DecisionContract(
-        allowed={"duplicate_charge", "refund_delay", "card_security"},
-        critical={"card_security"},
-    ),
-    cases=(
-        DecisionCase("I was charged twice", "duplicate_charge"),
-        DecisionCase("My refund is late", "refund_delay"),
-        DecisionCase("I do not recognise this card payment", "card_security"),
-    ),
-)
-
-result = run(agent, suite=suite)
-```
-
-`expected` records the route each case is intended to exercise. AgentVerity
-checks intended and observed route coverage separately. Your assertions or
-quality evaluator still decide whether each returned route was correct.
-
-Declaring a suite also splits the existing stability evidence by intended
-route. A noisy route is named instead of being averaged together with quieter
-ones, and the report lists the decision pairs that changed. A route proven
-stochastic blocks snapshot admission even when the pooled result looks
-deterministic.
-
-Use `stability_targets={"card_security": 0.05}` when a route needs its own
-release condition, then inspect the zero-change cost before calling the agent:
+Before spending model calls, inspect the zero-change evidence budget:
 
 ```bash
 agentverity plan --suite examples/route_stability_plan.json
 ```
 
-A targeted route that remains undecided blocks snapshot admission. An explicit
-`budget` remains a hard cap, so an unaffordable plan is refused before any
-agent call.
-
-Breadth remains separate from repeats. Declare
-`minimum_cases={"card_security": 3}` when review policy requires several cases
-for a route. This counts written cases and does not pretend three paraphrases
-are semantically diverse. When relations are enabled, the report also names
-routes that no transformation actually changed. Those are relation checks
-that were not exercised, not 0% violation results.
-
-Create one through the CLI:
+Then create the reviewed baseline:
 
 ```bash
 agentverity snapshot \
@@ -261,60 +199,21 @@ The same checks run before `agentverity check` reports differences as
 regressions. Snapshot files retain SHA-256 input fingerprints rather than raw
 prompts.
 
-## Where it fits
+The contract can also declare stricter stability targets for critical routes
+and minimum case counts. Repeats support a stability claim. Distinct reviewed
+cases support breadth. AgentVerity keeps those two claims separate.
 
-AgentVerity is a baseline-admission layer, not serving-path middleware. It can
-run the repeated checks itself or assess outputs an evaluator already
-collected:
-
-```text
-reviewed cases ---> evaluation harness ---> repeated agent outputs
-                                               |              |
-                              correctness / trajectory     AgentVerity
-                                      quality result       evidence decision
-                                               |              |
-                                               +-------> release policy
-                                                          |       |
-                                                        admit   refuse
-                                                          |
-                                                 regression baseline
-```
-
-Use it while developing, on a pull request, before release, or as a scheduled
-synthetic canary. Do not repeat live customer requests. Results can leave as
-text, JSON, JUnit XML, or one privacy-minimised OpenTelemetry span.
-
-Already have repeated outputs? Reuse them without another target call:
-
-Promptfoo users import its JSON export. DeepEval users pass the same
-precomputed `LLMTestCase` objects to `evidence_from_deepeval`. Other harnesses
-can emit the small versioned interchange format. In each path, the existing
-evaluator keeps ownership of correctness and trace quality while AgentVerity
-makes the suite-level stability and admission decision.
-
-[Use imported evidence with Promptfoo, DeepEval, or another harness](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
-
-[Read how per-route evidence works, with worked examples](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md).
-
-[See CI, telemetry, lifecycle, and multi-agent integration](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md).
-
-### Measured AgentCore canary
+## Measured production example
 
 The optional production example combines a Strands payment router on Amazon
 Bedrock, DeepEval route-quality checks, AgentVerity, AgentCore Runtime, and
 CloudWatch.
 
-![A real AgentCore canary passes DeepEval quality, AgentVerity evidence, and cloud health checks before its baseline is admitted](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
-
 At its declared 10% canary tolerance, the London run recorded 6/6 correct
 routes, no changes across 36 repeat pairs, all six routes reached, and 78
-successful cloud calls with no errors or throttles. Its first run was stable
-but only 5/6 correct, so the example now requires both quality and evidence
-before snapshot admission.
-
-The v0.9 contract path was then rerun directly through Bedrock after the old
-runtime was removed. It again scored 6/6 with 0/36 route changes, and reported
-all six required routes intended and observed with no unknown decision.
+successful cloud calls with no errors or throttles. An earlier run was stable
+but only 5/6 correct. The release policy therefore requires both quality and
+evidence rather than treating either tool as sufficient.
 
 This is deployment proof, not an AWS requirement. The zero-dependency callable
 works with any stack.
@@ -322,33 +221,23 @@ works with any stack.
 [Run the production example](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
 [Read the measured result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
 
-## Scope
+## What it does not prove
 
-A trustworthy AgentVerity result means that, for the supplied probe set,
-optional decision contract, and chosen tolerance:
+`TRUSTWORTHY` means the supplied cases produced stable, non-collapsed evidence
+at the declared tolerance and satisfied any declared decision contract.
 
-- repeated isolated calls provided enough evidence about decision stability
-- observed decisions did not collapse onto one highly dominant route
-- every required decision was intended and observed when a contract was given
-- no observed decision fell outside that contract
-- execution completed, and at least one requested relation genuinely changed
-  an input. Per-route relation gaps remain explicit diagnostics
+It does **not** prove:
 
-That is a minimum dynamic adequacy check, not exhaustive branch coverage.
-Without a decision contract, AgentVerity only checks observed diversity. With
-one, it reports required, intended, observed, missing, and unknown decisions.
-This is **required-decision presence**, not comprehensive behavioural-boundary
-coverage. It does not establish that every boundary was tested or that
-critical routes are correct. Keep labelled correctness cases beside it.
-`critical` marks consequence for coverage reporting, while
-`stability_targets` separately declares any route-specific statistical policy.
+- that each decision was correct or safe
+- that every code branch or behavioural boundary was tested
+- that several cases are semantically diverse
+- that an open-ended answer is high quality
 
-It also does not judge answer correctness, prove safety, store traces, host a
-dashboard, or monitor production traffic. Static tools remain useful for
-declared branches, route schemas, and expected labels. AgentVerity measures
-the decisions a model-backed or black-box target actually returns.
+It also does not store traces, host a dashboard, or monitor production
+traffic. Static coverage, Promptfoo or DeepEval quality checks, and production
+observability remain separate parts of the stack.
 
-## Documentation
+## Go deeper
 
 - [Which agents fit, and what the result does not prove](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md)
 - [Why arbitrary rerun counts fail](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
@@ -356,12 +245,11 @@ the decisions a model-backed or black-box target actually returns.
 - [Reuse Promptfoo, DeepEval, or generic evidence without duplicate calls](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md)
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
-- [Design decisions](https://github.com/mrwersa/agentverity/blob/main/DESIGN.md)
-- [ADR: compare named decisions, not generated text](https://github.com/mrwersa/agentverity/blob/main/docs/adr/0001-compare-named-decisions.md)
 - [API stability and path to 1.0](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)
 - [Security and data handling](https://github.com/mrwersa/agentverity/blob/main/SECURITY.md)
-- [Contributing](https://github.com/mrwersa/agentverity/blob/main/CONTRIBUTING.md)
-- [Release process](https://github.com/mrwersa/agentverity/blob/main/RELEASING.md)
+
+Read the design story:
+[Introducing AgentVerity: What Does a Green Agent Test Prove?](https://mrwersa.medium.com/introducing-agentverity-what-does-a-green-agent-test-prove-fa6ebbfda2d3)
 
 ## Development
 

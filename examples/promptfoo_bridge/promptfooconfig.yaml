@@ -20,8 +20,11 @@ tests:
   - vars:
       ticket: I do not recognise this card purchase.
     assert:
-      - type: equals
-        value: card_security
+      # The quality policy accepts either fraud queue for this ambiguous case.
+      # Both are valid outputs, but switching between them still makes a poor
+      # regression baseline because the queues have different downstream work.
+      - type: javascript
+        value: "['card_security', 'merchant_dispute'].includes(output)"
   - vars:
       ticket: The merchant charged more than the agreed amount.
     assert:

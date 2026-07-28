@@ -328,8 +328,9 @@ def test_the_shipped_promptfoo_export_reproduces_the_readme_numbers():
 
     assert result.meter.pair_trials == 78
     assert evidence.provenance["provider"] == "file://flaky_router.py"
-    assert sum(row["success"] is False for row in rows) == 12
+    assert all(row["success"] is True for row in rows)
     assert all(case.errors == 0 for case in evidence.cases)
+    assert "156/156 assertions pass" in (root / "README.md").read_text()
     assert result.meter.pair_flips == 8
     assert result.route_stability.stochastic == ("card_security",)
     by_route = {r.decision: r for r in result.route_stability.routes}

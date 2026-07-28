@@ -2,13 +2,16 @@
 
 Promptfoo owns case-level quality assertions. AgentVerity reuses its repeated
 outputs to decide whether those results are stable and cover the reviewed
-decision contract.
+decision contract. The ambiguous card-security case accepts either fraud queue
+as a valid quality result, so all 156 configured assertions pass.
 
 From this directory, regenerate the sample with Promptfoo:
 
 ```bash
 npx promptfoo@latest eval \
   --repeat 26 \
+  --max-concurrency 1 \
+  --no-cache \
   --output results.json \
   --no-share
 
@@ -46,15 +49,15 @@ $ agentverity assess \
     --isolation unknown
 ```
 
-The contract check passes and the pooled decision-change rate is 10.3%. Per
-route, `card_security` changes to `merchant_dispute` in 8 of its 13 paired
-reruns. The other five routes did not change, but remain `undecided`: 13 pairs
-bound their change rate at 22.8%, while 73 zero-change pairs are needed to
-certify the declared 5% tolerance.
+The contract check passes and the pooled decision-change rate is 10.3%. For
+the ambiguous case, the decision switches between `card_security` and
+`merchant_dispute` in 8 of its 13 paired reruns. The other five routes did not
+change, but remain `undecided`: 13 pairs bound their change rate at 22.8%,
+while 73 zero-change pairs are needed to certify the declared 5% tolerance.
 
-The fixed pseudo-random seed makes the committed fixture reproducible. The
-provider still returns different decisions across repeated calls to the
-`card_security` case. Promptfoo correctly marks the 12 changed decisions as
-failed quality assertions. AgentVerity retains those returned decisions for
-stability analysis rather than mistaking an assertion failure for a provider
-failure.
+The fixed pseudo-random seed, serial collection, and disabled cache make the
+committed fixture reproducible. The provider still returns different
+decisions across repeated calls to the `card_security` case. Promptfoo accepts
+both labels under the configured quality policy. AgentVerity catches the
+separate operational problem: a moving route is not a stable regression
+reference even when each answer is allowed.
