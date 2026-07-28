@@ -14,10 +14,14 @@ from agentverity import (
     EvidenceError,
     EvidenceSet,
     assess_evidence,
+    create_snapshot,
     load_evidence,
+    run_result_to_junit_xml,
+    run_result_to_otel_attributes,
     save_evidence,
 )
 from agentverity.evidence import EVIDENCE_SCHEMA
+from agentverity.reporting import run_result_to_dict
 
 
 def evidence(**overrides):
@@ -114,8 +118,35 @@ class TestSchemaValidation:
             EvidenceSet(cases=())
 
     def test_a_non_string_observation_is_rejected(self):
-        with pytest.raises(EvidenceError, match="non-string observation"):
+        with pytest.raises(EvidenceError, match="unsupported observation"):
             EvidenceCase("x", ({"verdict": "approve"}, "approve"))
+
+    def test_tool_paths_are_accepted_only_on_the_tools_layer(self):
+        case = EvidenceCase("x", (("search",), ("search", "refund")))
+        tool_evidence = EvidenceSet(cases=(case,), layer="tools")
+
+        result = assess_evidence(tool_evidence, epsilon=0.5)
+
+        assert result.meter.pair_flips == 1
+        with pytest.raises(EvidenceError, match="verdict observations"):
+            EvidenceSet(cases=(case,), layer="verdict")
+
+    def test_a_string_is_not_silently_treated_as_an_empty_tool_path(self):
+        case = EvidenceCase("x", ("search", "refund"))
+        with pytest.raises(EvidenceError, match="tools observations"):
+            EvidenceSet(cases=(case,), layer="tools")
+
+    def test_text_layer_preserves_text_without_inventing_a_verdict(self):
+        result = assess_evidence(
+            EvidenceSet(
+                cases=(EvidenceCase("x", ("first answer", "second answer")),),
+                layer="text",
+            ),
+            epsilon=0.5,
+        )
+
+        assert result.meter.layer == "text"
+        assert result.meter.pair_flips == 1
 
 
 class TestIndependenceIsRecordedNotAssumed:
@@ -152,6 +183,8 @@ class TestAssessment:
         assert result.blindness is not None
         assert result.decision_coverage is not None
         assert result.route_stability is not None
+        assert result.config.run_meter
+        assert result.config.run_blindness
 
     def test_the_unstable_route_is_named_from_imported_data(self):
         result = assess_evidence(evidence(), matching_suite(), epsilon=0.05)
@@ -209,6 +242,51 @@ class TestAssessment:
 
         assert "VERDICT-STOCHASTICITY METER" in summary
         assert "STABILITY BY ROUTE" in summary
+
+    def test_imported_failures_make_the_result_incomplete(self):
+        broken = evidence(
+            cases=(
+                EvidenceCase(
+                    "routine request",
+                    ("approve",) * 26,
+                    expected="approve",
+                    errors=2,
+                ),
+                evidence().cases[1],
+                evidence().cases[2],
+            )
+        )
+        result = assess_evidence(broken, matching_suite(), epsilon=0.05)
+
+        assert result.status == "incomplete"
+        assert len(result.errors) == 2
+        assert "INCOMPLETE" in result.headline
+
+    def test_imported_results_carry_source_values_for_snapshotting(self):
+        stable = evidence(
+            cases=(
+                EvidenceCase("routine request", ("approve",) * 26, expected="approve"),
+                EvidenceCase("ambiguous request", ("review",) * 26, expected="review"),
+                EvidenceCase("prohibited request", ("deny",) * 26, expected="deny"),
+            )
+        )
+        result = assess_evidence(stable, matching_suite(), epsilon=0.5)
+
+        assert result.observed_keys == ("approve", "review", "deny")
+        assert len(create_snapshot(result, approved=True).probes) == 3
+
+    def test_isolation_caveats_travel_with_the_result(self):
+        result = assess_evidence(
+            evidence(isolation="shared-session"),
+            matching_suite(),
+            epsilon=0.05,
+        )
+        assert len(result.caveats) == 1
+        assert "not independent" in result.caveats[0]
+        assert "EVIDENCE CAVEATS" in result.summary()
+        assert run_result_to_dict(result)["caveats"] == list(result.caveats)
+        assert "not independent" in run_result_to_junit_xml(result)
+        assert run_result_to_otel_attributes(result)["agentverity.caveats"] == 1
 
 
 class TestRoundTrip:

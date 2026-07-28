@@ -14,6 +14,7 @@ from agentverity.adapters.callable_adapter import from_callable
 from agentverity.decision_contract import DecisionSuite, load_decision_suite
 from agentverity.evidence import assess_evidence, load_evidence
 from agentverity.execution import ProgressEvent
+from agentverity.integrations.promptfoo import load_promptfoo
 from agentverity.meter import (
     PRECISION_LEVELS,
     pairs_for_deterministic_call,
@@ -451,13 +452,43 @@ def _build_parser() -> argparse.ArgumentParser:
         "assess",
         help="assess repeated runs collected elsewhere, making no calls",
     )
-    assess_parser.add_argument(
-        "--evidence", required=True, help="evidence JSON (agentverity.evidence/v1)"
+    assess_source = assess_parser.add_mutually_exclusive_group(required=True)
+    assess_source.add_argument(
+        "--evidence", help="evidence JSON (agentverity.evidence/v1)"
+    )
+    assess_source.add_argument(
+        "--promptfoo", help="Promptfoo JSON export containing repeated outputs"
     )
     assess_parser.add_argument(
         "--suite", default=None, help="optional decision suite to check against"
     )
     assess_parser.add_argument("--epsilon", type=float, default=0.05)
+    assess_parser.add_argument(
+        "--decision-path",
+        default=None,
+        help="dot path to a decision inside a structured Promptfoo output",
+    )
+    assess_parser.add_argument(
+        "--input-path",
+        default="prompt.raw",
+        help="dot path to the reviewed input in each Promptfoo result row",
+    )
+    assess_parser.add_argument(
+        "--provider",
+        default=None,
+        help="Promptfoo provider id when the export contains a matrix",
+    )
+    assess_parser.add_argument(
+        "--prompt-id",
+        default=None,
+        help="Promptfoo prompt id when the export contains a matrix",
+    )
+    assess_parser.add_argument(
+        "--isolation",
+        choices=("fresh-session", "fresh-instance", "shared-session", "unknown"),
+        default="unknown",
+        help="how Promptfoo repetitions were separated",
+    )
     assess_parser.add_argument(
         "--json", dest="json_path", default=None, help="write the JSON report here"
     )
@@ -499,14 +530,30 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _assess_command(args: argparse.Namespace) -> int:
     """Assess evidence a run collected elsewhere, without calling anything."""
-    evidence = load_evidence(args.evidence)
-    suite = load_decision_suite(args.suite) if args.suite else None
-    result = assess_evidence(evidence, suite, epsilon=args.epsilon)
+    try:
+        suite = load_decision_suite(args.suite) if args.suite else None
+        if args.promptfoo:
+            if suite is None:
+                raise ValueError(
+                    "--promptfoo requires --suite so exported inputs map to "
+                    "reviewed cases"
+                )
+            evidence = load_promptfoo(
+                args.promptfoo,
+                suite,
+                decision_path=args.decision_path,
+                input_path=args.input_path,
+                provider=args.provider,
+                prompt_id=args.prompt_id,
+                isolation=args.isolation,
+            )
+        else:
+            evidence = load_evidence(args.evidence)
+        result = assess_evidence(evidence, suite, epsilon=args.epsilon)
+    except (TypeError, ValueError) as exc:
+        print(f"assessment refused: {exc}", file=sys.stderr)
+        return 2
     print(result.summary())
-    caveat = evidence.independence_caveat
-    if caveat is not None:
-        print()
-        print(f"  note: {caveat}")
     if args.json_path:
         write_run_json(result, args.json_path)
     # The same precedence a live run uses, so a gate behaves identically

@@ -12,6 +12,80 @@ $ agentverity assess --evidence runs.json --suite suite.json
 
 No model is called. Everything below is arithmetic over decisions you recorded.
 
+## Promptfoo: direct import
+
+Promptfoo already supports repeated runs and JSON export. Keep its assertions
+for quality, then assess the same outputs:
+
+```console
+$ promptfoo eval --repeat 26 --output results.json
+$ agentverity assess \
+    --promptfoo results.json \
+    --suite decision-suite.json \
+    --isolation unknown
+```
+
+With six one-case routes, 26 repeats supply enough zero-change pairs for the
+pooled 5% check, not for six separate route-level claims. The report keeps
+those routes `undecided`. Run `agentverity plan --suite decision-suite.json`
+before collecting stricter per-route evidence.
+
+The adapter matches each row's rendered `prompt.raw` back to an exact reviewed
+suite input. Current Promptfoo releases assign a distinct `testIdx` to each
+repeat, so the importer does not treat that index as a case identity. If the
+reviewed input is stored elsewhere, point to it explicitly:
+
+```console
+$ agentverity assess \
+    --promptfoo results.json \
+    --suite decision-suite.json \
+    --input-path vars.ticket
+```
+
+If a provider returns structured JSON, point at its decision label:
+
+```console
+$ agentverity assess \
+    --promptfoo results.json \
+    --suite decision-suite.json \
+    --decision-path decision.route
+```
+
+A Promptfoo export can contain a matrix of providers and prompts. AgentVerity
+refuses to pool those configurations because a model or prompt difference
+would then look like random variation. Use `--provider` and `--prompt-id` to
+select one cell.
+
+Use `--isolation fresh-session` only when the harness configuration creates a
+new conversation or target instance for every repeat. Promptfoo's export does
+not establish that fact, so `unknown` is the conservative default.
+
+See the [runnable local Promptfoo example](../examples/promptfoo_bridge).
+
+## DeepEval: share precomputed test cases
+
+DeepEval metrics operate on individual `LLMTestCase` objects. AgentVerity's
+admission decision operates across repeated cases and preserves a third
+outcome, insufficient evidence, so it is not represented as a Boolean custom
+metric.
+
+Collect outputs once and give both tools the same objects:
+
+```python
+from agentverity import assess_evidence, evidence_from_deepeval
+
+# repeated_cases have already been evaluated by DeepEval
+evidence = evidence_from_deepeval(
+    repeated_cases,
+    decision=lambda output: output["route"],
+    isolation="fresh-session",
+)
+result = assess_evidence(evidence, suite)
+```
+
+The bridge uses structural typing and does not add DeepEval as a runtime
+dependency. See the [complete shared-run example](../examples/deepeval_shared_run.py).
+
 ## The file
 
 ```json
@@ -36,7 +110,7 @@ No model is called. Everything below is arithmetic over decisions you recorded.
 | `layer` | no | `verdict`, `text`, or `tools`. Defaults to `verdict` |
 | `isolation` | no | How trials were separated. Defaults to `unknown`, which is reported |
 | `cases[].input` | yes | The probe text |
-| `cases[].observations` | yes | Each decision, **in the order produced** |
+| `cases[].observations` | yes | Each decision or text string, or each tool path as a string list, **in the order produced** |
 | `cases[].expected` | no | The route the case was written to exercise |
 | `cases[].errors` | no | Runs that failed rather than returning a decision |
 | `provenance` | no | Free-form: model, harness, collection date |
@@ -84,8 +158,9 @@ cache, a single session reused.
 | `shared-session` | Trials ran in one session | not independent, the interval is too narrow |
 | `unknown` | Not recorded | independence assumed rather than established |
 
-Nothing is rejected on this basis. The point is that a reader can see which
-applied, rather than inheriting a confidence the file never earned.
+Nothing is rejected on this basis. The caveat travels through text, JSON,
+JUnit, and OpenTelemetry reports so downstream readers do not inherit a
+confidence claim the file never earned.
 
 ## What an import can and cannot check
 
@@ -117,7 +192,9 @@ is an error rather than a warning.
 
 ## Exit codes
 
-Identical to a live run, so a gate behaves the same either way.
+Identical to a live run, so a gate behaves the same either way. Recorded
+provider failures make the result incomplete rather than disappearing from
+the denominator.
 
 | Code | Meaning |
 |---|---|

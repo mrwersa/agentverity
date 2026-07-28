@@ -27,6 +27,18 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   method is reported rather than silently assumed away.
 - `docs/imported-evidence.md` covers the format, the refusal, the isolation
   levels, and what an import cannot check.
+- Promptfoo JSON exports can be assessed directly with
+  `agentverity assess --promptfoo results.json --suite suite.json`. Mixed
+  provider or prompt matrices are refused until one configuration is
+  selected, so configuration differences are not misreported as random
+  decision changes. Repeated rows map back to reviewed inputs rather than
+  relying on Promptfoo's per-execution `testIdx`.
+- `evidence_from_deepeval` groups repeated precomputed `LLMTestCase` objects.
+  DeepEval keeps ownership of per-case quality while AgentVerity makes the
+  suite-level evidence decision, with no second target run.
+- Imported `text` and `tools` layers preserve their real observation shapes.
+  Provider errors make the result incomplete, and isolation caveats now travel
+  through text, JSON, JUnit, and OpenTelemetry reports.
 
 ### Changed
 
@@ -34,6 +46,9 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   needs the agent to answer a transformed question, and those calls do not
   exist in an imported file. Claiming a relation held when it never ran would
   be the vacuous green this package exists to name.
+- Imported assessments populate source observations and enabled-check
+  configuration consistently, so the ordinary snapshot path can admit stable
+  imported evidence rather than rejecting it as an incomplete live run.
 
 ## [0.11.0] - 2026-07-28
 

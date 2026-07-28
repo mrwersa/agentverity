@@ -484,3 +484,71 @@ def test_assess_writes_the_same_json_report_a_live_run_would(tmp_path):
 
     assert "meter" in payload
     assert payload["schema"].startswith("agentverity.run/")
+
+
+def test_assess_imports_promptfoo_without_calling_the_target(tmp_path, capsys):
+    suite_path = tmp_path / "suite.json"
+    suite_path.write_text(
+        json.dumps(
+            {
+                "schema": "agentverity.decision-suite/v1",
+                "contract": {"allowed": ["approve", "review"]},
+                "cases": [
+                    {"input": "routine", "expected": "approve"},
+                    {"input": "ambiguous", "expected": "review"},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    rows = []
+    for test_index, decision in ((0, "approve"), (1, "review")):
+        for _ in range(4):
+            rows.append(
+                    {
+                        "testIdx": test_index,
+                        "promptId": "router",
+                        "provider": {"id": "local"},
+                        "prompt": {
+                            "raw": "routine" if test_index == 0 else "ambiguous"
+                        },
+                        "response": {"output": decision},
+                    "failureReason": 0,
+                }
+            )
+    export_path = tmp_path / "promptfoo.json"
+    export_path.write_text(
+        json.dumps({"version": 3, "results": rows}),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "assess",
+            "--promptfoo",
+            str(export_path),
+            "--suite",
+            str(suite_path),
+            "--epsilon",
+            "0.5",
+        ]
+    )
+
+    assert exit_code == 0
+    assert "DECLARED DECISION CONTRACT" in capsys.readouterr().out
+
+
+def test_promptfoo_import_requires_a_reviewed_suite(tmp_path, capsys):
+    path = tmp_path / "promptfoo.json"
+    path.write_text(json.dumps({"version": 3, "results": []}), encoding="utf-8")
+
+    assert main(["assess", "--promptfoo", str(path)]) == 2
+    assert "--promptfoo requires --suite" in capsys.readouterr().err
+
+
+def test_a_bad_evidence_file_is_a_clean_cli_refusal(tmp_path, capsys):
+    path = tmp_path / "bad.json"
+    path.write_text("not json", encoding="utf-8")
+
+    assert main(["assess", "--evidence", str(path)]) == 2
+    assert "assessment refused:" in capsys.readouterr().err

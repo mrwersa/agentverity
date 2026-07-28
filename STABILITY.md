@@ -31,6 +31,11 @@ Version 0.11 writes `agentverity.run/v2`, `agentverity.telemetry/v2`, and
 them in memory. JSON reports and telemetry exports are append-only artefacts,
 so consumers must opt into their v2 schemas.
 
+The next minor series adds `agentverity.evidence/v1`. It rejects unknown
+versions and aggregate-only inputs rather than guessing. Promptfoo and DeepEval
+bridges translate into that contract while keeping framework packages
+optional.
+
 ## What remains open
 
 The relation API and convenience adapters are the likeliest surfaces to change.

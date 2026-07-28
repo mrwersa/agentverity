@@ -55,23 +55,33 @@ class EvidenceCase:
     """One input and the decisions observed across repeated runs of it."""
 
     input: str
-    observations: tuple[str, ...]
+    observations: tuple[str | tuple[str, ...], ...]
     expected: str | None = None
     errors: int = 0
 
     def __post_init__(self) -> None:
         if not isinstance(self.input, str) or not self.input.strip():
             raise EvidenceError("case input must be a non-empty string")
-        observations = tuple(self.observations)
+        observations = tuple(
+            tuple(value) if isinstance(value, list) else value
+            for value in self.observations
+        )
         if len(observations) < 2:
             raise EvidenceError(
                 f"case {self.input!r} carries {len(observations)} observation(s); "
                 "at least two are needed to form one comparison"
             )
-        if any(not isinstance(value, str) for value in observations):
+        if any(
+            not isinstance(value, (str, tuple))
+            or (
+                isinstance(value, tuple)
+                and any(not isinstance(item, str) for item in value)
+            )
+            for value in observations
+        ):
             raise EvidenceError(
-                f"case {self.input!r} has a non-string observation; record the "
-                "decision as a label rather than an object"
+                f"case {self.input!r} has an unsupported observation; record "
+                "a decision or text as a string, or a tool path as a string list"
             )
         if self.expected is not None and (
             not isinstance(self.expected, str) or not self.expected.strip()
@@ -90,16 +100,42 @@ class EvidenceCase:
         """
         return len(self.observations) // 2
 
-    def to_observations(self) -> tuple[Observation, ...]:
-        """Render the recorded decisions as observations for the meter."""
+    def to_observations(self, layer: str) -> tuple[Observation, ...]:
+        """Render recorded values at the layer the evidence declares."""
+        if layer == "tools":
+            if any(not isinstance(value, tuple) for value in self.observations):
+                raise EvidenceError(
+                    f"case {self.input!r}: tools observations must be lists of "
+                    "tool names"
+                )
+            return tuple(
+                Observation(tools=value)
+                for value in self.observations
+                if isinstance(value, tuple)
+            )
+        if any(not isinstance(value, str) for value in self.observations):
+            raise EvidenceError(
+                f"case {self.input!r}: {layer} observations must be strings"
+            )
+        if layer == "text":
+            return tuple(
+                Observation(text=value)
+                for value in self.observations
+                if isinstance(value, str)
+            )
         return tuple(
-            Observation(text=value, verdict=value) for value in self.observations
+            Observation(text=value, verdict=value)
+            for value in self.observations
+            if isinstance(value, str)
         )
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "input": self.input,
-            "observations": list(self.observations),
+            "observations": [
+                list(value) if isinstance(value, tuple) else value
+                for value in self.observations
+            ],
         }
         if self.expected is not None:
             payload["expected"] = self.expected
@@ -138,6 +174,8 @@ class EvidenceSet:
                 f"unknown isolation {self.isolation!r}; expected one of "
                 + ", ".join(ISOLATION_LEVELS)
             )
+        for case in cases:
+            case.to_observations(self.layer)
         object.__setattr__(self, "cases", cases)
 
     @property
@@ -277,12 +315,12 @@ def assess_evidence(
     """
     from .blindness import score as blindness_score
     from .decision_contract import assess_decision_coverage
-    from .execution import input_fingerprint
+    from .execution import RunError, input_fingerprint
     from .meter import score_runs
     from .runner import RunConfig, RunResult
     from .stratified import stratify_runs
 
-    series = [case.to_observations() for case in evidence.cases]
+    series = [case.to_observations(evidence.layer) for case in evidence.cases]
     intended: tuple[str, ...] = ()
     targets: dict[str, float] = {}
 
@@ -331,23 +369,42 @@ def assess_evidence(
         )
 
     repeats = min(len(item) for item in series)
+    errors = tuple(
+        RunError(
+            phase="imported-evidence",
+            input_index=index,
+            input_fingerprint=input_fingerprint(case.input),
+            exception_type="ImportedExecutionError",
+            message="a recorded run failed before producing a decision",
+        )
+        for index, case in enumerate(evidence.cases)
+        for _ in range(case.errors)
+    )
+    observed_keys = tuple(item[0].key(evidence.layer) for item in series)
     return RunResult(
         config=RunConfig(
             k=repeats,
             epsilon=epsilon,
             layer=evidence.layer,
-            # No relation can run without the agent, and no call was made here.
-            run_meter=False,
-            run_blindness=False,
+            run_meter=True,
+            run_blindness=True,
+            error_policy="record",
         ),
         meter=meter_result,
         blindness=blindness_result,
         relation_results=[],
         decision_coverage=decision_coverage,
         route_stability=route_stability,
+        errors=errors,
+        caveats=(
+            (evidence.independence_caveat,)
+            if evidence.independence_caveat is not None
+            else ()
+        ),
         input_fingerprints=tuple(
             input_fingerprint(case.input) for case in evidence.cases
         ),
+        observed_keys=observed_keys,
         intended_decisions=intended,
         requested_inputs=len(evidence.cases),
     )

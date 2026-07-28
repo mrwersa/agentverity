@@ -47,6 +47,11 @@ from agentverity.evidence import (
     save_evidence,
 )
 from agentverity.execution import ProgressEvent, RunError, input_fingerprint
+from agentverity.integrations import (
+    evidence_from_deepeval,
+    evidence_from_promptfoo,
+    load_promptfoo,
+)
 from agentverity.meter import (
     PRECISION_LEVELS,
     MeterResult,
@@ -137,10 +142,13 @@ __all__ = [
     "compare_snapshot",
     "create_snapshot",
     "detect",
+    "evidence_from_deepeval",
+    "evidence_from_promptfoo",
     "from_callable",
     "input_fingerprint",
     "load_decision_suite",
     "load_evidence",
+    "load_promptfoo",
     "load_snapshot",
     "measure",
     "pairs_for_deterministic_call",

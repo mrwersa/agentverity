@@ -152,3 +152,15 @@ print(result.summary())
 report, JSON, JUnit, OpenTelemetry, and snapshot paths work unchanged.
 `relation_results` is empty, because a relation needs calls no imported file
 contains. See [imported evidence](imported-evidence.md).
+
+Framework bridges translate records without calling the target:
+
+```python
+from agentverity import evidence_from_deepeval, evidence_from_promptfoo
+```
+
+`evidence_from_deepeval(test_cases, ...)` groups repeated precomputed
+`LLMTestCase` objects by input. `evidence_from_promptfoo(payload, suite, ...)`
+selects one provider/prompt cell from a Promptfoo JSON export and matches
+rendered inputs back to the reviewed suite. The latter is also available
+through `agentverity assess --promptfoo`.
