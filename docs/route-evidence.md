@@ -228,6 +228,11 @@ deciding a route is genuinely explored stays a review job.
 repeated pairs correlated. See
 [applicability](applicability.md#independence-and-which-way-the-error-runs).
 
+**A per-route relation requirement.** An unprobed route is diagnostic rather
+than an automatic release failure. The contract does not yet declare which
+relations should apply to which routes. A relation catalogue that changes no
+input at all still fails as vacuous.
+
 ## Quick reference
 
 | Result | Meaning | Next action |

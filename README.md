@@ -1,6 +1,6 @@
 # AgentVerity
 
-> **Decision stability and coverage checks for AI agent tests.**
+> **Conservative baseline admission for AI agents with bounded decisions.**
 
 [![PyPI](https://img.shields.io/pypi/v/agentverity.svg)](https://pypi.org/project/agentverity/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20--%203.14-blue.svg)](https://www.python.org/downloads/)
@@ -13,6 +13,12 @@ finite, reviewed set of decisions. Examples include routers, approval or
 policy gates, and supervisors that select the next agent or tool. It compares
 the named decision, exposed as `verdict`, rather than harmless changes in
 explanation text.
+
+Correctness and trajectory evaluators ask whether the agent behaved properly.
+AgentVerity asks whether that evidence is repeatable and whether the reviewed
+decision contract was exercised before the run becomes a regression baseline.
+A regression baseline is a reviewed run saved as the expected behaviour for
+testing later versions.
 
 Use another evaluator for open-ended chat with no reviewed decision or ordered
 tool-path contract. AgentVerity is alpha, with
@@ -75,10 +81,9 @@ Those deliberately varied test inputs form the **probe set**. AgentVerity asks:
 
 - **Decision stability:** does one case reach the same decision across
   isolated reruns?
-- **Decision coverage:** do the cases reach more than one decision?
-- **Declared coverage:** when you supply a decision contract, did the suite
-  include every required decision, did the agent return them, and did it emit
-  an unknown decision?
+- **Observed decision spread:** do the cases reach more than one decision?
+- **Declared decision coverage:** did the suite include every required
+  decision, did the agent return them, and did it emit an unknown decision?
 
 A green quality score answers a different question: whether the selected
 answers were right. AgentVerity checks how much evidence that score rests on.
@@ -121,12 +126,21 @@ The default `balanced` precision calculates that budget automatically.
 
 [See the executable helper, arithmetic, and exact API mapping](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md).
 
+### Why not write a rerun loop in pytest?
+
+A loop can collect repeated calls. The difficult part is deciding what those
+calls support: forming non-overlapping comparisons, sizing them from a
+tolerance, preserving `undecided`, enforcing stricter route targets, and
+keeping terminal, JSON, JUnit, telemetry, and snapshot admission consistent.
+If your evaluation platform already implements that policy, keep it.
+AgentVerity packages the policy for teams that would otherwise maintain it
+themselves.
+
 ## The evidence gate
 
-A **baseline** is a reviewed set of expected decisions for later versions.
-AgentVerity refuses to save one until calls complete, decisions are stable
-enough, the probe set crosses a decision boundary, and a person approves the
-reference outputs.
+The evidence gate refuses to save a baseline until calls complete, decisions
+are stable enough, the probe set crosses a decision boundary, and a person
+approves the reference outputs.
 
 The bundled payment-dispute example runs two test sets:
 
@@ -167,28 +181,14 @@ result = run(agent, suite=suite)
 checks intended and observed route coverage separately. Your assertions or
 quality evaluator still decide whether each returned route was correct.
 
-Declaring a suite also splits stability by route, from the calls the run
-already made:
+Declaring a suite also splits the existing stability evidence by intended
+route. A noisy route is named instead of being averaged together with quieter
+ones, and the report lists the decision pairs that changed. A route proven
+stochastic blocks snapshot admission even when the pooled result looks
+deterministic.
 
-```text
-4. STABILITY BY ROUTE
-   route              cases  pairs  flips  95% CI            result
-   approve                2     26      0  [0.000, 0.129]    undecided
-   deny                   2     26      0  [0.000, 0.129]    undecided
-   review                 2     26     10  [0.224, 0.575]    stochastic
-   flip pairs:
-     deny <-> review  x10
-```
-
-The pooled meter said 12.8% across the whole set. One route is the reason. The
-other two are not clean, they are unmeasured: 26 pairs bounds them at 12.9%,
-and 73 pairs are needed to certify at 5%.
-
-A route proven stochastic blocks snapshot admission even when the pooled meter
-looks deterministic. Untargeted undecided rows remain visible limits rather
-than silently multiplying the call budget. When a route needs its own release
-condition, declare `stability_targets={"card_security": 0.05}` and inspect the
-zero-change cost first:
+Use `stability_targets={"card_security": 0.05}` when a route needs its own
+release condition, then inspect the zero-change cost before calling the agent:
 
 ```bash
 agentverity plan --suite examples/route_stability_plan.json
@@ -197,6 +197,13 @@ agentverity plan --suite examples/route_stability_plan.json
 A targeted route that remains undecided blocks snapshot admission. An explicit
 `budget` remains a hard cap, so an unaffordable plan is refused before any
 agent call.
+
+Breadth remains separate from repeats. Declare
+`minimum_cases={"card_security": 3}` when review policy requires several cases
+for a route. This counts written cases and does not pretend three paraphrases
+are semantically diverse. When relations are enabled, the report also names
+routes that no transformation actually changed. Those are relation checks
+that were not exercised, not 0% violation results.
 
 Create one through the CLI:
 
@@ -214,14 +221,21 @@ prompts.
 
 ## Where it fits
 
-AgentVerity is an evaluation runner, not serving-path middleware. It makes
-controlled calls with reviewed test inputs:
+AgentVerity is an evaluation runner, not serving-path middleware. It admits or
+refuses evidence produced beside the evaluator a team already uses:
 
 ```text
-reviewed cases ---> agent ---> quality evaluator: "Was it right?"
-             +---> agent ---> AgentVerity: "Can I trust this test?"
-                                      |
-                           snapshot or release decision
+reviewed cases ---> agent ---> correctness / trajectory evaluator ---> quality result
+       |
+       +---- isolated reruns ---> agent ---> AgentVerity stability + contract
+                                                   |
+quality result ------------------------------------+----> release policy
+                                                         |          |
+                                                       admit      refuse
+                                                         |
+                                                regression baseline in CI
+                                                         |
+                                               synthetic production canary
 ```
 
 Use it while developing, on a pull request, before release, or as a scheduled
@@ -240,10 +254,11 @@ CloudWatch.
 
 ![A real AgentCore canary passes DeepEval quality, AgentVerity evidence, and cloud health checks before its baseline is admitted](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
 
-The London canary recorded 6/6 correct routes, no changes across 36 repeat
-pairs, all six routes reached, and 78 successful cloud calls with no errors or
-throttles. Its first run was stable but only 5/6 correct, so the example now
-requires both quality and evidence before snapshot admission.
+At its declared 10% canary tolerance, the London run recorded 6/6 correct
+routes, no changes across 36 repeat pairs, all six routes reached, and 78
+successful cloud calls with no errors or throttles. Its first run was stable
+but only 5/6 correct, so the example now requires both quality and evidence
+before snapshot admission.
 
 The v0.9 contract path was then rerun directly through Bedrock after the old
 runtime was removed. It again scored 6/6 with 0/36 route changes, and reported
@@ -264,15 +279,17 @@ optional decision contract, and chosen tolerance:
 - observed decisions did not collapse onto one highly dominant route
 - every required decision was intended and observed when a contract was given
 - no observed decision fell outside that contract
-- execution completed and any requested relation checks were meaningful
+- execution completed, and at least one requested relation genuinely changed
+  an input. Per-route relation gaps remain explicit diagnostics
 
 That is a minimum dynamic adequacy check, not exhaustive branch coverage.
 Without a decision contract, AgentVerity only checks observed diversity. With
 one, it reports required, intended, observed, missing, and unknown decisions.
-It still does not establish that every boundary was tested or that critical
-routes are correct. Keep labelled correctness cases beside it. `critical`
-marks consequence for coverage reporting, while `stability_targets` separately
-declares any route-specific statistical policy.
+This is **required-decision presence**, not comprehensive behavioural-boundary
+coverage. It does not establish that every boundary was tested or that
+critical routes are correct. Keep labelled correctness cases beside it.
+`critical` marks consequence for coverage reporting, while
+`stability_targets` separately declares any route-specific statistical policy.
 
 It also does not judge answer correctness, prove safety, store traces, host a
 dashboard, or monitor production traffic. Static tools remain useful for
@@ -308,6 +325,6 @@ coverage, and the branch-protection `CI gate` requires that job to pass.
 ## Status and licence
 
 Alpha. Pin a minor series for production use, for example
-`agentverity~=0.9.0`. Patch releases preserve the public API.
+`agentverity~=0.10.0`. Patch releases preserve the public API.
 
 Apache-2.0. Contributions are welcome through the pull-request workflow.

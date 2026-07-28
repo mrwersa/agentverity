@@ -9,7 +9,8 @@ The same six reviewed payment-dispute cases were sent through:
 
 1. a Strands routing agent using Amazon Nova Micro
 2. DeepEval exact match against the reviewed route
-3. AgentVerity at `cheap` precision, with 12 isolated repeats per case
+3. AgentVerity at `cheap` precision, a 10% tolerated route-change rate, with
+   12 isolated repeats per case
 4. Amazon Bedrock AgentCore Runtime, with a fresh session for every call
 5. AgentCore Observability and CloudWatch for runtime logs and metrics
 
@@ -37,6 +38,10 @@ characterises this isolated evaluation path, not a normal serving session.
 CloudWatch recorded 78 successful invocations for the final canary, with no
 errors or throttles. The release decision required both route correctness and
 interpretable AgentVerity evidence.
+
+With zero changes, 36 pairs give a 95% upper bound of 9.6%. That clears the
+declared 10% canary tolerance. It does not support a 5% claim, which would need
+73 zero-change pairs.
 
 ## The useful failure
 

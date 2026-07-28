@@ -44,6 +44,9 @@ result = run(agent, suite=suite)
 - `DecisionContract.stability_targets` sets a per-route tolerance. Declaring
   one also sizes route repeats when the meter is enabled. Targets must name
   required decisions. They are separate from the `critical` reporting label.
+- `DecisionContract.minimum_cases` declares the minimum number of reviewed
+  cases a required route must carry. It counts cases, not reruns, and does not
+  infer whether those cases are semantically different.
 - `RunResult.route_plans` holds the zero-change pair requirement and the actual
   repeats and calls allocated to each route.
 - `RunResult.route_stability` splits stability by each case's intended
@@ -51,6 +54,15 @@ result = run(agent, suite=suite)
   cases, pairs, flips, a Wilson interval, and the same tri-state `call` as the
   pooled meter. `flip_pairs` records the unordered decision pairs behind those
   flips.
+- `RunResult.relation_coverage` reports which intended routes were genuinely
+  changed by at least one requested relation. `RelationCoverage` contains one
+  `RouteRelationCoverage` per route. An untouched route has no violation rate,
+  rather than a misleading rate of zero.
+
+Partial relation coverage is diagnostic. It does not block snapshot admission
+because the contract does not declare which relations should apply to which
+routes. A requested catalogue that changes no input at all remains vacuous and
+fails.
 
 The contract path is available for the `verdict` layer. It checks coverage,
 not per-case correctness. Keep labelled assertions or a quality evaluator
@@ -69,12 +81,12 @@ The CLI accepts the same versioned structure with `--suite suite.json`.
 - `run_result_to_otel_attributes` returns privacy-minimised aggregate fields.
 - `record_otel_run` emits those fields as one optional OpenTelemetry span.
 
-JSON includes the complete route table. The route-stability checks in JUnit
-and OpenTelemetry carry aggregate route counts. OpenTelemetry remains
-label-free and low-cardinality, while JUnit may name decisions in actionable
-failure guidance elsewhere in the report. JSON also includes `route_plans`,
-and the meter reports both minimum and maximum repeats when allocation differs
-by route.
+JSON includes the complete stability and relation-coverage route tables. The
+route checks in JUnit and OpenTelemetry carry aggregate counts. OpenTelemetry
+remains label-free and low-cardinality, while JUnit may name decisions in
+actionable failure guidance elsewhere in the report. JSON also includes
+`route_plans`, and the meter reports both minimum and maximum repeats when
+allocation differs by route.
 
 ## Snapshots
 
@@ -115,6 +127,8 @@ unless the caller explicitly supplies `k`.
 - `pairs_for_deterministic_call` budgets the minimum pair count.
 - `plan_repeats` converts the input count and precision into `k`.
 - `plan_route_repeats` produces a zero-change budget for a declared suite.
+- `stratify_relations` groups already-collected relation outcomes by intended
+  decision. Normal runs populate the same result automatically.
 - `builtin_relations` returns the default metamorphic catalogue.
 - `Relation` defines a custom invariant, monotone, or directional check.
 

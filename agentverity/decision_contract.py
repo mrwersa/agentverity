@@ -122,6 +122,7 @@ class DecisionContract:
                 self.required,
                 self.critical,
                 tuple(sorted(self.stability_targets.items())),
+                tuple(sorted(self.minimum_cases.items())),
             )
         )
 

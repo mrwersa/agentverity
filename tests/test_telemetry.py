@@ -8,6 +8,7 @@ from agentverity import (
     DecisionCase,
     DecisionContract,
     DecisionSuite,
+    Relation,
     from_callable,
     run,
 )
@@ -98,4 +99,37 @@ def test_contract_telemetry_contains_counts_not_decision_labels():
     assert attributes["agentverity.contract.satisfied"] is True
     assert attributes["agentverity.contract.required"] == 2
     assert attributes["agentverity.contract.observed_coverage"] == 1.0
+    assert attributes["agentverity.contract.under_cased"] == 0
+    assert "secret-review" not in repr(attributes)
+
+
+def test_relation_coverage_telemetry_contains_counts_not_route_labels():
+    suite = DecisionSuite(
+        contract=DecisionContract(allowed={"allow", "secret-review"}),
+        cases=(
+            DecisionCase("ordinary", "allow"),
+            DecisionCase("sensitive", "secret-review"),
+        ),
+    )
+    relation = Relation(
+        name="ordinary-only",
+        rtype="invariant",
+        transform=lambda text: text + "!" if text == "ordinary" else text,
+        check=lambda source, followup: source.verdict == followup.verdict,
+    )
+    result = run(
+        from_callable(
+            lambda text: {
+                "verdict": "secret-review" if text.startswith("sensitive") else "allow"
+            }
+        ),
+        suite=suite,
+        relations=[relation],
+        config=RunConfig(k=2, epsilon=0.9),
+    )
+
+    attributes = run_result_to_otel_attributes(result)
+    assert attributes["agentverity.relation_coverage.routes"] == 2
+    assert attributes["agentverity.relation_coverage.probed"] == 1
+    assert attributes["agentverity.relation_coverage.unprobed"] == 1
     assert "secret-review" not in repr(attributes)

@@ -862,7 +862,7 @@ class TestTheDocumentedNumbersAreReal:
         )
 
 
-class TestProbeCoverage:
+class TestRelationCoverage:
     """A relation whose transform returns the input unchanged has tested
     nothing. Counted per route, that becomes an answerable question: was this
     decision ever actually probed, or only appeared to be?"""
@@ -931,13 +931,23 @@ class TestProbeCoverage:
         with pytest.raises(ValueError, match="align with intended"):
             stratify_relations(["approve", "deny"], [["held"]])
 
-    def test_probe_coverage_serialises(self):
+    @pytest.mark.parametrize("decision", ["", None])
+    def test_invalid_intended_decisions_are_rejected(self, decision):
+        with pytest.raises(ValueError, match="non-empty string"):
+            stratify_relations([decision], [["held"]])
+
+    @pytest.mark.parametrize("outcome", ["passed", {"held": True}])
+    def test_unknown_relation_outcomes_are_rejected(self, outcome):
+        with pytest.raises(ValueError, match="unknown relation outcome"):
+            stratify_relations(["approve"], [[outcome]])
+
+    def test_relation_coverage_serialises(self):
         payload = stratify_relations(["deny"], [["skipped"]]).to_dict()
         assert payload["unprobed"] == ["deny"]
         assert payload["routes"][0]["probed"] is False
 
 
-class TestProbeCoverageThroughARun:
+class TestRelationCoverageThroughARun:
     """The scenario this exists for: relations that no-op on plain ASCII while
     the pooled table reports a flawless pass."""
 
@@ -972,7 +982,7 @@ class TestProbeCoverageThroughARun:
         result = run(agent, suite=suite, relations=rels, config=RunConfig(k=4, epsilon=0.5))
 
         assert all(r.violation_rate in (None, 0.0) for r in result.relation_results)
-        assert set(result.probe_coverage.unprobed) == {"approve", "deny"}
+        assert set(result.relation_coverage.unprobed) == {"approve", "deny"}
 
     def test_the_next_step_names_the_unprobed_routes(self):
         agent, suite, rels = self.build()
@@ -982,13 +992,13 @@ class TestProbeCoverageThroughARun:
         assert "NOT PROBED" in summary
         assert "NOT EXERCISED" in summary
 
-    def test_a_run_without_a_suite_has_no_probe_coverage(self):
+    def test_a_run_without_a_suite_has_no_relation_coverage(self):
         result = run(
             from_callable(lambda text: {"verdict": "approve"}),
             ["a", "b"],
             config=RunConfig(k=4, epsilon=0.5),
         )
-        assert result.probe_coverage is None
+        assert result.relation_coverage is None
 
 
 class TestMinimumCases:
@@ -1089,7 +1099,7 @@ def test_the_probing_walkthrough_in_the_docs_still_holds():
     result = run(from_callable(agent), suite=suite, relations=rels,
                  config=RunConfig(k=4, epsilon=0.5))
 
-    by_route = {r.decision: r for r in result.probe_coverage.routes}
+    by_route = {r.decision: r for r in result.relation_coverage.routes}
     assert by_route["approve"].exercised == 0 and by_route["approve"].skipped == 2
     assert by_route["deny"].exercised == 0 and by_route["deny"].skipped == 2
     assert by_route["review"].exercised == 2 and by_route["review"].skipped == 0

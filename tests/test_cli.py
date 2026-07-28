@@ -29,7 +29,8 @@ class TestCLI:
 
         assert raised.value.code == 0
         assert (
-            "Decision stability and coverage checks for AI agent tests."
+            "Evidence checks for regression baselines on AI agents with "
+            "bounded decisions."
             in capsys.readouterr().out
         )
 

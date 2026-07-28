@@ -98,6 +98,11 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         if result.route_stability is not None
         else None
     )
+    relation_coverage = (
+        result.relation_coverage.to_dict()
+        if result.relation_coverage is not None
+        else None
+    )
 
     return {
         "schema": RUN_SCHEMA,
@@ -120,6 +125,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         "blindness": blindness,
         "decision_contract": decision_contract,
         "route_stability": route_stability,
+        "relation_coverage": relation_coverage,
         "route_plans": [plan.to_dict() for plan in result.route_plans],
         "relations": [
             {
@@ -270,7 +276,8 @@ def run_result_to_junit_xml(
             f"observed={coverage.observed_coverage:.6f} "
             f"missing_intended={len(coverage.missing_intended)} "
             f"missing_observed={len(coverage.missing_observed)} "
-            f"unknown_observed={len(coverage.unknown_observed)}"
+            f"unknown_observed={len(coverage.unknown_observed)} "
+            f"under_cased={len(coverage.under_cased)}"
         )
         if not coverage.satisfied:
             failures += 1
@@ -334,10 +341,16 @@ def run_result_to_junit_xml(
             {"message": detail},
         ).text = detail
     else:
-        ET.SubElement(relation_coverage, "system-out").text = (
+        detail = (
             f"exercised={sum(r.exercised for r in result.relation_results)} "
             f"vacuous={sum(r.is_vacuous for r in result.relation_results)}"
         )
+        if result.relation_coverage is not None:
+            detail += (
+                f" routes={len(result.relation_coverage.routes)}"
+                f" unprobed_routes={len(result.relation_coverage.unprobed)}"
+            )
+        ET.SubElement(relation_coverage, "system-out").text = detail
 
     for relation in result.relation_results:
         case = _junit_case(

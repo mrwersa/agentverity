@@ -22,8 +22,19 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   was approached from more than one angle, and no bound turns the first into
   the second. A shortfall is reported as a contract finding and counted from
   the cases that were written rather than from what the agent returned.
-- `ProbeCoverage`, `RouteProbing`, and `stratify_relations` are exported, and
-  `RunResult.probe_coverage` is populated whenever a suite is declared.
+- `RelationCoverage`, `RouteRelationCoverage`, and `stratify_relations` are
+  exported, and `RunResult.relation_coverage` is populated whenever a suite
+  and relations are supplied.
+- JSON reports include the complete per-route relation table. JUnit and
+  OpenTelemetry include aggregate probed and unprobed route counts without
+  exposing route labels in telemetry.
+
+### Changed
+
+- Public positioning now states the narrow role directly: AgentVerity is a
+  conservative admission policy for regression baselines involving bounded
+  decisions, beside correctness and trajectory evaluators rather than in
+  place of them.
 
 ## [0.10.0] - 2026-07-28
 

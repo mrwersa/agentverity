@@ -415,7 +415,7 @@ def render_plan(
 
 
 @dataclass(frozen=True)
-class RouteProbing:
+class RouteRelationCoverage:
     """Whether one route's cases were genuinely perturbed by any relation.
 
     A relation whose transform hands the agent back its own input has not
@@ -464,10 +464,10 @@ class RouteProbing:
 
 
 @dataclass(frozen=True)
-class ProbeCoverage:
+class RelationCoverage:
     """Which routes the relation suite actually perturbed."""
 
-    routes: tuple[RouteProbing, ...]
+    routes: tuple[RouteRelationCoverage, ...]
 
     @property
     def unprobed(self) -> tuple[str, ...]:
@@ -503,7 +503,7 @@ class ProbeCoverage:
 def stratify_relations(
     intended: Sequence[str],
     outcomes: Sequence[Sequence[str] | None],
-) -> ProbeCoverage:
+) -> RelationCoverage:
     """Group per-input relation outcomes by each case's intended decision.
 
     Args:
@@ -520,17 +520,25 @@ def stratify_relations(
 
     tally: dict[str, dict[str, int]] = {}
     for decision, per_input in zip(intended, outcomes, strict=True):
+        if not isinstance(decision, str) or not decision:
+            raise ValueError("every intended decision must be a non-empty string")
         bucket = tally.setdefault(
             decision,
             {"cases": 0, "held": 0, "violated": 0, "skipped": 0, "error": 0},
         )
         bucket["cases"] += 1
         for outcome in per_input or ():
-            if outcome in bucket:
-                bucket[outcome] += 1
+            if not isinstance(outcome, str) or outcome not in {
+                "held",
+                "violated",
+                "skipped",
+                "error",
+            }:
+                raise ValueError(f"unknown relation outcome: {outcome!r}")
+            bucket[outcome] += 1
 
     routes = tuple(
-        RouteProbing(
+        RouteRelationCoverage(
             decision=decision,
             cases=bucket["cases"],
             exercised=bucket["held"] + bucket["violated"],
@@ -541,4 +549,4 @@ def stratify_relations(
         )
         for decision, bucket in sorted(tally.items())
     )
-    return ProbeCoverage(routes=routes)
+    return RelationCoverage(routes=routes)

@@ -5,12 +5,12 @@ sit inside the customer request path.
 
 ```text
 reviewed inputs
-   +-- labelled calls -----> agent -----> quality evaluator
-   +-- isolated repeats ---> agent -----> AgentVerity
+   +-- labelled calls -----> agent -----> correctness / trajectory evaluator
+   +-- isolated repeats ---> agent -----> AgentVerity admission policy
                                              |
                                   text / JSON / JUnit / OTEL
                                              |
-                                   team release policy
+                                admit or refuse CI baseline
 
 customer request ----------> deployed agent ----------> response
 ```
@@ -163,10 +163,11 @@ DeepEval answers whether the routes are correct. AgentVerity answers whether
 that score is repeatable and covers the reviewed decision set. Release policy
 requires both.
 
-The measured London canary produced 6/6 correct routes, no changes across 36
-repeat pairs, six routes reached, 78 successful invocations, and no errors or
-throttles. An earlier run was stable and well covered but scored only 5/6. The
-example now stops before snapshot admission when quality fails.
+At its declared 10% tolerance, the measured London canary produced 6/6 correct
+routes, no changes across 36 repeat pairs, six routes reached, 78 successful
+invocations, and no errors or throttles. An earlier run was stable and well
+covered but scored only 5/6. The example now stops before snapshot admission
+when quality fails.
 
 See the [method and redacted result](../examples/production_stack/RESULTS.md).
 No account identifiers, runtime ARNs, prompts, outputs, sessions, or trace
