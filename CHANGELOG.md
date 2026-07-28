@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-07-28
+
 ### Added
 
 - `agentverity compare-evidence before.json after.json` compares two
