@@ -12,7 +12,9 @@ from pathlib import Path
 
 from agentverity.adapters.callable_adapter import from_callable
 from agentverity.decision_contract import DecisionSuite, load_decision_suite
+from agentverity.evidence import assess_evidence, load_evidence
 from agentverity.execution import ProgressEvent
+from agentverity.integrations.promptfoo import load_promptfoo
 from agentverity.meter import (
     PRECISION_LEVELS,
     pairs_for_deterministic_call,
@@ -446,6 +448,51 @@ def _build_parser() -> argparse.ArgumentParser:
         help="exact default tolerance for routes with no declared target",
     )
 
+    assess_parser = sub.add_parser(
+        "assess",
+        help="assess repeated runs collected elsewhere, making no calls",
+    )
+    assess_source = assess_parser.add_mutually_exclusive_group(required=True)
+    assess_source.add_argument(
+        "--evidence", help="evidence JSON (agentverity.evidence/v1)"
+    )
+    assess_source.add_argument(
+        "--promptfoo", help="Promptfoo JSON export containing repeated outputs"
+    )
+    assess_parser.add_argument(
+        "--suite", default=None, help="optional decision suite to check against"
+    )
+    assess_parser.add_argument("--epsilon", type=float, default=0.05)
+    assess_parser.add_argument(
+        "--decision-path",
+        default=None,
+        help="dot path to a decision inside a structured Promptfoo output",
+    )
+    assess_parser.add_argument(
+        "--input-path",
+        default="prompt.raw",
+        help="dot path to the reviewed input in each Promptfoo result row",
+    )
+    assess_parser.add_argument(
+        "--provider",
+        default=None,
+        help="Promptfoo provider id when the export contains a matrix",
+    )
+    assess_parser.add_argument(
+        "--prompt-id",
+        default=None,
+        help="Promptfoo prompt id when the export contains a matrix",
+    )
+    assess_parser.add_argument(
+        "--isolation",
+        choices=("fresh-session", "fresh-instance", "shared-session", "unknown"),
+        default="unknown",
+        help="how Promptfoo repetitions were separated",
+    )
+    assess_parser.add_argument(
+        "--json", dest="json_path", default=None, help="write the JSON report here"
+    )
+
     snapshot_parser = sub.add_parser(
         "snapshot",
         help="Create an approved baseline when the evidence supports one.",
@@ -481,6 +528,39 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _assess_command(args: argparse.Namespace) -> int:
+    """Assess evidence a run collected elsewhere, without calling anything."""
+    try:
+        suite = load_decision_suite(args.suite) if args.suite else None
+        if args.promptfoo:
+            if suite is None:
+                raise ValueError(
+                    "--promptfoo requires --suite so exported inputs map to "
+                    "reviewed cases"
+                )
+            evidence = load_promptfoo(
+                args.promptfoo,
+                suite,
+                decision_path=args.decision_path,
+                input_path=args.input_path,
+                provider=args.provider,
+                prompt_id=args.prompt_id,
+                isolation=args.isolation,
+            )
+        else:
+            evidence = load_evidence(args.evidence)
+        result = assess_evidence(evidence, suite, epsilon=args.epsilon)
+    except (TypeError, ValueError) as exc:
+        print(f"assessment refused: {exc}", file=sys.stderr)
+        return 2
+    print(result.summary())
+    if args.json_path:
+        write_run_json(result, args.json_path)
+    # The same precedence a live run uses, so a gate behaves identically
+    # whether the calls were made here or imported.
+    return _exit_code(result)
+
+
 def _plan_command(args: argparse.Namespace) -> int:
     """Print what a suite would cost before any agent call is made.
 
@@ -506,6 +586,8 @@ def _plan_command(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     """Run the AgentVerity CLI."""
     args = _build_parser().parse_args(argv)
+    if args.command == "assess":
+        return _assess_command(args)
     if args.command == "plan":
         return _plan_command(args)
     if args.command == "run":

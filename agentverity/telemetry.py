@@ -43,6 +43,7 @@ def run_result_to_otel_attributes(result: RunResult) -> dict[str, Any]:
         "agentverity.relations.violated": sum(r.violated for r in relations),
         "agentverity.relations.vacuous": sum(r.is_vacuous for r in relations),
         "agentverity.errors": len(result.errors),
+        "agentverity.caveats": len(result.caveats),
     }
     if result.meter is not None:
         attributes.update(

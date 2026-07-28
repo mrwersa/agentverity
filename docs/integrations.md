@@ -4,13 +4,14 @@ AgentVerity runs controlled test inputs beside quality evaluators. It does not
 sit inside the customer request path.
 
 ```text
-reviewed inputs
-   +-- labelled calls -----> agent -----> correctness / trajectory evaluator
-   +-- isolated repeats ---> agent -----> AgentVerity admission policy
-                                             |
-                                  text / JSON / JUnit / OTEL
-                                             |
-                                admit or refuse CI baseline
+reviewed inputs ---> evaluation harness ---> repeated agent outputs
+                                                |             |
+                                  correctness / trajectory   AgentVerity
+                                        quality result       admission
+                                                |             |
+                                                +----> release policy
+                                                         |
+                                                 admit or refuse baseline
 
 customer request ----------> deployed agent ----------> response
 ```
@@ -39,6 +40,10 @@ No single evaluator qualifies an agent. Use layers:
 AgentVerity owns step 5. It does not replace the surrounding quality, security,
 or operational checks. Running the cheaper labelled quality check first also
 avoids spending on repeated calls for an agent already known to be wrong.
+When the evaluator already retained repeated categorical outputs, import them
+instead of making the target calls again. Promptfoo has a direct JSON bridge,
+and DeepEval can share precomputed test cases. See
+[imported evidence](imported-evidence.md).
 
 One AWS-oriented stack might use
 [`pytest`](https://docs.pytest.org/en/stable/how-to/parametrize.html) for

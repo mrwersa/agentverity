@@ -172,15 +172,22 @@ decision layer. See `docs/applicability.md`.
   preserves the skew warning while separately reporting required, intended,
   observed, missing, critical, and unknown decisions. Correctness remains the
   responsibility of labelled assertions or another evaluator.
-- M9 per-route evidence policy: DONE for the next minor release. Per-route
+- M9 per-route evidence policy: DONE in v0.10.0. Per-route
   intervals name concentrated decision changes. Optional stability targets
   allocate repeats by route, can be priced before execution, and become
   explicit release conditions. Risk labels and numerical targets remain
   separate declarations.
-- M10 semantic breadth diagnostics: DONE for the next minor release. Relation
+- M10 semantic breadth diagnostics: DONE in v0.11.0. Relation
   coverage names intended routes that no transform actually changed, while
   `minimum_cases` enforces a separately reviewed case-count policy without
   pretending to infer semantic diversity.
+- M11 evidence interchange: DONE for the next minor release. The versioned
+  schema keeps ordered individual decisions, route identity, errors,
+  isolation, and provenance so an existing harness can supply the evidence
+  without another target run. Aggregate-only exports are refused.
+- M12 evaluator bridges: DONE for the next minor release. Promptfoo has a
+  direct JSON importer and DeepEval has a zero-dependency shared-test-case
+  bridge. Both preserve correctness as the evaluator's responsibility.
 
 ## 5. Reporting boundary
 
@@ -211,15 +218,15 @@ OpenTelemetry context.
 
 ## 7. Candidate direction after independent use
 
-The highest-leverage extension is framework-neutral evidence ingestion:
-accept repeated decision observations produced by an existing evaluation
-platform, then apply AgentVerity's admission policy without making duplicate
-model calls. A versioned JSON Schema should come before adapters so DeepEval,
-LangSmith, promptfoo, AgentCore, and internal systems can target one small
-contract.
+The interchange contract and two reference bridges are now present. Do not add
+another named adapter until an external user demonstrates a format the generic
+schema cannot express.
 
-One integration should validate that contract before more are added. Temporal
-comparison across scheduled runs is a separate candidate for provider or
-model-version drift. Correctness scoring, full trajectory evaluation,
-red-teaming, hosted dashboards, and production request interception remain
-outside the project.
+The remaining method feature is temporal comparison across independently
+collected evidence sets: identify route-level interval movement, changed flip
+pairs, missing or new decisions, and model or prompt provenance changes. Frame
+that as release-to-release drift, never as proof that trials within one run
+were independent.
+
+Correctness scoring, full trajectory evaluation, red-teaming, hosted
+dashboards, and production request interception remain outside the project.

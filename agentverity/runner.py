@@ -257,6 +257,8 @@ class RunResult:
         relation_results: Per-relation results, in the order they were run.
         config: The RunConfig used.
         errors: Failures retained under the ``"record"`` error policy.
+        caveats: Evidence limitations that do not invalidate the arithmetic
+            but must travel with its interpretation.
         input_fingerprints: SHA-256 identifiers for the ordered probe set.
         observed_keys: One source-layer value per input, when available.
         intended_decisions: One reviewed intended decision per input for a
@@ -273,6 +275,7 @@ class RunResult:
     route_plans: tuple[RoutePlan, ...] = ()
     relation_coverage: RelationCoverage | None = None
     errors: tuple[RunError, ...] = ()
+    caveats: tuple[str, ...] = ()
     input_fingerprints: tuple[str, ...] = ()
     observed_keys: tuple[Any | None, ...] = ()
     intended_decisions: tuple[str, ...] = ()
@@ -539,6 +542,19 @@ class RunResult:
                 )
             if len(self.errors) > 5:
                 lines.append(f"   ... and {len(self.errors) - 5} more.")
+            lines.append("")
+
+        if self.caveats:
+            lines.append("EVIDENCE CAVEATS")
+            for caveat in self.caveats:
+                lines.extend(
+                    textwrap.wrap(
+                        caveat,
+                        width=55,
+                        initial_indent="   - ",
+                        subsequent_indent="     ",
+                    )
+                )
             lines.append("")
 
         if self.meter is not None:

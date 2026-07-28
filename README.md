@@ -221,26 +221,47 @@ prompts.
 
 ## Where it fits
 
-AgentVerity is an evaluation runner, not serving-path middleware. It admits or
-refuses evidence produced beside the evaluator a team already uses:
+AgentVerity is a baseline-admission layer, not serving-path middleware. It can
+run the repeated checks itself or assess outputs an evaluator already
+collected:
 
 ```text
-reviewed cases ---> agent ---> correctness / trajectory evaluator ---> quality result
-       |
-       +---- isolated reruns ---> agent ---> AgentVerity stability + contract
-                                                   |
-quality result ------------------------------------+----> release policy
-                                                         |          |
-                                                       admit      refuse
-                                                         |
-                                                regression baseline in CI
-                                                         |
-                                               synthetic production canary
+reviewed cases ---> evaluation harness ---> repeated agent outputs
+                                               |              |
+                              correctness / trajectory     AgentVerity
+                                      quality result       evidence decision
+                                               |              |
+                                               +-------> release policy
+                                                          |       |
+                                                        admit   refuse
+                                                          |
+                                                 regression baseline
 ```
 
 Use it while developing, on a pull request, before release, or as a scheduled
 synthetic canary. Do not repeat live customer requests. Results can leave as
 text, JSON, JUnit XML, or one privacy-minimised OpenTelemetry span.
+
+Already have repeated outputs? Reuse them without another target call:
+
+```bash
+# Direct Promptfoo import
+promptfoo eval --repeat 26 --output results.json
+agentverity assess \
+  --promptfoo results.json \
+  --suite decision-suite.json
+
+# Any harness can emit the small versioned interchange format
+agentverity assess \
+  --evidence agentverity-evidence.json \
+  --suite decision-suite.json
+```
+
+DeepEval users can pass the same precomputed `LLMTestCase` objects to
+`evidence_from_deepeval`. DeepEval keeps ownership of correctness and trace
+quality. AgentVerity makes the suite-level stability and admission decision.
+
+[Use imported evidence with Promptfoo, DeepEval, or another harness](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
 
 [Read how per-route evidence works, with worked examples](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md).
 
@@ -301,6 +322,7 @@ the decisions a model-backed or black-box target actually returns.
 - [Which agents fit, and what the result does not prove](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md)
 - [Why arbitrary rerun counts fail](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
 - [How to read and budget per-route evidence](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md)
+- [Reuse Promptfoo, DeepEval, or generic evidence without duplicate calls](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md)
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - [Design decisions](https://github.com/mrwersa/agentverity/blob/main/DESIGN.md)
@@ -325,6 +347,6 @@ coverage, and the branch-protection `CI gate` requires that job to pass.
 ## Status and licence
 
 Alpha. Pin a minor series for production use, for example
-`agentverity~=0.10.0`. Patch releases preserve the public API.
+`agentverity~=0.11.0`. Patch releases preserve the public API.
 
 Apache-2.0. Contributions are welcome through the pull-request workflow.
