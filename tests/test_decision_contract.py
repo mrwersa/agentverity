@@ -470,3 +470,70 @@ class TestAdviceNamesTheNextAction:
 
         assert result.satisfied is True
         assert result.advice == "all required decisions were represented and observed"
+
+
+class TestStabilityTargets:
+    """Risk labels and numerical stability policy stay separate."""
+
+    def test_a_target_overrides_the_run_default_for_that_route_only(self):
+        contract = DecisionContract(
+            allowed={"approve", "deny"},
+            critical={"deny"},
+            stability_targets={"deny": 0.01},
+        )
+        assert contract.target_for("deny", 0.05) == 0.01
+        assert contract.target_for("approve", 0.05) == 0.05
+
+    def test_a_target_for_an_unknown_decision_is_rejected(self):
+        with pytest.raises(ValueError, match="not required"):
+            DecisionContract(allowed={"approve"}, stability_targets={"deny": 0.01})
+
+    def test_a_target_for_an_optional_decision_is_rejected(self):
+        with pytest.raises(ValueError, match="not required"):
+            DecisionContract(
+                allowed={"approve", "review"},
+                required={"approve"},
+                stability_targets={"review": 0.05},
+            )
+
+    @pytest.mark.parametrize("bad", [0, 1, -0.1, 1.5])
+    def test_a_target_outside_zero_to_one_is_rejected(self, bad):
+        with pytest.raises(ValueError, match="between 0 and 1"):
+            DecisionContract(allowed={"approve"}, stability_targets={"approve": bad})
+
+    @pytest.mark.parametrize("bad", ["0.01", True, None])
+    def test_a_non_numeric_target_is_rejected(self, bad):
+        with pytest.raises(TypeError, match="must be a number"):
+            DecisionContract(allowed={"approve"}, stability_targets={"approve": bad})
+
+    def test_targets_must_be_a_mapping(self):
+        with pytest.raises(TypeError, match="must be a mapping"):
+            DecisionContract(allowed={"approve"}, stability_targets=["approve"])
+
+    def test_targets_survive_a_round_trip(self):
+        contract = DecisionContract(
+            allowed={"approve", "deny"}, stability_targets={"deny": 0.01}
+        )
+        assert DecisionContract.from_dict(contract.to_dict()).stability_targets == {
+            "deny": 0.01
+        }
+
+    def test_a_contract_without_targets_omits_the_key(self):
+        contract = DecisionContract(allowed={"approve"})
+        assert "stability_targets" not in contract.to_dict()
+        assert contract.stability_targets == {}
+
+    def test_targets_cannot_mutate_a_frozen_contract(self):
+        contract = DecisionContract(
+            allowed={"approve", "deny"},
+            stability_targets={"deny": 0.01},
+        )
+        with pytest.raises(TypeError):
+            contract.stability_targets["deny"] = 0.5
+
+    def test_a_contract_with_targets_remains_hashable(self):
+        contract = DecisionContract(
+            allowed={"approve", "deny"},
+            stability_targets={"deny": 0.01},
+        )
+        assert isinstance(hash(contract), int)

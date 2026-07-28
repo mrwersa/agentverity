@@ -115,6 +115,7 @@ suite = DecisionSuite(
     contract=DecisionContract(
         allowed={"approve", "review", "deny"},
         critical={"deny"},
+        stability_targets={"deny": 0.02},
     ),
     cases=(
         DecisionCase("routine request", "approve"),
@@ -124,11 +125,13 @@ suite = DecisionSuite(
 )
 ```
 
-Version 0.9 records critical decisions and reports when one is missing. It
-does not assign a separate statistical threshold to each route. Run critical
-cases as a separate stratum when they need a stricter tolerance. Treat
-AgentVerity as one release condition beside correctness, security, latency,
-cost, and operational health.
+`critical` records consequence and reports when a high-consequence decision is
+missing. `stability_targets` is a separate, explicit policy: it gives a
+required route its own tolerance, sizes the zero-change call plan, and makes an
+undecided target a release refusal. Keeping those declarations separate avoids
+inventing a numerical threshold merely because a route is marked critical.
+Treat AgentVerity as one release condition beside correctness, security,
+latency, cost, and operational health.
 
 ## Trial assumptions and cost
 
@@ -138,9 +141,9 @@ provider-side caching, model rollouts, routing changes, or shared external
 state.
 
 The global stability interval can also conceal a small unstable subgroup.
-`inputs_with_flip` makes that risk visible at aggregate level. For a critical
-route or boundary, run its cases separately rather than relying only on the
-pooled result.
+Per-route stability names that subgroup when a decision suite is supplied.
+Use `agentverity plan --suite` before assigning a tighter target to a
+high-consequence route.
 
 Lower tolerated change rates require more calls. Budget the run before
 execution and use a tolerance tied to the consequences of a changed decision.
@@ -176,7 +179,8 @@ statement about the suite, and the report does not claim otherwise. Read the
 table as six separate findings.
 
 A route proven stochastic blocks snapshot admission because pooling cannot
-erase a conclusive subgroup finding. An undecided route does not yet block a
-pooled baseline. Certifying every route independently would require a larger,
-route-aware call budget, which this release does not silently spend. Treat
-undecided rows as an explicit limit on the baseline, not as clean routes.
+erase a conclusive subgroup finding. An untargeted undecided route remains an
+explicit limit on a pooled baseline rather than a clean route. A route named
+in `stability_targets` is different: the run budgets for its declared
+tolerance. An undecided result blocks release and snapshot admission, while a
+result proven above the target fails the declared policy.

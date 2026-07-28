@@ -45,6 +45,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
             "epsilon": result.meter.epsilon,
             "inputs": result.meter.inputs,
             "repeats": result.meter.repeats,
+            "max_repeats": result.meter.max_repeats,
             "pair_trials": result.meter.pair_trials,
             "pair_flips": result.meter.pair_flips,
             "inputs_with_flip": result.meter.inputs_with_flip,
@@ -118,6 +119,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         "blindness": blindness,
         "decision_contract": decision_contract,
         "route_stability": route_stability,
+        "route_plans": [plan.to_dict() for plan in result.route_plans],
         "relations": [
             {
                 "name": relation.relation.name,
@@ -157,6 +159,8 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
                 if result.route_stability is not None
                 else None
             ),
+            "targeted_undecided_routes": len(result.targeted_undecided),
+            "targeted_stochastic_routes": len(result.targeted_stochastic),
             "decision_contract_satisfied": (
                 result.decision_coverage.satisfied
                 if result.decision_coverage is not None
@@ -284,13 +288,29 @@ def run_result_to_junit_xml(
             "preflight.route_stability",
             classname=suite_name,
         )
-        ET.SubElement(route_case, "system-out").text = (
+        detail = (
             f"routes={len(stability.routes)} "
             f"deterministic={len(stability.deterministic)} "
             f"stochastic={len(stability.stochastic)} "
             f"undecided={len(stability.undecided)} "
             f"flips={sum(route.pair_flips for route in stability.routes)}"
         )
+        if result.targeted_stochastic:
+            failures += 1
+            message = (
+                "declared route stability targets were exceeded for: "
+                + ", ".join(result.targeted_stochastic)
+            )
+            ET.SubElement(route_case, "failure", {"message": message}).text = detail
+        elif result.targeted_undecided:
+            errors += 1
+            message = (
+                "declared route stability targets remain undecided for: "
+                + ", ".join(result.targeted_undecided)
+            )
+            ET.SubElement(route_case, "error", {"message": message}).text = detail
+        else:
+            ET.SubElement(route_case, "system-out").text = detail
 
     # A caller who passed no relations did not ask for this check, so reporting
     # it as skipped is noise in every consuming dashboard. Say nothing instead.

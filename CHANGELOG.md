@@ -10,6 +10,19 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `DecisionContract.stability_targets` gives a route its own flip-rate
+  tolerance, so a consequential decision can be held to a tighter bound than a
+  routine one. Targets are numerical policy and remain separate from the
+  `critical` coverage label.
+- Repeats are sized per route when targets are declared. A suite with one case
+  for a tightly targeted decision and five routine cases would otherwise give
+  the targeted route the least evidence. On the three-route example, the
+  zero-change plan is 1054 calls against 2286 for one uniform repeat count.
+- `agentverity plan --suite` prints that best-case call plan without calling
+  the agent. An explicit run budget remains a hard cap and is checked before
+  execution.
+- `docs/route-evidence.md`, a worked guide to reading the route table, why a
+  verdict never comes from the observed rate, and where the budget goes.
 - Per-route stability. When a decision suite is declared, the same repeated
   observations the pooled meter uses are split by each case's intended
   decision, so a route that misbehaves is named instead of averaged away.
@@ -25,6 +38,16 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Changed
 
+- Repeat series may now differ in length, which is what lets a run size
+  repeats per route. Reports expose the minimum and maximum repeats rather
+  than hiding the allocation behind one `k`. A series carrying fewer than two
+  observations is still rejected because it contributes no pair.
+- A declared target is a release condition. If its route remains undecided,
+  run status, JUnit, and snapshot admission refuse. If the route is proven
+  above the target, status and JUnit fail the declared policy.
+- Route plans now appear in JSON and aggregate OpenTelemetry attributes.
+- Without declared targets nothing changes. Repeats stay uniform and the run
+  behaves as before.
 - The tri-state rule moved into `classify_call`, shared by the pooled meter
   and the per-route view so the two cannot drift apart. A route is classified
   from its confidence bound, never from its observed rate: one flip in
@@ -35,8 +58,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   rather than a joint one.
 - Proven route-level stochasticity now flows into the canonical run status and
   blocks snapshot admission even when the pooled meter looks deterministic.
-  Undecided routes remain an explicit diagnostic rather than silently
-  multiplying the default call budget.
+  Untargeted undecided routes remain an explicit diagnostic rather than
+  silently multiplying the default call budget.
 - JSON reports include the route table. Route-stability entries in JUnit and
   OpenTelemetry carry privacy-minimised aggregate counts without decision
   labels.

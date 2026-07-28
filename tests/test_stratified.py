@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import pytest
@@ -13,6 +14,7 @@ from agentverity import (
     DecisionSuite,
     RunConfig,
     from_callable,
+    load_decision_suite,
     run,
     run_result_to_dict,
     run_result_to_junit_xml,
@@ -21,6 +23,7 @@ from agentverity import (
 )
 from agentverity.observation import Observation
 from agentverity.snapshot import SnapshotRefused, create_snapshot
+from agentverity.stratified import plan_route_repeats, render_plan
 
 
 def series(decision: str, keys: list[str]) -> tuple[str, list[Observation]]:
@@ -370,6 +373,153 @@ class TestRunIntegration:
         with pytest.raises(SnapshotRefused, match="review"):
             create_snapshot(result, approved=True)
 
+    def test_a_declared_target_is_a_release_condition(self):
+        calls: dict[str, int] = {}
+
+        def agent(text):
+            calls[text] = calls.get(text, 0) + 1
+            if text == "deny" and calls[text] == 2:
+                return {"verdict": "approve"}
+            return {"verdict": text}
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "deny"},
+                stability_targets={"deny": 0.05},
+            ),
+            cases=(
+                DecisionCase("approve", "approve"),
+                DecisionCase("deny", "deny"),
+            ),
+        )
+        result = run(
+            from_callable(agent),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=2, epsilon=0.5),
+        )
+
+        assert result.meter.call == "verdict-deterministic"
+        assert result.targeted_undecided == ("deny",)
+        assert result.status == "undecided"
+        assert result.headline.startswith("NO ANSWER YET")
+        assert result.meter.repeats < result.meter.max_repeats
+        assert "repeats:" in result.summary()
+        assert "by route" in result.summary()
+        with pytest.raises(SnapshotRefused, match="targets remain undecided"):
+            create_snapshot(result, approved=True)
+
+        report = run_result_to_dict(result)
+        assert report["guidance"]["targeted_undecided_routes"] == 1
+        assert report["route_plans"]
+        assert report["meter"]["max_repeats"] == result.meter.max_repeats
+
+        root = ET.fromstring(run_result_to_junit_xml(result))
+        route_error = root.find(
+            "./testcase[@name='preflight.route_stability']/error"
+        )
+        assert route_error is not None
+        assert "deny" in route_error.attrib["message"]
+
+        telemetry = run_result_to_otel_attributes(result)
+        assert telemetry["agentverity.route_stability.targeted_undecided"] == 1
+        assert telemetry["agentverity.route_plan.calls"] == sum(
+            plan.calls for plan in result.route_plans
+        )
+        assert "deny" not in repr(telemetry)
+
+    def test_a_settled_target_allows_the_normal_release_path(self):
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "deny"},
+                stability_targets={"deny": 0.2},
+            ),
+            cases=(
+                DecisionCase("approve", "approve"),
+                DecisionCase("deny", "deny"),
+            ),
+        )
+        result = run(
+            from_callable(lambda text: {"verdict": text}),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=2, epsilon=0.5),
+        )
+
+        assert result.targeted_undecided == ()
+        assert result.targeted_stochastic == ()
+        assert result.status == "deterministic"
+        assert create_snapshot(result, approved=True)
+
+    def test_exceeding_a_declared_target_fails_the_release_policy(self):
+        calls: dict[str, int] = {}
+
+        def agent(text):
+            calls[text] = calls.get(text, 0) + 1
+            if text == "deny":
+                return {"verdict": "deny" if calls[text] % 2 else "review"}
+            return {"verdict": "approve"}
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "review", "deny"},
+                required={"approve", "deny"},
+                stability_targets={"deny": 0.2},
+            ),
+            cases=(
+                DecisionCase("approve", "approve"),
+                DecisionCase("deny", "deny"),
+            ),
+        )
+        result = run(
+            from_callable(agent),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=2, epsilon=0.5),
+        )
+
+        assert result.targeted_stochastic == ("deny",)
+        assert result.status == "target-failed"
+        assert result.headline.startswith("NOT READY")
+        root = ET.fromstring(run_result_to_junit_xml(result))
+        assert root.find(
+            "./testcase[@name='preflight.route_stability']/failure"
+        ) is not None
+        assert run_result_to_dict(result)["guidance"][
+            "targeted_stochastic_routes"
+        ] == 1
+        assert run_result_to_otel_attributes(result)[
+            "agentverity.route_stability.targeted_stochastic"
+        ] == 1
+
+    def test_an_explicit_budget_is_a_hard_cap_before_agent_calls(self):
+        calls = 0
+
+        def agent(text):
+            nonlocal calls
+            calls += 1
+            return {"verdict": text}
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "deny"},
+                stability_targets={"deny": 0.05},
+            ),
+            cases=(
+                DecisionCase("approve", "approve"),
+                DecisionCase("deny", "deny"),
+            ),
+        )
+
+        with pytest.raises(ValueError, match="above budget=10"):
+            run(
+                from_callable(agent),
+                suite=suite,
+                relations=[],
+                config=RunConfig(budget=10, epsilon=0.5),
+            )
+        assert calls == 0
+
     def test_machine_reports_carry_route_evidence_without_labels_in_shared_surfaces(
         self,
     ):
@@ -406,9 +556,21 @@ def test_a_short_series_is_rejected():
         stratify_runs([series("approve", ["a"])], k=1, epsilon=0.05)
 
 
-def test_a_series_that_does_not_match_k_is_rejected():
-    with pytest.raises(ValueError, match="exactly k=4"):
-        stratify_runs([series("approve", ["a", "a"])], k=4, epsilon=0.05)
+def test_a_series_carrying_no_pair_is_rejected():
+    with pytest.raises(ValueError, match="at least two observations"):
+        stratify_runs([series("approve", ["a"])], k=2, epsilon=0.05)
+
+
+def test_routes_may_carry_different_repeat_counts():
+    """Sizing repeats per route is the point of declaring targets, so series
+    of differing length have to be first-class rather than an error."""
+    result = stratify_runs(
+        [series("approve", ["a"] * 4), series("deny", ["d"] * 10)],
+        k=4,
+        epsilon=0.05,
+    )
+    trials = {route.decision: route.pair_trials for route in result.routes}
+    assert trials == {"approve": 2, "deny": 5}
 
 
 def test_an_invalid_epsilon_is_rejected():
@@ -497,3 +659,199 @@ def test_the_result_serialises():
     assert payload["routes"][0]["decision"] == "review"
     assert payload["flip_pairs"][0]["decisions"] == ["deny", "review"]
     assert payload["epsilon"] == 0.05
+
+
+class TestPerRouteTolerances:
+    """A declared target is a numerical release policy for one route."""
+
+    def test_a_route_is_judged_against_its_own_target(self):
+        result = stratify_runs(
+            [series("deny", ["d"] * 80), series("approve", ["a"] * 80)],
+            k=80,
+            epsilon=0.10,
+            targets={"deny": 0.05},
+        )
+        by_route = {route.decision: route for route in result.routes}
+
+        assert by_route["approve"].epsilon == 0.10
+        assert by_route["deny"].epsilon == 0.05
+
+    def test_the_same_evidence_can_clear_a_loose_target_and_not_a_tight_one(self):
+        """40 pairs with no flips bounds the rate at 8.8%. That certifies at
+        10% and does not at 5%, which is the whole reason targets exist."""
+        both = stratify_runs(
+            [series("approve", ["a"] * 80), series("deny", ["d"] * 80)],
+            k=80,
+            epsilon=0.10,
+            targets={"deny": 0.05},
+        )
+        by_route = {route.decision: route for route in both.routes}
+
+        assert by_route["approve"].call == "verdict-deterministic"
+        assert by_route["deny"].decided is False
+
+    def test_routes_without_a_target_use_the_run_default(self):
+        result = stratify_runs(
+            [series("approve", ["a"] * 4)], k=4, epsilon=0.2, targets={"deny": 0.01}
+        )
+        assert result.routes[0].epsilon == 0.2
+
+
+class TestBudgetPlanning:
+    """Sizing per route is what makes a tight target affordable."""
+
+    def test_a_tight_target_costs_more_repeats_than_a_loose_one(self):
+        plans = {
+            plan.decision: plan
+            for plan in plan_route_repeats(
+                ["approve", "deny"], epsilon=0.05, targets={"deny": 0.01}
+            )
+        }
+        assert plans["approve"].pairs_needed == 73
+        assert plans["deny"].pairs_needed == 381
+        assert plans["deny"].repeats_each > plans["approve"].repeats_each
+
+    def test_more_cases_on_a_route_means_fewer_repeats_each(self):
+        one = plan_route_repeats(["deny"], epsilon=0.05)[0]
+        many = plan_route_repeats(["deny"] * 5, epsilon=0.05)[0]
+
+        assert many.repeats_each < one.repeats_each
+        assert many.cases == 5
+
+    def test_more_cases_improve_breadth_not_total_call_cost(self):
+        one = plan_route_repeats(["deny"], epsilon=0.01)[0]
+        two = plan_route_repeats(["deny", "deny"], epsilon=0.01)[0]
+
+        assert one.calls == 762
+        assert two.calls == 764
+
+    def test_repeats_are_even_because_a_pair_needs_two_calls(self):
+        for plan in plan_route_repeats(["a", "b", "b"], epsilon=0.3):
+            assert plan.repeats_each % 2 == 0
+            assert plan.repeats_each >= 2
+
+    def test_sizing_per_route_costs_less_than_one_uniform_k(self):
+        """The claim the feature is sold on, so it is measured."""
+        intended = ["approve"] * 5 + ["deny"]
+        plans = plan_route_repeats(intended, epsilon=0.05, targets={"deny": 0.01})
+        sized = sum(plan.calls for plan in plans)
+        uniform = max(p.repeats_each for p in plans) * len(intended)
+
+        assert sized < uniform
+
+    def test_an_empty_suite_is_rejected(self):
+        with pytest.raises(ValueError, match="must not be empty"):
+            plan_route_repeats([], epsilon=0.05)
+
+    def test_an_invalid_epsilon_is_rejected(self):
+        with pytest.raises(ValueError, match="epsilon must be between"):
+            plan_route_repeats(["a"], epsilon=0)
+
+    def test_minimum_repeats_must_carry_a_pair(self):
+        with pytest.raises(ValueError, match="at least 2"):
+            plan_route_repeats(["a"], epsilon=0.05, minimum_repeats=1)
+
+    @pytest.mark.parametrize("bad", ["0.05", True])
+    def test_a_non_numeric_route_target_is_rejected(self, bad):
+        with pytest.raises(TypeError, match="must be a number"):
+            plan_route_repeats(["a"], epsilon=0.05, targets={"a": bad})
+
+    @pytest.mark.parametrize("bad", [0, 1])
+    def test_an_out_of_range_route_target_is_rejected(self, bad):
+        with pytest.raises(ValueError, match="between 0 and 1"):
+            plan_route_repeats(["a"], epsilon=0.05, targets={"a": bad})
+
+    def test_the_table_names_every_route_and_totals_the_calls(self):
+        plans = plan_route_repeats(["approve", "deny"], epsilon=0.05)
+        table = render_plan(plans, compare_uniform=True)
+
+        assert "approve" in table and "deny" in table
+        assert "total" in table
+        assert "if no pair changes decision" in table
+        assert str(sum(plan.calls for plan in plans)) in table
+
+    def test_the_run_floor_is_reflected_in_the_plan(self):
+        plan = plan_route_repeats(
+            ["approve"],
+            epsilon=0.5,
+            minimum_repeats=9,
+        )[0]
+        assert plan.repeats_each == 9
+        assert plan.calls == 9
+
+    def test_a_target_without_an_intended_case_is_rejected(self):
+        with pytest.raises(ValueError, match="no intended cases"):
+            plan_route_repeats(
+                ["approve"],
+                epsilon=0.05,
+                targets={"deny": 0.01},
+            )
+
+
+def test_a_route_plan_serialises():
+    payload = plan_route_repeats(["deny"], epsilon=0.05, targets={"deny": 0.01})[0].to_dict()
+
+    assert payload["decision"] == "deny"
+    assert payload["target"] == 0.01
+    assert payload["pairs_needed"] == 381
+    assert payload["calls"] == payload["repeats_each"] * payload["cases"]
+
+
+class TestTheDocumentedNumbersAreReal:
+    """docs/route-evidence.md quotes specific figures. A doc that drifts from
+    the code teaches the wrong thing confidently, so the figures are generated
+    here rather than trusted."""
+
+    def test_the_evidence_table(self):
+        from agentverity.meter import classify_call, wilson_ci
+
+        table = {
+            (0, 13): "undecided",
+            (1, 13): "undecided",
+            (3, 13): "verdict-stochastic",
+            (0, 36): "undecided",
+            (0, 73): "verdict-deterministic",
+        }
+        for (flips, pairs), expected in table.items():
+            low, high = wilson_ci(flips, pairs)
+            assert classify_call(low, high, 0.05).startswith(expected)
+
+    def test_the_budget_comparison(self):
+        plans = plan_route_repeats(
+            ["approve", "review", "deny"], epsilon=0.05, targets={"deny": 0.01}
+        )
+        sized = sum(plan.calls for plan in plans)
+        uniform = max(plan.repeats_each for plan in plans) * 3
+
+        assert sized == 1054
+        assert uniform == 2286
+
+    def test_adding_a_second_case_shares_pairs_without_cutting_total_calls(self):
+        one = plan_route_repeats(["card"], epsilon=0.01)[0]
+        two = plan_route_repeats(["card", "card"], epsilon=0.01)[0]
+
+        assert one.repeats_each == 762
+        assert two.repeats_each == 382
+        assert two.calls >= one.calls
+
+    def test_twenty_six_pairs_bounds_the_rate_at_the_documented_value(self):
+        from agentverity.meter import wilson_ci
+
+        assert round(wilson_ci(0, 26)[1], 3) == 0.129
+
+    def test_the_documented_plan_is_generated_from_the_bundled_suite(self):
+        root = Path(__file__).parents[1]
+        suite = load_decision_suite(root / "examples/route_stability_plan.json")
+        plans = plan_route_repeats(
+            suite.expected,
+            epsilon=0.05,
+            targets=suite.contract.stability_targets,
+        )
+        shown = "agentverity — zero-flip call plan\n" + render_plan(
+            plans,
+            compare_uniform=True,
+        )
+
+        assert shown in (root / "docs/route-evidence.md").read_text(
+            encoding="utf-8"
+        )

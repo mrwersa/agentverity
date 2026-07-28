@@ -138,9 +138,22 @@ class TestScoreRuns:
         assert result.pair_flips == 1
         assert result.inputs_with_flip == 1
 
-    def test_rejects_incomplete_series(self):
-        with pytest.raises(ValueError, match="exactly"):
+    def test_rejects_a_series_carrying_no_pair(self):
+        """Series lengths may differ so a suite can size repeats per route, but
+        one observation yields no comparison and would quietly weaken the
+        interval rather than failing."""
+        with pytest.raises(ValueError, match="at least two observations"):
             score_runs(
                 [[Observation(verdict="allow")]],
                 k=2,
             )
+
+    def test_accepts_series_of_differing_lengths(self):
+        result = score_runs(
+            [
+                [Observation(verdict="allow")] * 2,
+                [Observation(verdict="allow")] * 6,
+            ],
+            k=2,
+        )
+        assert result.pair_trials == 1 + 3

@@ -252,6 +252,11 @@ def _require_snapshot_evidence(result: RunResult) -> None:
             "route-level evidence is stochastic for: "
             + ", ".join(result.route_stability.stochastic)
         )
+    if result.targeted_undecided:
+        raise SnapshotRefused(
+            "declared route stability targets remain undecided for: "
+            + ", ".join(result.targeted_undecided)
+        )
     if result.meter.call != "verdict-deterministic":
         raise SnapshotRefused(_underpowered_message(result.meter))
     if result.meter.inputs != result.requested_inputs:

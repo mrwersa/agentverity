@@ -223,7 +223,10 @@ class MeterResult:
         epsilon: The flip-rate threshold below which a gate is considered
             deterministic.
         inputs: Number of distinct inputs probed.
-        repeats: Number of repeated calls per input (``k``).
+        repeats: Minimum repeated calls across the inputs. This equals ``k``
+            for an ordinary uniform run.
+        max_repeats: Maximum repeated calls across the inputs. It differs from
+            ``repeats`` when a decision contract allocates evidence by route.
         pair_trials: Total independent, disjoint comparisons across all inputs.
         pair_flips: Number of disjoint comparisons where the verdict differed.
         inputs_with_flip: Number of inputs that showed at least one flip.
@@ -240,6 +243,7 @@ class MeterResult:
     inputs_with_flip: int
     ci_low: float
     ci_high: float
+    max_repeats: int | None = None
 
     @property
     def flip_rate(self) -> float:
@@ -349,18 +353,25 @@ def score_runs(
     if not runs:
         raise ValueError("runs must not be empty")
 
+    lengths = [len(observations) for observations in runs]
     pair_trials = 0
     pair_flips = 0
     inputs_with_flip = 0
     for observations in runs:
-        if len(observations) != k:
+        # Series may differ in length when a suite sizes repeats per route, so
+        # pairs come from each series rather than from one k. Every series must
+        # still carry at least one pair, otherwise it contributes no evidence
+        # and silently weakens the interval.
+        length = len(observations)
+        if length < 2:
             raise ValueError(
-                f"every repeat series must contain exactly k={k} observations"
+                "every repeat series must contain at least two observations, "
+                f"got {length}"
             )
         keys = [observation.key(layer) for observation in observations]
         if len({_hashable(v) for v in keys}) > 1:
             inputs_with_flip += 1
-        for i in range(0, k - 1, 2):
+        for i in range(0, length - 1, 2):
             pair_trials += 1
             if _hashable(keys[i]) != _hashable(keys[i + 1]):
                 pair_flips += 1
@@ -369,12 +380,13 @@ def score_runs(
         layer=layer,
         epsilon=epsilon,
         inputs=len(runs),
-        repeats=k,
+        repeats=min((len(observations) for observations in runs), default=k),
         pair_trials=pair_trials,
         pair_flips=pair_flips,
         inputs_with_flip=inputs_with_flip,
         ci_low=lo,
         ci_high=hi,
+        max_repeats=max(lengths),
     )
 
 

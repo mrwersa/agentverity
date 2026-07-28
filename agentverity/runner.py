@@ -56,7 +56,13 @@ from agentverity.relations import (
     Relation,
     builtin_relations,
 )
-from agentverity.stratified import StratifiedStability, stratify_runs
+from agentverity.stratified import (
+    RoutePlan,
+    StratifiedStability,
+    plan_route_repeats,
+    render_plan,
+    stratify_runs,
+)
 
 AgentFn = Callable[[str], Observation]
 RunStatus = Literal[
@@ -64,6 +70,7 @@ RunStatus = Literal[
     "contract",
     "blind",
     "vacuous",
+    "target-failed",
     "undecided",
     "violations",
     "stochastic",
@@ -105,8 +112,9 @@ class RunConfig:
     """Configuration for a runner pass.
 
     Two knobs cover most use: ``budget``, how many agent calls the meter may
-    spend, and ``precision``, how tight a flip rate you care about. ``k`` and
-    ``epsilon`` remain available as exact overrides, and win when set.
+    spend, and ``precision``, how tight a flip rate you care about. ``epsilon``
+    is an exact threshold override. ``k`` is an exact uniform repeat count for
+    ordinary runs and a per-input floor when route targets are declared.
 
     Attributes:
         budget: Optional cap on meter calls. ``None`` (default) spends what
@@ -114,8 +122,10 @@ class RunConfig:
             instead of reporting "undecided". Ignored when ``k`` is given.
         precision: ``"cheap"`` (10%), ``"balanced"`` (5%, the default), or
             ``"strict"`` (1%). Ignored when ``epsilon`` is given.
-        k: Repeated calls per input. ``None`` (default) sizes it from the
-            budget. After a run, ``result.config.k`` holds the value used.
+        k: Minimum repeated calls per input. ``None`` (default) sizes it from
+            the budget. It is the exact uniform count unless a decision
+            contract declares route-specific stability targets. In that case
+            the route plan records any larger counts used.
         epsilon: Flip-rate threshold. ``None`` (default) takes it from
             ``precision``. After a run, ``result.config.epsilon`` holds the
             value used.
@@ -256,6 +266,7 @@ class RunResult:
     config: RunConfig
     decision_coverage: DecisionCoverageResult | None = None
     route_stability: StratifiedStability | None = None
+    route_plans: tuple[RoutePlan, ...] = ()
     errors: tuple[RunError, ...] = ()
     input_fingerprints: tuple[str, ...] = ()
     observed_keys: tuple[Any | None, ...] = ()
@@ -284,6 +295,31 @@ class RunResult:
         return self.blindness is not None and self.blindness.blind
 
     @property
+    def targeted_undecided(self) -> tuple[str, ...]:
+        """Declared stability targets that the run did not settle."""
+        if self.decision_coverage is None or self.route_stability is None:
+            return ()
+        targets = self.decision_coverage.contract.stability_targets
+        return tuple(
+            route.decision
+            for route in self.route_stability.routes
+            if route.decision in targets and not route.decided
+        )
+
+    @property
+    def targeted_stochastic(self) -> tuple[str, ...]:
+        """Declared stability targets the observed route exceeded."""
+        if self.decision_coverage is None or self.route_stability is None:
+            return ()
+        targets = self.decision_coverage.contract.stability_targets
+        return tuple(
+            route.decision
+            for route in self.route_stability.routes
+            if route.decision in targets
+            and route.call == "verdict-stochastic"
+        )
+
+    @property
     def status(self) -> RunStatus:
         """Canonical machine interpretation of the run.
 
@@ -301,11 +337,15 @@ class RunResult:
             return "blind"
         if self.relation_results and not self.suite_is_meaningful:
             return "vacuous"
+        if self.targeted_stochastic:
+            return "target-failed"
         if (
             self.route_stability is not None
             and self.route_stability.stochastic
         ):
             return "stochastic"
+        if self.targeted_undecided:
+            return "undecided"
         if self.meter is not None and self.meter.call.startswith("undecided"):
             return "undecided"
         if any(relation.violated for relation in self.relation_results):
@@ -389,6 +429,12 @@ class RunResult:
             )
         if self.meter is None:
             return "NO VERDICT MEASURED - the meter was disabled for this run."
+        if self.targeted_stochastic:
+            routes = ", ".join(self.targeted_stochastic)
+            return (
+                "NOT READY - decision changes exceed declared stability "
+                f"targets for: {routes}."
+            )
         if self.route_stability is not None and self.route_stability.stochastic:
             routes = ", ".join(self.route_stability.stochastic)
             if self.meter.call == "verdict-deterministic":
@@ -399,6 +445,12 @@ class RunResult:
             return (
                 "TRUSTWORTHY WITH CARE - decision changes above tolerance "
                 f"are concentrated on these routes: {routes}."
+            )
+        if self.targeted_undecided:
+            routes = ", ".join(self.targeted_undecided)
+            return (
+                "NO ANSWER YET - declared stability targets remain undecided "
+                f"for: {routes}."
             )
         if self.meter.call == "verdict-stochastic":
             return (
@@ -490,7 +542,14 @@ class RunResult:
             lines.append(f"   call:        {m.call}")
             lines.append(f"   flip rate:   {m.flip_rate:.1%} ({m.pair_flips}/{m.pair_trials} pairs)")
             lines.append(f"   Wilson CI:   [{m.ci_low:.3f}, {m.ci_high:.3f}] at epsilon={m.epsilon}")
-            lines.append(f"   inputs:      {m.inputs}, repeats: {m.repeats}, layer: {m.layer}")
+            repeats = (
+                str(m.repeats)
+                if m.max_repeats in {None, m.repeats}
+                else f"{m.repeats}-{m.max_repeats} by route"
+            )
+            lines.append(
+                f"   inputs:      {m.inputs}, repeats: {repeats}, layer: {m.layer}"
+            )
             lines.append(f"   advice:      {m.advice}")
             lines.append("")
 
@@ -541,6 +600,15 @@ class RunResult:
             lines.append("")
             next_section = 4
 
+        if self.route_plans:
+            lines.append(f"{next_section}. CALLS BY ROUTE")
+            lines.append(
+                "   declared targets size repeat counts before execution"
+            )
+            lines.append(render_plan(self.route_plans))
+            lines.append("")
+            next_section += 1
+
         if self.route_stability is not None and self.route_stability.routes:
             stability = self.route_stability
             lines.append(f"{next_section}. STABILITY BY ROUTE")
@@ -585,11 +653,23 @@ class RunResult:
                 "   CONTRACT — repair the declared suite or out-of-contract "
                 "agent decision before saving a baseline."
             )
+        elif self.targeted_stochastic:
+            lines.append(
+                "   TARGET — declared tolerances were exceeded for: "
+                + ", ".join(self.targeted_stochastic)
+                + ". Repair or change the policy before release."
+            )
         elif self.route_stability is not None and self.route_stability.stochastic:
             lines.append(
                 "   ROUTE — these routes move more than epsilon: "
                 + ", ".join(self.route_stability.stochastic)
                 + ". Repair them before reading any relation result."
+            )
+        elif self.targeted_undecided:
+            lines.append(
+                "   TARGET — declared tolerances remain undecided for: "
+                + ", ".join(self.targeted_undecided)
+                + ". Do not freeze a baseline yet."
             )
         elif self.is_blind:
             lines.append("   BLIND — green relation results may be vacuous.")
@@ -721,7 +801,8 @@ def run(
     if not inputs:
         raise ValueError("inputs must not be empty")
     _reject_duplicates(inputs)
-    config = _resolve(config or RunConfig(), inputs)
+    requested_config = config or RunConfig()
+    config = _resolve(requested_config, inputs)
     if suite is not None and config.layer != "verdict":
         raise ValueError("decision contracts require the verdict observation layer")
     if relations is None:
@@ -734,10 +815,44 @@ def run(
 
     # 1. Meter
     meter_result = None
+    # Repeats are uniform unless the contract declares per-route targets. That
+    # keeps the default path exactly as it was, and makes the extra spend an
+    # explicit consequence of asking for a tighter bound on a named route.
+    repeats_per_input = [config.k] * len(inputs)
+    route_plans: tuple[RoutePlan, ...] = ()
+    if (
+        config.run_meter
+        and suite is not None
+        and suite.contract.stability_targets
+    ):
+        route_plans = plan_route_repeats(
+            intended_decisions,
+            epsilon=config.epsilon,
+            targets=suite.contract.stability_targets,
+            minimum_repeats=config.k,
+        )
+        planned = {plan.decision: plan.repeats_each for plan in route_plans}
+        repeats_per_input = [
+            planned.get(decision, config.k) for decision in intended_decisions
+        ]
+        planned_calls = sum(repeats_per_input)
+        if (
+            requested_config.k is None
+            and requested_config.budget is not None
+            and planned_calls > requested_config.budget
+        ):
+            raise ValueError(
+                "declared route stability targets need at least "
+                f"{planned_calls} meter calls in the zero-flip best case, "
+                f"above budget={requested_config.budget}. Run "
+                "'agentverity plan --suite ...' before execution, raise the "
+                "budget, or choose deployment-relevant targets."
+            )
+
     if config.run_meter:
         meter_work = map_inputs(
             inputs,
-            lambda _index, text: [agent(text) for _ in range(config.k)],
+            lambda index, text: [agent(text) for _ in range(repeats_per_input[index])],
             phase="meter",
             max_workers=config.max_workers,
             error_policy=config.error_policy,
@@ -769,6 +884,7 @@ def run(
                 k=config.k,
                 layer=config.layer,
                 epsilon=config.epsilon,
+                targets=suite.contract.stability_targets,
             )
         if config.reuse_unchanged_calls:
             for index, observations in enumerate(meter_work.values):
@@ -917,6 +1033,7 @@ def run(
         config=config,
         decision_coverage=decision_coverage,
         route_stability=route_stability,
+        route_plans=route_plans,
         errors=tuple(
             sorted(
                 errors,

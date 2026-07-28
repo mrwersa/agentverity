@@ -153,7 +153,7 @@ a valid target when that step owns a release contract. Open-ended answer or
 trajectory quality is outside scope unless the system also exposes a reviewed
 decision layer. See `docs/applicability.md`.
 
-## 4. Status (2026-07-26)
+## 4. Status (2026-07-28)
 
 - M1 core: DONE — observation, meter, blindness, relations, runner, CLI.
 - M2 Strands adapter: DONE — adapter written, tested, worked example runs.
@@ -171,9 +171,12 @@ decision layer. See `docs/applicability.md`.
 - M8 declared decision contracts: DONE in v0.9.0. The optional contract
   preserves the skew warning while separately reporting required, intended,
   observed, missing, critical, and unknown decisions. Correctness remains the
-  responsibility of labelled assertions or another evaluator. Per-critical
-  stability tolerances remain future work because they require separate
-  sampling and cost policy.
+  responsibility of labelled assertions or another evaluator.
+- M9 per-route evidence policy: DONE for the next minor release. Per-route
+  intervals name concentrated decision changes. Optional stability targets
+  allocate repeats by route, can be priced before execution, and become
+  explicit release conditions. Risk labels and numerical targets remain
+  separate declarations.
 
 ## 5. Reporting boundary
 

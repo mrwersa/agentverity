@@ -25,7 +25,7 @@ flip-pair table and never a confusion matrix.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -196,6 +196,7 @@ def stratify_runs(
     k: int,
     layer: str = "verdict",
     epsilon: float = 0.01,
+    targets: Mapping[str, float] | None = None,
 ) -> StratifiedStability:
     """Split already-collected repeat series by each case's intended decision.
 
@@ -207,7 +208,10 @@ def stratify_runs(
             answers it wrongly or fails.
         k: Repeats per input, matching the pooled meter.
         layer: Observation layer to compare.
-        epsilon: Flip-rate threshold.
+        epsilon: Default flip-rate threshold.
+        targets: Optional per-route thresholds. A route with a declared target
+            is judged against it rather than against the run default, so a
+            consequential decision can be held to a tighter bound.
 
     Pairs are disjoint and formed exactly as the pooled meter forms them, so
     the per-route trials sum to the pooled trials.
@@ -235,12 +239,14 @@ def stratify_runs(
         if observations is None:
             continue
         observations = list(observations)
-        if len(observations) != k:
+        length = len(observations)
+        if length < 2:
             raise ValueError(
-                f"every repeat series must contain exactly k={k} observations"
+                "every repeat series must contain at least two observations, "
+                f"got {length}"
             )
         keys = [observation.key(layer) for observation in observations]
-        for index in range(0, k - 1, 2):
+        for index in range(0, length - 1, 2):
             trials[decision] += 1
             left, right = keys[index], keys[index + 1]
             if _hashable(left) != _hashable(right):
@@ -261,7 +267,7 @@ def stratify_runs(
                 pair_flips=flips[decision],
                 ci_low=low,
                 ci_high=high,
-                epsilon=epsilon,
+                epsilon=(targets or {}).get(decision, epsilon),
             )
         )
 
@@ -277,3 +283,132 @@ def stratify_runs(
         routes=tuple(routes),
         flip_pairs=flip_pairs,
     )
+
+
+@dataclass(frozen=True)
+class RoutePlan:
+    """What one route needs, and what the current run would give it."""
+
+    decision: str
+    cases: int
+    target: float
+    pairs_needed: int
+    repeats_each: int
+    calls: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "decision": self.decision,
+            "cases": self.cases,
+            "target": self.target,
+            "pairs_needed": self.pairs_needed,
+            "repeats_each": self.repeats_each,
+            "calls": self.calls,
+        }
+
+
+def plan_route_repeats(
+    intended: Sequence[str],
+    *,
+    epsilon: float,
+    targets: Mapping[str, float] | None = None,
+    minimum_repeats: int = 2,
+) -> tuple[RoutePlan, ...]:
+    """Plan the zero-flip evidence budget for each route.
+
+    Uniform repeats spend the same evidence on every case. A route represented
+    by one case therefore receives fewer pairs than a route represented by
+    five. Sizing from each declared target fixes that allocation without
+    inflating the whole suite to the tightest tolerance.
+
+    Args:
+        intended: The intended decision of every case, in suite order.
+        epsilon: The run's default tolerance, used where no target is declared.
+        targets: Optional per-route tolerances from the decision contract.
+        minimum_repeats: Per-input floor imposed by the run configuration.
+
+    Returns:
+        One plan per route, ordered by decision. ``pairs_needed`` is the
+        best-case requirement when no pair flips. ``repeats_each`` also
+        respects ``minimum_repeats``.
+    """
+    if not 0 < epsilon < 1:
+        raise ValueError("epsilon must be between 0 and 1")
+    if not intended:
+        raise ValueError("intended must not be empty")
+    if minimum_repeats < 2:
+        raise ValueError("minimum_repeats must be at least 2")
+
+    targets = dict(targets or {})
+    counts: dict[str, int] = {}
+    for decision in intended:
+        counts[decision] = counts.get(decision, 0) + 1
+    unknown = sorted(set(targets) - set(counts))
+    if unknown:
+        raise ValueError(
+            "stability targets have no intended cases: " + ", ".join(unknown)
+        )
+    for decision, target in targets.items():
+        if not isinstance(target, (int, float)) or isinstance(target, bool):
+            raise TypeError(f"stability target for {decision!r} must be a number")
+        if not 0 < float(target) < 1:
+            raise ValueError(
+                f"stability target for {decision!r} must be between 0 and 1"
+            )
+
+    plans = []
+    for decision in sorted(counts):
+        cases = counts[decision]
+        target = targets.get(decision, epsilon)
+        needed = pairs_for_deterministic_call(target)
+        # Ceiling division, then doubled: each case contributes floor(k/2)
+        # pairs, so k must be even and cover its share of the route's need.
+        per_case_pairs = -(-needed // cases)
+        repeats = max(minimum_repeats, per_case_pairs * 2)
+        plans.append(
+            RoutePlan(
+                decision=decision,
+                cases=cases,
+                target=target,
+                pairs_needed=needed,
+                repeats_each=repeats,
+                calls=repeats * cases,
+            )
+        )
+    return tuple(plans)
+
+
+def render_plan(
+    plans: Sequence[RoutePlan],
+    *,
+    compare_uniform: bool = False,
+) -> str:
+    """Render an actionable route budget without implying a guarantee."""
+    header = (
+        f"  {'route':<18}{'cases':>6}{'target':>9}{'pairs*':>7}"
+        f"{'repeats':>9}{'calls':>8}"
+    )
+    lines = [header]
+    for plan in plans:
+        lines.append(
+            f"  {plan.decision:<18}{plan.cases:>6}{plan.target:>9.3f}"
+            f"{plan.pairs_needed:>7}{plan.repeats_each:>9}{plan.calls:>8}"
+        )
+    total = sum(plan.calls for plan in plans)
+    lines.append(f"  {'total':<18}{'':>6}{'':>9}{'':>7}{'':>9}{total:>8}")
+    lines.append("  * minimum pairs needed if no pair changes decision")
+    if compare_uniform:
+        uniform = max(plan.repeats_each for plan in plans) * sum(
+            plan.cases for plan in plans
+        )
+        lines.append("")
+        lines.append(
+            f"  sized per route: {total} calls. "
+            f"one uniform k for every route: {uniform} calls."
+        )
+        if uniform > total:
+            lines.append(
+                f"  sizing per route saves {uniform - total} calls by not "
+                "buying a tight bound where nothing needs one."
+            )
+    return "\n".join(lines)

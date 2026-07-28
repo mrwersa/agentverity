@@ -185,9 +185,18 @@ other two are not clean, they are unmeasured: 26 pairs bounds them at 12.9%,
 and 73 pairs are needed to certify at 5%.
 
 A route proven stochastic blocks snapshot admission even when the pooled meter
-looks deterministic. Undecided route rows remain visible limits in this
-release. They do not silently trigger the much larger call budget needed to
-certify every route independently.
+looks deterministic. Untargeted undecided rows remain visible limits rather
+than silently multiplying the call budget. When a route needs its own release
+condition, declare `stability_targets={"card_security": 0.05}` and inspect the
+zero-change cost first:
+
+```bash
+agentverity plan --suite examples/route_stability_plan.json
+```
+
+A targeted route that remains undecided blocks snapshot admission. An explicit
+`budget` remains a hard cap, so an unaffordable plan is refused before any
+agent call.
 
 Create one through the CLI:
 
@@ -218,6 +227,8 @@ reviewed cases ---> agent ---> quality evaluator: "Was it right?"
 Use it while developing, on a pull request, before release, or as a scheduled
 synthetic canary. Do not repeat live customer requests. Results can leave as
 text, JSON, JUnit XML, or one privacy-minimised OpenTelemetry span.
+
+[Read how per-route evidence works, with worked examples](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md).
 
 [See CI, telemetry, lifecycle, and multi-agent integration](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md).
 
@@ -259,8 +270,9 @@ That is a minimum dynamic adequacy check, not exhaustive branch coverage.
 Without a decision contract, AgentVerity only checks observed diversity. With
 one, it reports required, intended, observed, missing, and unknown decisions.
 It still does not establish that every boundary was tested or that critical
-routes meet their own stability target. Keep labelled correctness cases and
-run critical groups separately when their risk warrants a tighter tolerance.
+routes are correct. Keep labelled correctness cases beside it. `critical`
+marks consequence for coverage reporting, while `stability_targets` separately
+declares any route-specific statistical policy.
 
 It also does not judge answer correctness, prove safety, store traces, host a
 dashboard, or monitor production traffic. Static tools remain useful for
@@ -271,6 +283,7 @@ the decisions a model-backed or black-box target actually returns.
 
 - [Which agents fit, and what the result does not prove](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md)
 - [Why arbitrary rerun counts fail](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
+- [How to read and budget per-route evidence](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md)
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - [Design decisions](https://github.com/mrwersa/agentverity/blob/main/DESIGN.md)

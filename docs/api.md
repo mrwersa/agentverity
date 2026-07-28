@@ -41,6 +41,11 @@ result = run(agent, suite=suite)
 - `RunResult.decision_coverage` reports intended, observed, missing, unknown,
   and missing-critical labels. Its `intended_counts` and `observed_counts`
   hold `DecisionCount` values, so that name is exported for annotations.
+- `DecisionContract.stability_targets` sets a per-route tolerance. Declaring
+  one also sizes route repeats when the meter is enabled. Targets must name
+  required decisions. They are separate from the `critical` reporting label.
+- `RunResult.route_plans` holds the zero-change pair requirement and the actual
+  repeats and calls allocated to each route.
 - `RunResult.route_stability` splits stability by each case's intended
   decision, using the calls the run already made. Each `RouteStability` carries
   cases, pairs, flips, a Wilson interval, and the same tri-state `call` as the
@@ -67,7 +72,9 @@ The CLI accepts the same versioned structure with `--suite suite.json`.
 JSON includes the complete route table. The route-stability checks in JUnit
 and OpenTelemetry carry aggregate route counts. OpenTelemetry remains
 label-free and low-cardinality, while JUnit may name decisions in actionable
-failure guidance elsewhere in the report.
+failure guidance elsewhere in the report. JSON also includes `route_plans`,
+and the meter reports both minimum and maximum repeats when allocation differs
+by route.
 
 ## Snapshots
 
@@ -80,12 +87,24 @@ declared contract and each case's intended decision.
 - `save_snapshot` and `load_snapshot` persist versioned snapshot JSON.
 
 A route proven stochastic blocks snapshot admission even when the pooled meter
-looks deterministic. An undecided route remains a diagnostic in this release,
-not an independent route-level certification requirement. The pooled meter
-still governs whether the overall run has enough stability evidence.
+looks deterministic. An untargeted undecided route remains a diagnostic. A
+route named in `stability_targets` is an explicit release condition, so an
+undecided target blocks admission and an exceeded target fails the release
+policy.
 
 The CLI exposes the same path through `agentverity snapshot` and
 `agentverity check`.
+
+## Planning route targets
+
+`agentverity plan --suite suite.json` prints the best-case call plan without
+calling the agent. The plan assumes zero decision changes. A changing route
+can remain undecided or resolve as stochastic.
+
+Programmatic callers can import `RoutePlan` and `plan_route_repeats`.
+`RunConfig.k` is a minimum when route targets are declared, and the route plan
+records any larger per-route allocation. `RunConfig.budget` remains a hard cap
+unless the caller explicitly supplies `k`.
 
 ## Advanced measurement
 
@@ -95,6 +114,7 @@ The CLI exposes the same path through `agentverity snapshot` and
   decision-coverage check.
 - `pairs_for_deterministic_call` budgets the minimum pair count.
 - `plan_repeats` converts the input count and precision into `k`.
+- `plan_route_repeats` produces a zero-change budget for a declared suite.
 - `builtin_relations` returns the default metamorphic catalogue.
 - `Relation` defines a custom invariant, monotone, or directional check.
 
