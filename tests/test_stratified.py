@@ -21,6 +21,7 @@ from agentverity import (
 )
 from agentverity.observation import Observation
 from agentverity.snapshot import SnapshotRefused, create_snapshot
+from agentverity.stratified import plan_route_repeats, render_plan
 
 
 def series(decision: str, keys: list[str]) -> tuple[str, list[Observation]]:
@@ -406,9 +407,21 @@ def test_a_short_series_is_rejected():
         stratify_runs([series("approve", ["a"])], k=1, epsilon=0.05)
 
 
-def test_a_series_that_does_not_match_k_is_rejected():
-    with pytest.raises(ValueError, match="exactly k=4"):
-        stratify_runs([series("approve", ["a", "a"])], k=4, epsilon=0.05)
+def test_a_series_carrying_no_pair_is_rejected():
+    with pytest.raises(ValueError, match="at least two observations"):
+        stratify_runs([series("approve", ["a"])], k=2, epsilon=0.05)
+
+
+def test_routes_may_carry_different_repeat_counts():
+    """Sizing repeats per route is the point of declaring targets, so series
+    of differing length have to be first-class rather than an error."""
+    result = stratify_runs(
+        [series("approve", ["a"] * 4), series("deny", ["d"] * 10)],
+        k=4,
+        epsilon=0.05,
+    )
+    trials = {route.decision: route.pair_trials for route in result.routes}
+    assert trials == {"approve": 2, "deny": 5}
 
 
 def test_an_invalid_epsilon_is_rejected():
@@ -497,3 +510,143 @@ def test_the_result_serialises():
     assert payload["routes"][0]["decision"] == "review"
     assert payload["flip_pairs"][0]["decisions"] == ["deny", "review"]
     assert payload["epsilon"] == 0.05
+
+
+class TestPerRouteTolerances:
+    """A declared target is what turns criticality from a label in a report
+    into a number the run has to satisfy."""
+
+    def test_a_route_is_judged_against_its_own_target(self):
+        result = stratify_runs(
+            [series("deny", ["d"] * 80), series("approve", ["a"] * 80)],
+            k=80,
+            epsilon=0.10,
+            targets={"deny": 0.05},
+        )
+        by_route = {route.decision: route for route in result.routes}
+
+        assert by_route["approve"].epsilon == 0.10
+        assert by_route["deny"].epsilon == 0.05
+
+    def test_the_same_evidence_can_clear_a_loose_target_and_not_a_tight_one(self):
+        """40 pairs with no flips bounds the rate at 8.8%. That certifies at
+        10% and does not at 5%, which is the whole reason targets exist."""
+        both = stratify_runs(
+            [series("approve", ["a"] * 80), series("deny", ["d"] * 80)],
+            k=80,
+            epsilon=0.10,
+            targets={"deny": 0.05},
+        )
+        by_route = {route.decision: route for route in both.routes}
+
+        assert by_route["approve"].call == "verdict-deterministic"
+        assert by_route["deny"].decided is False
+
+    def test_routes_without_a_target_use_the_run_default(self):
+        result = stratify_runs(
+            [series("approve", ["a"] * 4)], k=4, epsilon=0.2, targets={"deny": 0.01}
+        )
+        assert result.routes[0].epsilon == 0.2
+
+
+class TestBudgetPlanning:
+    """Sizing per route is what makes a tight target affordable."""
+
+    def test_a_tight_target_costs_more_repeats_than_a_loose_one(self):
+        plans = {
+            plan.decision: plan
+            for plan in plan_route_repeats(
+                ["approve", "deny"], epsilon=0.05, targets={"deny": 0.01}
+            )
+        }
+        assert plans["approve"].pairs_needed == 73
+        assert plans["deny"].pairs_needed == 381
+        assert plans["deny"].repeats_each > plans["approve"].repeats_each
+
+    def test_more_cases_on_a_route_means_fewer_repeats_each(self):
+        one = plan_route_repeats(["deny"], epsilon=0.05)[0]
+        many = plan_route_repeats(["deny"] * 5, epsilon=0.05)[0]
+
+        assert many.repeats_each < one.repeats_each
+        assert many.cases == 5
+
+    def test_repeats_are_even_because_a_pair_needs_two_calls(self):
+        for plan in plan_route_repeats(["a", "b", "b"], epsilon=0.3):
+            assert plan.repeats_each % 2 == 0
+            assert plan.repeats_each >= 2
+
+    def test_sizing_per_route_costs_less_than_one_uniform_k(self):
+        """The claim the feature is sold on, so it is measured."""
+        intended = ["approve"] * 5 + ["deny"]
+        plans = plan_route_repeats(intended, epsilon=0.05, targets={"deny": 0.01})
+        sized = sum(plan.calls for plan in plans)
+        uniform = max(p.repeats_each for p in plans) * len(intended)
+
+        assert sized < uniform
+
+    def test_an_empty_suite_is_rejected(self):
+        with pytest.raises(ValueError, match="must not be empty"):
+            plan_route_repeats([], epsilon=0.05)
+
+    def test_an_invalid_epsilon_is_rejected(self):
+        with pytest.raises(ValueError, match="epsilon must be between"):
+            plan_route_repeats(["a"], epsilon=0)
+
+    def test_the_table_names_every_route_and_totals_the_calls(self):
+        plans = plan_route_repeats(["approve", "deny"], epsilon=0.05)
+        table = render_plan(plans, current_repeats=4)
+
+        assert "approve" in table and "deny" in table
+        assert "total" in table
+        assert str(sum(plan.calls for plan in plans)) in table
+
+
+def test_a_route_plan_serialises():
+    payload = plan_route_repeats(["deny"], epsilon=0.05, targets={"deny": 0.01})[0].to_dict()
+
+    assert payload["decision"] == "deny"
+    assert payload["target"] == 0.01
+    assert payload["pairs_needed"] == 381
+    assert payload["calls"] == payload["repeats_each"] * payload["cases"]
+
+
+class TestTheDocumentedNumbersAreReal:
+    """docs/route-evidence.md quotes specific figures. A doc that drifts from
+    the code teaches the wrong thing confidently, so the figures are generated
+    here rather than trusted."""
+
+    def test_the_evidence_table(self):
+        from agentverity.meter import classify_call, wilson_ci
+
+        table = {
+            (0, 13): "undecided",
+            (1, 13): "undecided",
+            (3, 13): "verdict-stochastic",
+            (0, 36): "undecided",
+            (0, 73): "verdict-deterministic",
+        }
+        for (flips, pairs), expected in table.items():
+            low, high = wilson_ci(flips, pairs)
+            assert classify_call(low, high, 0.05).startswith(expected)
+
+    def test_the_budget_comparison(self):
+        plans = plan_route_repeats(
+            ["approve", "review", "deny"], epsilon=0.05, targets={"deny": 0.01}
+        )
+        sized = sum(plan.calls for plan in plans)
+        uniform = max(plan.repeats_each for plan in plans) * 3
+
+        assert sized == 1054
+        assert uniform == 2286
+
+    def test_adding_a_second_case_roughly_halves_the_repeats(self):
+        one = plan_route_repeats(["card"], epsilon=0.01)[0]
+        two = plan_route_repeats(["card", "card"], epsilon=0.01)[0]
+
+        assert one.repeats_each == 762
+        assert two.repeats_each == 382
+
+    def test_twenty_six_pairs_bounds_the_rate_at_the_documented_value(self):
+        from agentverity.meter import wilson_ci
+
+        assert round(wilson_ci(0, 26)[1], 3) == 0.129

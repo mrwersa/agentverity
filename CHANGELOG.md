@@ -10,6 +10,33 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `DecisionContract.stability_targets` gives a route its own flip-rate
+  tolerance, so a consequential decision can be held to a tighter bound than a
+  routine one. This is what turns `critical` from a label in a report into a
+  number the run has to satisfy.
+- Repeats are sized per route when targets are declared. A suite with one case
+  for a critical decision and five for a routine one previously gave the
+  critical decision the least evidence, which is backwards. Sizing per route
+  fixes the allocation without inflating the whole suite to the tightest
+  tolerance: on the three-route example it is 1054 calls against 2286.
+- `agentverity plan --suite` prints the call budget a suite needs without
+  calling the agent, so a tolerance is chosen before the invoice rather than
+  after.
+- `docs/route-evidence.md`, a worked guide to reading the route table, why a
+  verdict never comes from the observed rate, and where the budget goes.
+
+### Changed
+
+- Repeat series may now differ in length, which is what lets a run size
+  repeats per route. A series carrying fewer than two observations is still
+  rejected, because it contributes no pair and would quietly weaken the
+  interval instead of failing.
+- Without declared targets nothing changes. Repeats stay uniform and the run
+  behaves exactly as before, so the extra spend is always something a
+  contract asked for.
+
+### Added
+
 - Per-route stability. When a decision suite is declared, the same repeated
   observations the pooled meter uses are split by each case's intended
   decision, so a route that misbehaves is named instead of averaged away.

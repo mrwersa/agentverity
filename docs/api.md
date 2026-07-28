@@ -41,6 +41,9 @@ result = run(agent, suite=suite)
 - `RunResult.decision_coverage` reports intended, observed, missing, unknown,
   and missing-critical labels. Its `intended_counts` and `observed_counts`
   hold `DecisionCount` values, so that name is exported for annotations.
+- `DecisionContract.stability_targets` sets a per-route tolerance. Declaring
+  one also sizes that route's repeats, so the budget follows consequence.
+- `RunResult.route_plans` holds the repeats and calls each route was given.
 - `RunResult.route_stability` splits stability by each case's intended
   decision, using the calls the run already made. Each `RouteStability` carries
   cases, pairs, flips, a Wilson interval, and the same tri-state `call` as the

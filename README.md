@@ -219,6 +219,8 @@ Use it while developing, on a pull request, before release, or as a scheduled
 synthetic canary. Do not repeat live customer requests. Results can leave as
 text, JSON, JUnit XML, or one privacy-minimised OpenTelemetry span.
 
+[Read how per-route evidence works, with worked examples](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md).
+
 [See CI, telemetry, lifecycle, and multi-agent integration](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md).
 
 ### Measured AgentCore canary

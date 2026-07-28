@@ -56,7 +56,13 @@ from agentverity.relations import (
     Relation,
     builtin_relations,
 )
-from agentverity.stratified import StratifiedStability, stratify_runs
+from agentverity.stratified import (
+    RoutePlan,
+    StratifiedStability,
+    plan_route_repeats,
+    render_plan,
+    stratify_runs,
+)
 
 AgentFn = Callable[[str], Observation]
 RunStatus = Literal[
@@ -256,6 +262,7 @@ class RunResult:
     config: RunConfig
     decision_coverage: DecisionCoverageResult | None = None
     route_stability: StratifiedStability | None = None
+    route_plans: tuple[RoutePlan, ...] = ()
     errors: tuple[RunError, ...] = ()
     input_fingerprints: tuple[str, ...] = ()
     observed_keys: tuple[Any | None, ...] = ()
@@ -541,6 +548,16 @@ class RunResult:
             lines.append("")
             next_section = 4
 
+        if self.route_plans:
+            lines.append(f"{next_section}. CALL BUDGET BY ROUTE")
+            lines.append(
+                "   repeats sized per route, because a tight bound is only "
+                "worth buying where consequence is"
+            )
+            lines.append(render_plan(self.route_plans))
+            lines.append("")
+            next_section += 1
+
         if self.route_stability is not None and self.route_stability.routes:
             stability = self.route_stability
             lines.append(f"{next_section}. STABILITY BY ROUTE")
@@ -734,10 +751,27 @@ def run(
 
     # 1. Meter
     meter_result = None
+    # Repeats are uniform unless the contract declares per-route targets. That
+    # keeps the default path exactly as it was, and makes the extra spend an
+    # explicit consequence of asking for a tighter bound on a named route.
+    repeats_per_input = [config.k] * len(inputs)
+    route_plans: tuple[RoutePlan, ...] = ()
+    if suite is not None and suite.contract.stability_targets:
+        route_plans = plan_route_repeats(
+            intended_decisions,
+            epsilon=config.epsilon,
+            targets=suite.contract.stability_targets,
+        )
+        planned = {plan.decision: plan.repeats_each for plan in route_plans}
+        repeats_per_input = [
+            max(config.k, planned.get(decision, config.k))
+            for decision in intended_decisions
+        ]
+
     if config.run_meter:
         meter_work = map_inputs(
             inputs,
-            lambda _index, text: [agent(text) for _ in range(config.k)],
+            lambda index, text: [agent(text) for _ in range(repeats_per_input[index])],
             phase="meter",
             max_workers=config.max_workers,
             error_policy=config.error_policy,
@@ -769,6 +803,7 @@ def run(
                 k=config.k,
                 layer=config.layer,
                 epsilon=config.epsilon,
+                targets=suite.contract.stability_targets,
             )
         if config.reuse_unchanged_calls:
             for index, observations in enumerate(meter_work.values):
@@ -917,6 +952,7 @@ def run(
         config=config,
         decision_coverage=decision_coverage,
         route_stability=route_stability,
+        route_plans=route_plans,
         errors=tuple(
             sorted(
                 errors,

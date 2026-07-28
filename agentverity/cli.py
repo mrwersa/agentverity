@@ -33,6 +33,7 @@ from agentverity.snapshot import (
     load_snapshot,
     save_snapshot,
 )
+from agentverity.stratified import plan_route_repeats, render_plan
 
 
 def _load_agent(spec: str) -> Callable:
@@ -399,6 +400,18 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Write the report to this path instead of stdout.",
     )
 
+    plan_parser = sub.add_parser(
+        "plan",
+        help="show the call budget a declared suite needs, without calling the agent",
+    )
+    plan_parser.add_argument("--suite", required=True, help="decision suite JSON")
+    plan_parser.add_argument(
+        "--epsilon",
+        type=float,
+        default=0.05,
+        help="default tolerance for routes with no declared target",
+    )
+
     snapshot_parser = sub.add_parser(
         "snapshot",
         help="Create an approved baseline when the evidence supports one.",
@@ -434,9 +447,28 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _plan_command(args: argparse.Namespace) -> int:
+    """Print what a suite would cost before any agent call is made.
+
+    Knowing the bill in advance is the difference between adopting a tighter
+    tolerance and discovering it after a provider invoice.
+    """
+    suite = load_decision_suite(args.suite)
+    plans = plan_route_repeats(
+        suite.expected,
+        epsilon=args.epsilon,
+        targets=suite.contract.stability_targets,
+    )
+    print("agentverity — call budget")
+    print(render_plan(plans, current_repeats=0))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the AgentVerity CLI."""
     args = _build_parser().parse_args(argv)
+    if args.command == "plan":
+        return _plan_command(args)
     if args.command == "run":
         return _run_command(args)
     if args.command == "snapshot":

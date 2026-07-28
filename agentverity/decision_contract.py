@@ -39,14 +39,20 @@ class DecisionContract:
 
     ``allowed`` defines the complete known label set. ``required`` defaults to
     every allowed label but can omit genuinely optional routes. ``critical``
-    records the high-consequence subset for reporting and future policy
-    extensions. Version 0.9 does not assign a separate statistical threshold
-    to critical labels.
+    records the high-consequence subset.
+
+    ``stability_targets`` gives a route its own flip-rate tolerance, so a
+    consequential decision can be held to a tighter bound than a routine one.
+    A route with no target uses the run's epsilon. Declaring a target is what
+    turns criticality from a label in a report into a number the run has to
+    satisfy, and it is what lets a budget be spent where consequence is rather
+    than spread evenly over routes that do not need it.
     """
 
     allowed: frozenset[str]
     required: frozenset[str] | None = None
     critical: frozenset[str] = field(default_factory=frozenset)
+    stability_targets: dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         allowed = _normalise_labels(self.allowed, field_name="allowed")
@@ -66,18 +72,40 @@ class DecisionContract:
         if not critical <= required:
             unknown = ", ".join(sorted(critical - required))
             raise ValueError(f"critical decisions must also be required: {unknown}")
+        targets = dict(self.stability_targets or {})
+        for label, target in targets.items():
+            if label not in allowed:
+                raise ValueError(
+                    f"stability target for a decision that is not allowed: {label}"
+                )
+            if not isinstance(target, (int, float)) or isinstance(target, bool):
+                raise TypeError(f"stability target for {label!r} must be a number")
+            if not 0 < float(target) < 1:
+                raise ValueError(
+                    f"stability target for {label!r} must be between 0 and 1"
+                )
+        object.__setattr__(
+            self, "stability_targets", {k: float(v) for k, v in targets.items()}
+        )
         object.__setattr__(self, "allowed", allowed)
         object.__setattr__(self, "required", required)
         object.__setattr__(self, "critical", critical)
 
-    def to_dict(self) -> dict[str, list[str]]:
+    def target_for(self, decision: str, default: float) -> float:
+        """The tolerance this route is held to, falling back to the run's."""
+        return self.stability_targets.get(decision, default)
+
+    def to_dict(self) -> dict[str, Any]:
         """Return a stable JSON-compatible representation."""
         assert self.required is not None
-        return {
+        payload: dict[str, Any] = {
             "allowed": sorted(self.allowed),
             "required": sorted(self.required),
             "critical": sorted(self.critical),
         }
+        if self.stability_targets:
+            payload["stability_targets"] = dict(sorted(self.stability_targets.items()))
+        return payload
 
     @classmethod
     def from_dict(cls, value: Any) -> DecisionContract:
@@ -89,6 +117,7 @@ class DecisionContract:
                 allowed=value["allowed"],
                 required=value.get("required"),
                 critical=value.get("critical", ()),
+                stability_targets=value.get("stability_targets", {}),
             )
         except KeyError as exc:
             raise ValueError("decision contract is missing 'allowed'") from exc
