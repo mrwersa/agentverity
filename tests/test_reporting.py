@@ -79,6 +79,36 @@ def test_write_run_json_round_trips(tmp_path):
     assert json.loads(path.read_text())["schema"] == RUN_SCHEMA
 
 
+def test_json_report_includes_relation_coverage_by_route():
+    suite = DecisionSuite(
+        contract=DecisionContract(allowed={"allow", "block"}),
+        cases=(
+            DecisionCase("allow this", "allow"),
+            DecisionCase("block this", "block"),
+        ),
+    )
+    relation = Relation(
+        name="punctuation-invariance",
+        rtype="invariant",
+        transform=lambda text: text + "!",
+        check=lambda source, followup: source.verdict == followup.verdict,
+    )
+    result = run(
+        from_callable(
+            lambda text: {
+                "verdict": "allow" if text.startswith("allow") else "block"
+            }
+        ),
+        suite=suite,
+        relations=[relation],
+        config=RunConfig(k=2, epsilon=0.9),
+    )
+
+    coverage = run_result_to_dict(result)["relation_coverage"]
+    assert coverage["probed"] == ["allow", "block"]
+    assert coverage["unprobed"] == []
+
+
 def test_json_value_refuses_lossy_fallback():
     with pytest.raises(TypeError, match="not JSON-compatible"):
         json_value(object())

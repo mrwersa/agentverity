@@ -94,6 +94,7 @@ def run_result_to_otel_attributes(result: RunResult) -> dict[str, Any]:
                 "agentverity.contract.unknown_observed": len(
                     coverage.unknown_observed
                 ),
+                "agentverity.contract.under_cased": len(coverage.under_cased),
             }
         )
     if result.route_stability is not None:
@@ -128,6 +129,15 @@ def run_result_to_otel_attributes(result: RunResult) -> dict[str, Any]:
                 "agentverity.route_plan.calls": sum(
                     plan.calls for plan in result.route_plans
                 ),
+            }
+        )
+    if result.relation_coverage is not None:
+        coverage = result.relation_coverage
+        attributes.update(
+            {
+                "agentverity.relation_coverage.routes": len(coverage.routes),
+                "agentverity.relation_coverage.probed": len(coverage.probed),
+                "agentverity.relation_coverage.unprobed": len(coverage.unprobed),
             }
         )
     return attributes

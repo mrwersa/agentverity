@@ -132,6 +132,85 @@ The benefit is broader test evidence rather than cheaper statistics.
 Use a target tied to the consequence of a changed decision. A strict 1% target
 is expensive by design and should not be copied into every route.
 
+## A green relation can mean nothing was tested
+
+A relation transforms an input and checks the agent answers the same way. If
+the transform returns the input unchanged, there is no second question to
+answer. The pair is byte-identical, the check passes, and nothing was tested.
+
+That is easy to hit by accident. Accent normalisation on plain ASCII text is a
+no-op. So is whitespace collapsing on text that is already tidy.
+
+```text
+  case: "routine request"          case: "café dispute"
+
+  normalisation-invariance         normalisation-invariance
+    "routine request"                "café dispute"
+    →  "routine request"             →  "cafe dispute"
+    unchanged, tested nothing        changed, genuinely probed
+```
+
+Pooled, this is invisible. Every relation reports a pass:
+
+```text
+7. RELATION RESULTS
+   relation                     type         held violated skipped errors    rate
+   normalisation-invariance     invariant       1        0       2      0    0.0%
+   tool-selection-invariance    invariant       1        0       2      0    0.0%
+```
+
+Split by route, it is obvious:
+
+```text
+4. RELATION PROBING BY ROUTE
+   a transform that returns the input unchanged tests nothing
+   route              cases  probed  no-op  violated  result
+   approve                1       0      2         -  NOT EXERCISED
+   deny                   1       0      2         -  NOT EXERCISED
+   review                 1       2      0        0%  exercised
+   advice:      every relation left these routes unchanged, so their relation
+                results are vacuous: approve, deny
+```
+
+Two of three routes have relation results that prove nothing. `violated` reads
+`-` rather than `0%` for those, because reporting a zero rate on a route that
+was never probed hands you the same false green the table exists to prevent.
+
+The fix is a relation that actually perturbs those inputs, not more reruns.
+
+## Cases are not repeats
+
+Ten `deny` cases that are paraphrases of one request satisfy any tolerance and
+leave the boundary untested. Repeats tell you a decision is stable. Distinct
+cases tell you a route was approached from more than one angle. No amount of
+statistics turns the first into the second, because the package has no idea
+what inputs a route ought to contain.
+
+So the number is declared, not calculated:
+
+```python
+DecisionContract(
+    allowed={"approve", "review", "deny"},
+    critical={"deny"},
+    stability_targets={"deny": 0.01},   # statistical: how tight a bound
+    minimum_cases={"deny": 3},          # editorial: how many angles
+)
+```
+
+A shortfall is a contract finding, alongside the missing-route checks:
+
+```text
+3. DECLARED DECISION CONTRACT
+   call:        INCOMPLETE
+   under-cased:   deny 1/3
+   advice:      these routes carry fewer reviewed cases than the contract
+                declares: deny has 1 of 3
+```
+
+The count comes from the cases you wrote, not from what the agent returned. An
+agent answering `deny` for several inputs does not mean the suite explores
+`deny`.
+
 ## What the route table does not prove
 
 **Correctness.** Keep reviewed assertions or a quality evaluator beside
@@ -140,13 +219,19 @@ AgentVerity.
 **A joint guarantee.** Each route has its own 95% interval. Six intervals are
 not one 95% statement about the suite.
 
-**Semantic breadth.** Ten near-duplicate cases can still explore one narrow
-corner of a route. AgentVerity counts declared cases but cannot judge whether
-they represent the input space.
+**Semantic breadth.** `minimum_cases` enforces how many cases a route carries.
+It cannot judge whether those cases are different from each other. Ten
+paraphrases of one request meet a minimum of ten. Counting is mechanical;
+deciding a route is genuinely explored stays a review job.
 
 **True independence.** Caching, provider routing, and shared state can make
 repeated pairs correlated. See
 [applicability](applicability.md#independence-and-which-way-the-error-runs).
+
+**A per-route relation requirement.** An unprobed route is diagnostic rather
+than an automatic release failure. The contract does not yet declare which
+relations should apply to which routes. A relation catalogue that changes no
+input at all still fails as vacuous.
 
 ## Quick reference
 
@@ -158,3 +243,5 @@ repeated pairs correlated. See
 | `undecided` with no changes | The route was quiet but under-measured | Add repeats up to the named pair requirement |
 | `deterministic` | The route is stable enough at its declared tolerance | Review correctness before admitting a baseline |
 | A flip pair | Two decisions appeared for the same input | Inspect that decision boundary |
+| `NOT EXERCISED` | Every relation left this route's inputs unchanged | Add a relation that perturbs them. More reruns will not help |
+| `under-cased` | Fewer reviewed cases than the contract declares | Write cases that approach the route differently, not repeats of one |

@@ -537,3 +537,50 @@ class TestStabilityTargets:
             stability_targets={"deny": 0.01},
         )
         assert isinstance(hash(contract), int)
+
+
+class TestMinimumCasesIsADeclarationNotACalculation:
+    """Nothing in the statistics can infer semantic breadth, so this number
+    comes from review and is validated like any other declared field."""
+
+    def test_a_minimum_survives_a_round_trip(self):
+        contract = DecisionContract(
+            allowed={"approve", "deny"}, minimum_cases={"deny": 3}
+        )
+        restored = DecisionContract.from_dict(contract.to_dict())
+        assert dict(restored.minimum_cases) == {"deny": 3}
+
+    def test_a_contract_without_minimums_omits_the_key(self):
+        contract = DecisionContract(allowed={"approve"})
+        assert "minimum_cases" not in contract.to_dict()
+        assert dict(contract.minimum_cases) == {}
+
+    def test_hash_includes_the_minimum_case_policy(self):
+        one_case = DecisionContract(
+            allowed={"approve"},
+            minimum_cases={"approve": 1},
+        )
+        two_cases = DecisionContract(
+            allowed={"approve"},
+            minimum_cases={"approve": 2},
+        )
+
+        assert one_case != two_cases
+        assert hash(one_case) != hash(two_cases)
+
+    def test_a_minimum_for_a_decision_that_is_not_required_is_rejected(self):
+        with pytest.raises(ValueError, match="not required"):
+            DecisionContract(allowed={"approve"}, minimum_cases={"deny": 2})
+
+    def test_a_minimum_below_one_is_rejected(self):
+        with pytest.raises(ValueError, match="at least 1"):
+            DecisionContract(allowed={"approve"}, minimum_cases={"approve": 0})
+
+    @pytest.mark.parametrize("bad", [2.5, "3", True, None])
+    def test_a_non_integer_minimum_is_rejected(self, bad):
+        with pytest.raises(TypeError, match="must be an integer"):
+            DecisionContract(allowed={"approve"}, minimum_cases={"approve": bad})
+
+    def test_minimums_must_be_a_mapping(self):
+        with pytest.raises(TypeError, match="must be a mapping"):
+            DecisionContract(allowed={"approve"}, minimum_cases=[("approve", 2)])

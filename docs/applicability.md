@@ -1,10 +1,12 @@
 # Applicability and limits
 
-AgentVerity qualifies test evidence for a named decision point. It is useful
-when a model-backed component behaves like a classifier, router, gate,
-supervisor, or bounded controller even if it also generates explanatory text.
+AgentVerity is a conservative admission policy for regression baselines
+involving named decisions. It is useful when a model-backed component behaves
+like a classifier, router, gate, supervisor, or bounded controller even if it
+also generates explanatory text.
 
-It qualifies a test run, not the whole agent.
+It qualifies evidence produced beside correctness and trajectory evaluators.
+It does not qualify the whole agent.
 
 ## The fit checklist
 
@@ -108,6 +110,11 @@ decision this application declared as required". It does not prove that the
 labels were correct, the inputs were semantically representative, or unknown
 behaviour was impossible.
 
+This is required-decision presence, not comprehensive behavioural-boundary
+coverage. Use `minimum_cases` to enforce a reviewed case-count policy and
+relation coverage to reveal routes no transformation touched. Neither feature
+can decide that the cases represent every meaningful boundary.
+
 ```python
 from agentverity import DecisionCase, DecisionContract, DecisionSuite
 
@@ -116,6 +123,7 @@ suite = DecisionSuite(
         allowed={"approve", "review", "deny"},
         critical={"deny"},
         stability_targets={"deny": 0.02},
+        minimum_cases={"deny": 3},
     ),
     cases=(
         DecisionCase("routine request", "approve"),
@@ -132,6 +140,16 @@ undecided target a release refusal. Keeping those declarations separate avoids
 inventing a numerical threshold merely because a route is marked critical.
 Treat AgentVerity as one release condition beside correctness, security,
 latency, cost, and operational health.
+
+## Why use a library instead of a local loop?
+
+A local loop is reasonable when a project only needs a few exploratory reruns.
+The reusable part is the admission policy around those calls: non-overlapping
+comparisons, evidence sizing from a tolerance, a separate insufficient-evidence
+state, route-specific targets, declared coverage, and consistent CI and
+snapshot behaviour. AgentVerity packages those decisions. A team that already
+implements and reviews the same policy in its evaluation platform does not
+need a second implementation.
 
 ## Trial assumptions and cost
 

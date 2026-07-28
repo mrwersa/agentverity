@@ -1,4 +1,4 @@
-"""Decision stability and coverage checks for AI agent tests.
+"""Evidence checks for regression baselines on AI agents with bounded decisions.
 
 Before trusting a green run, AgentVerity checks whether the agent's named
 decision is stable across reruns and whether the test inputs reach more than
@@ -71,10 +71,13 @@ from agentverity.snapshot import (
 )
 from agentverity.stratified import (
     FlipPair,
+    RelationCoverage,
     RoutePlan,
+    RouteRelationCoverage,
     RouteStability,
     StratifiedStability,
     plan_route_repeats,
+    stratify_relations,
     stratify_runs,
 )
 from agentverity.telemetry import (
@@ -101,8 +104,10 @@ __all__ = [
     "Observation",
     "ProgressEvent",
     "Relation",
+    "RelationCoverage",
     "RelationResult",
     "RoutePlan",
+    "RouteRelationCoverage",
     "RouteStability",
     "RunConfig",
     "RunError",
@@ -133,6 +138,7 @@ __all__ = [
     "run_result_to_otel_attributes",
     "save_decision_suite",
     "save_snapshot",
+    "stratify_relations",
     "stratify_runs",
     "write_junit_xml",
     "write_run_json",

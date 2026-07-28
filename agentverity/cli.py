@@ -382,7 +382,10 @@ def _check_command(args: argparse.Namespace) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agentverity",
-        description="Decision stability and coverage checks for AI agent tests.",
+        description=(
+            "Evidence checks for regression baselines on AI agents with "
+            "bounded decisions."
+        ),
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

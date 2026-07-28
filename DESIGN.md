@@ -177,6 +177,10 @@ decision layer. See `docs/applicability.md`.
   allocate repeats by route, can be priced before execution, and become
   explicit release conditions. Risk labels and numerical targets remain
   separate declarations.
+- M10 semantic breadth diagnostics: DONE for the next minor release. Relation
+  coverage names intended routes that no transform actually changed, while
+  `minimum_cases` enforces a separately reviewed case-count policy without
+  pretending to infer semantic diversity.
 
 ## 5. Reporting boundary
 
@@ -204,3 +208,18 @@ The bridge creates one span after a diagnostic run. It does not repeat
 production requests, instrument model internals, or replace the host's trace
 collector. When called inside an active trace, the span follows the current
 OpenTelemetry context.
+
+## 7. Candidate direction after independent use
+
+The highest-leverage extension is framework-neutral evidence ingestion:
+accept repeated decision observations produced by an existing evaluation
+platform, then apply AgentVerity's admission policy without making duplicate
+model calls. A versioned JSON Schema should come before adapters so DeepEval,
+LangSmith, promptfoo, AgentCore, and internal systems can target one small
+contract.
+
+One integration should validate that contract before more are added. Temporal
+comparison across scheduled runs is a separate candidate for provider or
+model-version drift. Correctness scoring, full trajectory evaluation,
+red-teaming, hosted dashboards, and production request interception remain
+outside the project.
