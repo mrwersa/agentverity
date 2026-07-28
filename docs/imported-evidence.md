@@ -217,3 +217,50 @@ tested against one when the probe set is small or predictable.
 
 Observations are decision labels. If your labels embed customer data, the same
 applies.
+
+## Comparing two windows over time
+
+A run says whether a decision is repeatable now. It cannot say whether last
+month's answer was the same, which is the question after a model version
+changes, a prompt is edited, or a provider reroutes traffic.
+
+```console
+$ agentverity compare-evidence july.json august.json
+evidence drift
+  route                     before         after  result
+  card_security               0/13          9/13  undecided -> stochastic
+  duplicate_charge            0/13          0/13  unchanged
+  flip pairs gained: card_security <-> merchant_dispute
+  provenance:
+    model: 'router-v3' -> 'router-v4'
+
+verdict: DRIFTED
+```
+
+The reportable event is a **tri-state result moving**, not a rate wandering. A
+route drifting from 2% to 3% inside the same conclusion is noise. A route
+crossing from deterministic to stochastic is a release event.
+
+| Reported | Meaning |
+|---|---|
+| `undecided -> stochastic` | The verdict moved. Investigate |
+| `wider` / `tighter` | The rate moved inside one verdict |
+| `incomparable` | One window had no usable pairs for that route |
+| decisions gained or lost | A route appeared or disappeared entirely |
+| flip pairs gained or lost | A new confusion appeared, or an old one resolved |
+| provenance | A model, prompt, or harness difference between the files |
+
+A provenance change alone counts as drift even when every decision held. A
+model swap is the fact you most want beside a comparison, not a footnote.
+
+Exit code is `1` on drift and `0` on none. Drift is a finding to review rather
+than a failure to block on: whether a moved route is a regression, an
+improvement, or a relabelled taxonomy is a judgement this package does not make.
+
+### What a comparison cannot establish
+
+Agreement between two windows does not prove trials were independent within
+either one. Two correlated runs agree with each other very comfortably.
+Independence is a property of how each window was collected, recorded in
+`isolation`, and no comparison recovers it. The note travels with every
+comparison for that reason.

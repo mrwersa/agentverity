@@ -8,6 +8,33 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `agentverity compare-evidence before.json after.json` compares two
+  independently collected evidence windows and reports what moved: per-route
+  intervals, decisions that appeared or disappeared, flip-pair structure, and
+  any model, prompt, or harness difference recorded in provenance.
+- The reportable event is a tri-state result changing rather than a rate
+  wandering. A route drifting inside one conclusion is noise; a route crossing
+  from deterministic to stochastic is a release event.
+- A provenance change counts as drift even when every decision held, because a
+  model swap is the fact you most want beside a comparison.
+- `compare_evidence`, `EvidenceDrift`, and `RouteDrift` are exported.
+
+### Changed
+
+- The README describes the target using the established agent-pattern
+  vocabulary: routing, orchestrator-workers, evaluator-optimiser, tool use,
+  multi-agent supervisor, and guardrail or policy gate, each paired with the
+  decision that is actually under test.
+
+### Notes
+
+- A comparison never claims that agreement between two windows establishes
+  independence within either one. Two correlated runs agree comfortably.
+  Independence is a property of collection, recorded in `isolation`, and the
+  caveat travels with every comparison.
+
 ## [0.12.2] - 2026-07-28
 
 ### Changed

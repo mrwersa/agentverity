@@ -37,6 +37,7 @@ from agentverity.decision_contract import (
     load_decision_suite,
     save_decision_suite,
 )
+from agentverity.drift import EvidenceDrift, RouteDrift, compare_evidence
 from agentverity.evidence import (
     EVIDENCE_SCHEMA,
     EvidenceCase,
@@ -115,6 +116,7 @@ __all__ = [
     "DecisionCoverageResult",
     "DecisionSuite",
     "EvidenceCase",
+    "EvidenceDrift",
     "EvidenceError",
     "EvidenceSet",
     "FlipPair",
@@ -124,6 +126,7 @@ __all__ = [
     "Relation",
     "RelationCoverage",
     "RelationResult",
+    "RouteDrift",
     "RoutePlan",
     "RouteRelationCoverage",
     "RouteStability",
@@ -139,6 +142,7 @@ __all__ = [
     "StratifiedStability",
     "assess_evidence",
     "builtin_relations",
+    "compare_evidence",
     "compare_snapshot",
     "create_snapshot",
     "detect",
