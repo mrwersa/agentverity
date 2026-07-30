@@ -8,6 +8,21 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-07-30
+
+### Added
+
+- A provider-free evaluator-stability example and guide show how to qualify
+  repeated `pass`, `fail`, or `uncertain` judgements without claiming that
+  repeatability establishes validity.
+
+### Changed
+
+- The README and integration guide place AgentVerity in the full evaluation
+  loop from capability exploration through regression admission and reviewed
+  production feedback.
+- Production pinning examples now name the current `0.13` minor series.
+
 ## [0.13.1] - 2026-07-28
 
 ### Changed
