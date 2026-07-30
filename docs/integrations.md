@@ -45,6 +45,33 @@ instead of making the target calls again. Promptfoo has a direct JSON bridge,
 and DeepEval can share precomputed test cases. See
 [imported evidence](imported-evidence.md).
 
+The loop continues after deployment:
+
+```text
+capability cases -> quality and trajectory evaluation
+        |                       |
+        +-----------> AgentVerity qualification
+                                  |
+                          reviewed regression baseline
+                                  |
+                       release -> canary -> production
+                                              |
+                                  reviewed traces and incidents
+                                              |
+                                      offline dataset
+```
+
+Do not add raw production traffic automatically. A person first decides
+whether an incident is representative, removes sensitive content, defines the
+expected outcome, and reviews whether it belongs in a capability suite or a
+near-perfect regression suite.
+
+An LLM judge is itself a model-backed categorical decision when it returns
+labels such as `pass`, `fail`, or `uncertain`. The
+[evaluator-stability recipe](evaluator-stability.md) shows how to qualify its
+repeatability on frozen traces. Human-labelled examples still establish
+whether the judge is valid.
+
 One AWS-oriented stack might use
 [`pytest`](https://docs.pytest.org/en/stable/how-to/parametrize.html) for
 deterministic contracts,

@@ -20,13 +20,13 @@ scope statement, not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.12.0
+agentverity~=0.13.0
 ```
 
 That accepts compatible `0.12.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.12 writes `agentverity.run/v2`, `agentverity.telemetry/v2`,
+Version 0.13 writes `agentverity.run/v2`, `agentverity.telemetry/v2`,
 `agentverity.snapshot/v2`, and `agentverity.evidence/v1`. The snapshot loader
 accepts v1 files and migrates them in memory. JSON reports and telemetry
 exports are append-only artefacts, so consumers must opt into their v2

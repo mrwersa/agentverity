@@ -106,21 +106,36 @@ Amazon AgentCore health before admitting a baseline:
 Never repeat live customer requests. Use reviewed synthetic cases in CI,
 before release, or on a schedule.
 
-## The developer workflow
+## Where it sits in the evaluation loop
 
-1. **Evaluate quality.** Keep Promptfoo, DeepEval, or your current assertions.
-2. **Reuse the outputs.** Import repeated decisions into AgentVerity without
+1. **Explore capability.** Use challenging cases to learn what the agent can
+   and cannot do.
+2. **Evaluate quality.** Keep Promptfoo, DeepEval, or your current assertions
+   for outcomes and trajectories.
+3. **Qualify the evidence.** Import repeated decisions into AgentVerity without
    calling the model again.
-3. **Fix what is missing.** Repair moving routes, add missing cases, or collect
+4. **Fix what is missing.** Repair moving routes, add missing cases, or collect
    the reruns needed for an honest conclusion.
-4. **Freeze a baseline.** A human approves the reference only after the
-   evidence gate admits it.
-5. **Catch regressions.** `agentverity check` requalifies the current run
-   before comparing it with that baseline.
+5. **Promote a regression case.** A mature capability case becomes a reusable
+   baseline only after a human approves it and the evidence gate admits it.
+6. **Monitor and learn.** Review canary failures and production incidents,
+   then add suitable cases back to the offline dataset.
 
 The import command diagnoses decisions already collected by another
 evaluator. The `snapshot` and `check` commands below provide the same
 admission policy when AgentVerity calls your agent directly.
+
+Outcomes, trajectories, and decisions remain separate evidence:
+
+| Layer | Example question |
+|---|---|
+| Outcome | Was the refund recorded in the case system? |
+| Trajectory | Which tools or agents acted, and in what order? |
+| Decision | Did the workflow choose refund, review, or deny? |
+
+An evaluation framework can grade the first two. AgentVerity qualifies the
+repeatability and declared coverage of the bounded decision before that result
+becomes a regression reference.
 
 ## What it checks
 
@@ -274,6 +289,7 @@ observability remain separate parts of the stack.
 - [Why arbitrary rerun counts fail](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
 - [How to read and budget per-route evidence](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md)
 - [Reuse Promptfoo, DeepEval, or generic evidence without duplicate calls](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md)
+- [Qualify a categorical LLM judge without confusing stability with validity](https://github.com/mrwersa/agentverity/blob/main/docs/evaluator-stability.md)
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - [API stability and path to 1.0](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)
@@ -297,6 +313,6 @@ coverage, and the branch-protection `CI gate` requires that job to pass.
 ## Status and licence
 
 Alpha. Pin a minor series for production use, for example
-`agentverity~=0.12.0`. Patch releases preserve the public API.
+`agentverity~=0.13.0`. Patch releases preserve the public API.
 
 Apache-2.0. Contributions are welcome through the pull-request workflow.
