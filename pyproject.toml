@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentverity"
-version = "0.13.2"
+version = "0.14.0"
 description = "Evidence checks for regression baselines on AI agents with bounded decisions"
 readme = "README.md"
 license = "Apache-2.0"
@@ -42,6 +42,7 @@ dependencies = []
 
 [project.optional-dependencies]
 strands = ["strands-agents>=1.0"]
+langgraph = ["langgraph>=0.2"]
 otel = ["opentelemetry-api>=1.27,<2"]
 showcase = [
     "bedrock-agentcore>=1.18,<2",

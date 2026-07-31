@@ -93,6 +93,15 @@ Keep your existing evaluator for correctness and trajectory quality.
 AgentVerity checks whether the repeated results are stable and complete enough for a
 regression baseline.
 
+If you would rather AgentVerity make the calls itself, install the adapter for
+your framework. The core has no agent library as a dependency, so this is the
+only place one is needed:
+
+```bash
+pip install "agentverity[strands]"     # Strands Agents
+pip install "agentverity[langgraph]"   # LangGraph
+```
+
 ## Where to integrate it
 
 AgentVerity is a test and release step, not serving-path middleware.

@@ -8,6 +8,54 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-31
+
+### Added
+
+- A LangGraph adapter. `from_langgraph(graph)` wraps a compiled graph into the
+  `run(input) -> Observation` shape, reading the final text, the ordered tool
+  calls, and a decision from `verdict`, `decision`, `route`, or
+  `classification`.
+- Every call gets a fresh `thread_id`. A graph compiled without a checkpointer
+  is unaffected; one compiled with a checkpointer would otherwise make each
+  repeat a further turn in a single conversation, and the intervals this
+  library reports assume independent trials. A `thread_id` supplied in
+  `config` is respected, so opting out is possible and deliberate.
+- `from_langgraph_thread(graph, thread_id)` for the case where the
+  conversation itself is under test. Evidence collected that way should record
+  `isolation: shared-session`, and the report then names the caveat.
+- The adapter reads both message shapes: LangChain objects carrying
+  `tool_calls`, and serialised dicts carrying `name` or `function.name`. The
+  answer is the last message with text, so a trailing tool result is not
+  mistaken for the response.
+- A `langgraph` extra, so `pip install "agentverity[langgraph]"` gets the
+  dependency. The adapter is lazily imported, so without it a user got an
+  ImportError naming the module rather than the extra that provides it. The
+  README says where both adapters come from, in the section about letting
+  AgentVerity make the calls rather than in the one that makes none.
+- A `ROADMAP.md`, which the project did not have. It names what each command
+  establishes, what is next, and what is deliberately not planned.
+
+### Changed
+
+- Releases are cut by merging the version bump. The release notes come from
+  that version's changelog section, so the prose is written once rather than
+  once there and again by hand in the GitHub Release.
+- The release runs when CI finishes on `main` and only when it succeeded, not
+  when the push happens, and it reads the version from the exact commit that
+  passed. Artefacts are built and checked before the tag and the GitHub
+  Release are created, because tagging first leaves a public release behind
+  whenever an upload fails. Only a commit still at the tip of `main` releases,
+  since `workflow_run` events arrive as each CI run finishes rather than in
+  commit order.
+- The packaging smoke test compares three numbers rather than two: the literal
+  in `pyproject.toml`, the installed distribution metadata, and what the
+  imported package reports. Comparing only the first two is how a sibling
+  project shipped a wheel whose `__version__` was a release behind.
+- The README comparison table names AgentMandate, which answers the question
+  next to this one rather than the same one, and links
+  [agent-release-gate](https://github.com/mrwersa/agent-release-gate).
+
 ## [0.13.2] - 2026-07-30
 
 ### Added
