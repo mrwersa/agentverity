@@ -123,7 +123,8 @@ carries what relations can assert over:
 Adapters:
 - **Strands:** `Agent(prompt) -> AgentResult`. Adapter calls the agent, reads
   the final message text and the tool-use blocks for `tools`.
-- **LangGraph:** compiled graph `.invoke(state)` (planned).
+- **LangGraph:** compiled graph `.invoke(state)`. Fresh thread per call by
+  default; `from_langgraph_thread` for when the conversation is under test.
 - **callable:** any `fn(input) -> str | dict | Observation` for non-library agents.
 Adapters are optional imports. The core installs without any agent library.
 
@@ -153,11 +154,15 @@ a valid target when that step owns a release contract. Open-ended answer or
 trajectory quality is outside scope unless the system also exposes a reviewed
 decision layer. See `docs/applicability.md`.
 
-## 4. Status (2026-07-28)
+## 4. Status (2026-07-31)
 
 - M1 core: DONE — observation, meter, blindness, relations, runner, CLI.
 - M2 Strands adapter: DONE — adapter written, tested, worked example runs.
-- M2 LangGraph adapter: PLANNED.
+- M2 LangGraph adapter: DONE in v0.14.0. A compiled graph is read for its
+  message list, its tool calls, and a decision under any of the usual state
+  keys. Every call gets a fresh `thread_id`, because a graph compiled with a
+  checkpointer would otherwise turn repeated trials into successive turns of
+  one conversation, and every interval assumes independence.
 - M3 agent-specific relations: PLANNED (tool-selection-invariance is built-in;
   more user-extensible relations to follow).
 - M4 packaging: DONE — PyPI, release automation, protected main, CI on Python

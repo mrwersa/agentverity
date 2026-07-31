@@ -8,6 +8,35 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-31
+
+### Added
+
+- A LangGraph adapter. `from_langgraph(graph)` wraps a compiled graph into the
+  `run(input) -> Observation` shape, reading the final text, the ordered tool
+  calls, and a decision from `verdict`, `decision`, `route`, or
+  `classification`.
+- Every call gets a fresh `thread_id`. A graph compiled without a checkpointer
+  is unaffected; one compiled with a checkpointer would otherwise make each
+  repeat a further turn in a single conversation, and the intervals this
+  library reports assume independent trials. A `thread_id` supplied in
+  `config` is respected, so opting out is possible and deliberate.
+- `from_langgraph_thread(graph, thread_id)` for the case where the
+  conversation itself is under test. Evidence collected that way should record
+  `isolation: shared-session`, and the report then names the caveat.
+- The adapter reads both message shapes: LangChain objects carrying
+  `tool_calls`, and serialised dicts carrying `name` or `function.name`. The
+  answer is the last message with text, so a trailing tool result is not
+  mistaken for the response.
+- A `ROADMAP.md`, which the project did not have. It names what each command
+  establishes, what is next, and what is deliberately not planned.
+
+### Changed
+
+- The README comparison table names AgentMandate, which answers the question
+  next to this one rather than the same one, and links
+  [agent-release-gate](https://github.com/mrwersa/agent-release-gate).
+
 ## [0.13.2] - 2026-07-30
 
 ### Added
