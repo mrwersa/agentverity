@@ -28,6 +28,11 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   `tool_calls`, and serialised dicts carrying `name` or `function.name`. The
   answer is the last message with text, so a trailing tool result is not
   mistaken for the response.
+- A `langgraph` extra, so `pip install "agentverity[langgraph]"` gets the
+  dependency. The adapter is lazily imported, so without it a user got an
+  ImportError naming the module rather than the extra that provides it. The
+  README says where both adapters come from, in the section about letting
+  AgentVerity make the calls rather than in the one that makes none.
 - A `ROADMAP.md`, which the project did not have. It names what each command
   establishes, what is next, and what is deliberately not planned.
 

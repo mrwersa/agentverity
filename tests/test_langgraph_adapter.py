@@ -248,3 +248,30 @@ def test_a_state_object_rather_than_a_dict_still_yields_a_decision() -> None:
 
     assert extract(State()).verdict == "refund_approved"
     assert extract(State()).text == "ok"
+
+
+def test_the_extra_that_installs_the_dependency_is_declared() -> None:
+    # The adapter is lazily imported, so a user without langgraph gets an
+    # ImportError naming the module and not the extra that provides it. The
+    # extra has to exist for the docstring's install line to be true.
+    import re
+    from pathlib import Path
+
+    pyproject = (
+        Path(__file__).resolve().parents[1] / "pyproject.toml"
+    ).read_text(encoding="utf-8")
+
+    assert re.search(r"^langgraph = \[", pyproject, flags=re.MULTILINE)
+    assert 'agentverity[langgraph]' in (
+        Path(__file__).resolve().parents[1] / "README.md"
+    ).read_text(encoding="utf-8")
+
+
+def test_a_boolean_decision_keeps_pythons_spelling() -> None:
+    # Deliberate, not an oversight. The decision label belongs to the
+    # application; lower-casing here would be this package inventing a
+    # convention nobody declared. Stability is unaffected because both trials
+    # render the same way, and a declared contract listing true/false reports
+    # the mismatch loudly rather than hiding it.
+    assert extract({"messages": [], "verdict": True}).verdict == "True"
+    assert extract({"messages": [], "verdict": False}).verdict == "False"

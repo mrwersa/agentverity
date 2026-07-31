@@ -18,6 +18,14 @@ and the intervals AgentVerity reports assume independence. So
 itself is what is under test.
 
 The adapter is an optional import: the core installs without ``langgraph``.
+Install it with ``pip install "agentverity[langgraph]"``.
+
+A decision stored as a bool arrives as ``"True"`` or ``"False"``, which is
+Python's spelling rather than a normalised one. That is deliberate: the
+decision label belongs to the application, and lower-casing it here would be
+this package inventing a convention nobody declared. Stability is unaffected,
+since both trials render the same way, and a declared contract listing
+``true``/``false`` will report the mismatch loudly rather than hiding it.
 
 Example::
 
