@@ -21,8 +21,6 @@ import re
 import sys
 from pathlib import Path
 
-import tomllib
-
 # "## [0.14.0] - 2026-07-31". Keep a Changelog brackets the version; the
 # brackets are optional here so a section written either way is found.
 HEADING = re.compile(
@@ -30,6 +28,12 @@ HEADING = re.compile(
     r" - (?P<date>\d{4}-\d{2}-\d{2})\s*$"
 )
 ANY_HEADING = re.compile(r"^## ")
+
+# `tomllib` is stdlib only from 3.11 and this package supports 3.10, so the
+# one field wanted is read directly. Scoped to the [project] table, because a
+# `version` key under a tool table is a different number.
+PROJECT_TABLE = re.compile(r"^\[project\]\s*$(?P<body>.*?)(?=^\[|\Z)", re.MULTILINE | re.DOTALL)
+PROJECT_VERSION = re.compile(r"^version\s*=\s*[\"'](?P<version>[^\"']+)[\"']", re.MULTILINE)
 
 
 class ChangelogError(Exception):
@@ -75,13 +79,14 @@ def extract(text: str, version: str) -> str:
 def read_version(pyproject: Path) -> str:
     """Read the packaged version, the single source of the number."""
     try:
-        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-    except (OSError, tomllib.TOMLDecodeError) as exc:
+        text = pyproject.read_text(encoding="utf-8")
+    except OSError as exc:
         raise ChangelogError(f"cannot read {pyproject}: {exc}") from exc
-    version = data.get("project", {}).get("version")
-    if not isinstance(version, str) or not version.strip():
+    table = PROJECT_TABLE.search(text)
+    match = PROJECT_VERSION.search(table.group("body")) if table else None
+    if match is None:
         raise ChangelogError(f"{pyproject} declares no project.version")
-    return version
+    return match.group("version")
 
 
 def main(argv: list[str] | None = None) -> int:

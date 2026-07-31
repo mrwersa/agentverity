@@ -116,6 +116,20 @@ def test_main_prints_the_packaged_version(capsys) -> None:
     assert capsys.readouterr().out.strip() == release_notes.read_version(PYPROJECT)
 
 
+def test_a_version_under_another_table_is_not_the_project_version(
+    tmp_path: Path,
+) -> None:
+    # Reading the file without a TOML parser means being explicit about
+    # scope: a version under a tool table is a different number.
+    path = tmp_path / "pyproject.toml"
+    path.write_text(
+        '[tool.something]\nversion = "9.9.9"\n\n[project]\nversion = "1.2.3"\n',
+        encoding="utf-8",
+    )
+
+    assert release_notes.read_version(path) == "1.2.3"
+
+
 def test_main_reports_an_unreadable_pyproject(capsys, tmp_path: Path) -> None:
     argv = ["--print-version", "--pyproject", str(tmp_path / "absent.toml")]
 
