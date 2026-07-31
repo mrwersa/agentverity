@@ -24,6 +24,12 @@ not pay for the same calls twice.
 | Promptfoo, DeepEval, your assertions | Was this answer acceptable? |
 | **AgentVerity** | **Are the repeated answers stable and covered enough to save as expected behaviour?** |
 | LangSmith, AgentCore, your observability | What happened during this run, and in production? |
+| [AgentMandate](https://github.com/mrwersa/agentmandate) | What is this agent permitted to do, and did this release widen it? |
+
+**See it in a full release gate:**
+[**agent-release-gate**](https://github.com/mrwersa/agent-release-gate) runs
+AgentVerity beside authority analysis on one agent, offline, including the case
+where a route shows zero flips over six pairs and an interval running to 39%.
 
 ## The 60-second problem
 
