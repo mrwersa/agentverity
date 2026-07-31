@@ -33,6 +33,20 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Changed
 
+- Releases are cut by merging the version bump. The release notes come from
+  that version's changelog section, so the prose is written once rather than
+  once there and again by hand in the GitHub Release.
+- The release runs when CI finishes on `main` and only when it succeeded, not
+  when the push happens, and it reads the version from the exact commit that
+  passed. Artefacts are built and checked before the tag and the GitHub
+  Release are created, because tagging first leaves a public release behind
+  whenever an upload fails. Only a commit still at the tip of `main` releases,
+  since `workflow_run` events arrive as each CI run finishes rather than in
+  commit order.
+- The packaging smoke test compares three numbers rather than two: the literal
+  in `pyproject.toml`, the installed distribution metadata, and what the
+  imported package reports. Comparing only the first two is how a sibling
+  project shipped a wheel whose `__version__` was a release behind.
 - The README comparison table names AgentMandate, which answers the question
   next to this one rather than the same one, and links
   [agent-release-gate](https://github.com/mrwersa/agent-release-gate).

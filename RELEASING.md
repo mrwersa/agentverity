@@ -20,33 +20,80 @@ publisher, so this step does not need repeating.
 Protect the `pypi` GitHub environment against unreviewed deployment where the
 account plan permits it.
 
-## Prepare a release
+## Cut a release
+
+Releases are cut by merging a pull request. Nothing is typed by hand at
+release time.
 
 1. Create a release branch from current `main`.
-2. Set the version in `pyproject.toml`.
-3. Move the relevant entries from `Unreleased` into a dated changelog section.
+2. Set the version in `pyproject.toml`. That is the only place the number
+   lives: `agentverity.__version__` reads the installed distribution metadata
+   rather than carrying a second literal, so the two cannot drift apart.
+3. Move the relevant entries from `Unreleased` into a dated section:
+
+   ```markdown
+   ## [0.14.0] - 2026-07-31
+   ```
+
+   That section becomes the GitHub Release notes verbatim, so write it for
+   someone deciding whether to upgrade. A missing, undated, or empty section
+   fails the release rather than publishing a version nobody described.
+
 4. Run the local checks:
 
    ```bash
    python -m pytest -q
    ruff check .
-   python -m pip install build twine
-   python -m build
-   python -m twine check dist/*
+   python -m build && python -m twine check dist/*
    ```
 
-5. Open a pull request and merge it only after every required CI check passes.
+5. Open a pull request and merge it once every required check passes.
 
-## Publish
+Merging does the rest, once CI has passed on the merged commit. The workflow
+runs when CI finishes on `main`, and only when it succeeded. It reads the
+version from the exact commit CI passed on, stops if that version is already
+released, extracts the changelog section, builds and checks the artefacts, and
+only then creates the tag and the GitHub Release before publishing to PyPI.
 
-1. Create a GitHub Release targeting the merged `main` commit.
-2. Use a `v`-prefixed tag that exactly matches the package version.
-3. Copy the matching changelog section into the release notes.
-4. Publish the GitHub Release.
+The order matters. Tagging first would leave a public release behind whenever
+a build or an upload failed, which is a version users can see and cannot
+install.
 
-Publishing the release starts `.github/workflows/release.yml`. The workflow
-verifies that the tag matches `pyproject.toml`, builds the wheel and source
-distribution, checks their metadata, and publishes them to PyPI using OIDC.
+## What the automation refuses to do
+
+- Publish a commit whose CI run did not succeed.
+- Publish a commit that is no longer the tip of `main`. CI runs finish in
+  whatever order they finish, not commit order, so releasing a commit that
+  something has landed on top of would publish an older version after a newer
+  one. Whatever is on top releases itself.
+- Publish a version with no dated changelog section.
+- Publish a wheel or sdist whose filename does not match the tag.
+- Re-release a version that already has a GitHub Release.
+- Run two releases at once. The workflow takes a repository-wide lock.
+
+Two bumps merged in quick succession release the second one only. The first
+version is never the tip long enough to release, and its changes ship inside
+the second. Merge one release at a time if each needs its own version on PyPI.
+
+## When something fails partway
+
+The decision is keyed on whether the **release** exists, not the tag, so a run
+that pushed the tag and then died recreates only what is missing rather than
+reading as finished.
+
+If the PyPI upload is what failed, re-run the failed job from the Actions
+page. The artefacts are already built and attached, and the publish step
+uploads those exact files.
+
+## Publishing from the GitHub UI
+
+Creating a release by hand still publishes, which is the path to use for a
+re-run after an infrastructure failure. Tag it `v<version>`, matching
+`pyproject.toml` exactly.
+
+Note that a release created by the workflow's own token does not trigger
+another workflow run. That is why tagging and publishing live in the same
+workflow file rather than in two files that chain.
 
 ## Verify
 
