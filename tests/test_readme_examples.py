@@ -37,7 +37,7 @@ def test_readme_shows_the_finding_before_positioning_itself():
     readme = (ROOT / "README.md").read_text()
 
     problem = readme.index("## The 60-second problem")
-    install = readme.index("## Try it")
+    install = readme.index("## Try it without model calls")
     positioning = readme.index("| What you run | Question it answers |")
 
     assert problem < install < positioning
