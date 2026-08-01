@@ -9,13 +9,13 @@ reviewed payment cases
    |                                                          route quality
    |
    +-- isolated repeated calls ----> Strands routing agent --> AgentVerity
-                                                     stability + declared coverage
+                                              pooled stability + declared route reach
                                                                       |
                                                         aggregate OTEL span
                                                                       |
                                              AgentCore Observability / CloudWatch
 
-quality passed + evidence qualified + human approval --> admit baseline
+quality passed + declared evidence policy + human approval --> admit baseline
 ```
 
 Here, the baseline is the reviewed set of expected route decisions used to
@@ -62,12 +62,14 @@ python examples/production_stack/evaluate_stack.py \
 
 DeepEval applies its deterministic exact-match metric to six reviewed routing
 labels. AgentVerity then repeats those six cases from clean Strands sessions,
-checks whether the route is stable, and verifies that every route declared as
-required was represented and observed. `card_security` is marked critical, so
-a missing critical route is named separately in the report. A failed labelled
-check stops before the repeat budget is spent. Both checks must pass before
-the script admits a reference. Stable but incorrect routing is still a failed
-run. The canary permits four concurrent calls by default. Pass
+checks pooled route stability, reports the evidence per route, and verifies
+that every route declared as required was represented and observed. This
+recorded canary did not declare per-route stability targets, so admission used
+the pooled 10% rule. `card_security` is marked critical, so a missing critical
+route is named separately in the report. A failed labelled check stops before
+the repeat budget is spent. Both checks must pass before the script admits a
+reference. Repeatable but incorrect routing is still a failed run. The canary
+permits four concurrent calls by default. Pass
 `--max-workers 1` for a sequential run.
 
 The script does not save a snapshot by default. Review the outputs before

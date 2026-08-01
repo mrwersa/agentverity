@@ -113,10 +113,12 @@ AgentVerity is a test and release step, not serving-path middleware.
 | Pre-release | Refuse unstable, incomplete, or underpowered evidence |
 | Scheduled canary | Recheck reviewed synthetic cases and emit OpenTelemetry |
 
-One real integration combines DeepEval quality, AgentVerity evidence, and
-Amazon AgentCore health before admitting a baseline:
+One measured integration combined DeepEval quality, AgentVerity evidence, and
+Amazon AgentCore health. Its original 10% policy was pooled across the six
+routes, so it proves the integration path rather than certifying each route at
+10%. Declare route-specific targets when admission needs that stronger claim:
 
-![A real AgentCore canary combines DeepEval quality, AgentVerity evidence, and cloud health before baseline admission](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
+![A real AgentCore canary combines DeepEval quality, a pooled AgentVerity evidence rule, and cloud health](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
 
 Never repeat live customer requests. Use reviewed synthetic cases in CI,
 before release, or on a schedule.
@@ -276,11 +278,13 @@ The optional production example combines a Strands routing agent on Amazon
 Bedrock, DeepEval route-quality checks, AgentVerity, AgentCore Runtime, and
 CloudWatch.
 
-At its declared 10% canary tolerance, the London run recorded 6/6 correct
+Under its declared pooled 10% canary rule, the London run recorded 6/6 correct
 routes, no changes across 36 repeat pairs, all six routes reached, and 78
-successful cloud calls with no errors or throttles. An earlier run was stable
-but only 5/6 correct. The release policy therefore requires both quality and
-evidence rather than treating either tool as sufficient.
+successful cloud calls with no errors or throttles. Split across six routes,
+however, each route had only six pairs and an upper bound of about 39%. The run
+is systems integration evidence, not per-route certification. An earlier run
+was repeatable but only 5/6 correct, so the release policy still requires both
+quality and evidence rather than treating either tool as sufficient.
 
 This is deployment proof, not an AWS requirement. The zero-dependency callable
 works with any stack.

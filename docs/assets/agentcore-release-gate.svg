@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690"
  viewBox="0 0 1200 690" role="img"
- aria-label="AgentVerity release gate from a real AgentCore payment-routing canary">
+ aria-label="Historical pooled AgentVerity release gate from a real AgentCore payment-routing canary">
 <style>
   .bg { fill: #0b1220; }
   .card { fill: #111b2e; stroke: #314158; stroke-width: 1.5; }
@@ -22,8 +22,8 @@
   .footer { fill: #73849c; font-size: 13px; font-weight: 400; }
 </style>
 <rect width="1200" height="690" class="bg"/>
-<text x="54" y="52" class="headline">A green agent test, qualified before release.</text>
-<text x="54" y="82" class="subhead">Separate quality, evidence, and operational checks · combined only at release</text>
+<text x="54" y="52" class="headline">A live agent canary, read under its pooled rule.</text>
+<text x="54" y="82" class="subhead">Separate quality, pooled evidence, and operational checks · combined only at release</text>
 <rect x="54" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="357" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="660" y="112" width="238" height="52" rx="6" class="step"/>
@@ -52,9 +52,9 @@
 <text x="454" y="286" class="eyebrow">EVIDENCE · AGENTVERITY</text>
 <text x="454" y="338" class="metric">0 / 36 route changes</text>
 <text x="454" y="382" class="detail">6 of 6 routes reached</text>
-<text x="454" y="414" class="detail">Decision stability and coverage checked</text>
+<text x="454" y="414" class="detail">Pooled 10% rule and route reach checked</text>
 <rect x="454" y="446" width="192" height="30" rx="4" fill="#4ade80"/>
-<text x="550" y="467" class="badge">BASELINE ADMITTED</text>
+<text x="550" y="467" class="badge">POOLED RULE PASSED</text>
 <rect x="802" y="244" width="344" height="250" rx="8" class="card"/>
 <rect x="802" y="244" width="344" height="5" rx="2" fill="#a78bfa"/>
 <text x="828" y="286" class="eyebrow">OPERATIONS · AGENTCORE</text>
