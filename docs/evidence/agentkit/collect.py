@@ -25,8 +25,10 @@ def main() -> int:
     parser.add_argument("--factory", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--repeats", type=int, default=146)
-    parser.add_argument("--workers", type=int, default=8)
-    parser.add_argument("--timeout", type=int, default=180)
+    # Six, because six is what produced the committed evidence and the wall
+    # time quoted beside it. A default that differs from the documented run
+    # makes `python collect.py` a third set of numbers.
+    parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--out", type=pathlib.Path, required=True)
     args = parser.parse_args()
 
@@ -84,6 +86,11 @@ def main() -> int:
             "gateway": "openrouter",
             "collected_at": time.strftime("%Y-%m-%d"),
             "repeats_per_case": args.repeats,
+            # Recorded because it sets the wall time below, which the write-up
+            # quotes. The committed files predate this field; they were
+            # collected with six, and back-filling a value the code did not
+            # emit would make an artefact claim an origin it does not have.
+            "workers": args.workers,
             "tool_set": "coinbase-agentkit 0.7.4, seven providers wired by the Strands example",
             "observed_cost_usd": round(cost, 4),
             "wall_seconds": round(time.time() - started),

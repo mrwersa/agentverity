@@ -133,8 +133,14 @@ three models, and needs an `OPENROUTER_API_KEY`:
 ```bash
 agentverity plan --suite suite.json          # price it first: 1460 calls per model
 python collect.py --factory gpt4o_mini --model openai/gpt-4o-mini \
-                  --repeats 146 --workers 6 --out evidence-gpt4o_mini.json
+                  --repeats 146 --out evidence-gpt4o_mini.json
 ```
+
+Six workers is the default, which is what produced these files and the 30
+minutes quoted above. Raising it shortens the wall clock and increases the
+chance of an upstream rate limit, which the adapter retries rather than
+records. Later runs write `workers` into provenance; the committed files
+predate that field and used six.
 
 Collected 2026-08-01 through OpenRouter. Model behaviour changes without
 notice, so a later run reproducing the method is expected; a later run
