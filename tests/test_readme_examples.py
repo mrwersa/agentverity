@@ -123,3 +123,53 @@ def test_stability_note_exposes_underpowered_as_not_stable():
         "the Boolean helper now passes, so the README's opening no longer holds"
     )
     assert pairs_for_deterministic_call(0.05) == 73
+
+
+def test_the_readme_pin_names_the_current_minor_series() -> None:
+    """A version in prose drifts, and this one already had.
+
+    The README shipped `agentverity~=0.13.0` in the 0.14.0 release, so a
+    reader following it pinned a series one behind the one they installed.
+    Fixing the string alone leaves the same trap for the next minor, so the
+    pin is checked rather than remembered.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    version = re.search(
+        r'^version = "([^"]+)"',
+        (root / "pyproject.toml").read_text(encoding="utf-8"),
+        re.MULTILINE,
+    ).group(1)
+    major, minor, _ = version.split(".")
+
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    pins = set(re.findall(r"agentverity~=([\d.]+)", readme))
+
+    assert pins == {f"{major}.{minor}.0"}, (
+        f"README pins {pins or 'nothing'}; this release is {version}"
+    )
+
+
+def test_every_cli_command_is_discoverable_from_the_readme() -> None:
+    """A command the README never names is a command nobody finds.
+
+    `compare-evidence` shipped as the 0.13.0 headline and reached 0.14.0
+    without a single mention outside the roadmap.
+    """
+    from pathlib import Path
+
+    from agentverity.cli import _build_parser
+
+    root = Path(__file__).resolve().parents[1]
+    readme = (root / "README.md").read_text(encoding="utf-8")
+
+    commands = {
+        name
+        for action in _build_parser()._subparsers._group_actions
+        for name in action.choices
+    }
+    missing = sorted(c for c in commands if c not in readme)
+
+    assert not missing, f"the README never mentions: {', '.join(missing)}"

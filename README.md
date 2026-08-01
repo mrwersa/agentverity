@@ -168,6 +168,12 @@ It keeps three outcomes separate:
 - **unstable** above that tolerance
 - **undecided** because the run did not collect enough evidence
 
+And once you have two runs, `agentverity compare-evidence before.json after.json`
+answers the question a single report cannot: **what moved?** It reports which
+per-route intervals shifted, which decisions appeared or disappeared, and how
+the flip pairs changed, so a release that is still green for a different reason
+than last week does not pass unnoticed.
+
 ## Is it for my agent?
 
 Use it when:
@@ -328,6 +334,6 @@ coverage, and the branch-protection `CI gate` requires that job to pass.
 ## Status and licence
 
 Alpha. Pin a minor series for production use, for example
-`agentverity~=0.13.0`. Patch releases preserve the public API.
+`agentverity~=0.14.0`. Patch releases preserve the public API.
 
 Apache-2.0. Contributions are welcome through the pull-request workflow.

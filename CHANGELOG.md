@@ -8,6 +8,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- The README pinned `agentverity~=0.13.0` in the 0.14.0 release, so a reader
+  following it pinned a series one behind the one they had installed. A test
+  now checks the pin against the packaged version rather than trusting anyone
+  to remember it.
+- `compare-evidence` shipped as the 0.13.0 headline and reached 0.14.0 without
+  a mention in the README, so it was discoverable only from the roadmap. It is
+  described where the other checks are, and a test requires every CLI command
+  to appear on the front page.
+
 ## [0.14.0] - 2026-07-31
 
 ### Added
