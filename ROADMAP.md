@@ -56,6 +56,19 @@ decision. That measures wording rather than choice. The adapter here works
 around it by naming the outcome, and the library should not need a caller to
 know that.
 
+**What it also asked for.** One definition of "reached". The contract check
+reads the first verdict of each case, while the route table reads every
+repeat, so `approve` came back 98 times out of 146 and was still reported as
+never observed. Both readings are defensible on their own and they should not
+disagree silently inside one report.
+
+**A vocabulary gap it exposed.** The two unstable routes flip between acting
+and resolving an identifier first, and both are reasonable opening moves. That
+is a different release risk from a route flipping between a good action and a
+bad one, and this library currently calls them the same thing. A per-route
+ambiguity signal, derived from the flip pairs already reported, would separate
+them. Not built: it needs a second graph before the concept earns its name.
+
 **What it did not ask for.** Multi-turn support. Several models resolve an
 identifier before acting, which is a reasonable plan that a single-turn probe
 cannot express, and the fix is a better probe rather than a wider model.

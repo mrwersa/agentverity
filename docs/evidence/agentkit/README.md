@@ -23,6 +23,36 @@ still makes the entire choice.
 One turn, `tool_choice="required"`, temperature left at each provider's
 default. Pinning it to zero would measure a configuration nobody deploys.
 
+## Start here: the tool refuses to certify this evidence
+
+Run the command this README recommends and the headline verdict is **NOT
+TRUSTWORTHY**:
+
+```console
+$ agentverity assess --evidence evidence-gpt4o_mini.json --suite suite.json
+  NOT TRUSTWORTHY - the declared decision contract is incomplete: required
+  decisions were represented by cases but not returned: approve, fetch_price,
+  get_balance, get_portfolio.
+```
+
+That is not a bug in the evidence. It is the contract check working, and one
+line of it is worth understanding before anything else here.
+
+`approve` was returned **98 times out of 146**. The contract still reports it
+as never observed, because the contract reads the *first* verdict of each case
+and the first answer to that probe was `get_erc20_token_address`. The route
+table and the contract mean different things by "reached": the table counts
+every repeat, the contract counts the opening answer.
+
+So a route can be **stochastic but reached** in one section and **never
+observed** in another, from the same evidence. That is a real wrinkle in this
+library, surfaced by its own flagship example, and it is recorded in the
+roadmap rather than tidied away here.
+
+The other three are simpler: `fetch_price`, `get_balance` and `get_portfolio`
+genuinely never came back, because these models answered those probes with a
+different tool every time.
+
 ## The result
 
 ```
@@ -75,8 +105,10 @@ anybody thinks the right answer was.
 ## Two things the collection itself found
 
 `tool_choice="required"` did not always produce a tool call. Nova Micro
-answered with prose on two probes, which the adapter records as
-`no_tool_selected` rather than leaving the verdict unset. Leaving it unset
+answered with prose on **eight of ten probes**, and on two of them it was the
+most common answer: 80 of 146 on `unwrap_eth`, 70 of 146 on
+`request_faucet_funds`. The adapter records that as `no_tool_selected` rather
+than leaving the verdict unset. Leaving it unset
 makes the meter fall back to comparing raw text, so two differently worded
 refusals count as a changed decision. That measures wording, not choice.
 
@@ -95,8 +127,8 @@ agentverity assess --evidence docs/evidence/agentkit/evidence-gpt4o_mini.json \
                    --suite docs/evidence/agentkit/suite.json
 ```
 
-Collecting again costs about 0.70 USD and 25 minutes, and needs an
-`OPENROUTER_API_KEY`:
+Collecting again costs 0.70 USD and about 30 minutes of wall time across the
+three models, and needs an `OPENROUTER_API_KEY`:
 
 ```bash
 agentverity plan --suite suite.json          # price it first: 1460 calls per model
