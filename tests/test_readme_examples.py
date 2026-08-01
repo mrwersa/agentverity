@@ -26,6 +26,26 @@ def test_readme_onboards_before_the_statistical_explanation():
     assert "Use another evaluator for open-ended chat" in readme
 
 
+def test_readme_shows_the_finding_before_positioning_itself():
+    """Order is the thing this file protects, because order is what accretes.
+
+    Every new section arrives with a reason to sit near the top, and the
+    comparison tables won that argument twice before a reader had seen a
+    single number the library produces. A developer deciding whether to spend
+    ten minutes wants the failing route and the install line first.
+    """
+    readme = (ROOT / "README.md").read_text()
+
+    problem = readme.index("## The 60-second problem")
+    install = readme.index("## Try it")
+    positioning = readme.index("| What you run | Question it answers |")
+
+    assert problem < install < positioning
+    # Nothing between the title and the problem except the badges and one
+    # paragraph saying what this is.
+    assert problem < 1200, f"{problem} characters of preamble before the problem"
+
+
 def _run_example() -> str:
     # The example parses argv, so pytest's own flags must not reach it.
     captured_out, sys.stdout = sys.stdout, StringIO()
