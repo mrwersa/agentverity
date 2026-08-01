@@ -145,3 +145,22 @@ predate that field and used six.
 Collected 2026-08-01 through OpenRouter. Model behaviour changes without
 notice, so a later run reproducing the method is expected; a later run
 reproducing these exact numbers is not.
+
+## The other half
+
+The same agent was measured for *authority* as well as stability:
+[what it is permitted to do](https://github.com/mrwersa/agentmandate/tree/main/docs/evidence/agentkit).
+
+Putting the two together finds something neither produces alone. `approve` is
+the one tool whose permission outlives the run, because it grants an ERC-20
+allowance another address can spend later. It is also the least stable route
+here, at 34 flips in 73 pairs.
+
+![One agent, two questions, and the answer they share](intersection.png)
+
+Regenerate the figure from `intersection.mmd`:
+
+```bash
+npx @mermaid-js/mermaid-cli -i docs/evidence/agentkit/intersection.mmd \
+  -o docs/evidence/agentkit/intersection.png -w 1200 -b white
+```
