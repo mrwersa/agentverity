@@ -22,7 +22,7 @@ the working copy needed to render a revision would be gone.
 
 | file | used by |
 |---|---|
-| `evidence-by-route.mmd` / `.png` | The article. Source of truth is the `.mmd`. |
+| `evidence-by-route.mmd` / `.png` | The article. The `.mmd` records the semantic source and the PNG follows the article house style. |
 | `agentcore-release-gate.svg` | This repository's README, directly. |
 | `agentcore-release-gate.png` | The article. Raster because Medium does not take SVG. |
 | `diagnostic-report.svg` | `docs/integrations.md`, directly. |
