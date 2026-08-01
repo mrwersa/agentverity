@@ -9,27 +9,10 @@
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
 A Python library and CLI that reruns the decisions your agent makes and reports
-whether they are repeatable enough, and varied enough, to trust as a **regression
-baseline**: the reviewed run you save as expected behaviour and compare future
-releases against.
-
-Keep using [Promptfoo](https://www.promptfoo.dev/), DeepEval, or your own
-assertions to decide whether each answer is *correct*. AgentVerity reuses those
-same results to find unstable routes, missing decisions, and runs too small to
-support a reliable baseline. It can read runs you already collected, so you do
-not pay for the same calls twice.
-
-| What you run | Question it answers |
-|---|---|
-| Promptfoo, DeepEval, your assertions | Was this answer acceptable? |
-| **AgentVerity** | **Are the repeated answers stable and covered enough to save as expected behaviour?** |
-| LangSmith, AgentCore, your observability | What happened during this run, and in production? |
-| [AgentMandate](https://github.com/mrwersa/agentmandate) | What is this agent permitted to do, and did this release widen it? |
-
-**See it in a full release gate:**
-[**agent-release-gate**](https://github.com/mrwersa/agent-release-gate) runs
-AgentVerity beside authority analysis on one agent, offline, including the case
-where a route shows zero flips over six pairs and an interval running to 39%.
+whether they are repeatable enough, and varied enough, to trust as a
+**regression baseline**: the reviewed run you save as expected behaviour and
+compare future releases against. It can read runs another evaluator already
+collected, so you do not pay for the same calls twice.
 
 ## The 60-second problem
 
@@ -56,18 +39,13 @@ AgentVerity reuses the same Promptfoo export and finds this:
 ```
 
 The contract check passes, but the decision switches between `card_security`
-and `merchant_dispute` in 8 of 13 paired reruns.
+and `merchant_dispute` in 8 of 13 paired reruns. Those labels send work to
+different queues, controls, and owners, and a moving reference makes every
+later regression failure noisy. One pooled score would have hidden which route
+was moving, and the five quiet routes have too few reruns to call stable.
 
-## Why you should care
-
-- Those labels send work to different queues, controls, and owners.
-- A moving reference makes later regression failures noisy and hard to trust.
-- One pooled score hides which route is moving.
-- Zero observed changes do not prove a quiet route is stable when the sample
-  is too small.
-
-AgentVerity names the unstable route and leaves the five underpowered routes
-`undecided`. It will not freeze this run as a baseline.
+So AgentVerity names the unstable route, leaves the five underpowered routes
+`undecided`, and refuses to freeze this run as a baseline.
 
 ## Try it without model calls
 
@@ -82,16 +60,12 @@ agentverity assess \
   --suite examples/payment_decisions.json
 ```
 
-The last command performs arithmetic over saved decisions. It makes no model
+That last command performs arithmetic over saved decisions. It makes no model
 or provider calls.
 
 Already using [DeepEval](https://deepeval.com/)? Pass the same precomputed
 `LLMTestCase` objects to `evidence_from_deepeval`. Any harness can use the
 [small neutral evidence format](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
-
-Keep your existing evaluator for correctness and trajectory quality.
-AgentVerity checks whether the repeated results are stable and complete enough for a
-regression baseline.
 
 If you would rather AgentVerity make the calls itself, install the adapter for
 your framework. The core has no agent library as a dependency, so this is the
@@ -101,58 +75,6 @@ only place one is needed:
 pip install "agentverity[strands]"     # Strands Agents
 pip install "agentverity[langgraph]"   # LangGraph
 ```
-
-## Where to integrate it
-
-AgentVerity is a test and release step, not serving-path middleware.
-
-| Stage | Use it for |
-|---|---|
-| Local development | Diagnose a moving or one-route-only test set |
-| Pull request | Qualify a candidate baseline and publish JUnit |
-| Pre-release | Refuse unstable, incomplete, or underpowered evidence |
-| Scheduled canary | Recheck reviewed synthetic cases and emit OpenTelemetry |
-
-One measured integration combined DeepEval quality, AgentVerity evidence, and
-Amazon AgentCore health. Declare route-specific targets when admission needs a
-per-route claim, and see [Measured on real systems](#measured-on-real-systems)
-for what each run does and does not establish:
-
-![A real AgentCore canary combines DeepEval quality, a pooled AgentVerity evidence rule, and cloud health](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
-
-Never repeat live customer requests. Use reviewed synthetic cases in CI,
-before release, or on a schedule.
-
-## Where it sits in the evaluation loop
-
-1. **Explore capability.** Use challenging cases to learn what the agent can
-   and cannot do.
-2. **Evaluate quality.** Keep Promptfoo, DeepEval, or your current assertions
-   for outcomes and trajectories.
-3. **Qualify the evidence.** Import repeated decisions into AgentVerity without
-   calling the model again.
-4. **Fix what is missing.** Repair moving routes, add missing cases, or collect
-   the reruns needed for an honest conclusion.
-5. **Promote a regression case.** A mature capability case becomes a reusable
-   baseline only after a human approves it and the evidence gate admits it.
-6. **Monitor and learn.** Review canary failures and production incidents,
-   then add suitable cases back to the offline dataset.
-
-The import command diagnoses decisions already collected by another
-evaluator. The `snapshot` and `check` commands below provide the same
-admission policy when AgentVerity calls your agent directly.
-
-Outcomes, trajectories, and decisions remain separate evidence:
-
-| Layer | Example question |
-|---|---|
-| Outcome | Was the refund recorded in the case system? |
-| Trajectory | Which tools or agents acted, and in what order? |
-| Decision | Did the workflow choose refund, review, or deny? |
-
-An evaluation framework can grade the first two. AgentVerity qualifies the
-repeatability and declared coverage of the bounded decision before that result
-becomes a regression reference.
 
 ## What it checks
 
@@ -170,11 +92,110 @@ It keeps three outcomes separate:
 - **unstable** above that tolerance
 - **undecided** because the run did not collect enough evidence
 
-And once you have two runs, `agentverity compare-evidence before.json after.json`
+Once you have two runs, `agentverity compare-evidence before.json after.json`
 answers the question a single report cannot: **what moved?** It reports which
 per-route intervals shifted, which decisions appeared or disappeared, and how
 the flip pairs changed, so a release that is still green for a different reason
 than last week does not pass unnoticed.
+
+## Measured on real systems
+
+Two runs, answering different questions. The first shows the analysis survives
+a real deployment. The second shows what the analysis is actually for, and it
+exists because of a limitation the first one had.
+
+### Does it work in a real pipeline?
+
+A Strands routing agent on Amazon Bedrock, with DeepEval route-quality checks,
+AgentVerity, AgentCore Runtime, and CloudWatch. The London run recorded 6/6
+correct routes, no changes across 36 repeat pairs, all six routes reached, and
+78 successful cloud calls with no errors or throttles.
+
+Read the caveat, because it is the honest part. Those 36 pairs are six routes
+at six pairs each, and six pairs bound a route at about 39%. **That run is
+systems-integration evidence, not per-route certification.** An earlier
+attempt was repeatable but only 5/6 correct, which is why the release policy
+needs both quality and evidence rather than treating either as sufficient.
+
+![A real AgentCore canary combines DeepEval quality, a pooled AgentVerity evidence rule, and cloud health](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
+
+That gate is pooled on purpose. Declare route-specific targets when admission
+needs a per-route claim.
+
+[Run it](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
+[the measured result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
+
+### What does per-route analysis actually find?
+
+4,380 real calls against the twenty tools a published agent exposes, across
+three models, for 0.70 USD. Enough repeats this time to certify a route rather
+than only reach it.
+
+```
+model                                           correct  always the same
+amazon/nova-micro-v1                               4/10             1/10
+openai/gpt-4o-mini                                 7/10             8/10
+mistralai/mistral-small-3.2-24b-instruct           5/10            10/10
+```
+
+`mistral-small` returned the same tool on every probe and was correct on half
+of them. `gpt-4o-mini` is unstable on two routes and correct on seven. **Rank
+on stability alone and the worse agent wins**, which is why this library says
+repeatability is not correctness and why that sentence needs numbers.
+
+The two unstable routes are `transfer` and `approve`, two of the three the
+suite marks critical. Pooled, the same evidence reads 8.5% and does not say
+which routes carry it.
+
+Running `assess` on that evidence returns **NOT TRUSTWORTHY**, and the reason
+is worth reading: the contract counts the first answer per case, the route
+table counts every repeat, and they disagree about what "reached" means.
+
+[The evidence, and the commands to re-run it for nothing](https://github.com/mrwersa/agentverity/tree/main/docs/evidence/agentkit)
+
+Never repeat live customer requests. Reviewed synthetic cases only, in CI,
+before release, or on a schedule.
+
+## Where it sits beside your evaluator
+
+Keep [Promptfoo](https://www.promptfoo.dev/), DeepEval, or your own assertions
+to decide whether each answer is *correct*. AgentVerity reuses those same
+results to find unstable routes, missing decisions, and runs too small to
+support a reliable baseline.
+
+| What you run | Question it answers |
+|---|---|
+| Promptfoo, DeepEval, your assertions | Was this answer acceptable? |
+| **AgentVerity** | **Are the repeated answers stable and covered enough to save as expected behaviour?** |
+| LangSmith, AgentCore, your observability | What happened during this run, and in production? |
+| [AgentMandate](https://github.com/mrwersa/agentmandate) | What is this agent permitted to do, and did this release widen it? |
+
+Those are different layers of evidence, and one does not substitute for
+another:
+
+| Layer | Example question |
+|---|---|
+| Outcome | Was the refund recorded in the case system? |
+| Trajectory | Which tools or agents acted, and in what order? |
+| Decision | Did the workflow choose refund, review, or deny? |
+
+An evaluation framework can grade the first two. AgentVerity qualifies the
+repeatability and declared coverage of the bounded decision, in the step
+between a green quality run and saving that run as a reference.
+
+It is a test and release step, not serving-path middleware:
+
+| Stage | Use it for |
+|---|---|
+| Local development | Diagnose a moving or one-route-only test set |
+| Pull request | Qualify a candidate baseline and publish JUnit |
+| Pre-release | Refuse unstable, incomplete, or underpowered evidence |
+| Scheduled canary | Recheck reviewed synthetic cases and emit OpenTelemetry |
+
+[Where it belongs in the full test and release pipeline](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md),
+including the layers it does not own, and
+[**agent-release-gate**](https://github.com/mrwersa/agent-release-gate), which
+runs AgentVerity beside authority analysis on one agent, offline.
 
 ## Is it for my agent?
 
@@ -226,7 +247,9 @@ text, JSON, JUnit, telemetry, and snapshots.
 
 ## The evidence gate
 
-The evidence gate refuses to save a baseline until:
+`assess` diagnoses decisions another evaluator already collected. `snapshot`
+and `check` apply the same admission policy when AgentVerity calls your agent
+itself. Either way the gate refuses to save a baseline until:
 
 - calls complete
 - decisions are stable enough
@@ -271,59 +294,6 @@ prompts.
 The contract can also declare stricter stability targets for critical routes
 and minimum case counts. Repeats support a stability claim. Distinct reviewed
 cases support breadth. AgentVerity keeps those two claims separate.
-
-## Measured on real systems
-
-Two runs, answering different questions. The first shows the analysis survives
-a real deployment. The second shows what the analysis is actually for, and it
-exists because of a limitation the first one had.
-
-### Does it work in a real pipeline?
-
-A Strands routing agent on Amazon Bedrock, with DeepEval route-quality checks,
-AgentVerity, AgentCore Runtime, and CloudWatch. The London run recorded 6/6
-correct routes, no changes across 36 repeat pairs, all six routes reached, and
-78 successful cloud calls with no errors or throttles.
-
-Read the caveat, because it is the honest part. Those 36 pairs are six routes
-at six pairs each, and six pairs bound a route at about 39%. **That run is
-systems-integration evidence, not per-route certification.** An earlier
-attempt was repeatable but only 5/6 correct, which is why the release policy
-needs both quality and evidence rather than treating either as sufficient.
-
-[Run it](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
-[the measured result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
-
-### What does per-route analysis actually find?
-
-4,380 real calls against the twenty tools a published agent exposes, across
-three models, for 0.70 USD. Enough repeats this time to certify a route rather
-than only reach it.
-
-```
-model                                           correct  always the same
-amazon/nova-micro-v1                               4/10             1/10
-openai/gpt-4o-mini                                 7/10             8/10
-mistralai/mistral-small-3.2-24b-instruct           5/10            10/10
-```
-
-`mistral-small` returned the same tool on every probe and was correct on half
-of them. `gpt-4o-mini` is unstable on two routes and correct on seven. **Rank
-on stability alone and the worse agent wins**, which is why this library says
-repeatability is not correctness and why that sentence needs numbers.
-
-The two unstable routes are `transfer` and `approve`, two of the three the
-suite marks critical. Pooled, the same evidence reads 8.5% and does not say
-which routes carry it.
-
-Running `assess` on that evidence returns **NOT TRUSTWORTHY**, and the reason
-is worth reading: the contract counts the first answer per case, the route
-table counts every repeat, and they disagree about what "reached" means.
-
-[The evidence, and the commands to re-run it for nothing](https://github.com/mrwersa/agentverity/tree/main/docs/evidence/agentkit)
-
-Never repeat live customer requests. Reviewed synthetic cases only, in CI,
-before release, or on a schedule.
 
 ## What it does not prove
 
