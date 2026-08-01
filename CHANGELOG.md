@@ -8,6 +8,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
+  Coinbase AgentKit Strands example exposes, across three models, with every
+  observation committed so re-assessing costs nothing. The collector, the
+  adapter, the suite, and a summariser are there too.
+- The result is this library's caveat with numbers behind it. One model
+  returned the same tool on all ten probes and was correct on five of them,
+  while a model that is unstable on two routes was correct on seven. A
+  stability gate alone prefers the worse agent.
+
 ### Fixed
 
 - The README pinned `agentverity~=0.13.0` in the 0.14.0 release, so a reader

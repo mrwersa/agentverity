@@ -1,0 +1,107 @@
+[
+  {
+    "name": "approve",
+    "provider": "ERC20ActionProvider",
+    "description": "This tool will approve a spender to transfer ERC20 tokens from the wallet. It takes the following inputs: - amount: The amount to approve in whole units (e.g. 100 for 100 USDC) - contract_address: The contract address of the token to approve - spender_address: The spender address to approve Important notes: - This will overwrite any existing allowance - To revoke an allowance, set the amount to 0 "
+  },
+  {
+    "name": "borrow",
+    "provider": "CompoundActionProvider",
+    "description": "This tool allows borrowing base assets from Compound. It takes: - asset_id: The asset to borrow, either `weth` or `usdc` - amount: The amount of base tokens to borrow in human-readable format Examples: - 1000 USDC - 0.5 WETH Important notes: - Make sure to use the exact amount provided - You must have sufficient collateral to borrow"
+  },
+  {
+    "name": "buy_token",
+    "provider": "WowActionProvider",
+    "description": "This tool can only be used to buy a Zora Wow ERC20 memecoin (also can be referred to as a bonding curve token) with ETH. Do not use this tool for any other purpose, or trading other assets. Inputs: - WOW token contract address - Amount of ETH to spend (in wei) Important notes: - The amount is a string and cannot have any decimal points, since the unit of measurement is wei. - Make sure to use the "
+  },
+  {
+    "name": "create_token",
+    "provider": "WowActionProvider",
+    "description": "This tool can only be used to create a Zora Wow ERC20 memecoin (also can be referred to as a bonding curve token) using the WOW factory. Do not use this tool for any other purpose, or for creating other types of tokens. Inputs: - Token name (e.g. WowCoin) - Token symbol (e.g. WOW) - Token URI (optional) - Contains metadata about the token Important notes: - Uses a bonding curve - no upfront liquid"
+  },
+  {
+    "name": "fetch_price",
+    "provider": "PythActionProvider",
+    "description": "Fetch the price of a price feed from Pyth. Inputs: - priceFeedID: Price feed ID (string) Important notes: - Do not assume that a random ID is a Pyth price feed ID. If you are confused, ask a clarifying question. - This action only fetches price inputs from Pyth price feeds. No other source. - If you are asked to fetch the price from Pyth for a ticker symbol such as BTC, you must first use the fetc"
+  },
+  {
+    "name": "fetch_price_feed",
+    "provider": "PythActionProvider",
+    "description": "Fetch the price feed ID for a given token symbol from Pyth. Inputs: - tokenSymbol: The asset ticker/symbol to fetch the price feed ID for (e.g. BTC, ETH, COIN, XAU, EUR, etc.) - quoteCurrency: The quote currency to filter by (defaults to USD) - assetType: The asset type to search for (crypto, equity, fx, metal) - defaults to crypto Examples: - Crypto: BTC, ETH, SOL - Equities: COIN, AAPL, TSLA - F"
+  },
+  {
+    "name": "get_allowance",
+    "provider": "ERC20ActionProvider",
+    "description": "This tool will get the allowance amount for a spender of an ERC20 token. It takes the following inputs: - contract_address: The contract address of the token to check allowance for - spender_address: The address to check allowance for Important notes: - Never assume token addresses, they have to be provided as inputs. If only token symbol is provided, use the get_erc20_token_address tool to get th"
+  },
+  {
+    "name": "get_balance",
+    "provider": "ERC20ActionProvider",
+    "description": "This tool will get the balance of an ERC20 token for a given address. It takes the following inputs: - contract_address: The contract address of the token to get the balance for - address: (Optional) The address to check the balance for. If not provided, uses the wallet's address Important notes: - Never assume token or address, they have to be provided as inputs. If only token symbol is provided,"
+  },
+  {
+    "name": "get_balance",
+    "provider": "WalletActionProvider",
+    "description": "This tool will get the native currency balance of the connected wallet."
+  },
+  {
+    "name": "get_erc20_token_address",
+    "provider": "ERC20ActionProvider",
+    "description": "This tool will get the contract address for frequently used ERC20 tokens on different networks. It takes the following input: - symbol: The token symbol (e.g. USDC, EURC, CBBTC)"
+  },
+  {
+    "name": "get_portfolio",
+    "provider": "CompoundActionProvider",
+    "description": "This tool allows getting portfolio details from Compound. It takes: - comet_address: The address of the Compound Comet contract to get details from - account: The address of the account to get details for Returns portfolio details including: - Collateral balances and USD values - Borrowed amounts and USD values Formatted in Markdown for readability."
+  },
+  {
+    "name": "get_wallet_details",
+    "provider": "WalletActionProvider",
+    "description": "This tool will return the details of the connected wallet including: - Wallet address - Network information (protocol family, network ID, chain ID) - Native token balance (ETH for EVM networks, SOL for SVM networks) - Wallet provider name"
+  },
+  {
+    "name": "native_transfer",
+    "provider": "WalletActionProvider",
+    "description": "This tool will transfer native tokens (ETH for EVM networks, SOL for SVM networks) from the wallet to another onchain address. It takes the following inputs: - to: The destination address to receive the funds - value: The amount to transfer in whole units (e.g. '4.2' for 4.2 ETH, '0.1' for 0.1 SOL) Important notes: - Ensure sufficient balance of the input asset before transferring - Ensure there i"
+  },
+  {
+    "name": "repay",
+    "provider": "CompoundActionProvider",
+    "description": "This tool allows repaying borrowed assets to Compound. It takes: - asset_id: The asset to repay, either `weth` or `usdc` - amount: The amount of tokens to repay in human-readable format Examples: - 1000 USDC - 0.5 WETH Important notes: - Make sure to use the exact amount provided - You must have sufficient balance of the asset you want to repay"
+  },
+  {
+    "name": "request_faucet_funds",
+    "provider": "CdpApiActionProvider",
+    "description": "This tool will request test tokens from the faucet for the default address in the wallet. It takes the wallet and asset ID as input. Faucet is only allowed on 'base-sepolia' or 'solana-devnet'. If fauceting on 'base-sepolia', user can only provide asset ID 'eth', 'usdc', 'eurc' or 'cbbtc', if no asset ID is provided, the faucet will default to 'eth'. If fauceting on 'solana-devnet', user can only "
+  },
+  {
+    "name": "sell_token",
+    "provider": "WowActionProvider",
+    "description": "This tool can only be used to sell a Zora Wow ERC20 memecoin (also can be referred to as a bonding curve token) for ETH. Do not use this tool for any other purpose, or trading other assets. Inputs: - WOW token contract address - Amount of tokens to sell (in wei) Important notes: - The amount is a string and cannot have any decimal points, since the unit of measurement is wei. - Make sure to use th"
+  },
+  {
+    "name": "supply",
+    "provider": "CompoundActionProvider",
+    "description": "This tool allows supplying collateral assets to Compound. It takes: - asset_id: The asset to supply, one of `weth`, `cbeth`, `cbbtc`, `wsteth`, or `usdc` - amount: The amount of tokens to supply in human-readable format Examples: - 1 WETH - 0.1 WETH - 0.01 WETH Important notes: - Make sure to use the exact amount provided - The token must be an approved collateral asset for the Compound market"
+  },
+  {
+    "name": "transfer",
+    "provider": "ERC20ActionProvider",
+    "description": "This tool will transfer an ERC20 token from the wallet to another onchain address. It takes the following inputs: - amount: The amount to transfer in whole units (e.g. 10.5 USDC) - contract_address: The contract address of the token to transfer - destination_address: The address to send the tokens to Important notes: - Never assume token or destination addresses, they have to be provided as inputs"
+  },
+  {
+    "name": "unwrap_eth",
+    "provider": "WethActionProvider",
+    "description": "This tool unwraps WETH to ETH. Inputs: - Amount of WETH to unwrap in human-readable format (e.g., 0.1 for 0.1 WETH)."
+  },
+  {
+    "name": "withdraw",
+    "provider": "CompoundActionProvider",
+    "description": "This tool allows withdrawing collateral assets from Compound. It takes: - asset_id: The asset to withdraw, one of `weth`, `cbeth`, `cbbtc`, `wsteth`, or `usdc` - amount: The amount of tokens to withdraw in human-readable format Examples: - 1 WETH - 0.1 WETH - 0.01 WETH Important notes: - Make sure to use the exact amount provided - The token must be a collateral asset you have supplied to the Comp"
+  },
+  {
+    "name": "wrap_eth",
+    "provider": "WethActionProvider",
+    "description": "This tool wraps ETH to WETH. Inputs: - Amount of ETH to wrap in human-readable format (e.g., 0.1 for 0.1 ETH)."
+  }
+]
