@@ -114,9 +114,9 @@ AgentVerity is a test and release step, not serving-path middleware.
 | Scheduled canary | Recheck reviewed synthetic cases and emit OpenTelemetry |
 
 One measured integration combined DeepEval quality, AgentVerity evidence, and
-Amazon AgentCore health. Its original 10% policy was pooled across the six
-routes, so it proves the integration path rather than certifying each route at
-10%. Declare route-specific targets when admission needs that stronger claim:
+Amazon AgentCore health. Declare route-specific targets when admission needs a
+per-route claim, and see [Measured on real systems](#measured-on-real-systems)
+for what each run does and does not establish:
 
 ![A real AgentCore canary combines DeepEval quality, a pooled AgentVerity evidence rule, and cloud health](https://raw.githubusercontent.com/mrwersa/agentverity/main/docs/assets/agentcore-release-gate.svg)
 
@@ -272,25 +272,58 @@ The contract can also declare stricter stability targets for critical routes
 and minimum case counts. Repeats support a stability claim. Distinct reviewed
 cases support breadth. AgentVerity keeps those two claims separate.
 
-## Measured production example
+## Measured on real systems
 
-The optional production example combines a Strands routing agent on Amazon
-Bedrock, DeepEval route-quality checks, AgentVerity, AgentCore Runtime, and
-CloudWatch.
+Two runs, answering different questions. The first shows the analysis survives
+a real deployment. The second shows what the analysis is actually for, and it
+exists because of a limitation the first one had.
 
-Under its declared pooled 10% canary rule, the London run recorded 6/6 correct
-routes, no changes across 36 repeat pairs, all six routes reached, and 78
-successful cloud calls with no errors or throttles. Split across six routes,
-however, each route had only six pairs and an upper bound of about 39%. The run
-is systems integration evidence, not per-route certification. An earlier run
-was repeatable but only 5/6 correct, so the release policy still requires both
-quality and evidence rather than treating either tool as sufficient.
+### Does it work in a real pipeline?
 
-This is deployment proof, not an AWS requirement. The zero-dependency callable
-works with any stack.
+A Strands routing agent on Amazon Bedrock, with DeepEval route-quality checks,
+AgentVerity, AgentCore Runtime, and CloudWatch. The London run recorded 6/6
+correct routes, no changes across 36 repeat pairs, all six routes reached, and
+78 successful cloud calls with no errors or throttles.
 
-[Run the production example](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
-[Read the measured result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
+Read the caveat, because it is the honest part. Those 36 pairs are six routes
+at six pairs each, and six pairs bound a route at about 39%. **That run is
+systems-integration evidence, not per-route certification.** An earlier
+attempt was repeatable but only 5/6 correct, which is why the release policy
+needs both quality and evidence rather than treating either as sufficient.
+
+[Run it](https://github.com/mrwersa/agentverity/tree/main/examples/production_stack) ·
+[the measured result](https://github.com/mrwersa/agentverity/blob/main/examples/production_stack/RESULTS.md)
+
+### What does per-route analysis actually find?
+
+4,380 real calls against the twenty tools a published agent exposes, across
+three models, for 0.70 USD. Enough repeats this time to certify a route rather
+than only reach it.
+
+```
+model                                           correct  always the same
+amazon/nova-micro-v1                               4/10             1/10
+openai/gpt-4o-mini                                 7/10             8/10
+mistralai/mistral-small-3.2-24b-instruct           5/10            10/10
+```
+
+`mistral-small` returned the same tool on every probe and was correct on half
+of them. `gpt-4o-mini` is unstable on two routes and correct on seven. **Rank
+on stability alone and the worse agent wins**, which is why this library says
+repeatability is not correctness and why that sentence needs numbers.
+
+The two unstable routes are `transfer` and `approve`, two of the three the
+suite marks critical. Pooled, the same evidence reads 8.5% and does not say
+which routes carry it.
+
+Running `assess` on that evidence returns **NOT TRUSTWORTHY**, and the reason
+is worth reading: the contract counts the first answer per case, the route
+table counts every repeat, and they disagree about what "reached" means.
+
+[The evidence, and the commands to re-run it for nothing](https://github.com/mrwersa/agentverity/tree/main/docs/evidence/agentkit)
+
+Never repeat live customer requests. Reviewed synthetic cases only, in CI,
+before release, or on a schedule.
 
 ## What it does not prove
 

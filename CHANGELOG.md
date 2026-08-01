@@ -8,6 +8,24 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
+  Coinbase AgentKit Strands example exposes, across three models, with every
+  observation committed so re-assessing costs nothing. The collector, the
+  adapter, the suite, and a summariser are there too.
+- The README presents both real runs as one arc rather than one example and a
+  footnote. AgentCore shows the analysis surviving a real deployment and says
+  plainly that six pairs per route certify nothing; AgentKit is the run with
+  enough repeats to certify, and it exists because of that limitation.
+- The write-up is pinned to the evidence by a test. Three numbers in it were
+  wrong before that existed, including a wall time quoted as 25 minutes in one
+  place and 33 in another against a recorded 30.1.
+- The result is this library's caveat with numbers behind it. One model
+  returned the same tool on all ten probes and was correct on five of them,
+  while a model that is unstable on two routes was correct on seven. A
+  stability gate alone prefers the worse agent.
+
 ### Fixed
 
 - The README pinned `agentverity~=0.13.0` in the 0.14.0 release, so a reader

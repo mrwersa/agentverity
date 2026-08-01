@@ -32,6 +32,47 @@ Adapters: Strands, LangGraph, and any callable. Evaluator bridges: Promptfoo
 by direct import, DeepEval by shared test cases. Reporting: terminal, versioned
 JSON, JUnit XML, and one privacy-minimised OpenTelemetry span.
 
+### A real agent has now been measured
+
+`docs/evidence/agentkit/` holds 4,380 model calls against the tool set the
+Coinbase AgentKit Strands example exposes, across three models, for 0.70 USD.
+Every observation is committed, so re-assessing costs nothing.
+
+The result is this library's own caveat with numbers behind it. Ranked by how
+often a model returned the same tool for the same request, `mistral-small`
+scores 10 out of 10 and is correct on five of ten probes. `gpt-4o-mini` scores
+8 and is correct on seven. A stability gate alone prefers the worse agent.
+
+**What it confirmed.** Per-route beats pooled, on real data. Eight of
+`gpt-4o-mini`'s routes settle as deterministic at a 5% tolerance, and the two
+that do not are `transfer` and `approve`, which are two of the three the suite
+marks critical. The pooled figure is 8.5% and says nothing about which routes
+carry it.
+
+**What it asked for.** A first-class notion of an unset decision. When a model
+answers a tool-calling contract with prose, `Observation.key` falls back to
+comparing raw text, so two differently worded refusals count as a changed
+decision. That measures wording rather than choice. The adapter here works
+around it by naming the outcome, and the library should not need a caller to
+know that.
+
+**What it also asked for.** One definition of "reached". The contract check
+reads the first verdict of each case, while the route table reads every
+repeat, so `approve` came back 98 times out of 146 and was still reported as
+never observed. Both readings are defensible on their own and they should not
+disagree silently inside one report.
+
+**A vocabulary gap it exposed.** The two unstable routes flip between acting
+and resolving an identifier first, and both are reasonable opening moves. That
+is a different release risk from a route flipping between a good action and a
+bad one, and this library currently calls them the same thing. A per-route
+ambiguity signal, derived from the flip pairs already reported, would separate
+them. Not built: it needs a second graph before the concept earns its name.
+
+**What it did not ask for.** Multi-turn support. Several models resolve an
+identifier before acting, which is a reasonable plan that a single-turn probe
+cannot express, and the fix is a better probe rather than a wider model.
+
 ## Next: make the evidence easier to bring
 
 1. **More evaluator importers.** LangSmith and a generic CSV or JSONL shape.
