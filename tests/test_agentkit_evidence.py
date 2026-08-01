@@ -21,6 +21,9 @@ import pytest
 
 EVIDENCE = Path(__file__).resolve().parents[1] / "docs" / "evidence" / "agentkit"
 README = (EVIDENCE / "README.md").read_text(encoding="utf-8")
+MAIN_README = (Path(__file__).resolve().parents[1] / "README.md").read_text(
+    encoding="utf-8"
+)
 SUITE = json.loads((EVIDENCE / "suite.json").read_text(encoding="utf-8"))
 EXPECTED = {c["input"]: c["expected"] for c in SUITE["cases"]}
 FILES = ("evidence-nova.json", "evidence-gpt4o_mini.json", "evidence-nemo.json")
@@ -57,6 +60,21 @@ def test_the_readme_table_matches_the_evidence(
         rf"^{re.escape(model)}\s+(\d+)/10\s+(\d+)/10$", README, flags=re.MULTILINE
     )
     assert row, f"{model} has no row in the README table"
+    assert (int(row.group(1)), int(row.group(2))) == (correct, single)
+
+
+@pytest.mark.parametrize("name", FILES)
+def test_the_main_readme_quotes_the_same_table(name: str) -> None:
+    """The front page carries these numbers too, so it drifts too."""
+    evidence = load(name)
+    correct, single = score(evidence)
+    row = re.search(
+        rf"^{re.escape(evidence['provenance']['model'])}\s+(\d+)/10\s+(\d+)/10$",
+        MAIN_README,
+        flags=re.MULTILINE,
+    )
+
+    assert row, f"{evidence['provenance']['model']} is not in the main README table"
     assert (int(row.group(1)), int(row.group(2))) == (correct, single)
 
 
