@@ -25,7 +25,7 @@ only the application and its runtime dependencies.
 | Reviewed routes correct | 6/6 | 6/6 |
 | Verdict flips | 0/36 pairs | 0/36 pairs |
 | Distinct routes reached | 6/6 | 6/6 |
-| Baseline | admitted | admitted |
+| Baseline | admitted under pooled rule | admitted under pooled rule |
 | Successful model calls | 78/78 | 78/78 |
 | End-to-end p50 | 0.498 s | 5.869 s |
 | End-to-end p95 | 0.799 s | 7.591 s |
@@ -39,9 +39,11 @@ CloudWatch recorded 78 successful invocations for the final canary, with no
 errors or throttles. The release decision required both route correctness and
 interpretable AgentVerity evidence.
 
-With zero changes, 36 pairs give a 95% upper bound of 9.6%. That clears the
-declared 10% canary tolerance. It does not support a 5% claim, which would need
-73 zero-change pairs.
+With zero changes, 36 pooled pairs give a 95% upper bound of 9.6%. That clears
+the declared pooled 10% canary tolerance. It does not certify each route at
+10%. The pairs were spread evenly across six routes, leaving six pairs and an
+upper bound of about 39% per route. A current contract can declare per-route
+stability targets when that stronger admission rule is required.
 
 ## The useful failure
 

@@ -62,7 +62,7 @@ def render(
 
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690"
  viewBox="0 0 1200 690" role="img"
- aria-label="AgentVerity release gate from a real AgentCore payment-routing canary">
+ aria-label="Historical pooled AgentVerity release gate from a real AgentCore payment-routing canary">
 <style>
   .bg {{ fill: #0b1220; }}
   .card {{ fill: #111b2e; stroke: #314158; stroke-width: 1.5; }}
@@ -84,8 +84,8 @@ def render(
   .footer {{ fill: #73849c; font-size: 13px; font-weight: 400; }}
 </style>
 <rect width="1200" height="690" class="bg"/>
-{_text(54, 52, "A green agent test, qualified before release.", css="headline")}
-{_text(54, 82, "Separate quality, evidence, and operational checks · combined only at release", css="subhead")}
+{_text(54, 52, "A live agent canary, read under its pooled rule.", css="headline")}
+{_text(54, 82, "Separate quality, pooled evidence, and operational checks · combined only at release", css="subhead")}
 <rect x="54" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="357" y="112" width="238" height="52" rx="6" class="step"/>
 <rect x="660" y="112" width="238" height="52" rx="6" class="step"/>
@@ -115,8 +115,8 @@ def render(
     eyebrow="EVIDENCE · AGENTVERITY",
     headline=f"{cloud['pair_flips']} / {cloud['pair_trials']} route changes",
     detail_1=f"{cloud['distinct_routes']} of {method['reviewed_cases']} routes reached",
-    detail_2="Decision stability and coverage checked",
-    badge="BASELINE ADMITTED",
+    detail_2="Pooled 10% rule and route reach checked",
+    badge="POOLED RULE PASSED",
     accent="#4ade80",
 )}
 {_card(

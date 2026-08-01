@@ -20,7 +20,8 @@ def test_agentcore_evidence_asset_matches_sanitised_results(tmp_path: Path) -> N
     assert "6 / 6 correct" in svg
     assert "0 / 36 route changes" in svg
     assert "78 successful" in svg
-    assert "BASELINE ADMITTED" in svg
+    assert "POOLED RULE PASSED" in svg
+    assert "Pooled 10% rule and route reach checked" in svg
     assert "AGENTCORE RUNTIME" in svg
     assert "3 SEPARATE CHECKS" in svg
     assert "3 INDEPENDENT CHECKS" not in svg
