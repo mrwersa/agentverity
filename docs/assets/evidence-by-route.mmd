@@ -1,0 +1,18 @@
+flowchart TD
+  runs["36 reruns across six routes<br/>zero changed their answer"]
+
+  runs --> pooled["Read as one number<br/>36 pairs<br/>95% CI [0.000, 0.096]"]
+  runs --> split["Read per route<br/>6 pairs each<br/>95% CI [0.000, 0.390]"]
+
+  pooled --> published["9.6%<br/>what I published as evidence"]
+  split --> actual["39%<br/>what any single route supports"]
+
+  classDef source fill:#e8f1fb,stroke:#3978b8,color:#174a7a,stroke-width:2px;
+  classDef trap fill:#fff0e8,stroke:#dc6b3c,color:#8b3d20,stroke-width:2px;
+  classDef truth fill:#fdecea,stroke:#a33b33,color:#7a2b24,stroke-width:2px;
+  class runs source;
+  class pooled,published trap;
+  class split,actual truth;
+
+  linkStyle 0,2 stroke:#dc6b3c,stroke-width:2px;
+  linkStyle 1,3 stroke:#a33b33,stroke-width:2px;
