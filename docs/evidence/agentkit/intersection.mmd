@@ -1,0 +1,20 @@
+flowchart TD
+  agent["One agent<br/>20 tools from Coinbase AgentKit"]
+
+  agent --> q1["What may it do?<br/><i>authority analysis</i>"]
+  agent --> q2["Does it do the same thing twice?<br/><i>decision stability</i>"]
+
+  q1 --> a1["A version bump added a scope,<br/>not just a tool.<br/><b>approve</b> grants permission<br/>that outlives the run."]
+  q2 --> a2["Eight routes settle.<br/>Two do not.<br/><b>approve</b> flips 34 times in 73."]
+
+  a1 --> both["The permission that outlives the run<br/>sits on the least predictable route.<br/>Neither measurement finds this alone."]
+  a2 --> both
+
+  classDef src fill:#e8f1fb,stroke:#3978b8,color:#174a7a,stroke-width:2px;
+  classDef q fill:#f4f6f5,stroke:#607080,color:#30404f;
+  classDef ans fill:#fff0e8,stroke:#dc6b3c,color:#8b3d20;
+  classDef out fill:#fdecea,stroke:#a33b33,color:#7a2b24,stroke-width:2px;
+  class agent src;
+  class q1,q2 q;
+  class a1,a2 ans;
+  class both out;
