@@ -53,6 +53,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 - The README opens with the finding rather than the positioning. A recorded
   `run` shows the result before the tool explains itself, because a reader
   who has not seen the failure has no reason to care about the library.
+- Design and stability documentation now reflects the shipped 0.14 loop,
+  including temporal comparison, LangGraph isolation, and the externally
+  authored AgentKit evidence. The stale changelog comparison links are also
+  restored through every published minor and patch release.
+- Simple diagrams now keep Mermaid as their reviewable source and SVG as the
+  documentation render, with PNG reserved for Medium. The bespoke release-gate
+  dashboard remains SVG because its denser layout does not benefit from a
+  generic flow renderer.
 
 ## [0.14.0] - 2026-07-31
 
@@ -771,7 +779,25 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/mrwersa/agentverity/compare/v0.13.2...v0.14.0
+[0.13.2]: https://github.com/mrwersa/agentverity/compare/v0.13.1...v0.13.2
+[0.13.1]: https://github.com/mrwersa/agentverity/compare/v0.13.0...v0.13.1
+[0.13.0]: https://github.com/mrwersa/agentverity/compare/v0.12.2...v0.13.0
+[0.12.2]: https://github.com/mrwersa/agentverity/compare/v0.12.1...v0.12.2
+[0.12.1]: https://github.com/mrwersa/agentverity/compare/v0.12.0...v0.12.1
+[0.12.0]: https://github.com/mrwersa/agentverity/compare/v0.11.0...v0.12.0
+[0.11.0]: https://github.com/mrwersa/agentverity/compare/v0.10.0...v0.11.0
+[0.10.0]: https://github.com/mrwersa/agentverity/compare/v0.9.1...v0.10.0
+[0.9.1]: https://github.com/mrwersa/agentverity/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/mrwersa/agentverity/compare/v0.8.6...v0.9.0
+[0.8.6]: https://github.com/mrwersa/agentverity/compare/v0.8.5...v0.8.6
+[0.8.5]: https://github.com/mrwersa/agentverity/compare/v0.8.4...v0.8.5
+[0.8.4]: https://github.com/mrwersa/agentverity/compare/v0.8.3...v0.8.4
+[0.8.3]: https://github.com/mrwersa/agentverity/compare/v0.8.2...v0.8.3
+[0.8.2]: https://github.com/mrwersa/agentverity/compare/v0.8.1...v0.8.2
+[0.8.1]: https://github.com/mrwersa/agentverity/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/mrwersa/agentverity/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/mrwersa/agentverity/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/mrwersa/agentverity/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/mrwersa/agentverity/compare/v0.4.0...v0.5.0
