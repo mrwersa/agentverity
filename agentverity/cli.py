@@ -193,9 +193,8 @@ def _agent_and_inputs(
 ) -> tuple[Callable, list[str] | None, DecisionSuite | None]:
     try:
         factory = _load_agent(args.agent)
-        if args.suite:
-            return from_callable(factory()), None, load_decision_suite(args.suite)
-        return from_callable(factory()), _load_inputs(args.inputs), None
+        suite = load_decision_suite(args.suite) if args.suite else None
+        inputs = None if args.suite else _load_inputs(args.inputs)
     except (
         AttributeError,
         FileNotFoundError,
@@ -204,6 +203,7 @@ def _agent_and_inputs(
         ValueError,
     ) as exc:
         raise CliRefusal(str(exc)) from exc
+    return from_callable(factory()), inputs, suite
 
 
 def _exit_code(result: RunResult) -> int:

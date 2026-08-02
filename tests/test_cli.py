@@ -107,6 +107,23 @@ class TestCLI:
         assert exit_code == 2
         assert "run refused" in captured.err
 
+    def test_run_factory_exception_is_not_a_refusal(self, tmp_path):
+        agent_file = tmp_path / "broken.py"
+        agent_file.write_text(
+            "def factory():\n"
+            "    return 'x' + 1\n",
+            encoding="utf-8",
+        )
+        inputs_file = tmp_path / "inputs.txt"
+        _write_inputs(str(inputs_file), ["hello"])
+
+        with pytest.raises(TypeError):
+            main([
+                "run",
+                "--agent", f"{agent_file}:factory",
+                "--inputs", str(inputs_file),
+            ])
+
     def test_run_loads_agent_from_python_file(self, capsys, tmp_path):
         agent_file = tmp_path / "router.py"
         agent_file.write_text(
