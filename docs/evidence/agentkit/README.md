@@ -156,11 +156,13 @@ the one tool whose permission outlives the run, because it grants an ERC-20
 allowance another address can spend later. It is also the least stable route
 here, at 34 flips in 73 pairs.
 
-![One agent, two questions, and the answer they share](intersection.png)
+![One agent, two questions, and the answer they share](intersection.svg)
 
-Regenerate the figure from `intersection.mmd`:
+Regenerate the documentation SVG and the article PNG from `intersection.mmd`:
 
 ```bash
+npx @mermaid-js/mermaid-cli -i docs/evidence/agentkit/intersection.mmd \
+  -o docs/evidence/agentkit/intersection.svg -b white
 npx @mermaid-js/mermaid-cli -i docs/evidence/agentkit/intersection.mmd \
   -o docs/evidence/agentkit/intersection.png -w 1200 -b white
 ```

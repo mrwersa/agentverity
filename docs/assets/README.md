@@ -1,16 +1,25 @@
 # Figures
 
 Each diagram keeps its source beside the rendered image. The source is what
-gets reviewed and diffed; a raster render exists only where the publishing
-surface cannot handle the source, which for Mermaid means anywhere outside
-GitHub.
+gets reviewed and diffed.
 
-No figure in this directory is a direct Mermaid render. The one diagram in this
-repository whose raster does come from a `.mmd` lives in
-`docs/evidence/agentkit/`, and regenerating it after an edit looks like:
+Use Mermaid for a simple flow or comparison whose meaning fits in nodes and
+arrows. Commit an SVG render for README and documentation use, because GitHub
+renders Mermaid but PyPI does not. Keep a PNG only for Medium and other
+publishing surfaces that reject SVG. PlantUML is not used: these diagrams do
+not need its extra renderer or notation. Information-dense dashboards remain
+hand-authored SVGs, where replacing the layout with Mermaid would reduce
+legibility.
+
+No figure in this directory is a direct Mermaid render. The AgentKit
+intersection diagram lives in `docs/evidence/agentkit/` and is the reference
+Mermaid workflow:
 
 ```bash
-npx @mermaid-js/mermaid-cli -i docs/evidence/agentkit/intersection.mmd -o docs/evidence/agentkit/intersection.png -w 1200 -b white
+npx @mermaid-js/mermaid-cli -i docs/evidence/agentkit/intersection.mmd \
+  -o docs/evidence/agentkit/intersection.svg -b white
+npx @mermaid-js/mermaid-cli -i docs/evidence/agentkit/intersection.mmd \
+  -o docs/evidence/agentkit/intersection.png -w 1200 -b white
 ```
 
 The article figures here instead follow the article house style. Each raster is

@@ -51,13 +51,13 @@ safety, or complete route coverage of the agent.
 
 **Four design choices:**
 
-1. **Verdict-layer oracle selection.** Existing tools repeat tests, report
+1. **Decision-layer baseline admission.** Existing tools repeat tests, report
    uncertainty, and in AgentAssay's case calibrate trial budgets. AgentVerity
    asks whether the chosen categorical decision layer is stable enough that a
    frozen baseline is supportable. The distinctive use is test-strategy
    selection, not awareness that agents are non-deterministic.
 
-2. **Constant-gate-blindness detector.** A gate that returns `"allow"` on 96%
+2. **Decision-collapse diagnostic.** A gate that returns `"allow"` on 96%
    of a probe set can satisfy many invariance checks without exercising a
    boundary. The detector flags the pass as potentially vacuous. This is a
    suite-power warning, not a correctness judgement.
@@ -154,7 +154,7 @@ a valid target when that step owns a release contract. Open-ended answer or
 trajectory quality is outside scope unless the system also exposes a reviewed
 decision layer. See `docs/applicability.md`.
 
-## 4. Status (2026-07-31)
+## 4. Status (2026-08-02)
 
 - M1 core: DONE — observation, meter, blindness, relations, runner, CLI.
 - M2 Strands adapter: DONE — adapter written, tested, worked example runs.
@@ -163,8 +163,9 @@ decision layer. See `docs/applicability.md`.
   keys. Every call gets a fresh `thread_id`, because a graph compiled with a
   checkpointer would otherwise turn repeated trials into successive turns of
   one conversation, and every interval assumes independence.
-- M3 agent-specific relations: PLANNED (tool-selection-invariance is built-in;
-  more user-extensible relations to follow).
+- M3 agent-specific relations: PARTIAL. Tool-selection-invariance is built in.
+  A public registration protocol for domain relations remains evidence-led
+  future work rather than a release commitment.
 - M4 packaging: DONE — PyPI, release automation, protected main, CI on Python
   3.10 to 3.14.
 - M5 real-agent execution: DONE — bounded concurrency, progress, partial
@@ -193,6 +194,16 @@ decision layer. See `docs/applicability.md`.
 - M12 evaluator bridges: DONE in v0.12.0. Promptfoo has a
   direct JSON importer and DeepEval has a zero-dependency shared-test-case
   bridge. Both preserve correctness as the evaluator's responsibility.
+- M13 temporal evidence comparison: DONE in v0.13.0. Two independently
+  collected windows can be compared by route conclusion, decision reach,
+  flip-pair structure, isolation, and non-volatile provenance.
+- M14 LangGraph adapter: DONE in v0.14.0. Fresh thread IDs preserve trial
+  isolation by default, while an explicit shared-thread mode keeps
+  conversation state available when state is the subject of the test.
+- M15 external-system evidence: DONE after v0.14.0. The AgentKit study records
+  4,380 model calls across three models and twenty externally authored tools.
+  It demonstrates why stability, correctness, and authority must remain
+  separate claims.
 
 ## 5. Reporting boundary
 
@@ -223,15 +234,15 @@ OpenTelemetry context.
 
 ## 7. Candidate direction after independent use
 
-The interchange contract and two reference bridges are now present. Do not add
-another named adapter until an external user demonstrates a format the generic
-schema cannot express.
+The collection, import, admission, and temporal-comparison loop is complete.
+Do not add another named adapter until an external user demonstrates a format
+the generic schema cannot express.
 
-The remaining method feature is temporal comparison across independently
-collected evidence sets: identify route-level interval movement, changed flip
-pairs, missing or new decisions, and model or prompt provenance changes. Frame
-that as release-to-release drift, never as proof that trials within one run
-were independent.
+The AgentKit evidence exposed two narrower design questions. A missing tool
+choice currently needs an application adapter to name it, otherwise raw text
+can become the comparison key. The contract and route table also use different
+definitions of whether a decision was reached. Resolve either only through an
+explicit schema and migration, not by silently changing a published report.
 
 Correctness scoring, full trajectory evaluation, red-teaming, hosted
 dashboards, and production request interception remain outside the project.
