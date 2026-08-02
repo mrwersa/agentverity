@@ -20,10 +20,10 @@ scope statement, not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.13.0
+agentverity~=0.14.0
 ```
 
-That accepts compatible `0.12.x` fixes without moving to a later pre-1.0 minor
+That accepts compatible `0.13.x` fixes without moving to a later pre-1.0 minor
 series.
 
 Version 0.13 writes `agentverity.run/v2`, `agentverity.telemetry/v2`,

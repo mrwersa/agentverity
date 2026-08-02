@@ -145,13 +145,14 @@ def test_stability_note_exposes_underpowered_as_not_stable():
     assert pairs_for_deterministic_call(0.05) == 73
 
 
-def test_the_readme_pin_names_the_current_minor_series() -> None:
-    """A version in prose drifts, and this one already had.
+def test_the_docs_pin_names_the_current_minor_series() -> None:
+    """A version in prose drifts, and this one already had twice.
 
-    The README shipped `agentverity~=0.13.0` in the 0.14.0 release, so a
-    reader following it pinned a series one behind the one they installed.
-    Fixing the string alone leaves the same trap for the next minor, so the
-    pin is checked rather than remembered.
+    The README shipped `agentverity~=0.13.0` in the 0.14.0 release, and
+    STABILITY.md still said `~=0.13.0` after the README was fixed, because the
+    guard scanned one file. Every prose markdown file may carry the current-
+    series pin and nothing else. The changelog and the release notes
+    legitimately carry other versions, so they are excluded.
     """
     import re
     from pathlib import Path
@@ -163,13 +164,25 @@ def test_the_readme_pin_names_the_current_minor_series() -> None:
         re.MULTILINE,
     ).group(1)
     major, minor, _ = version.split(".")
+    expected = f"{major}.{minor}.0"
 
-    readme = (root / "README.md").read_text(encoding="utf-8")
-    pins = set(re.findall(r"agentverity~=([\d.]+)", readme))
+    pinned = []
+    for path in sorted(root.rglob("*.md")):
+        if path.name in {"CHANGELOG.md", "RELEASING.md"}:
+            continue
+        pins = set(
+            re.findall(r"agentverity~=([\d.]+)", path.read_text(encoding="utf-8"))
+        )
+        if pins:
+            pinned.append((path, pins))
 
-    assert pins == {f"{major}.{minor}.0"}, (
-        f"README pins {pins or 'nothing'}; this release is {version}"
-    )
+    assert pinned, "no prose markdown pins the current series"
+    stale = [
+        f"{path.relative_to(root)}: {sorted(pins)}"
+        for path, pins in pinned
+        if pins != {expected}
+    ]
+    assert not stale, f"docs pin {', '.join(stale)}; this release is {version}"
 
 
 def test_every_cli_command_is_discoverable_from_the_readme() -> None:

@@ -69,27 +69,43 @@ class TestCLI:
         assert "BLIND" in captured.out
         assert exit_code == 1
 
-    def test_run_false_agent_spec(self, tmp_path):
+    def test_run_false_agent_spec(self, tmp_path, capsys):
         inputs_file = tmp_path / "inputs.txt"
         _write_inputs(str(inputs_file), ["hello"])
 
-        with pytest.raises(ValueError, match="--agent"):
-            main([
-                "run",
-                "--agent", "not_a_dotted_path",
-                "--inputs", str(inputs_file),
-            ])
+        exit_code = main([
+            "run",
+            "--agent", "not_a_dotted_path",
+            "--inputs", str(inputs_file),
+        ])
+        captured = capsys.readouterr()
+        assert exit_code == 2
+        assert "run refused" in captured.err
+        assert "--agent" in captured.err
 
-    def test_run_bad_module(self, tmp_path):
+    def test_run_bad_module(self, tmp_path, capsys):
         inputs_file = tmp_path / "inputs.txt"
         _write_inputs(str(inputs_file), ["hello"])
 
-        with pytest.raises(ModuleNotFoundError):
-            main([
-                "run",
-                "--agent", "nonexistent_module:func",
-                "--inputs", str(inputs_file),
-            ])
+        exit_code = main([
+            "run",
+            "--agent", "nonexistent_module:func",
+            "--inputs", str(inputs_file),
+        ])
+        captured = capsys.readouterr()
+        assert exit_code == 2
+        assert "run refused" in captured.err
+        assert "No module named" in captured.err
+
+    def test_run_missing_inputs_file(self, tmp_path, capsys):
+        exit_code = main([
+            "run",
+            "--agent", "examples.toy_agent:constant_gate",
+            "--inputs", str(tmp_path / "nope.txt"),
+        ])
+        captured = capsys.readouterr()
+        assert exit_code == 2
+        assert "run refused" in captured.err
 
     def test_run_loads_agent_from_python_file(self, capsys, tmp_path):
         agent_file = tmp_path / "router.py"
@@ -117,6 +133,12 @@ class TestCLI:
     def test_no_subcommand(self):
         with pytest.raises(SystemExit):
             main([])
+
+    def test_version_flag(self, capsys):
+        with pytest.raises(SystemExit) as excinfo:
+            main(["--version"])
+        assert excinfo.value.code == 0
+        assert "agentverity" in capsys.readouterr().out
 
     def test_json_diagnostics_only_report(self, capsys, tmp_path):
         inputs_file = tmp_path / "inputs.txt"

@@ -10,6 +10,7 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
+from agentverity import __version__
 from agentverity.adapters.callable_adapter import from_callable
 from agentverity.decision_contract import DecisionSuite, load_decision_suite
 from agentverity.drift import compare_evidence
@@ -37,6 +38,10 @@ from agentverity.snapshot import (
     save_snapshot,
 )
 from agentverity.stratified import plan_route_repeats, render_plan
+
+
+class CliRefusal(Exception):
+    """A caller-input problem the CLI reports as a refusal rather than a crash."""
 
 
 def _load_agent(spec: str) -> Callable:
@@ -186,10 +191,19 @@ def _progress(event: ProgressEvent) -> None:
 def _agent_and_inputs(
     args: argparse.Namespace,
 ) -> tuple[Callable, list[str] | None, DecisionSuite | None]:
-    factory = _load_agent(args.agent)
-    if args.suite:
-        return from_callable(factory()), None, load_decision_suite(args.suite)
-    return from_callable(factory()), _load_inputs(args.inputs), None
+    try:
+        factory = _load_agent(args.agent)
+        if args.suite:
+            return from_callable(factory()), None, load_decision_suite(args.suite)
+        return from_callable(factory()), _load_inputs(args.inputs), None
+    except (
+        AttributeError,
+        FileNotFoundError,
+        ImportError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        raise CliRefusal(str(exc)) from exc
 
 
 def _exit_code(result: RunResult) -> int:
@@ -209,7 +223,11 @@ def _exit_code(result: RunResult) -> int:
 
 
 def _run_command(args: argparse.Namespace) -> int:
-    agent, inputs, suite = _agent_and_inputs(args)
+    try:
+        agent, inputs, suite = _agent_and_inputs(args)
+    except CliRefusal as exc:
+        print(f"run refused: {exc}", file=sys.stderr)
+        return 2
     config = RunConfig(
         budget=args.budget,
         precision=args.precision,
@@ -289,7 +307,11 @@ def _snapshot_command(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 2
-    agent, inputs, suite = _agent_and_inputs(args)
+    try:
+        agent, inputs, suite = _agent_and_inputs(args)
+    except CliRefusal as exc:
+        print(f"snapshot refused: {exc}", file=sys.stderr)
+        return 2
     input_count = len(suite.cases) if suite is not None else len(inputs or ())
     infeasible = _infeasible_reason(
         input_count,
@@ -342,7 +364,11 @@ def _check_command(args: argparse.Namespace) -> int:
     except SnapshotCompatibilityError as exc:
         print(f"snapshot check refused: {exc}", file=sys.stderr)
         return 2
-    agent, inputs, suite = _agent_and_inputs(args)
+    try:
+        agent, inputs, suite = _agent_and_inputs(args)
+    except CliRefusal as exc:
+        print(f"snapshot check refused: {exc}", file=sys.stderr)
+        return 2
     if (snapshot.decision_contract is None) != (suite is None):
         print(
             "snapshot check refused: current decision-suite mode does not "
@@ -389,6 +415,12 @@ def _build_parser() -> argparse.ArgumentParser:
             "Evidence checks for regression baselines on AI agents with "
             "bounded decisions."
         ),
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="show the installed version and exit.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
