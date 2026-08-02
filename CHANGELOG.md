@@ -28,14 +28,31 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Fixed
 
-- The README pinned `agentverity~=0.13.0` in the 0.14.0 release, so a reader
-  following it pinned a series one behind the one they had installed. A test
-  now checks the pin against the packaged version rather than trusting anyone
-  to remember it.
+- The `run`, `snapshot`, and `check` commands crashed with a Python traceback
+  when `--agent` named a missing module or function or `--inputs` pointed at a
+  file that does not exist. A typo in CI therefore reported as a failed
+  stability gate (exit 1) instead of the caller-input problem it is. These
+  now refuse with a one-line message and exit 2, the same contract `assess`
+  already used, so a bad flag can no longer masquerade as a verdict.
+- `agentverity --version` fell through to the required-subcommand error even
+  though the sibling tool had a version flag. It now prints the installed
+  version.
+- `STABILITY.md` still pinned `agentverity~=0.13.0` after the README was
+  corrected, because the pin guard scanned one file. The README pinned
+  `agentverity~=0.13.0` in the 0.14.0 release, so a reader following it pinned
+  a series one behind the one they had installed. A test now checks every
+  prose markdown file against the packaged version rather than trusting
+  anyone to remember it.
 - `compare-evidence` shipped as the 0.13.0 headline and reached 0.14.0 without
   a mention in the README, so it was discoverable only from the roadmap. It is
   described where the other checks are, and a test requires every CLI command
   to appear on the front page.
+
+### Changed
+
+- The README opens with the finding rather than the positioning. A recorded
+  `run` shows the result before the tool explains itself, because a reader
+  who has not seen the failure has no reason to care about the library.
 
 ## [0.14.0] - 2026-07-31
 
