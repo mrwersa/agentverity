@@ -210,3 +210,16 @@ def comparison_key(value: object) -> object:
     if isinstance(value, str):
         return Decision(value) if value else value
     return value
+
+
+def decision_label(value: object) -> object:
+    """Unwrap a `Decision` to the plain label a contract is written in.
+
+    Contracts declare strings. A `Decision("refund")` satisfies a contract
+    allowing ``"refund"``, and passing the object through would report the
+    route as both unknown and missing. The inverse of `comparison_key`, for
+    the one place that needs the label rather than the canonical key.
+    """
+    if isinstance(value, Decision):
+        return value.label
+    return value

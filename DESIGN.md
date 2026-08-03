@@ -360,6 +360,15 @@ Comparison normalises the two, because a bare `"refund"` and a tagged one are
 the same decision and reporting a flip between them would be this ADR's own
 defect at a different seam.
 
+There is exactly one canonical comparison, `comparison_key`, and every semantic
+consumer uses it: the pooled meter, per-route stratification, blindness, and
+the invariant relations. Contract coverage uses `decision_label`, the inverse,
+because a contract is written in plain labels and a `Decision` satisfies one.
+Storage keeps the original representation, which is why neither lives in
+`Observation.key`: that feeds reporting and snapshot storage, and snapshots
+refuse a tagged value, so normalising there would refuse every ordinary string
+verdict.
+
 Two consumers are not there yet and the behaviour is fail-closed until they
 are. Decision coverage refuses a `NoDecision` rather than folding every reason
 into one unknown label, so a contract cannot yet declare `refused` as an

@@ -30,6 +30,8 @@ from typing import Any
 
 from agentverity.observation import Observation
 
+from .decision import comparison_key
+
 AgentFn = Callable[[str], Observation]
 
 
@@ -161,4 +163,7 @@ def _hashable(v: Any) -> Any:
     """Normalise a verdict value to a hashable comparison key."""
     if isinstance(v, (list, tuple)):
         return tuple(v)
+    # The same canonical key the meter uses. A constant gate whose evidence
+    # mixes a bare label and a tagged one is constant, not two decisions.
+    v = comparison_key(v)
     return v.value if hasattr(v, "value") else v
