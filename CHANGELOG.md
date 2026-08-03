@@ -76,6 +76,10 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   the point of using it. Only a reason a contract can declare reaches a
   snapshot; the meter refuses the rest long before admission, and the
   serialiser refuses them again rather than trusting that.
+- A stored snapshot outcome is validated on read, against the same vocabulary
+  the writer can produce. Evidence already did this. A snapshot did not, so a
+  hand-edited file carried an invented reason into a comparison, and a probe
+  missing its reason compared equal to any other probe missing one.
 - Snapshot comparison normalises both sides, so a baseline written before an
   adapter adopted the typed outcomes still matches the runs it makes
   afterwards. A diff still reports what is stored rather than the normalised

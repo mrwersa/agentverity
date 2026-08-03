@@ -20,7 +20,7 @@ from agentverity.meter import MeterResult, pairs_for_deterministic_call
 from agentverity.reporting import json_value
 from agentverity.runner import RunResult
 
-from .decision import comparison_key
+from .decision import DECLARABLE_REASONS, comparison_key
 
 SNAPSHOT_SCHEMA = "agentverity.snapshot/v3"
 
@@ -127,7 +127,7 @@ class Snapshot:
             parsed_probes = tuple(
                 SnapshotProbe(
                     input_fingerprint=str(probe["input_fingerprint"]),
-                    expected=json_value(probe["expected"]),
+                    expected=_read_expected(probe["expected"]),
                     intended=(
                         str(probe["intended"])
                         if probe.get("intended") is not None
@@ -326,6 +326,38 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
         probes=probes,
     )
 
+
+
+
+def _read_expected(stored: Any) -> Any:
+    """Validate a stored outcome as it is read.
+
+    Evidence checks a no-decision reason against the vocabulary on load, and a
+    snapshot did not, so a hand-edited or corrupted file carried garbage into a
+    comparison. Worse, two differently malformed probes compared equal to each
+    other, because an absent reason became the same ``None`` in both.
+
+    Only a reason a contract can declare is accepted, matching what the writer
+    can produce. A snapshot holding ``extraction_failed`` could not have been
+    made legitimately, so reading one back is a corruption rather than an
+    outcome.
+    """
+    if not isinstance(stored, dict):
+        return json_value(stored)
+    if stored.get("kind") != "no_decision":
+        raise SnapshotCompatibilityError(
+            "a stored outcome object records a no-decision and needs "
+            f"'kind': 'no_decision', got {stored.get('kind')!r}. A decision is "
+            "stored as a plain string."
+        )
+    reason = stored.get("reason")
+    if reason not in DECLARABLE_REASONS:
+        raise SnapshotCompatibilityError(
+            f"a stored no-decision names {reason!r}, which is not an outcome a "
+            "contract can declare. Expected one of "
+            f"{', '.join(sorted(DECLARABLE_REASONS))}. See DESIGN.md ADR 4."
+        )
+    return {"kind": "no_decision", "reason": reason}
 
 
 def _comparable(stored: Any) -> Any:

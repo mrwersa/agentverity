@@ -324,3 +324,105 @@ class TestBaseliningADeclaredRefusal:
         stored_label = json_value(Decision("refused"), strict=True)
 
         assert _comparable(stored_reason) != _comparable(stored_label)
+
+
+class TestAStoredOutcomeIsValidatedOnRead:
+    """Evidence validated a reason on load and a snapshot did not.
+
+    Found reviewing my own PR. A hand-edited or corrupted snapshot carried
+    garbage into a comparison, and two differently malformed probes compared
+    equal to each other because an absent reason became the same `None` in
+    both.
+    """
+
+    def _snapshot_file(self, tmp_path):
+        import json
+
+        from agentverity import (
+            DecisionCase,
+            DecisionContract,
+            DecisionSuite,
+            NoDecision,
+            Observation,
+            RunConfig,
+            run,
+        )
+        from agentverity.snapshot import create_snapshot, save_snapshot
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund"}),
+                required=frozenset({"refund"}),
+                allowed_no_decisions=frozenset({"refused"}),
+            ),
+            cases=(
+                DecisionCase(input="a1", expected="refund"),
+                DecisionCase(input="b1", expected="refund"),
+            ),
+        )
+
+        def agent(text: str) -> Observation:
+            if text.startswith("b"):
+                return Observation(text="no", verdict=NoDecision("refused"))
+            return Observation(text="ok", verdict="refund")
+
+        path = tmp_path / "baseline.json"
+        save_snapshot(
+            create_snapshot(
+                run(agent, suite=suite, config=RunConfig(budget=200, epsilon=0.2)),
+                approved=True,
+            ),
+            path,
+        )
+        return path, json.loads(path.read_text())
+
+    @pytest.mark.parametrize(
+        "field, value",
+        [
+            ("reason", "invented"),
+            ("reason", "extraction_failed"),
+            ("reason", None),
+            ("kind", "decision"),
+        ],
+    )
+    def test_a_malformed_stored_outcome_is_refused(self, tmp_path, field, value):
+        import json
+
+        from agentverity.snapshot import SnapshotCompatibilityError, load_snapshot
+
+        path, doc = self._snapshot_file(tmp_path)
+        for probe in doc["probes"]:
+            if isinstance(probe["expected"], dict):
+                if value is None:
+                    probe["expected"].pop(field, None)
+                else:
+                    probe["expected"][field] = value
+        path.write_text(json.dumps(doc))
+
+        with pytest.raises(SnapshotCompatibilityError):
+            load_snapshot(path)
+
+    def test_a_harness_failure_could_not_have_been_written(self, tmp_path):
+        """So reading one back is a corruption, not an outcome."""
+        import json
+
+        from agentverity.snapshot import SnapshotCompatibilityError, load_snapshot
+
+        path, doc = self._snapshot_file(tmp_path)
+        for probe in doc["probes"]:
+            if isinstance(probe["expected"], dict):
+                probe["expected"]["reason"] = "runtime_error"
+        path.write_text(json.dumps(doc))
+
+        with pytest.raises(SnapshotCompatibilityError, match="contract can declare"):
+            load_snapshot(path)
+
+    def test_a_valid_file_still_loads(self, tmp_path):
+        from agentverity.snapshot import load_snapshot
+
+        path, _ = self._snapshot_file(tmp_path)
+        probes = load_snapshot(path).probes
+
+        assert {"kind": "no_decision", "reason": "refused"} in [
+            p.expected for p in probes
+        ]

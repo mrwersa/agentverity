@@ -452,6 +452,12 @@ contract declared. The serialiser still refuses the others rather than relying
 on that, because a guarantee that depends on an upstream check holding is not a
 guarantee.
 
+A stored outcome is validated as it is read, against the same vocabulary the
+writer can produce. Evidence already did this and a snapshot did not, so a
+hand-edited file carried garbage into a comparison, and two differently
+malformed probes compared equal to each other because an absent reason became
+the same `None` in both.
+
 Comparison normalises through `comparison_key`, so a snapshot storing
 `"refund"` matches a current run returning `Decision("refund")`. Without it, an
 adapter adopting the types would fail every baseline it had written before
