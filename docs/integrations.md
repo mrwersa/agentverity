@@ -42,7 +42,8 @@ or operational checks. Running the cheaper labelled quality check first also
 avoids spending on repeated calls for an agent already known to be wrong.
 When the evaluator already retained repeated categorical outputs, import them
 instead of making the target calls again. Promptfoo has a direct JSON bridge,
-and DeepEval can share precomputed test cases. See
+DeepEval can share precomputed test cases, and anything else that can write one
+JSON object per run goes through `--jsonl`. See
 [imported evidence](imported-evidence.md).
 
 The loop continues after deployment:

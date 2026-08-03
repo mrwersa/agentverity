@@ -4,6 +4,9 @@ You probably already run your agent repeatedly. promptfoo, DeepEval, LangSmith,
 a script someone wrote. Running it again through AgentVerity to get an
 admission decision pays for the same information twice.
 
+The first two have a bridge, the script someone wrote has `--jsonl`, and
+anything can write the evidence format directly.
+
 `agentverity assess` reads the observations you already collected.
 
 ```console

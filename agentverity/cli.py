@@ -507,12 +507,19 @@ def _build_parser() -> argparse.ArgumentParser:
     assess_parser.add_argument(
         "--decision-path",
         default=None,
-        help="dot path to a decision inside a structured Promptfoo output",
+        help=(
+            "dot path to the decision in each row. Defaults to the source's "
+            "own convention: a Promptfoo structured output, or 'decision' "
+            "for --jsonl"
+        ),
     )
     assess_parser.add_argument(
         "--input-path",
-        default="prompt.raw",
-        help="dot path to the reviewed input in each Promptfoo result row",
+        default=None,
+        help=(
+            "dot path to the reviewed input in each row. Defaults to "
+            "'prompt.raw' for --promptfoo and 'input' for --jsonl"
+        ),
     )
     assess_parser.add_argument(
         "--provider",
@@ -609,6 +616,18 @@ def _assess_command(args: argparse.Namespace) -> int:
     """Assess evidence a run collected elsewhere, without calling anything."""
     try:
         suite = load_decision_suite(args.suite) if args.suite else None
+        # Each importer carries its own field-name defaults, so the CLI
+        # forwards a path only when one was named. Defaulting here instead
+        # would make one flag mean two conventions, and passing
+        # `--input-path prompt.raw` to --jsonl would then be silently ignored.
+        paths = {
+            name: value
+            for name, value in (
+                ("input_path", args.input_path),
+                ("decision_path", args.decision_path),
+            )
+            if value is not None
+        }
         if args.promptfoo:
             if suite is None:
                 raise ValueError(
@@ -618,20 +637,17 @@ def _assess_command(args: argparse.Namespace) -> int:
             evidence = load_promptfoo(
                 args.promptfoo,
                 suite,
-                decision_path=args.decision_path,
-                input_path=args.input_path,
                 provider=args.provider,
                 prompt_id=args.prompt_id,
                 isolation=args.isolation,
+                **paths,
             )
         elif args.jsonl:
             evidence = load_jsonl(
                 args.jsonl,
                 suite=suite,
-                input_path=args.input_path if args.input_path != "prompt.raw"
-                else "input",
-                decision_path=args.decision_path or "decision",
                 isolation=args.isolation,
+                **paths,
             )
         else:
             evidence = load_evidence(args.evidence)

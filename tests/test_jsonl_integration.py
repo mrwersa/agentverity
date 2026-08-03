@@ -194,3 +194,34 @@ def test_isolation_is_recorded_rather_than_assumed():
 
     assert evidence.isolation == "unknown"
     assert evidence.independence_caveat is not None
+
+
+def test_the_cli_honours_a_path_that_matches_the_other_importers_default(
+    tmp_path, capsys
+):
+    """`--input-path prompt.raw` on a JSONL file must mean what it says.
+
+    The CLI shares two path flags between --promptfoo and --jsonl, and the
+    first version gave them a Promptfoo default and treated that default as
+    "unset" for JSONL. So a log whose input really did sit at `prompt.raw`
+    had the flag silently discarded and failed on a field it was never asked
+    to read. Each importer owns its own default now, and the CLI forwards a
+    path only when the caller named one.
+    """
+    from agentverity.cli import main
+
+    path = tmp_path / "runs.jsonl"
+    path.write_text(
+        "\n".join(
+            json.dumps({"prompt": {"raw": "a"}, "decision": decision})
+            for decision in ("x", "x")
+        ),
+        encoding="utf-8",
+    )
+
+    # 2 is a refusal, which is what the discarded flag produced. 1 is the
+    # gate calling two repeats undecided, which is the file being read.
+    code = main(["assess", "--jsonl", str(path), "--input-path", "prompt.raw"])
+
+    assert code == 1, "the named path was not used"
+    assert "no 'prompt.raw'" not in capsys.readouterr().err
