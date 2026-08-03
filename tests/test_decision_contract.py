@@ -9,7 +9,6 @@ import pytest
 from agentverity import from_callable, run
 from agentverity.decision_contract import (
     DECISION_SUITE_SCHEMA,
-    LEGACY_DECISION_SUITE_SCHEMA,
     DecisionCase,
     DecisionContract,
     DecisionSuite,
@@ -118,9 +117,7 @@ def test_suite_round_trip_is_versioned(tmp_path):
     save_decision_suite(_suite(), path)
     payload = json.loads(path.read_text())
 
-    # A suite that declares no no-decision outcome needs nothing v2 carries,
-    # so it stays v1 and readable by a build that predates the field.
-    assert payload["schema"] == LEGACY_DECISION_SUITE_SCHEMA
+    assert payload["schema"] == DECISION_SUITE_SCHEMA
     assert load_decision_suite(path) == _suite()
 
 
@@ -814,42 +811,6 @@ class TestDeclarableNoDecisions:
     def test_declaring_a_reason_does_not_make_it_required(self):
         """Permitted is not demanded."""
         assert self._suite().contract.required == frozenset({"refund"})
-
-    def test_a_suite_claims_v2_only_when_it_declares_one(self, tmp_path):
-        from agentverity import save_decision_suite
-        from agentverity.decision_contract import (
-            DECISION_SUITE_SCHEMA,
-            LEGACY_DECISION_SUITE_SCHEMA,
-        )
-
-        plain = tmp_path / "plain.json"
-        save_decision_suite(self._suite(declared=frozenset()), plain)
-        assert json.loads(plain.read_text())["schema"] == LEGACY_DECISION_SUITE_SCHEMA
-
-        declaring = tmp_path / "declaring.json"
-        save_decision_suite(self._suite(), declaring)
-        assert json.loads(declaring.read_text())["schema"] == DECISION_SUITE_SCHEMA
-
-    def test_a_v1_suite_declaring_one_is_refused(self, tmp_path):
-        from agentverity import load_decision_suite
-        from agentverity.decision_contract import LEGACY_DECISION_SUITE_SCHEMA
-
-        path = tmp_path / "lying.json"
-        path.write_text(
-            json.dumps(
-                {
-                    "schema": LEGACY_DECISION_SUITE_SCHEMA,
-                    "contract": {
-                        "allowed": ["refund"],
-                        "allowed_no_decisions": ["refused"],
-                    },
-                    "cases": [{"input": "a", "expected": "refund"}],
-                }
-            )
-        )
-
-        with pytest.raises(ValueError, match="does not carry it"):
-            load_decision_suite(path)
 
     def test_the_internal_counting_key_never_leaks_into_the_file(self, tmp_path):
         from agentverity import save_decision_suite

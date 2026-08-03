@@ -313,9 +313,10 @@ class TestPersistenceRefusals:
             input="x", observations=(NoDecision("refused"), Decision("refund"))
         ).to_dict()
 
+        # A decision is a plain string; only a no-decision needs an object.
         assert payload["observations"] == [
             {"kind": "no_decision", "reason": "refused"},
-            {"kind": "decision", "label": "refund"},
+            "refund",
         ]
 
     def test_a_plain_string_still_stores(self):

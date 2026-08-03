@@ -414,7 +414,7 @@ def test_plan_prints_a_budget_without_calling_the_agent(tmp_path, capsys):
     tighter tolerance and discovering it on a provider invoice."""
 
     suite = {
-        "schema": "agentverity.decision-suite/v1",
+        "schema": "agentverity.decision-suite/v2",
         "contract": {
             "allowed": ["approve", "deny"],
             "critical": ["deny"],
@@ -499,7 +499,7 @@ def test_assess_prints_the_independence_caveat_when_isolation_is_unknown(
     tmp_path, capsys
 ):
     payload = {
-        "schema": "agentverity.evidence/v1",
+        "schema": "agentverity.evidence/v2",
         "cases": [
             {"input": "a", "observations": ["approve", "approve"]},
             {"input": "b", "observations": ["deny", "deny"]},
@@ -530,7 +530,7 @@ def test_assess_imports_promptfoo_without_calling_the_target(tmp_path, capsys):
     suite_path.write_text(
         json.dumps(
             {
-                "schema": "agentverity.decision-suite/v1",
+                "schema": "agentverity.decision-suite/v2",
                 "contract": {"allowed": ["approve", "review"]},
                 "cases": [
                     {"input": "routine", "expected": "approve"},

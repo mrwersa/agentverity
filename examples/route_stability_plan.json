@@ -1,12 +1,20 @@
 {
-  "schema": "agentverity.decision-suite/v1",
+  "cases": [
+    {
+      "expected": "approve",
+      "input": "Refund request is within policy and its evidence is complete."
+    },
+    {
+      "expected": "review",
+      "input": "Refund request has conflicting transaction evidence."
+    },
+    {
+      "expected": "deny",
+      "input": "Refund request is outside policy and has no exception."
+    }
+  ],
   "contract": {
     "allowed": [
-      "approve",
-      "deny",
-      "review"
-    ],
-    "required": [
       "approve",
       "deny",
       "review"
@@ -14,22 +22,14 @@
     "critical": [
       "deny"
     ],
+    "required": [
+      "approve",
+      "deny",
+      "review"
+    ],
     "stability_targets": {
       "deny": 0.01
     }
   },
-  "cases": [
-    {
-      "input": "Refund request is within policy and its evidence is complete.",
-      "expected": "approve"
-    },
-    {
-      "input": "Refund request has conflicting transaction evidence.",
-      "expected": "review"
-    },
-    {
-      "input": "Refund request is outside policy and has no exception.",
-      "expected": "deny"
-    }
-  ]
+  "schema": "agentverity.decision-suite/v2"
 }

@@ -351,11 +351,10 @@ working. One condition, one exception. Review found a `TypeError` in one path
 and a `ValueError` in another, and that was not a considered distinction, it
 was two local consistencies that disagreed.
 
-Evidence carries the tag from `agentverity.evidence/v2`. A file claims v2 only
-when it holds a typed outcome, so string-only evidence stays v1 and readable by
-an older build, and a v2 file tags every decision so it carries one
-representation rather than two. A bare string in a v1 file is never promoted:
-it recorded a label an adapter invented rather than a reason this ADR defines.
+Evidence carries the reason from `agentverity.evidence/v2`. A decision is
+written as a plain string and a no-decision as an object, which is one reading
+rule and the smallest form that stays unambiguous. Tagging decisions too would
+triple a repeat-heavy file to record a distinction nothing acts on.
 Comparison normalises the two, because a bare `"refund"` and a tagged one are
 the same decision and reporting a flip between them would be this ADR's own
 defect at a different seam.
@@ -412,12 +411,10 @@ declared allowed, because a contract cannot make a broken harness acceptable.
 An undeclared `NoDecision` keeps the existing refusal, so silence still fails
 closed rather than being read as permission.
 
-**Consequences.** The decision-suite schema follows the same discipline as
-evidence: a suite claims `agentverity.decision-suite/v2` only when it declares
-a no-decision outcome, so every existing suite stays v1 and readable by a build
-that predates the field. A suite declaring the field under v1 is refused, for
-the same reason a v1 evidence file may not carry a tag: a version that does not
-constrain the contents is not a version.
+**Consequences.** The decision-suite schema moves to
+`agentverity.decision-suite/v2` and every suite in the repository is rewritten
+at it. There is no v1 read path, because nothing is released and a dual-read
+path is a promise costing more than it is worth while the format moves.
 
 Coverage counts a declared no-decision outcome under its reason, never under a
 label. `refused` in `allowed_no_decisions` and `refused` in `allowed` are two

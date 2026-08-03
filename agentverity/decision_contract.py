@@ -27,7 +27,6 @@ from .decision import (
 )
 
 DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v2"
-LEGACY_DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v1"
 
 
 def _normalise_labels(value: Any, *, field_name: str) -> frozenset[str]:
@@ -283,11 +282,7 @@ class DecisionSuite:
     def to_dict(self) -> dict[str, Any]:
         """Return the versioned, portable suite representation."""
         return {
-            "schema": (
-                DECISION_SUITE_SCHEMA
-                if self.contract.allowed_no_decisions
-                else LEGACY_DECISION_SUITE_SCHEMA
-            ),
+            "schema": DECISION_SUITE_SCHEMA,
             "contract": self.contract.to_dict(),
             "cases": [case.to_dict() for case in self.cases],
         }
@@ -298,19 +293,10 @@ class DecisionSuite:
         if not isinstance(value, dict):
             raise TypeError("decision suite root must be an object")
         schema = value.get("schema")
-        if schema not in {DECISION_SUITE_SCHEMA, LEGACY_DECISION_SUITE_SCHEMA}:
+        if schema != DECISION_SUITE_SCHEMA:
             raise ValueError(
                 f"unsupported decision suite schema: {schema!r}; this build "
-                f"reads {DECISION_SUITE_SCHEMA} and {LEGACY_DECISION_SUITE_SCHEMA}"
-            )
-        if schema == LEGACY_DECISION_SUITE_SCHEMA and (
-            value.get("contract") or {}
-        ).get("allowed_no_decisions"):
-            raise ValueError(
-                "allowed_no_decisions appears in a suite declaring "
-                f"{LEGACY_DECISION_SUITE_SCHEMA}, which does not carry it. "
-                f"Declare {DECISION_SUITE_SCHEMA} to allow a no-decision "
-                "outcome."
+                f"reads {DECISION_SUITE_SCHEMA}"
             )
         # A missing key is malformed input, not a type error. Loading reports
         # every malformed suite as ValueError so one except clause covers a

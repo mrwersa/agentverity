@@ -46,5 +46,5 @@
       "transfer_delay"
     ]
   },
-  "schema": "agentverity.decision-suite/v1"
+  "schema": "agentverity.decision-suite/v2"
 }

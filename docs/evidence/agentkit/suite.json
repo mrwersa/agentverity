@@ -1,5 +1,46 @@
 {
-  "schema": "agentverity.decision-suite/v1",
+  "cases": [
+    {
+      "expected": "get_balance",
+      "input": "How much ETH is in my wallet?"
+    },
+    {
+      "expected": "get_wallet_details",
+      "input": "What address is this wallet and which network is it on?"
+    },
+    {
+      "expected": "transfer",
+      "input": "Send 5 USDC to 0x1234567890abcdef1234567890abcdef12345678"
+    },
+    {
+      "expected": "native_transfer",
+      "input": "Transfer 0.01 ETH to 0x1234567890abcdef1234567890abcdef12345678"
+    },
+    {
+      "expected": "wrap_eth",
+      "input": "Wrap 0.5 ETH into WETH"
+    },
+    {
+      "expected": "unwrap_eth",
+      "input": "Convert my WETH back into ETH"
+    },
+    {
+      "expected": "request_faucet_funds",
+      "input": "I need some testnet funds to try this out"
+    },
+    {
+      "expected": "fetch_price",
+      "input": "What is the current price of ETH?"
+    },
+    {
+      "expected": "approve",
+      "input": "Let the Uniswap router spend up to 100 of my USDC"
+    },
+    {
+      "expected": "get_portfolio",
+      "input": "Show me everything in this wallet"
+    }
+  ],
   "contract": {
     "allowed": [
       "approve",
@@ -23,6 +64,11 @@
       "withdraw",
       "wrap_eth"
     ],
+    "critical": [
+      "approve",
+      "native_transfer",
+      "transfer"
+    ],
     "required": [
       "approve",
       "fetch_price",
@@ -34,53 +80,7 @@
       "transfer",
       "unwrap_eth",
       "wrap_eth"
-    ],
-    "critical": [
-      "transfer",
-      "native_transfer",
-      "approve"
     ]
   },
-  "cases": [
-    {
-      "input": "How much ETH is in my wallet?",
-      "expected": "get_balance"
-    },
-    {
-      "input": "What address is this wallet and which network is it on?",
-      "expected": "get_wallet_details"
-    },
-    {
-      "input": "Send 5 USDC to 0x1234567890abcdef1234567890abcdef12345678",
-      "expected": "transfer"
-    },
-    {
-      "input": "Transfer 0.01 ETH to 0x1234567890abcdef1234567890abcdef12345678",
-      "expected": "native_transfer"
-    },
-    {
-      "input": "Wrap 0.5 ETH into WETH",
-      "expected": "wrap_eth"
-    },
-    {
-      "input": "Convert my WETH back into ETH",
-      "expected": "unwrap_eth"
-    },
-    {
-      "input": "I need some testnet funds to try this out",
-      "expected": "request_faucet_funds"
-    },
-    {
-      "input": "What is the current price of ETH?",
-      "expected": "fetch_price"
-    },
-    {
-      "input": "Let the Uniswap router spend up to 100 of my USDC",
-      "expected": "approve"
-    },
-    {
-      "input": "Show me everything in this wallet",
-      "expected": "get_portfolio"
-    }
-  ]
+  "schema": "agentverity.decision-suite/v2"
 }
