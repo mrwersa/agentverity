@@ -8,6 +8,46 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- Isolation now decides whether evidence may certify a baseline.
+  `shared-session` is refused, `unknown` is admitted with its caveat
+  travelling, and `fresh-session` and `fresh-instance` are admitted. Before
+  this the caveat had no consequence: the same run printed "repeats are not
+  independent and the interval is narrower than the evidence supports" and
+  then produced a snapshot resting on that interval.
+- A snapshot records the isolation it was admitted under, and `check` reports
+  when the current run establishes less than the evidence that certified the
+  baseline. A snapshot previously recorded no isolation at all, so the
+  provenance died at the admission boundary.
+
+### Changed
+
+- `agentverity.snapshot/v4`. A v3 reader cannot apply the policy, because the
+  field is absent and neither default is safe: reading a missing isolation as
+  `fresh-*` claims provenance nobody asserted, and reading it as
+  `shared-session` refuses baselines that were legitimately admitted.
+- `check` can print a `provenance:` line before its verdict. A parser reading
+  the first line of output to decide pass or fail now sees it on a weakened
+  run. Exit codes are unchanged: `0` clean, `1` drift, `2` refused. Key on the
+  `snapshot clean:` and `snapshot drift:` prefixes rather than on position, or
+  on the exit code, which is the stable contract.
+- `assess --isolation` is refused with `--evidence` instead of being accepted
+  and discarded. An evidence file records its own isolation, and since that
+  value now decides whether the evidence may certify a baseline, silently
+  overriding the flag let a caller believe they had upgraded the provenance of
+  a baseline they were about to freeze.
+
+### Migration
+
+- **A stored v3 snapshot is refused, and re-admission is the path.** There is
+  no upgrade script and there should not be one: a v3 file does not record how
+  its trials were isolated, and filling that in now would manufacture the
+  provenance the policy exists to establish. Re-run and snapshot again,
+  stating the isolation the run actually had. The refusal says this, so the
+  answer arrives where the problem does.
+
+
 ## [0.15.0] - 2026-08-03
 
 Route reach became three quantities instead of one, the absence of a decision

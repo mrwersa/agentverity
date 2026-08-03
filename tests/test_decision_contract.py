@@ -910,6 +910,11 @@ def test_the_schema_numbers_record_format_history_not_a_release():
     Evidence moved to v2 because the shape of an observation changed and the
     0.14.0 reader rejects the new one. The decision suite did not, because
     `allowed_no_decisions` is optional and a suite without it still parses.
+
+    The snapshot has moved twice for two separate reasons, v3 for the typed
+    outcome and v4 for the recorded isolation, which is what a number that
+    records the history of one format looks like beside one that does not move
+    at all.
     """
     from agentverity.decision_contract import DECISION_SUITE_SCHEMA
     from agentverity.evidence import EVIDENCE_SCHEMA
@@ -919,6 +924,6 @@ def test_the_schema_numbers_record_format_history_not_a_release():
 
     assert EVIDENCE_SCHEMA.endswith("/v2"), "the observation shape changed"
     assert DECISION_SUITE_SCHEMA.endswith("/v1"), "only an optional field was added"
-    assert SNAPSHOT_SCHEMA.endswith("/v3"), "a snapshot can now hold a no-decision"
+    assert SNAPSHOT_SCHEMA.endswith("/v4"), "a snapshot records its isolation"
     for unchanged in (RUN_SCHEMA, TELEMETRY_SCHEMA):
         assert unchanged.endswith("/v2"), f"{unchanged} did not change in 0.15"

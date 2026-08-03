@@ -465,4 +465,5 @@ def assess_evidence(
         observed_keys=observed_keys,
         intended_decisions=intended,
         requested_inputs=len(evidence.cases),
+        isolation=evidence.isolation,
     )

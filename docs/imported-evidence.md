@@ -254,16 +254,34 @@ The statistics assume trials are independent. An imported file can break that
 in ways a self-run cannot: repeats drawn from one conversation, a warm provider
 cache, a single session reused.
 
-| `isolation` | Meaning | Reported |
-|---|---|---|
-| `fresh-session` | Each trial started a new session | no caveat |
-| `fresh-instance` | Each trial used a new agent instance | no caveat |
-| `shared-session` | Trials ran in one session | not independent, the interval is too narrow |
-| `unknown` | Not recorded | independence assumed rather than established |
+| `isolation` | Meaning | Reported | May certify a baseline |
+|---|---|---|---|
+| `fresh-session` | Each trial started a new session | no caveat | yes |
+| `fresh-instance` | Each trial used a new agent instance | no caveat | yes |
+| `shared-session` | Trials ran in one session | not independent, the interval is too narrow | **no** |
+| `unknown` | Not recorded | independence assumed rather than established | yes, with the caveat |
 
-Nothing is rejected on this basis. The caveat travels through text, JSON,
-JUnit, and OpenTelemetry reports so downstream readers do not inherit a
-confidence claim the file never earned.
+Everything is still **assessed**. What the last column governs is admission: a
+snapshot is a number you are committing to, and certifying one from trials you
+have said were not independent publishes an interval the same report called
+too narrow.
+
+`unknown` is admitted because it is the default of every importer, and
+refusing it would teach callers to write `fresh-session` to make the error go
+away. So the policy refuses a claim of shared state rather than an unstated
+one. The caveat still travels through text, JSON, JUnit, and OpenTelemetry so
+downstream readers do not inherit a confidence claim the file never earned.
+
+A snapshot stores the isolation that admitted it, and `check` says when a
+later run establishes less:
+
+```console
+$ agentverity check --agent app:router --inputs probes.txt --snapshot base.json
+provenance: the baseline was certified under 'fresh-session' and this run
+records 'unknown', so the observations match but the current evidence
+establishes less than the evidence that admitted the baseline
+snapshot clean: 100/100 references matched
+```
 
 ## What an import can and cannot check
 
