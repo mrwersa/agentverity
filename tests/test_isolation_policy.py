@@ -206,3 +206,55 @@ def test_an_unrelated_schema_gets_no_snapshot_migration_advice():
         Snapshot.from_dict({"schema": "something.else/v1"})
 
     assert "Re-run and snapshot again" not in str(refused.value)
+
+
+def test_the_isolation_flag_reaches_the_importer_and_is_refused_elsewhere(
+    tmp_path, capsys
+):
+    """`--isolation` decides admission now, so discarding it is not cosmetic.
+
+    It was declared on `assess` and left out of the flag table, so
+    `--evidence file.json --isolation fresh-session` was accepted and thrown
+    away while the file's own value won. A caller could believe they had
+    upgraded the provenance of a baseline they were about to certify.
+    """
+    from agentverity.cli import main
+
+    runs = tmp_path / "runs.jsonl"
+    runs.write_text(
+        "\n".join(
+            json.dumps({"input": f"probe-{index}", "decision": decision})
+            for index in range(6)
+            for decision in ((("refund", "billing")[index % 2],) * 80)
+        ),
+        encoding="utf-8",
+    )
+
+    # Asserted on the caveat rather than the exit code, because `undecided`
+    # exits 2 as well and would read as a refusal that never happened.
+    main(["assess", "--jsonl", str(runs), "--isolation", "fresh-session"])
+    printed = capsys.readouterr()
+
+    assert "assessment refused" not in printed.err
+    assert "independence is assumed" not in printed.out, (
+        "the flag reached the importer, so the unknown caveat is gone"
+    )
+
+    evidence = tmp_path / "evidence.json"
+    evidence.write_text(
+        json.dumps(
+            {
+                "schema": "agentverity.evidence/v2",
+                "layer": "verdict",
+                "isolation": "shared-session",
+                "cases": [
+                    {"input": "a", "observations": ["x", "x"]},
+                    {"input": "b", "observations": ["y", "y"]},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["assess", "--evidence", str(evidence), "--isolation", "fresh-session"]) == 2
+    assert "--isolation applies to" in capsys.readouterr().err

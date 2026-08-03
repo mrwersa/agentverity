@@ -549,8 +549,12 @@ def _build_parser() -> argparse.ArgumentParser:
     assess_parser.add_argument(
         "--isolation",
         choices=("fresh-session", "fresh-instance", "shared-session", "unknown"),
-        default="unknown",
-        help="how Promptfoo repetitions were separated",
+        default=None,
+        help=(
+            "--promptfoo or --jsonl only: how repeated trials were separated. "
+            "Defaults to 'unknown'. An evidence file records its own, and it "
+            "decides whether the evidence may certify a baseline"
+        ),
     )
     assess_parser.add_argument(
         "--json", dest="json_path", default=None, help="write the JSON report here"
@@ -633,6 +637,7 @@ def _compare_evidence_command(args: argparse.Namespace) -> int:
 #: the same defect as a default that silently overrides one they named.
 _ASSESS_FLAGS: dict[str, tuple[str, ...]] = {
     "layer": ("jsonl",),
+    "isolation": ("promptfoo", "jsonl"),
     "provider": ("promptfoo",),
     "prompt_id": ("promptfoo",),
     "input_path": ("promptfoo", "jsonl"),
@@ -665,41 +670,26 @@ def _assess_command(args: argparse.Namespace) -> int:
     """Assess evidence a run collected elsewhere, without calling anything."""
     try:
         suite = load_decision_suite(args.suite) if args.suite else None
-        # Each importer carries its own field-name defaults, so the CLI
-        # forwards a path only when one was named. Defaulting here instead
-        # would make one flag mean two conventions, and passing
-        # `--input-path prompt.raw` to --jsonl would then be silently ignored.
-        paths = {
-            name: value
-            for name, value in (
-                ("input_path", args.input_path),
-                ("decision_path", args.decision_path),
-            )
-            if value is not None
-        }
         _refuse_flags_the_source_cannot_use(args)
+        # Built from the same table the refusal reads, so a flag can only be
+        # forwarded where it is declared usable. Each importer keeps its own
+        # defaults and the CLI passes a value only when one was named:
+        # defaulting here would make one flag mean two conventions, and
+        # `--input-path prompt.raw` on --jsonl would be silently ignored.
+        options = {
+            flag: getattr(args, flag)
+            for flag in _ASSESS_FLAGS
+            if getattr(args, flag) is not None
+        }
         if args.promptfoo:
             if suite is None:
                 raise ValueError(
                     "--promptfoo requires --suite so exported inputs map to "
                     "reviewed cases"
                 )
-            evidence = load_promptfoo(
-                args.promptfoo,
-                suite,
-                provider=args.provider,
-                prompt_id=args.prompt_id,
-                isolation=args.isolation,
-                **paths,
-            )
+            evidence = load_promptfoo(args.promptfoo, suite, **options)
         elif args.jsonl:
-            evidence = load_jsonl(
-                args.jsonl,
-                suite=suite,
-                isolation=args.isolation,
-                layer=args.layer or "verdict",
-                **paths,
-            )
+            evidence = load_jsonl(args.jsonl, suite=suite, **options)
         else:
             evidence = load_evidence(args.evidence)
         result = assess_evidence(evidence, suite, epsilon=args.epsilon)

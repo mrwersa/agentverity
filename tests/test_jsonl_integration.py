@@ -345,6 +345,7 @@ def test_the_refusal_says_the_whole_import_stopped():
 #: the table it is testing rather than restated beside it.
 _FLAG_VALUES = {
     "layer": "tools",
+    "isolation": "fresh-session",
     "provider": "local",
     "prompt_id": "router",
     "input_path": "input",
@@ -433,6 +434,8 @@ def test_every_unusable_flag_combination_refuses(tmp_path, capsys, source, flag)
 @pytest.mark.parametrize(
     ("source", "extra"),
     [
+        ("jsonl", ["--isolation", "fresh-session"]),
+        ("promptfoo", ["--isolation", "fresh-instance"]),
         ("jsonl", ["--input-path", "input"]),
         ("jsonl", ["--decision-path", "decision"]),
         ("jsonl", []),

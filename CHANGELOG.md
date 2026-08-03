@@ -29,7 +29,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   `shared-session` refuses baselines that were legitimately admitted.
 - `check` can print a `provenance:` line before its verdict. A parser reading
   the first line of output to decide pass or fail now sees it on a weakened
-  run. Exit codes are unchanged: `0` clean, `1` drift, `2` refused.
+  run. Exit codes are unchanged: `0` clean, `1` drift, `2` refused. Key on the
+  `snapshot clean:` and `snapshot drift:` prefixes rather than on position, or
+  on the exit code, which is the stable contract.
+- `assess --isolation` is refused with `--evidence` instead of being accepted
+  and discarded. An evidence file records its own isolation, and since that
+  value now decides whether the evidence may certify a baseline, silently
+  overriding the flag let a caller believe they had upgraded the provenance of
+  a baseline they were about to freeze.
 
 ### Migration
 
