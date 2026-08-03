@@ -73,13 +73,67 @@ them. Not built: it needs a second graph before the concept earns its name.
 identifier before acting, which is a reasonable plan that a single-turn probe
 cannot express, and the fix is a better probe rather than a wider model.
 
-## Next: make the evidence easier to bring
+## Next: fix what disagrees, then make the evidence cheaper
 
-1. **More evaluator importers.** LangSmith and a generic CSV or JSONL shape.
+Reordered after an outside review. The review was accurate and restated the
+README, which told me the positioning reads clearly and told me nothing about
+what to build. What it did not raise is where the work is: the evidence costs
+too much to collect, and nothing checks that the trials were independent.
+
+### First, two things that disagree with themselves
+
+1. **One definition of "reached".** The contract check reads the first verdict
+   of each case and the route table reads every repeat, so `approve` came back
+   98 times out of 146 and was still reported as never observed. Running the
+   recommended command over this project's own flagship evidence returns
+   `NOT TRUSTWORTHY` for that reason. Two defensible readings that disagree
+   silently inside one report is a defect, and it is the first thing an
+   adopter hits.
+2. **A first-class unset decision.** When a model answers a tool-calling
+   contract with prose, `Observation.key` falls back to comparing raw text, so
+   two differently worded refusals count as a changed decision. That measures
+   wording rather than choice. The AgentKit adapter works around it by naming
+   the outcome, and no caller should have to know that.
+
+### Then, the cost of evidence
+
+A 5% claim needs 73 zero-change pairs per route. That is the honest number and
+it is also the reason a team tries this once and stops.
+
+3. **Sequential evidence.** Today a run collects the full planned budget and
+   then decides. It should stop as soon as the bound is reached, and stop
+   early when a route is already clearly unstable. Same guarantee from the
+   same arithmetic, often a fraction of the calls. The sizing already exists
+   in `plan`; this makes it adaptive rather than fixed.
+4. **Independence checks.** Every interval assumes the repeats were
+   independent trials. Nothing verifies it. A harness that reuses one session
+   turns repeats into turns of a single conversation, the model then agrees
+   with itself, and stability is overstated with no error anywhere. The
+   LangGraph adapter mints a fresh `thread_id` per call for exactly this
+   reason, and the library should refuse, or at least flag, evidence that
+   looks contaminated: repeated identical session identifiers, inputs that
+   grow monotonically across trials, or verdicts that stop changing partway
+   through a run. Refusing on absent evidence is already this library's
+   position. Computing an interval over evidence it cannot trust is the same
+   error in the other direction.
+
+### Then, whether the suite points at the right things
+
+5. **Production coverage.** A suite that certifies six routes evenly, against
+   traffic that is eighty per cent one route, is well measured and misdirected.
+   Given an observed route distribution, report what share of production
+   volume the suite actually certifies. This stays inside the mission: it is a
+   statement about the evidence, not about whether any answer was correct.
+
+### Then, easier import
+
+6. **More evaluator importers.** LangSmith and a generic CSV or JSONL shape.
    The evidence schema already refuses aggregates, which is the part that
-   matters; each importer is a mapping onto it. A team that has already paid
-   for the repeats should not pay again to learn whether they were enough.
-2. **User-extensible relations.** The catalogue is a closed set of
+   matters; each importer is a mapping onto it. Worth saying plainly: import
+   only helps a team that already repeated. Most Promptfoo and DeepEval runs
+   are one pass per case, and one pass is `undecided` by construction. The
+   importer removes the second bill, not the first.
+7. **User-extensible relations.** The catalogue is a closed set of
    transforms. A documented protocol for registering a domain relation, with
    the coverage report treating a user relation the same as a built-in.
 
@@ -112,3 +166,10 @@ forces someone to distort before it earns the complexity.
 - **Inferring semantic diversity.** `minimum_cases` enforces a reviewed policy
   on case count. It does not pretend to know whether the cases are varied,
   because nothing in the text tells it that.
+
+An outside review listed five things this does not prove: correctness, safety,
+semantic representativeness, open-ended quality, and production distribution
+coverage. Four of those are permanent and are above. The fifth is item 5, and
+it belongs here only because it is about the evidence rather than the answer.
+Treating a boundary list as a backlog is how a tool that answers one question
+well becomes one that answers several badly.
