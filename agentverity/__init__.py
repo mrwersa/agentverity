@@ -60,7 +60,9 @@ from agentverity.evidence import (
 from agentverity.execution import ProgressEvent, RunError, input_fingerprint
 from agentverity.integrations import (
     evidence_from_deepeval,
+    evidence_from_jsonl,
     evidence_from_promptfoo,
+    load_jsonl,
     load_promptfoo,
 )
 from agentverity.meter import (
@@ -165,11 +167,13 @@ __all__ = [
     "create_snapshot",
     "detect",
     "evidence_from_deepeval",
+    "evidence_from_jsonl",
     "evidence_from_promptfoo",
     "from_callable",
     "input_fingerprint",
     "load_decision_suite",
     "load_evidence",
+    "load_jsonl",
     "load_promptfoo",
     "load_snapshot",
     "measure",

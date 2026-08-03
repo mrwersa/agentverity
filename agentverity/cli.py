@@ -16,6 +16,7 @@ from agentverity.decision_contract import DecisionSuite, load_decision_suite
 from agentverity.drift import compare_evidence
 from agentverity.evidence import EvidenceError, assess_evidence, load_evidence
 from agentverity.execution import ProgressEvent
+from agentverity.integrations.jsonl import load_jsonl
 from agentverity.integrations.promptfoo import load_promptfoo
 from agentverity.meter import (
     PRECISION_LEVELS,
@@ -492,6 +493,13 @@ def _build_parser() -> argparse.ArgumentParser:
     assess_source.add_argument(
         "--promptfoo", help="Promptfoo JSON export containing repeated outputs"
     )
+    assess_source.add_argument(
+        "--jsonl",
+        help=(
+            "JSONL from any harness: one JSON object per run, in the order "
+            "produced. Name the fields with --input-path and --decision-path."
+        ),
+    )
     assess_parser.add_argument(
         "--suite", default=None, help="optional decision suite to check against"
     )
@@ -614,6 +622,15 @@ def _assess_command(args: argparse.Namespace) -> int:
                 input_path=args.input_path,
                 provider=args.provider,
                 prompt_id=args.prompt_id,
+                isolation=args.isolation,
+            )
+        elif args.jsonl:
+            evidence = load_jsonl(
+                args.jsonl,
+                suite=suite,
+                input_path=args.input_path if args.input_path != "prompt.raw"
+                else "input",
+                decision_path=args.decision_path or "decision",
                 isolation=args.isolation,
             )
         else:
