@@ -10,6 +10,21 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
+  Coinbase AgentKit Strands example exposes, across three models, with every
+  observation committed so re-assessing costs nothing. The collector, the
+  adapter, the suite, and a summariser are there too.
+- The README presents both real runs as one arc rather than one example and a
+  footnote. AgentCore shows the analysis surviving a real deployment and says
+  plainly that six pairs per route certify nothing; AgentKit is the run with
+  enough repeats to certify, and it exists because of that limitation.
+- The write-up is pinned to the evidence by a test. Three numbers in it were
+  wrong before that existed, including a wall time quoted as 25 minutes in one
+  place and 33 in another against a recorded 30.1.
+- The result is this library's caveat with numbers behind it. One model
+  returned the same tool on all ten probes and was correct on five of them,
+  while a model that is unstable on two routes was correct on seven. A
+  stability gate alone prefers the worse agent.
 - `Decision(label)` and `NoDecision(reason)` type what a run decided, or why it
   did not. Two reworded refusals are now one decision rather than two, because
   a `NoDecision` compares on its reason. The reason vocabulary is closed and
@@ -69,26 +84,21 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   different numbers, which is what it looks like when a version records the
   history of one format rather than a release.
 
-### Not yet
-- The snapshot schema does not yet carry the tag. Writing a typed outcome into
-  a snapshot is refused with an actionable message rather than silently
-  persisting a shape the schema version does not describe.
-
-- `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
-  Coinbase AgentKit Strands example exposes, across three models, with every
-  observation committed so re-assessing costs nothing. The collector, the
-  adapter, the suite, and a summariser are there too.
-- The README presents both real runs as one arc rather than one example and a
-  footnote. AgentCore shows the analysis surviving a real deployment and says
-  plainly that six pairs per route certify nothing; AgentKit is the run with
-  enough repeats to certify, and it exists because of that limitation.
-- The write-up is pinned to the evidence by a test. Three numbers in it were
-  wrong before that existed, including a wall time quoted as 25 minutes in one
-  place and 33 in another against a recorded 30.1.
-- The result is this library's caveat with numbers behind it. One model
-  returned the same tool on all ten probes and was correct on five of them,
-  while a model that is unstable on two routes was correct on seven. A
-  stability gate alone prefers the worse agent.
+- `agentverity.snapshot/v3` stores a typed outcome the way evidence does: a
+  decision as a plain string, a no-decision as
+  `{"kind": "no_decision", "reason": ...}`. Before this a contract could
+  declare a refusal and never baseline one, so the feature worked right up to
+  the point of using it. Only a reason a contract can declare reaches a
+  snapshot; the meter refuses the rest long before admission, and the
+  serialiser refuses them again rather than trusting that.
+- A stored snapshot outcome is validated on read, against the same vocabulary
+  the writer can produce. Evidence already did this. A snapshot did not, so a
+  hand-edited file carried an invented reason into a comparison, and a probe
+  missing its reason compared equal to any other probe missing one.
+- Snapshot comparison normalises both sides, so a baseline written before an
+  adapter adopted the typed outcomes still matches the runs it makes
+  afterwards. A diff still reports what is stored rather than the normalised
+  form.
 
 ### Fixed
 

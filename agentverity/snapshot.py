@@ -20,7 +20,9 @@ from agentverity.meter import MeterResult, pairs_for_deterministic_call
 from agentverity.reporting import json_value
 from agentverity.runner import RunResult
 
-SNAPSHOT_SCHEMA = "agentverity.snapshot/v2"
+from .decision import DECLARABLE_REASONS, comparison_key
+
+SNAPSHOT_SCHEMA = "agentverity.snapshot/v3"
 
 
 class SnapshotRefused(ValueError):
@@ -125,7 +127,7 @@ class Snapshot:
             parsed_probes = tuple(
                 SnapshotProbe(
                     input_fingerprint=str(probe["input_fingerprint"]),
-                    expected=json_value(probe["expected"]),
+                    expected=_read_expected(probe["expected"]),
                     intended=(
                         str(probe["intended"])
                         if probe.get("intended") is not None
@@ -325,6 +327,59 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
     )
 
 
+def _read_expected(stored: Any) -> Any:
+    """Validate a stored outcome as it is read.
+
+    Evidence checks a no-decision reason against the vocabulary on load, and a
+    snapshot did not, so a hand-edited or corrupted file carried garbage into a
+    comparison. Worse, two differently malformed probes compared equal to each
+    other, because an absent reason became the same ``None`` in both.
+
+    Only a reason a contract can declare is accepted, matching what the writer
+    can produce. A snapshot holding ``extraction_failed`` could not have been
+    made legitimately, so reading one back is a corruption rather than an
+    outcome.
+    """
+    if isinstance(stored, (str, list, tuple)):
+        return json_value(stored)
+    if not isinstance(stored, dict):
+        # A number or a boolean cannot have been written here either, and
+        # loading one turns a corrupt file into a permanent reported change
+        # rather than a refusal. Same rule as the reason check below.
+        raise SnapshotCompatibilityError(
+            f"a stored outcome is {type(stored).__name__}, which no run "
+            "produces. A decision is stored as a string, a tool path as a "
+            "list, and a no-decision as an object."
+        )
+    if stored.get("kind") != "no_decision":
+        raise SnapshotCompatibilityError(
+            "a stored outcome object records a no-decision and needs "
+            f"'kind': 'no_decision', got {stored.get('kind')!r}. A decision is "
+            "stored as a plain string."
+        )
+    reason = stored.get("reason")
+    if reason not in DECLARABLE_REASONS:
+        raise SnapshotCompatibilityError(
+            f"a stored no-decision names {reason!r}, which is not an outcome a "
+            "contract can declare. Expected one of "
+            f"{', '.join(sorted(DECLARABLE_REASONS))}. See DESIGN.md ADR 4."
+        )
+    return {"kind": "no_decision", "reason": reason}
+
+
+def _comparable(stored: Any) -> Any:
+    """One comparison key for a stored outcome, whichever shape it is in.
+
+    A snapshot may hold ``"refund"`` from before an adapter adopted the typed
+    outcomes and ``{"kind": "no_decision", ...}`` from after. Comparison has to
+    treat a bare label and a ``Decision`` as one decision, and keep a reason
+    distinct from a label of the same name.
+    """
+    if isinstance(stored, dict) and stored.get("kind") == "no_decision":
+        return ("no_decision", stored.get("reason"))
+    return comparison_key(stored)
+
+
 def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
     """Compare a current, independently admitted run to an approved snapshot."""
     _require_snapshot_evidence(result)
@@ -354,6 +409,10 @@ def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
             "current decision contract does not match the snapshot"
         )
 
+    # Normalised on both sides, so a baseline written before an adapter
+    # adopted the types still matches the runs it makes afterwards. Without it
+    # adoption would fail every existing baseline, which is the
+    # string-versus-typed defect one layer further out.
     expected = {
         probe.input_fingerprint: probe.expected
         for probe in snapshot.probes
@@ -391,10 +450,13 @@ def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
             "current intended decisions do not match the snapshot"
         )
 
+    # Compared through one canonical key, reported as stored. A baseline
+    # written before an adapter adopted the typed outcomes still matches the
+    # runs it makes afterwards, and the diff still shows what is in the file.
     changes = tuple(
         SnapshotChange(fingerprint, expected[fingerprint], actual[fingerprint])
         for fingerprint in expected
-        if actual[fingerprint] != expected[fingerprint]
+        if _comparable(actual[fingerprint]) != _comparable(expected[fingerprint])
     )
     return SnapshotDiff(changes=changes, checked=len(expected))
 

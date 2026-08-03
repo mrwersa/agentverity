@@ -10,7 +10,12 @@ from xml.etree import ElementTree as ET
 
 from agentverity.runner import RunResult
 
-from .decision import Decision, NoDecision, OutcomeNotScorable
+from .decision import (
+    DECLARABLE_REASONS,
+    Decision,
+    NoDecision,
+    OutcomeNotScorable,
+)
 
 RUN_SCHEMA = "agentverity.run/v2"
 JUNIT_SUITE_NAME = "agentverity"
@@ -38,21 +43,20 @@ def json_value(value: Any, *, strict: bool = False) -> Any:
     # reader nothing. Stored formats are different: `strict` is set by callers
     # that persist under a schema version which does not yet describe the tag,
     # and they refuse rather than writing a shape the version does not promise.
+    # One encoding across both stored formats: a decision is a plain string, a
+    # no-decision is an object. See DESIGN.md ADR 2 and ADR 4.
     if isinstance(value, Decision):
-        if strict:
-            raise OutcomeNotScorable(
-                f"a typed Decision({value.label!r}) cannot be stored in a "
-                "snapshot. Snapshots hold plain comparison keys; pass the "
-                "label as a string. See DESIGN.md ADR 2."
-            )
-        return {"kind": "decision", "label": value.label}
+        return value.label if strict else {"kind": "decision", "label": value.label}
     if isinstance(value, NoDecision):
-        if strict:
+        if strict and value.reason not in DECLARABLE_REASONS:
+            # Unreachable through the runner, which refuses these long before
+            # admission. Enforced here anyway: a guarantee that depends on an
+            # upstream check holding is not a guarantee.
             raise OutcomeNotScorable(
                 f"a NoDecision({value.reason!r}) cannot be stored in a "
-                "snapshot yet. The snapshot format has no shape for it, so a "
-                "stored reason would be indistinguishable from a label. "
-                "See DESIGN.md ADR 2."
+                "snapshot. Only an outcome a contract can declare may be "
+                "baselined, and this one means the harness failed or the "
+                "answer was not categorical. See DESIGN.md ADR 4."
             )
         return {"kind": "no_decision", "reason": value.reason}
     if hasattr(value, "value"):

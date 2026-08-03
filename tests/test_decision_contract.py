@@ -919,5 +919,6 @@ def test_the_schema_numbers_record_format_history_not_a_release():
 
     assert EVIDENCE_SCHEMA.endswith("/v2"), "the observation shape changed"
     assert DECISION_SUITE_SCHEMA.endswith("/v1"), "only an optional field was added"
-    for unchanged in (RUN_SCHEMA, SNAPSHOT_SCHEMA, TELEMETRY_SCHEMA):
+    assert SNAPSHOT_SCHEMA.endswith("/v3"), "a snapshot can now hold a no-decision"
+    for unchanged in (RUN_SCHEMA, TELEMETRY_SCHEMA):
         assert unchanged.endswith("/v2"), f"{unchanged} did not change in 0.15"

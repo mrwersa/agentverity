@@ -283,12 +283,28 @@ class TestPersistenceRefusals:
     storing a shape the unchanged schema version does not describe.
     """
 
-    def test_a_snapshot_refuses_a_typed_outcome(self):
+    def test_a_snapshot_stores_what_a_contract_could_declare(self):
+        """ADR 4. A baseline has to be able to hold a declared refusal."""
         from agentverity.reporting import json_value
 
-        for value in (Decision("refund"), NoDecision("refused")):
-            with pytest.raises(OutcomeNotScorable, match="cannot be stored in a"):
-                json_value(value, strict=True)
+        assert json_value(Decision("refund"), strict=True) == "refund"
+        assert json_value(NoDecision("refused"), strict=True) == {
+            "kind": "no_decision",
+            "reason": "refused",
+        }
+
+    def test_a_snapshot_still_refuses_what_no_contract_could_declare(self):
+        """Unreachable through the runner, enforced here regardless.
+
+        A guarantee that depends on an upstream check holding is not a
+        guarantee.
+        """
+        from agentverity.reporting import json_value
+
+        for reason in ("extraction_failed", "malformed_response", "runtime_error",
+                       "open_ended"):
+            with pytest.raises(OutcomeNotScorable, match="cannot be stored"):
+                json_value(NoDecision(reason), strict=True)
 
     def test_the_run_report_still_serialises_it_tagged(self):
         """The report is regenerated from the run, so a new shape costs nothing."""
@@ -303,7 +319,7 @@ class TestPersistenceRefusals:
         from agentverity.reporting import json_value
 
         with pytest.raises(OutcomeNotScorable):
-            json_value({"a": [Decision("refund")]}, strict=True)
+            json_value({"a": [NoDecision("runtime_error")]}, strict=True)
 
     def test_evidence_now_stores_a_typed_outcome_tagged(self):
         """v2 carries the tag, so the refusal that stood in for it is gone."""
