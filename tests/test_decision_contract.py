@@ -672,3 +672,58 @@ class TestObservedRouteReach:
             c for c in result.observed_case_counts if c.decision == "approve"
         )
         assert approve.count == 1, "98 observations came from one case"
+
+
+class TestPerCaseValidation:
+    """A misaligned `per_case` must fail loudly, not silently miscount.
+
+    This whole change exists because one reading of coverage disagreed with
+    another without saying so. A caller passing the wrong number of groups
+    should not get a third quiet disagreement.
+    """
+
+    def _suite(self):
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+
+        return DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"a", "b"}), required=frozenset({"a"})
+            ),
+            cases=(
+                DecisionCase(input="x", expected="a"),
+                DecisionCase(input="y", expected="a"),
+            ),
+        )
+
+    def test_too_few_groups_is_refused(self):
+        import pytest
+
+        from agentverity.decision_contract import assess_decision_coverage
+
+        with pytest.raises(ValueError, match="one group per case"):
+            assess_decision_coverage(
+                self._suite(), observed=("a", "a"), per_case=(("a",),)
+            )
+
+    def test_too_many_groups_is_refused(self):
+        import pytest
+
+        from agentverity.decision_contract import assess_decision_coverage
+
+        with pytest.raises(ValueError, match="one group per case"):
+            assess_decision_coverage(
+                self._suite(), observed=("a", "a"), per_case=(("a",), ("a",), ("a",))
+            )
+
+    def test_a_label_only_in_per_case_is_still_checked_against_the_contract(self):
+        """Otherwise an out-of-contract label hides by appearing on a repeat."""
+        from agentverity.decision_contract import assess_decision_coverage
+
+        result = assess_decision_coverage(
+            self._suite(),
+            observed=("a", "a"),
+            all_observed=("a", "a"),          # the invented label is absent here
+            per_case=(("a", "invented"), ("a",)),
+        )
+
+        assert "invented" in result.unknown_observed

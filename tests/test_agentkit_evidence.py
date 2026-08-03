@@ -78,6 +78,19 @@ def test_the_main_readme_quotes_the_same_table(name: str) -> None:
     assert (int(row.group(1)), int(row.group(2))) == (correct, single)
 
 
+def _coverage(name: str):
+    """Coverage for one committed evidence file, the way the CLI computes it."""
+    from agentverity import load_decision_suite
+    from agentverity.decision_contract import assess_decision_coverage
+
+    evidence = load(name)
+    suite = load_decision_suite(EVIDENCE / "suite.json")
+    return assess_decision_coverage(
+        suite,
+        observed=tuple(case["observations"][0] for case in evidence["cases"]),
+        per_case=tuple(tuple(case["observations"]) for case in evidence["cases"]),
+    )
+
 def test_the_headline_holds() -> None:
     """The claim is that ranking on stability alone prefers the worse agent."""
     nemo_correct, nemo_single = score(load("evidence-nemo.json"))
@@ -115,13 +128,12 @@ def test_the_unstable_routes_are_the_ones_named() -> None:
     assert unstable <= set(SUITE["contract"]["critical"])
 
 
-def test_the_contract_wrinkle_is_disclosed() -> None:
-    """`approve` is returned 98 times and reported as never observed.
+def test_approve_is_reached_on_repeats_and_now_counts() -> None:
+    """This case is why coverage stopped reading only the primary result.
 
-    The contract reads the first verdict per case, the route table reads every
-    repeat, and the two disagree on what "reached" means. A reader running the
-    recommended command meets NOT TRUSTWORTHY, so the README has to prepare
-    them for it.
+    `approve` is returned 98 times out of 146 and never first, so the older
+    reading reported a route the agent demonstrably reached as never reached.
+    It now counts, once, because it is one case however many repeats agreed.
     """
     approve = next(
         c for c in load("evidence-gpt4o_mini.json")["cases"]
@@ -129,9 +141,32 @@ def test_the_contract_wrinkle_is_disclosed() -> None:
     )
 
     assert approve["observations"].count("approve") == 98
-    assert approve["observations"][0] != "approve"
+    assert approve["observations"][0] != "approve", "never the primary result"
+
+    result = _coverage("evidence-gpt4o_mini.json")
+    assert "approve" not in result.missing_observed
+    assert {c.decision: c.count for c in result.observed_case_counts}["approve"] == 1
+
+
+def test_the_refusal_is_now_about_unreached_routes_only() -> None:
+    """The command still refuses, and the README must say why it refuses now.
+
+    It used to refuse partly because the report disagreed with itself. That is
+    fixed, so the remaining refusal is about three routes the model genuinely
+    never returned on any repeat.
+    """
+    result = _coverage("evidence-gpt4o_mini.json")
+
+    assert set(result.missing_observed) == {
+        "fetch_price",
+        "get_balance",
+        "get_portfolio",
+    }
+    assert not result.satisfied
     assert "NOT TRUSTWORTHY" in README
-    assert "first" in README and "98 times out of 146" in README
+    assert "approve" not in README.split("NOT TRUSTWORTHY")[1].split("```")[0], (
+        "the quoted refusal must not still list approve"
+    )
 
 
 def test_nova_answered_with_prose_on_eight_probes() -> None:

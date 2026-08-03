@@ -78,9 +78,22 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
                 item.decision: item.count
                 for item in coverage.intended_counts
             },
+            # Two readings, named. `observed_counts` counts primary results
+            # and is kept for continuity; `observed_case_counts` counts the
+            # distinct cases that reached a decision on any repeat, and it is
+            # the one `observed_coverage` and `missing_observed` are computed
+            # from. See DESIGN.md ADR 1.
             "observed_counts": {
                 item.decision: item.count
                 for item in coverage.observed_counts
+            },
+            "primary_observed_counts": {
+                item.decision: item.count
+                for item in coverage.observed_counts
+            },
+            "observed_case_counts": {
+                item.decision: item.count
+                for item in coverage.observed_case_counts
             },
             "intended_coverage": coverage.intended_coverage,
             "observed_coverage": coverage.observed_coverage,

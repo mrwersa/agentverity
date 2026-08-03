@@ -595,7 +595,8 @@ class RunResult:
                 f"   intended:    {coverage.intended_coverage:.0%} of required decisions"
             )
             lines.append(
-                f"   observed:    {coverage.observed_coverage:.0%} of required decisions"
+                f"   observed:    {coverage.observed_coverage:.0%} of required "
+                "decisions, counted over cases that reached them on any repeat"
             )
             if coverage.missing_intended:
                 lines.append(
@@ -870,6 +871,11 @@ def run(
 
     source_observations: list[Observation | None] = [None] * len(inputs)
     repeated_observations: list[Observation] = []
+    # One group per input, position preserved. `complete_series` drops failed
+    # entries and is right to, because the meter needs complete series. Reach
+    # is per case, so a dropped entry there would shift every later case onto
+    # the wrong contract row.
+    case_series: list[tuple[Observation, ...]] = [() for _ in inputs]
     route_stability: StratifiedStability | None = None
     errors: list[RunError] = []
 
@@ -924,6 +930,9 @@ def run(
             for observations in meter_work.values
             if observations is not None
         ]
+        for index, observations in enumerate(meter_work.values):
+            if observations is not None:
+                case_series[index] = tuple(observations)
         repeated_observations = [
             observation
             for observations in complete_series
@@ -1092,9 +1101,10 @@ def run(
             + observed_keys,
             per_case=tuple(
                 tuple(observation.key(config.layer) for observation in observations)
-                for observations in complete_series
-            )
-            or tuple((key,) for key in observed_keys),
+                if observations
+                else ((key,) if key is not None else ())
+                for observations, key in zip(case_series, observed_keys)
+            ),
         )
         if suite is not None
         else None

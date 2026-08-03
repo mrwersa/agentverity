@@ -31,9 +31,17 @@ TRUSTWORTHY**:
 ```console
 $ agentverity assess --evidence evidence-gpt4o_mini.json --suite suite.json
   NOT TRUSTWORTHY - the declared decision contract is incomplete: required
-  decisions were represented by cases but not returned: approve, fetch_price,
+  decisions were represented by cases but not returned: fetch_price,
   get_balance, get_portfolio.
 ```
+
+`approve` used to appear in that list, and it was the strongest evidence in
+this directory for a defect the library has since fixed. The model returned
+`approve` on 98 of 146 repeats, and coverage read only the first result of
+each case, so a route the agent demonstrably reached was reported as never
+reached. Coverage now counts the distinct cases that reached a decision on any
+repeat, and counts each case once however many repeats agreed. See
+`DESIGN.md` ADR 1.
 
 That is not a bug in the evidence. It is the contract check working, and one
 line of it is worth understanding before anything else here.

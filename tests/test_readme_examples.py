@@ -206,3 +206,53 @@ def test_every_cli_command_is_discoverable_from_the_readme() -> None:
     missing = sorted(c for c in commands if c not in readme)
 
     assert not missing, f"the README never mentions: {', '.join(missing)}"
+
+
+def test_the_new_reach_semantics_reach_every_output_surface():
+    """The roadmap promised the AgentKit case pinned across surfaces.
+
+    A semantic change that moves the terminal report and not the JSON one is
+    the same class of defect the change was fixing: two readings in one
+    product that disagree without saying so.
+    """
+    import json
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    evidence = root / "docs" / "evidence" / "agentkit"
+
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "report.json"
+        subprocess.run(
+            [sys.executable, "-m", "agentverity.cli", "assess",
+             "--evidence", str(evidence / "evidence-gpt4o_mini.json"),
+             "--suite", str(evidence / "suite.json"), "--json", str(out)],
+            capture_output=True, text=True, cwd=root, check=False,
+        )
+        payload = json.loads(out.read_text())
+    contract = payload["decision_contract"]
+
+    # both readings present and named
+    assert "approve" not in contract["observed_counts"], "primaries are unchanged"
+    assert contract["observed_case_counts"]["approve"] == 1, "one case, 98 repeats"
+    assert "approve" not in contract["missing_observed"]
+    assert set(contract["missing_observed"]) == {
+        "fetch_price", "get_balance", "get_portfolio",
+    }
+    # and the two agree: every required decision is either counted or missing
+    required = set(contract["required"])
+    counted = set(contract["observed_case_counts"])
+    assert required - counted == set(contract["missing_observed"])
+
+    text = subprocess.run(
+        [sys.executable, "-m", "agentverity.cli", "assess",
+         "--evidence", str(evidence / "evidence-gpt4o_mini.json"),
+         "--suite", str(evidence / "suite.json")],
+        capture_output=True, text=True, cwd=root, check=False,
+    ).stdout
+    section = text.split("3. DECLARED DECISION CONTRACT")[1][:400]
+    assert "approve" not in section, "the terminal report agrees with the JSON one"

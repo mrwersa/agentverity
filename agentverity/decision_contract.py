@@ -312,7 +312,13 @@ class DecisionCoverageResult:
 
     @property
     def observed_coverage(self) -> float:
-        """Share of required decisions returned at least once by the target."""
+        """Share of required decisions reached by at least one reviewed case.
+
+        Counted over distinct cases that returned the decision on any repeat,
+        so a route the target only reached on a repeat still counts, and a
+        route it returned ninety-eight times inside one case counts once.
+        See DESIGN.md ADR 1.
+        """
         assert self.contract.required is not None
         return (
             len(self.contract.required) - len(self.missing_observed)
@@ -378,14 +384,25 @@ def assess_decision_coverage(
     """
     if len(observed) != len(suite.cases):
         raise ValueError("observed decisions must align with decision suite cases")
+    if per_case is not None and len(per_case) != len(suite.cases):
+        raise ValueError(
+            f"per_case has {len(per_case)} groups for {len(suite.cases)} cases; "
+            "one group per case, in case order"
+        )
     primary_labels = [
         value if isinstance(value, str) else f"<non-string:{type(value).__name__}>"
         for value in observed
         if value is not None
     ]
+    # Every label the caller showed us, from whichever argument carried it. A
+    # repeat that only appears in `per_case` must still be checked against the
+    # contract, or an out-of-contract label can hide by being passed once.
+    seen: list[Any] = list(all_observed if all_observed is not None else observed)
+    if per_case is not None:
+        seen.extend(value for case in per_case for value in case)
     every_label = [
         value if isinstance(value, str) else f"<non-string:{type(value).__name__}>"
-        for value in (all_observed if all_observed is not None else observed)
+        for value in seen
         if value is not None
     ]
     intended_counter = Counter(suite.expected)
