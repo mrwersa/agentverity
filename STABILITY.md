@@ -20,7 +20,7 @@ scope statement, not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.15.0
+agentverity~=0.16.0
 ```
 
 That accepts compatible `0.14.x` fixes without moving to a later pre-1.0 minor
