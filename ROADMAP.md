@@ -56,11 +56,11 @@ decision. That measures wording rather than choice. The adapter here works
 around it by naming the outcome, and the library should not need a caller to
 know that.
 
-**What it also asked for.** One definition of "reached". The contract check
-reads the first verdict of each case, while the route table reads every
+**What it also asked for.** Reach semantics that do not disagree. The contract
+check reads the first verdict of each case, while the route table reads every
 repeat, so `approve` came back 98 times out of 146 and was still reported as
-never observed. Both readings are defensible on their own and they should not
-disagree silently inside one report.
+never observed. Neither reading is wrong. They answer different questions and
+the report does not say which is which.
 
 **A vocabulary gap it exposed.** The two unstable routes flip between acting
 and resolving an identifier first, and both are reasonable opening moves. That
@@ -73,69 +73,114 @@ them. Not built: it needs a second graph before the concept earns its name.
 identifier before acting, which is a reasonable plan that a single-turn probe
 cannot express, and the fix is a better probe rather than a wider model.
 
-## Next: fix what disagrees, then make the evidence cheaper
+## Next
 
-Reordered after an outside review. The review was accurate and restated the
-README, which told me the positioning reads clearly and told me nothing about
-what to build. What it did not raise is where the work is: the evidence costs
-too much to collect, and nothing checks that the trials were independent.
+Ordered by what unblocks what. Semantics first, because an importer or a
+statistical procedure built on ambiguous semantics has to be rebuilt. Each
+item that changes reach semantics or the statistical procedure gets an ADR in
+`DESIGN.md` before code, and the AgentKit case is pinned across terminal,
+JSON, JUnit, OTEL, snapshot and imported-evidence output so a semantic change
+cannot move one surface silently.
 
-### First, two things that disagree with themselves
+### 1. Separate intended, observed, and admissible route reach
 
-1. **One definition of "reached".** The contract check reads the first verdict
-   of each case and the route table reads every repeat, so `approve` came back
-   98 times out of 146 and was still reported as never observed. Running the
-   recommended command over this project's own flagship evidence returns
-   `NOT TRUSTWORTHY` for that reason. Two defensible readings that disagree
-   silently inside one report is a defect, and it is the first thing an
-   adopter hits.
-2. **A first-class unset decision.** When a model answers a tool-calling
-   contract with prose, `Observation.key` falls back to comparing raw text, so
-   two differently worded refusals count as a changed decision. That measures
-   wording rather than choice. The AgentKit adapter works around it by naming
-   the outcome, and no caller should have to know that.
+`DecisionCoverageResult` already carries intended and observed counts. The
+defect is narrower than it first looks: observed coverage reads only the
+primary result of each case, so a route the model reached on 98 of 146 repeats
+reports as never observed.
 
-### Then, the cost of evidence
+Three quantities, kept distinct in the model and in every report:
 
-A 5% claim needs 73 zero-change pairs per route. That is the honest number and
-it is also the reason a team tries this once and stops.
+- **intended** — reviewed cases written for that route
+- **observed** — distinct cases that returned it on any repeat
+- **admissible** — route evidence that meets its declared stability target
 
-3. **Sequential evidence.** Today a run collects the full planned budget and
-   then decides. It should stop as soon as the bound is reached, and stop
-   early when a route is already clearly unstable. Same guarantee from the
-   same arithmetic, often a fraction of the calls. The sizing already exists
-   in `plan`; this makes it adaptive rather than fixed.
-4. **Independence checks.** Every interval assumes the repeats were
-   independent trials. Nothing verifies it. A harness that reuses one session
-   turns repeats into turns of a single conversation, the model then agrees
-   with itself, and stability is overstated with no error anywhere. The
-   LangGraph adapter mints a fresh `thread_id` per call for exactly this
-   reason, and the library should refuse, or at least flag, evidence that
-   looks contaminated: repeated identical session identifiers, inputs that
-   grow monotonically across trials, or verdicts that stop changing partway
-   through a run. Refusing on absent evidence is already this library's
-   position. Computing an interval over evidence it cannot trust is the same
-   error in the other direction.
+The distinctions matter in both directions. Ninety-eight observations of
+`approve` are not ninety-eight cases, so observed must count cases and not
+occurrences. And one chance occurrence must not let unstable evidence pass as
+adequately covered, which is what admissible is for.
 
-### Then, whether the suite points at the right things
+### 2. A typed representation for the absence of a decision
 
-5. **Production coverage.** A suite that certifies six routes evenly, against
-   traffic that is eighty per cent one route, is well measured and misdirected.
-   Given an observed route distribution, report what share of production
-   volume the suite actually certifies. This stays inside the mission: it is a
-   statement about the evidence, not about whether any answer was correct.
+`Observation.key` falls back to comparing raw text when no verdict is set, so
+two differently worded refusals read as a changed decision. That measures
+wording rather than choice.
 
-### Then, easier import
+A single `UNSET` sentinel would be worse than the fallback, because at least
+six distinct events currently collapse into `verdict=None`: open-ended output,
+a refusal, no tool selected, extraction failure, a malformed provider
+response, and a runtime failure. Folding those into one category would make a
+run of extraction failures look perfectly stable.
 
-6. **More evaluator importers.** LangSmith and a generic CSV or JSONL shape.
-   The evidence schema already refuses aggregates, which is the part that
-   matters; each importer is a mapping onto it. Worth saying plainly: import
-   only helps a team that already repeated. Most Promptfoo and DeepEval runs
-   are one pass per case, and one pass is `undecided` by construction. The
-   importer removes the second bill, not the first.
-7. **User-extensible relations.** The catalogue is a closed set of
-   transforms. A documented protocol for registering a domain relation, with
-   the coverage report treating a user relation the same as a built-in.
+So: an explicit `Decision(label)` against `NoDecision(reason)`, versioned.
+Runtime and extraction failures make the evidence **incomplete**, which is
+already a first-class outcome here. A refusal becomes a categorical outcome
+only when the contract or the adapter declares it as one. This needs an
+evidence-schema and snapshot migration, which is why it comes before the
+importer rather than after.
+
+### 3. A generic JSONL importer
+
+Once the two above are settled. The evidence schema already refuses
+aggregates, which is the part that matters; an importer is a mapping onto it.
+Worth stating plainly so the value is not oversold: an imported run with one
+observation per case remains `undecided`. The importer removes the second
+bill, not the first.
+
+### 4. Isolation provenance, and what to do with it
+
+Every interval assumes independent trials. The recorded `isolation` field
+already models this with `fresh-session`, `fresh-instance`, `shared-session`
+and `unknown`, and `shared-session` already produces a caveat.
+
+Strengthen the provenance rather than infer it. Per-trial execution
+identifiers, and adapter assertions about what was actually fresh. Then a
+stated policy: refuse known shared-state evidence for certification, caveat
+`unknown`, and admit `fresh-*`.
+
+Deliberately not attempted: inferring contamination from behaviour. Inputs
+that grow across trials are often legitimate test inputs, and verdicts
+settling partway through a run is not evidence of anything. Both would reject
+valid evidence, and neither absence establishes independence.
+
+### 5. Anytime-valid sequential collection
+
+A 5% claim needs 73 zero-change pairs per route. Collecting the full planned
+budget and then deciding is the honest way to spend that, and it is also why a
+team runs this once.
+
+Stopping early is worth having and **cannot reuse the fixed-sample interval**.
+Repeatedly inspecting a Wilson interval and stopping when it crosses a
+threshold is optional stopping, and it destroys the nominal coverage the
+interval claims. One of three routes, chosen and written down first:
+
+- an anytime-valid confidence sequence
+- predeclared checkpoints with alpha spending
+- a fixed maximum with a formally justified sequential test
+
+Validated by simulation around `p = epsilon`, where the error inflates, rather
+than by unit examples that pass either way. The design also has to state what
+happens to in-flight calls under bounded concurrency, since they overshoot the
+stopping point and their results must either count or be discarded by a rule
+declared in advance.
+
+### 6. Traffic-weighted route reporting, optional
+
+Given an observed route distribution, report **traffic-weighted admitted-route
+mass**, split into deterministic, stochastic, undecided, and out-of-contract,
+recording the telemetry window, the model and the contract version.
+
+Stated carefully, because the obvious version overclaims. A route-level
+distribution says nothing about semantic coverage within a route. And an even
+spread across six routes may be deliberate risk-based coverage rather than a
+mistake, so traffic weighting is reported beside risk weighting and never
+substituted for it.
+
+### 7. User-extensible relations
+
+Last. The catalogue is a closed set of transforms. A documented protocol for
+registering a domain relation, with the coverage report treating a user
+relation the same as a built-in.
 
 ## Then, if evidence demands it
 
@@ -167,9 +212,9 @@ forces someone to distort before it earns the complexity.
   on case count. It does not pretend to know whether the cases are varied,
   because nothing in the text tells it that.
 
-An outside review listed five things this does not prove: correctness, safety,
-semantic representativeness, open-ended quality, and production distribution
-coverage. Four of those are permanent and are above. The fifth is item 5, and
-it belongs here only because it is about the evidence rather than the answer.
-Treating a boundary list as a backlog is how a tool that answers one question
-well becomes one that answers several badly.
+Correctness, safety, semantic representativeness and open-ended quality are
+permanent boundaries rather than unstarted work. Item 6 above is adjacent to
+the last of them and stays in scope only because it describes the evidence
+rather than the answer. A boundary list is not a backlog, and treating it as
+one is how a tool that answers a single question well becomes one that answers
+several badly.
