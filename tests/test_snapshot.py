@@ -234,5 +234,3 @@ def test_snapshot_refuses_an_incomplete_declared_contract():
 
     with pytest.raises(SnapshotRefused, match="decision contract"):
         create_snapshot(result, approved=True)
-
-

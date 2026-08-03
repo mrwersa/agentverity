@@ -31,5 +31,5 @@
       "deny": 0.01
     }
   },
-  "schema": "agentverity.decision-suite/v2"
+  "schema": "agentverity.decision-suite/v1"
 }

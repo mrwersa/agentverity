@@ -39,7 +39,7 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   with too few comparable observations, and coverage refusing a `NoDecision`.
   It subclasses `ValueError`, so a caller already catching that keeps working.
 
-- `agentverity.evidence/v2` records a no-decision as
+- The evidence schema records a no-decision as
   `{"kind": "no_decision", "reason": ...}` and a decision as a plain string.
   One reading rule, and the smallest form that stays unambiguous: tagging both
   would triple a repeat-heavy file to record a distinction nothing acts on,
@@ -52,15 +52,22 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   failure cannot be made acceptable, and categorical stability is undefined
   over an open-ended answer. Declaring a reason permits it and does not require
   it. An undeclared one is still refused, because silence is not permission.
-- `agentverity.decision-suite/v2` carries that field.
+- `allowed_no_decisions` is additive and optional, so it is not a schema
+  change: a suite written without it parses correctly.
 
-### Removed
+### Changed
 
-- Reading `agentverity.evidence/v1`, `agentverity.decision-suite/v1` and
-  `agentverity.snapshot/v1`. Nothing is released and nothing consumes them, so
-  a dual-read path was a promise costing more than it was worth while the
-  format is still moving. Every artefact in the repository is rewritten at the
-  current version, and `STABILITY.md` states the one-version rule.
+- **Breaking, with no known external consumers.** `agentverity.evidence` moves
+  to v2 because the shape of an observation changed: a run that produced no
+  decision is now an object, and the 0.14.0 reader rejects one. Run, telemetry
+  and snapshot stay at v2 because nothing about them changed, and the decision
+  suite stays at v1 because `allowed_no_decisions` is optional and additive.
+  Only the current version of each is readable; there are no legacy readers.
+- `STABILITY.md` states when a version changes: only when a reader cannot
+  correctly interpret a file written at the previous version. Adding an
+  optional field is not a version change. Different schemas therefore sit at
+  different numbers, which is what it looks like when a version records the
+  history of one format rather than a release.
 
 ### Not yet
 - The snapshot schema does not yet carry the tag. Writing a typed outcome into

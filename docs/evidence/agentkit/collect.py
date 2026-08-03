@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect repeated tool selections and write an agentverity.evidence/v1 file.
+"""Collect repeated tool selections and write an agentverity.evidence/v2 file.
 
 Written rather than using `agentverity run` directly so the artefact is the
 evidence itself. Anyone can then re-run `agentverity assess` against the
@@ -75,7 +75,7 @@ def main() -> int:
 
     cost = globals().get("_cost", 0.0)
     evidence = {
-        "schema": "agentverity.evidence/v1",
+        "schema": "agentverity.evidence/v2",
         "layer": "verdict",
         # Every call is a fresh HTTP request with no conversation carried
         # between them, so the trials are independent in the way the

@@ -41,20 +41,18 @@ def json_value(value: Any, *, strict: bool = False) -> Any:
     if isinstance(value, Decision):
         if strict:
             raise OutcomeNotScorable(
-                f"a typed Decision({value.label!r}) cannot be persisted yet. "
-                "The evidence and snapshot schemas do not carry the tag, so "
-                "storing it would write a shape the schema version does not "
-                "describe. Pass the label as a plain string until the tagged "
-                "schema lands. See DESIGN.md ADR 2."
+                f"a typed Decision({value.label!r}) cannot be stored in a "
+                "snapshot. Snapshots hold plain comparison keys; pass the "
+                "label as a string. See DESIGN.md ADR 2."
             )
         return {"kind": "decision", "label": value.label}
     if isinstance(value, NoDecision):
         if strict:
             raise OutcomeNotScorable(
-                f"a NoDecision({value.reason!r}) cannot be persisted yet. The "
-                "evidence and snapshot schemas do not carry the tag, so a "
-                "stored reason would be indistinguishable from a label a "
-                "caller invented. See DESIGN.md ADR 2."
+                f"a NoDecision({value.reason!r}) cannot be stored in a "
+                "snapshot yet. The snapshot format has no shape for it, so a "
+                "stored reason would be indistinguishable from a label. "
+                "See DESIGN.md ADR 2."
             )
         return {"kind": "no_decision", "reason": value.reason}
     if hasattr(value, "value"):

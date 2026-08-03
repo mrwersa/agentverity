@@ -82,5 +82,5 @@
       "wrap_eth"
     ]
   },
-  "schema": "agentverity.decision-suite/v2"
+  "schema": "agentverity.decision-suite/v1"
 }

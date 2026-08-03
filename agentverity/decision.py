@@ -36,8 +36,8 @@ class OutcomeNotScorable(ValueError):
 
     Raised wherever a typed outcome reaches a consumer that cannot honestly
     account for it: a repeat series holding a harness failure, a series with
-    too few comparable observations, or a contract that cannot yet declare a
-    no-decision outcome.
+    too few comparable observations, or a no-decision outcome the contract
+    does not declare.
 
     It subclasses ``ValueError`` because that is what the meter already raised
     for unscorable evidence, and because the neighbouring refusals in this
