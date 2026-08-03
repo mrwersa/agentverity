@@ -177,9 +177,21 @@ multiplicity penalty: 72 pairs at a 5% tolerance against the fixed sample's 73.
 The earlier looks test only the stochastic direction. See DESIGN.md ADR 7,
 including why an even split was measured and rejected.
 
-Writing an adapter? `declare_isolation(run, "fresh-instance")` before returning
-it, and `run` records what you said. That value decides whether the evidence
-may certify a baseline, so state what happened rather than what you wanted.
+Writing an adapter?
+
+```python
+from agentverity import declare_isolation
+
+def from_my_framework(build_client):
+    def run(text: str) -> Observation:
+        ...
+    return declare_isolation(run, "fresh-instance")
+```
+
+`run` records what you said, and that value decides whether the evidence may
+certify a baseline. State what happened rather than what you wanted: a shared
+session declared honestly is refused a baseline, and a shared session declared
+as fresh certifies one on a false claim.
 
 Framework bridges translate records without calling the target:
 

@@ -65,6 +65,7 @@ from agentverity.integrations import (
     load_jsonl,
     load_promptfoo,
 )
+from agentverity.isolation import declare_isolation, isolation_of
 from agentverity.meter import (
     PRECISION_LEVELS,
     MeterResult,
@@ -172,12 +173,14 @@ __all__ = [
     "compare_snapshot",
     "create_snapshot",
     "decide_sequentially",
+    "declare_isolation",
     "detect",
     "evidence_from_deepeval",
     "evidence_from_jsonl",
     "evidence_from_promptfoo",
     "from_callable",
     "input_fingerprint",
+    "isolation_of",
     "load_decision_suite",
     "load_evidence",
     "load_jsonl",

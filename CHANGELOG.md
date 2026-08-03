@@ -45,7 +45,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   isolation and the calls describe one thing. Mutating the mapping afterwards
   to add a `thread_id` previously sent later repeats down one shared thread
   while the declaration still claimed independence.
-- `declare_isolation` and `isolation_of` for anyone writing an adapter.
+- `declare_isolation` and `isolation_of` for anyone writing an adapter,
+  exported from the top-level package where the rest of the API lives.
 
 - Isolation now decides whether evidence may certify a baseline.
   `shared-session` is refused, `unknown` is admitted with its caveat

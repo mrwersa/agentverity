@@ -298,3 +298,29 @@ def test_every_changelog_version_has_a_matching_comparison_link() -> None:
     assert f"compare/v{latest}...HEAD" in changelog, (
         "Unreleased must compare against the newest released version"
     )
+
+
+def test_every_name_the_docs_import_from_the_package_actually_exists() -> None:
+    """A doc that teaches a name the package does not export is a doc that
+    fails on the first line a reader runs.
+
+    `docs/api.md` taught `declare_isolation` in a file where every other
+    example imports from the top-level package, and it was only reachable as
+    `agentverity.isolation.declare_isolation`. Scanning the prose rather than
+    the code blocks, because the sentence is what a reader copies.
+    """
+    import re
+    from pathlib import Path
+
+    import agentverity
+
+    root = Path(__file__).resolve().parents[1]
+    missing = []
+    for path in sorted(root.glob("docs/*.md")) + [root / "README.md"]:
+        text = path.read_text(encoding="utf-8")
+        for block in re.findall(r"from agentverity import ([^\n]+)", text):
+            for name in re.split(r"[,\s()]+", block.replace("\\", "")):
+                if name and name.isidentifier() and not hasattr(agentverity, name):
+                    missing.append(f"{path.name}: {name}")
+
+    assert not missing, f"docs import names the package does not export: {missing}"
