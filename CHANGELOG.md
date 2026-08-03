@@ -39,16 +39,21 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   with too few comparable observations, and coverage refusing a `NoDecision`.
   It subclasses `ValueError`, so a caller already catching that keeps working.
 
+- The evidence schema is `agentverity.evidence/v2` and carries a typed outcome
+  tagged, as `{"kind": "decision", "label": ...}` or `{"kind": "no_decision",
+  "reason": ...}`. v1 files still load, and a bare string in one stays a bare
+  string rather than being promoted, because it recorded a label a caller
+  invented rather than the reason ADR 2 defines. Promoting it would rewrite
+  what committed evidence means.
+
 ### Not yet
 
 - A contract cannot declare a no-decision outcome as allowed. Coverage refuses
   a `NoDecision` rather than folding every reason into one unknown label, which
   is the fail-closed behaviour until the tagged contract representation lands.
-- The evidence and snapshot schemas do not yet carry the tag, so a stored bare
-  string is still read as a `Decision`. That is deliberate: it is what the
-  string meant when it was written. Writing a typed outcome into either format
-  is refused with an actionable message rather than silently persisting a
-  shape the schema version does not describe.
+- The snapshot schema does not yet carry the tag. Writing a typed outcome into
+  a snapshot is refused with an actionable message rather than silently
+  persisting a shape the schema version does not describe.
 
 - `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
   Coinbase AgentKit Strands example exposes, across three models, with every

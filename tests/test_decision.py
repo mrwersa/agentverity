@@ -307,11 +307,18 @@ class TestPersistenceRefusals:
         with pytest.raises(OutcomeNotScorable):
             json_value({"a": [Decision("refund")]}, strict=True)
 
-    def test_evidence_refuses_a_typed_outcome_with_an_actionable_message(self):
+    def test_evidence_now_stores_a_typed_outcome_tagged(self):
+        """v2 carries the tag, so the refusal that stood in for it is gone."""
         from agentverity.evidence import EvidenceCase
 
-        with pytest.raises(OutcomeNotScorable, match="Pass a plain string"):
-            EvidenceCase(input="x", observations=(NoDecision("refused"),))
+        payload = EvidenceCase(
+            input="x", observations=(NoDecision("refused"), Decision("refund"))
+        ).to_dict()
+
+        assert payload["observations"] == [
+            {"kind": "no_decision", "reason": "refused"},
+            {"kind": "decision", "label": "refund"},
+        ]
 
     def test_a_plain_string_still_stores(self):
         from agentverity.evidence import EvidenceCase

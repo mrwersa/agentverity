@@ -27,10 +27,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .decision import Decision, NoDecision, OutcomeNotScorable
+from .decision import NO_DECISION_REASONS, Decision, NoDecision
 from .observation import Observation
 
-EVIDENCE_SCHEMA = "agentverity.evidence/v1"
+EVIDENCE_SCHEMA = "agentverity.evidence/v2"
+LEGACY_EVIDENCE_SCHEMA = "agentverity.evidence/v1"
 
 LAYERS = ("verdict", "text", "tools")
 
@@ -56,26 +57,14 @@ class EvidenceCase:
     """One input and the decisions observed across repeated runs of it."""
 
     input: str
-    observations: tuple[str | tuple[str, ...], ...]
+    observations: tuple[str | tuple[str, ...] | Decision | NoDecision, ...]
     expected: str | None = None
     errors: int = 0
 
     def __post_init__(self) -> None:
         if not isinstance(self.input, str) or not self.input.strip():
             raise EvidenceError("case input must be a non-empty string")
-        # The evidence schema carries bare strings. A typed outcome would not
-        # count as an observation below, so the caller would meet a confusing
-        # "fewer than two observations" instead of the real reason.
-        for value in self.observations:
-            if isinstance(value, (Decision, NoDecision)):
-                raise OutcomeNotScorable(
-                    f"a typed {type(value).__name__} cannot be stored in "
-                    f"{EVIDENCE_SCHEMA} yet. The schema carries bare strings, "
-                    "so a stored reason would be indistinguishable from a "
-                    "label a caller invented. Pass a plain string, or keep the "
-                    "typed outcome in memory until the tagged schema lands. "
-                    "See DESIGN.md ADR 2."
-                )
+
         observations = tuple(
             tuple(value) if isinstance(value, list) else value
             for value in self.observations
@@ -86,7 +75,7 @@ class EvidenceCase:
                 "at least two are needed to form one comparison"
             )
         if any(
-            not isinstance(value, (str, tuple))
+            not isinstance(value, (str, tuple, Decision, NoDecision))
             or (
                 isinstance(value, tuple)
                 and any(not isinstance(item, str) for item in value)
@@ -94,8 +83,9 @@ class EvidenceCase:
             for value in observations
         ):
             raise EvidenceError(
-                f"case {self.input!r} has an unsupported observation; record "
-                "a decision or text as a string, or a tool path as a string list"
+                f"case {self.input!r} has an unsupported observation; record a "
+                "decision or text as a string, a tool path as a string list, or "
+                "a typed Decision or NoDecision"
             )
         if self.expected is not None and (
             not isinstance(self.expected, str) or not self.expected.strip()
@@ -127,9 +117,13 @@ class EvidenceCase:
                 for value in self.observations
                 if isinstance(value, tuple)
             )
-        if any(not isinstance(value, str) for value in self.observations):
+        # The text layer needs actual text. A typed outcome carries none, so it
+        # is only meaningful on the verdict layer.
+        allowed = (str,) if layer == "text" else (str, Decision, NoDecision)
+        if any(not isinstance(value, allowed) for value in self.observations):
             raise EvidenceError(
                 f"case {self.input!r}: {layer} observations must be strings"
+                + ("" if layer == "text" else " or typed outcomes")
             )
         if layer == "text":
             return tuple(
@@ -138,18 +132,15 @@ class EvidenceCase:
                 if isinstance(value, str)
             )
         return tuple(
-            Observation(text=value, verdict=value)
+            Observation(text=value if isinstance(value, str) else "", verdict=value)
             for value in self.observations
-            if isinstance(value, str)
+            if isinstance(value, (str, Decision, NoDecision))
         )
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "input": self.input,
-            "observations": [
-                list(value) if isinstance(value, tuple) else value
-                for value in self.observations
-            ],
+            "observations": [_encode_observation(value) for value in self.observations],
         }
         if self.expected is not None:
             payload["expected"] = self.expected
@@ -237,10 +228,10 @@ class EvidenceSet:
         if not isinstance(value, dict):
             raise EvidenceError("evidence root must be an object")
         schema = value.get("schema")
-        if schema != EVIDENCE_SCHEMA:
+        if schema not in {EVIDENCE_SCHEMA, LEGACY_EVIDENCE_SCHEMA}:
             raise EvidenceError(
                 f"unsupported evidence schema: {schema!r}; this build reads "
-                f"{EVIDENCE_SCHEMA}"
+                f"{EVIDENCE_SCHEMA} and {LEGACY_EVIDENCE_SCHEMA}"
             )
         raw_cases = value.get("cases")
         if not isinstance(raw_cases, list):
@@ -268,7 +259,9 @@ class EvidenceSet:
             cases.append(
                 EvidenceCase(
                     input=entry.get("input", ""),
-                    observations=tuple(observations),
+                    observations=tuple(
+                        _decode_observation(item, index) for item in observations
+                    ),
                     expected=entry.get("expected"),
                     errors=entry.get("errors", 0),
                 )
@@ -292,6 +285,48 @@ def load_evidence(path: str | Path) -> EvidenceSet:
     except (OSError, json.JSONDecodeError) as exc:
         raise EvidenceError(f"cannot load evidence: {exc}") from exc
     return EvidenceSet.from_dict(value)
+
+
+
+def _encode_observation(value: Any) -> Any:
+    """Write one observation. A typed outcome is tagged; anything else is as-is."""
+    if isinstance(value, Decision):
+        return {"kind": "decision", "label": value.label}
+    if isinstance(value, NoDecision):
+        return {"kind": "no_decision", "reason": value.reason}
+    return list(value) if isinstance(value, tuple) else value
+
+
+def _decode_observation(value: Any, index: int) -> Any:
+    """Read one observation.
+
+    A bare string stays a bare string. It is not promoted to ``Decision``,
+    because v1 files stored labels adapters invented and the meter compares
+    strings and typed outcomes by equality either way. The tag is what carries
+    the distinction, and only v2 writes one.
+    """
+    if not isinstance(value, dict):
+        return value
+    kind = value.get("kind")
+    if kind == "decision":
+        label = value.get("label")
+        if not isinstance(label, str) or not label:
+            raise EvidenceError(
+                f"cases[{index}]: a tagged decision needs a non-empty 'label'"
+            )
+        return Decision(label)
+    if kind == "no_decision":
+        reason = value.get("reason")
+        if reason not in NO_DECISION_REASONS:
+            raise EvidenceError(
+                f"cases[{index}]: unknown no-decision reason {reason!r}; "
+                f"expected one of {', '.join(sorted(NO_DECISION_REASONS))}"
+            )
+        return NoDecision(reason)
+    raise EvidenceError(
+        f"cases[{index}]: an observation object needs a 'kind' of 'decision' "
+        f"or 'no_decision', got {kind!r}"
+    )
 
 
 def save_evidence(evidence: EvidenceSet, path: str | Path) -> None:

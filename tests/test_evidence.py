@@ -20,7 +20,7 @@ from agentverity import (
     run_result_to_otel_attributes,
     save_evidence,
 )
-from agentverity.evidence import EVIDENCE_SCHEMA
+from agentverity.evidence import EVIDENCE_SCHEMA, LEGACY_EVIDENCE_SCHEMA
 from agentverity.reporting import run_result_to_dict
 
 
@@ -328,7 +328,11 @@ class TestRoundTrip:
         result = assess_evidence(load_evidence(path), epsilon=0.05)
 
         assert result.route_stability.stochastic == ("card_security",)
-        assert json.loads(path.read_text())["schema"] == EVIDENCE_SCHEMA
+        # Deliberately still v1. It carries no typed outcome, so rewriting it
+        # would change a version string and nothing else, and leaving it means
+        # the compatibility path is exercised on every run rather than only in
+        # a fixture written for the purpose.
+        assert json.loads(path.read_text())["schema"] == LEGACY_EVIDENCE_SCHEMA
 
 
 class TestCaseFieldValidation:
@@ -386,3 +390,122 @@ def test_the_documented_refusal_message_is_the_real_one():
 def test_the_documented_isolation_table_matches_behaviour(isolation, caveated):
     result = evidence(isolation=isolation).independence_caveat
     assert (result is not None) is caveated
+
+
+class TestTaggedOutcomeRoundTrip:
+    """v2 carries the tag. v1 files keep working and keep meaning what they did.
+
+    The whole compatibility question is that a v1 file storing the string
+    "no_tool_selected" recorded a label an adapter invented, not the reason
+    ADR 2 defines. Reading it back as a NoDecision would rewrite history.
+    """
+
+    def _set(self, observations):
+        from agentverity import EvidenceCase, EvidenceSet
+
+        return EvidenceSet(cases=(EvidenceCase(input="x", observations=observations),))
+
+    def test_a_typed_outcome_survives_a_round_trip(self, tmp_path):
+        from agentverity import Decision, NoDecision, load_evidence, save_evidence
+        from agentverity.evidence import EVIDENCE_SCHEMA
+
+        path = tmp_path / "evidence.json"
+        save_evidence(
+            self._set((NoDecision("refused"), Decision("refund"), Decision("refund"))),
+            path,
+        )
+
+        assert json.loads(path.read_text())["schema"] == EVIDENCE_SCHEMA
+        assert load_evidence(path).cases[0].observations == (
+            NoDecision("refused"),
+            Decision("refund"),
+            Decision("refund"),
+        )
+
+    def test_a_tag_keeps_a_reason_distinct_from_a_label(self, tmp_path):
+        """The point of the tag: these two must not collapse into one another."""
+        from agentverity import Decision, NoDecision, load_evidence, save_evidence
+
+        path = tmp_path / "evidence.json"
+        save_evidence(self._set((NoDecision("refused"), Decision("refused"))), path)
+        back = load_evidence(path).cases[0].observations
+
+        assert back[0] != back[1]
+        assert back == (NoDecision("refused"), Decision("refused"))
+
+    def test_a_v1_string_stays_a_string(self, tmp_path):
+        """It recorded a label a caller invented. Promoting it rewrites history."""
+        from agentverity import NoDecision, load_evidence
+        from agentverity.evidence import LEGACY_EVIDENCE_SCHEMA
+
+        path = tmp_path / "old.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": LEGACY_EVIDENCE_SCHEMA,
+                    "cases": [
+                        {
+                            "input": "x",
+                            "observations": ["no_tool_selected", "no_tool_selected"],
+                        }
+                    ],
+                }
+            )
+        )
+
+        observations = load_evidence(path).cases[0].observations
+        assert observations == ("no_tool_selected", "no_tool_selected")
+        assert not isinstance(observations[0], NoDecision)
+
+    def test_an_unknown_reason_in_a_file_is_refused(self, tmp_path):
+        from agentverity import load_evidence
+        from agentverity.evidence import EVIDENCE_SCHEMA
+
+        path = tmp_path / "bad.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": EVIDENCE_SCHEMA,
+                    "cases": [
+                        {
+                            "input": "x",
+                            "observations": [
+                                {"kind": "no_decision", "reason": "invented"},
+                                {"kind": "no_decision", "reason": "invented"},
+                            ],
+                        }
+                    ],
+                }
+            )
+        )
+
+        with pytest.raises(EvidenceError, match="unknown no-decision reason"):
+            load_evidence(path)
+
+    def test_an_object_without_a_kind_is_refused(self, tmp_path):
+        from agentverity import load_evidence
+        from agentverity.evidence import EVIDENCE_SCHEMA
+
+        path = tmp_path / "bad.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": EVIDENCE_SCHEMA,
+                    "cases": [{"input": "x", "observations": [{"a": 1}, {"a": 1}]}],
+                }
+            )
+        )
+
+        with pytest.raises(EvidenceError, match="needs a 'kind'"):
+            load_evidence(path)
+
+    def test_the_committed_agentkit_evidence_still_loads(self):
+        """Three v1 files in the repository, unchanged, still readable."""
+        from pathlib import Path
+
+        from agentverity import load_evidence
+
+        root = Path(__file__).resolve().parents[1] / "docs" / "evidence" / "agentkit"
+        for name in ("evidence-gpt4o_mini.json", "evidence-nova.json", "evidence-nemo.json"):
+            evidence = load_evidence(root / name)
+            assert len(evidence.cases) == 10
