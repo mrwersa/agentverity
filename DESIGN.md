@@ -333,9 +333,17 @@ label the caller invented and the reason this ADR defines. Reading old
 evidence keeps the string as `Decision("no_tool_selected")`, which is what it
 meant when it was written, and the migration note says so.
 
-Adapters stop needing the workaround. An adapter that cannot read a decision
-returns `NoDecision("extraction_failed")` and the run reports incomplete
-evidence, rather than the caller inventing a label to avoid a text comparison.
+Adapters stop needing the workaround for the meter, which is where the
+workaround was invented. An adapter that cannot read a decision returns
+`NoDecision("extraction_failed")` and the meter refuses to score the series
+rather than counting repeated failures as a stable decision.
+
+Two consumers are not there yet and the behaviour is fail-closed until they
+are. Decision coverage refuses a `NoDecision` rather than folding every reason
+into one unknown label, so a contract cannot yet declare `refused` as an
+allowed outcome. And the evidence and snapshot schemas do not carry the tag, so
+an adapter emitting a typed outcome should not expect it to survive a
+round-trip through stored evidence.
 
 **Alternatives rejected.** A single `UNSET` sentinel, which merges six events
 and can certify a broken harness. Keeping the text fallback, which is the

@@ -42,7 +42,7 @@ class Observation:
     """
 
     text: str = ""
-    verdict: str | NoDecision | None = None
+    verdict: str | Outcome | None = None
     tools: tuple[str, ...] = ()
     raw: Any = None
 
@@ -54,7 +54,7 @@ class Observation:
         `Decision`. An unset verdict on an agent that produced text is
         open-ended, which is comparable to nothing on a categorical layer.
         """
-        if isinstance(self.verdict, NoDecision):
+        if isinstance(self.verdict, (Decision, NoDecision)):
             return self.verdict
         if isinstance(self.verdict, str) and self.verdict:
             return Decision(self.verdict)
@@ -85,7 +85,7 @@ class Observation:
             # are one decision. A bare string keeps its meaning. Only a truly
             # unset verdict still falls back to the text, which is the old
             # behaviour and the reason ADR 2 exists.
-            if isinstance(self.verdict, NoDecision):
+            if isinstance(self.verdict, (Decision, NoDecision)):
                 return self.verdict
             return self.verdict if self.verdict is not None else self.text
         if on == "text":

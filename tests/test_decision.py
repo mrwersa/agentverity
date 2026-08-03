@@ -133,3 +133,84 @@ def test_the_agentkit_workaround_is_what_this_replaces():
     # and the label the collector invented is out of contract on purpose
     suite = json.loads((root / "suite.json").read_text())
     assert "no_tool_selected" not in suite["contract"]["allowed"]
+
+
+class TestEnforcement:
+    """The value objects were safe; the paths that consume them were not.
+
+    Review found that `is_incomplete` and `comparable` were documented and
+    ignored, that a NoDecision reaching the contract was stringified into one
+    mangled label, and that the JSON report could not hold what the package
+    exported. A type whose safety properties are documented but not enforced
+    is worse than no type.
+    """
+
+    def test_repeated_harness_failures_are_refused_not_scored(self):
+        """Zero-flip pairs over extraction failures would certify the failure."""
+        from agentverity.meter import score_runs
+
+        series = [Observation(verdict=NoDecision("extraction_failed"))] * 4
+
+        with pytest.raises(ValueError, match="harness failed"):
+            score_runs([series], k=4)
+
+    def test_each_incomplete_reason_is_refused(self):
+        from agentverity.meter import score_runs
+
+        for reason in ("extraction_failed", "malformed_response", "runtime_error"):
+            with pytest.raises(ValueError, match="harness failed"):
+                score_runs([[Observation(verdict=NoDecision(reason))] * 4], k=4)
+
+    def test_open_ended_contributes_no_pairs(self):
+        """Comparable to nothing means it cannot be half of a comparison."""
+        from agentverity.meter import score_runs
+
+        with pytest.raises(ValueError, match="comparable observations"):
+            score_runs([[Observation(verdict=NoDecision("open_ended"))] * 4], k=4)
+
+    def test_a_no_decision_reaching_the_contract_is_refused_not_mangled(self):
+        """It used to become "<non-string:NoDecision>", folding every reason."""
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+        from agentverity.decision_contract import assess_decision_coverage
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund"}), required=frozenset({"refund"})
+            ),
+            cases=(DecisionCase(input="a", expected="refund"),),
+        )
+
+        with pytest.raises(TypeError, match="cannot yet declare no-decision"):
+            assess_decision_coverage(suite, observed=(NoDecision("refused"),))
+
+    def test_the_json_report_can_hold_a_typed_outcome(self):
+        """It raised TypeError, so any adapter emitting one died at serialisation."""
+        from agentverity.reporting import json_value
+
+        assert json_value(Decision("refund")) == {
+            "kind": "decision",
+            "label": "refund",
+        }
+        assert json_value(NoDecision("refused")) == {
+            "kind": "no_decision",
+            "reason": "refused",
+        }
+
+    def test_the_tag_distinguishes_a_label_from_a_reason(self):
+        """`Decision("refused")` and `NoDecision("refused")` must not collide."""
+        from agentverity.reporting import json_value
+
+        assert json_value(Decision("refused")) != json_value(NoDecision("refused"))
+
+    def test_both_access_paths_agree_on_a_decision(self):
+        """`key` returned the Decision while `outcome` said open_ended."""
+        observation = Observation(verdict=Decision("refund"))
+
+        assert observation.key("verdict") == observation.outcome == Decision("refund")
+
+    def test_a_string_verdict_is_untouched_by_all_of_this(self):
+        from agentverity.meter import score_runs
+
+        result = score_runs([[Observation(verdict="refund")] * 4], k=4)
+
+        assert result.flip_rate == 0.0

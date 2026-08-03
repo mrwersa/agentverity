@@ -23,6 +23,24 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   A string verdict stays a `Decision`, and an unset verdict on an agent that
   produced prose is `open_ended`, which is comparable to nothing on a
   categorical layer.
+- The meter enforces both properties rather than documenting them. A repeat
+  series containing an incomplete outcome is refused rather than scored, since
+  zero-flip pairs over repeated extraction failures would certify the failure.
+  An outcome comparable to nothing is excluded from pairing, and a series with
+  fewer than two comparable observations is refused.
+- The JSON report serialises a typed outcome tagged, as
+  `{"kind": "decision", "label": ...}` or `{"kind": "no_decision", "reason":
+  ...}`, so a decision whose label happens to be `refused` is distinguishable
+  from a run that refused.
+
+### Not yet
+
+- A contract cannot declare a no-decision outcome as allowed. Coverage refuses
+  a `NoDecision` rather than folding every reason into one unknown label, which
+  is the fail-closed behaviour until the tagged contract representation lands.
+- The evidence and snapshot schemas do not yet carry the tag, so a stored bare
+  string is still read as a `Decision`. That is deliberate: it is what the
+  string meant when it was written.
 
 - `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
   Coinbase AgentKit Strands example exposes, across three models, with every

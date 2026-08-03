@@ -10,6 +10,8 @@ from xml.etree import ElementTree as ET
 
 from agentverity.runner import RunResult
 
+from .decision import Decision, NoDecision
+
 RUN_SCHEMA = "agentverity.run/v2"
 JUNIT_SUITE_NAME = "agentverity"
 
@@ -29,6 +31,12 @@ def json_value(value: Any) -> Any:
         if not all(isinstance(key, str) for key in value):
             raise TypeError("JSON observation mappings must have string keys")
         return {key: json_value(item) for key, item in value.items()}
+    # A typed outcome serialises tagged, so a reader can tell a decision whose
+    # label happens to be "refused" from a run that refused. See DESIGN.md ADR 2.
+    if isinstance(value, Decision):
+        return {"kind": "decision", "label": value.label}
+    if isinstance(value, NoDecision):
+        return {"kind": "no_decision", "reason": value.reason}
     if hasattr(value, "value"):
         return json_value(value.value)
     raise TypeError(
