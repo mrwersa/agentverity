@@ -44,6 +44,7 @@ import uuid
 from collections.abc import Callable
 from typing import Any
 
+from agentverity.isolation import declare_isolation
 from agentverity.observation import Observation
 
 # Where a decision plausibly lives in a returned state, in the order tried.
@@ -186,7 +187,12 @@ def from_langgraph(
         )
         return extract(graph.invoke(state, config=merged), verdict_key=verdict_key)
 
-    return run
+    # Computed, not assumed. A caller-supplied thread_id is the documented way
+    # to opt out, and every repeat then runs on that one thread. Declaring
+    # `fresh-session` from the function name would assert independence exactly
+    # where the caller had turned it off.
+    pinned = "thread_id" in dict((config or {}).get("configurable", {}))
+    return declare_isolation(run, "shared-session" if pinned else "fresh-session")
 
 
 def from_langgraph_thread(
@@ -219,4 +225,7 @@ def from_langgraph_thread(
         )
         return extract(graph.invoke(state, config=merged), verdict_key=verdict_key)
 
-    return run
+    # The whole point of this function. Evidence collected here is refused a
+    # baseline, which is the documented consequence rather than a surprise:
+    # repeats on one thread are successive turns, not independent trials.
+    return declare_isolation(run, "shared-session")

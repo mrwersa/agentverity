@@ -10,6 +10,18 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- Adapters declare the isolation they produce, and `run` records it, so the
+  admission policy below now applies to a live run instead of only to imported
+  evidence. `from_strands_factory` declares `fresh-instance`, `from_langgraph`
+  declares `fresh-session`, `from_strands` and `from_langgraph_thread` declare
+  `shared-session`, and `from_callable` declares nothing.
+  The declaration follows what the adapter did rather than which function was
+  called: `from_langgraph` respects a caller-supplied `thread_id`, and every
+  repeat then runs on that one thread, so it declares `shared-session` in that
+  case. Keying it on the function name would have asserted independence
+  exactly where the caller opted out.
+- `declare_isolation` and `isolation_of` for anyone writing an adapter.
+
 - Isolation now decides whether evidence may certify a baseline.
   `shared-session` is refused, `unknown` is admitted with its caveat
   travelling, and `fresh-session` and `fresh-instance` are admitted. Before
@@ -23,6 +35,12 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Changed
 
+- **Behaviour change.** A run collected through a shared-session adapter is now
+  refused a baseline. Anyone snapshotting through `from_strands` or
+  `from_langgraph_thread` was previously admitted, because the run recorded
+  `unknown` whatever it had done. Use `from_strands_factory`, or
+  `from_langgraph` without pinning a `thread_id`, for evidence intended to
+  certify.
 - `agentverity.snapshot/v4`. A v3 reader cannot apply the policy, because the
   field is absent and neither default is safe: reading a missing isolation as
   `fresh-*` claims provenance nobody asserted, and reading it as

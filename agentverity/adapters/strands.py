@@ -28,6 +28,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from agentverity.isolation import declare_isolation
 from agentverity.observation import Observation
 
 AgentFactory = Callable[[], Any]
@@ -61,7 +62,10 @@ def from_strands(
         result = agent(x)
         return _extract(result, verdict_key=verdict_key)
 
-    return run
+    # One instance across every repeat, and Strands keeps conversation history
+    # on it. The docstring has always said so; now the evidence carries it and
+    # a baseline built from it is refused rather than quietly admitted.
+    return declare_isolation(run, "shared-session")
 
 
 def from_strands_factory(
@@ -94,7 +98,10 @@ def from_strands_factory(
         result = invoke(agent, x) if invoke is not None else agent(x)
         return _extract(result, verdict_key=verdict_key)
 
-    return run
+    # A new agent per trial. `fresh-instance` rather than `fresh-session`,
+    # because the factory may legitimately reuse a stateless model client and
+    # this names what the adapter controls.
+    return declare_isolation(run, "fresh-instance")
 
 
 def _extract(

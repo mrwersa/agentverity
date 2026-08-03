@@ -557,6 +557,67 @@ not evidence of anything. Both reject valid evidence, and neither absence
 establishes independence. Strengthen what is asserted; do not guess at what is
 not.
 
+## ADR 6: an adapter declares the isolation it actually produced
+
+**Status.** Accepted 2026-08-03. Roadmap item 4, the provenance half.
+
+**Context.** ADR 5 made isolation decide whether evidence may certify a
+baseline, and then admitted in its own consequences that the policy was inert
+for live runs: the runner set nothing, so a baseline and its later check both
+read `unknown` and nothing was ever refused. Only imported evidence could
+state what it did, which is the path fewest callers use.
+
+The knowledge was already there and was being thrown away. `from_langgraph`
+generates a fresh `thread_id` per call, `from_strands_factory` builds a new
+agent per trial, `from_langgraph_thread` deliberately shares one thread, and
+`from_strands` deliberately shares one instance. Each of those is a mechanical
+fact about what the adapter did, not a guess about what the target does.
+
+**Decision.** An agent callable may carry a declared isolation, and `run`
+reads it into `RunResult.isolation`, where ADR 5's policy already applies.
+`from_callable` declares nothing, because a plain function tells the library
+nothing about what happens inside it, and `unknown` is the honest answer.
+
+**The declaration is computed from what the adapter did, not from which
+function was called.** `from_langgraph` respects a caller-supplied
+`thread_id`, which is the documented way to opt out, and in that case every
+repeat runs on one thread. Verified before writing this: three calls produce
+three thread ids by default and one pinned id when the caller supplies one. A
+declaration keyed on the function name would have claimed `fresh-session`
+exactly where the caller had turned it off, which is worse than the `unknown`
+it replaced, because the policy would then certify a baseline on the strength
+of a false assertion.
+
+**Consequences.** A live `run` through a fresh-per-trial adapter now certifies
+with real provenance, and one through a shared-session adapter is refused a
+baseline rather than quietly admitted. That is a behaviour change for anyone
+using `from_strands` or `from_langgraph_thread` with `snapshot`, and it is the
+change ADR 5 was written to make.
+
+An assertion is still an assertion. The adapter states what it did, and the
+library cannot see whether a model provider kept state behind it, whether a
+tool wrote to a shared database, or whether the graph was compiled without a
+checkpointer so the fresh thread changed nothing. The claim is bounded to
+what the adapter controls, and the report says `fresh-session` rather than
+`independent`.
+
+**Alternatives rejected.**
+
+*A constructor argument on `run`.* It would work, and it would be a caller
+asserting rather than an adapter reporting. The caller is the party with an
+incentive to say `fresh-session` to get a baseline admitted, and the adapter
+is the party that knows.
+
+*Per-trial execution identifiers, for now.* The roadmap pairs them with this,
+and they answer a different question: not what isolation was intended, but
+evidence that trials were in fact distinct. That needs another evidence schema
+move, one release after two of them, to serve auditability nobody has asked
+for yet. Deferred under the same rule the rest of the project uses: a schema
+grows when a real case forces it.
+
+*Inferring isolation from observed behaviour.* Rejected in ADR 5 and still
+rejected. Nothing in a sequence of verdicts establishes independence.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.
