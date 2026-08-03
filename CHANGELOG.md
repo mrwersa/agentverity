@@ -10,6 +10,21 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `plan_sequential` and `decide_sequentially` stop collecting once the answer
+  is in, without invalidating it. Checkpoints are declared before collection
+  starts, so this is not the Wilson interval recomputed after every pair, which
+  is optional stopping and destroys the coverage the interval claims.
+  The error budget is split by direction rather than evenly. Certification is
+  tested once, at the final checkpoint, so it carries no multiplicity penalty:
+  72 pairs at a 5% tolerance against the fixed sample's 73. The earlier looks
+  test only the stochastic direction, and an obviously unstable route stops in
+  a quarter of the budget.
+  A decision reads exactly the first n pairs in collection order, so results
+  that overshoot a checkpoint under concurrency are kept as evidence and never
+  change a call.
+  Not yet driven by `run`, so the saving is available to a caller driving
+  collection rather than from the command line.
+
 - Adapters declare the isolation they produce, and `run` records it, so the
   admission policy below now applies to a live run instead of only to imported
   evidence. `from_strands_factory` declares `fresh-instance`, `from_langgraph`

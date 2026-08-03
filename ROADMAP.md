@@ -181,6 +181,22 @@ valid evidence, and neither absence establishes independence.
 
 ### 5. Anytime-valid sequential collection
 
+**The statistical core is shipped**, as `plan_sequential` and
+`decide_sequentially`. See DESIGN.md ADR 7. Checkpoints are declared before
+collection starts, and the error budget is split asymmetrically: certification
+is tested once at the final checkpoint, so it carries no multiplicity penalty
+and costs 72 pairs against the fixed sample's 73, while the earlier looks test
+only the stochastic direction. An obviously unstable route stops in a quarter
+of the budget and a well-behaved one pays nothing for the privilege.
+
+The even split was built and measured first. It costs 99 pairs to certify and
+its early looks never certify anything, so it taxed every good route to buy an
+early exit for bad ones. That is in the ADR because the number is the argument.
+
+**Runner integration remains.** The plan is not yet driven by `run`, so the
+saving is available to a caller who drives collection and not yet to the
+`run` command.
+
 A 5% claim needs 73 zero-change pairs per route. Collecting the full planned
 budget and then deciding is the honest way to spend that, and it is also why a
 team runs this once.

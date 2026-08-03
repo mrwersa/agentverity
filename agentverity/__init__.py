@@ -83,6 +83,11 @@ from agentverity.reporting import (
     write_run_json,
 )
 from agentverity.runner import RelationResult, RunConfig, RunResult, run
+from agentverity.sequential import (
+    SequentialPlan,
+    decide_sequentially,
+    plan_sequential,
+)
 from agentverity.snapshot import (
     SNAPSHOT_SCHEMA,
     Snapshot,
@@ -152,6 +157,7 @@ __all__ = [
     "RunConfig",
     "RunError",
     "RunResult",
+    "SequentialPlan",
     "Snapshot",
     "SnapshotChange",
     "SnapshotCompatibilityError",
@@ -165,6 +171,7 @@ __all__ = [
     "compare_evidence",
     "compare_snapshot",
     "create_snapshot",
+    "decide_sequentially",
     "detect",
     "evidence_from_deepeval",
     "evidence_from_jsonl",
@@ -180,6 +187,7 @@ __all__ = [
     "pairs_for_deterministic_call",
     "plan_repeats",
     "plan_route_repeats",
+    "plan_sequential",
     "record_otel_run",
     "run",
     "run_result_to_dict",
