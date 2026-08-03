@@ -12,7 +12,7 @@ from agentverity.runner import RunResult
 
 from .decision import Decision, NoDecision, OutcomeNotScorable
 
-RUN_SCHEMA = "agentverity.run/v1"
+RUN_SCHEMA = "agentverity.run/v2"
 JUNIT_SUITE_NAME = "agentverity"
 
 

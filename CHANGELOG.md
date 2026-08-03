@@ -57,17 +57,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Changed
 
-- **Breaking, with no known external consumers.** Every schema is renumbered to
-  v1 and reads only that version. 0.14.0 did publish evidence, decision-suite
-  and snapshot formats, so this is an intentional break rather than a
-  clean-slate definition, and it ships as a minor release. The previous
-  numbering had reached v2 with no v1 readable by any build, which is a puzzle
-  for every new reader and gets more expensive to fix the longer it stands.
+- **Breaking, with no known external consumers.** `agentverity.evidence` moves
+  to v2 because the shape of an observation changed: a run that produced no
+  decision is now an object, and the 0.14.0 reader rejects one. Run, telemetry
+  and snapshot stay at v2 because nothing about them changed, and the decision
+  suite stays at v1 because `allowed_no_decisions` is optional and additive.
+  Only the current version of each is readable; there are no legacy readers.
 - `STABILITY.md` states when a version changes: only when a reader cannot
   correctly interpret a file written at the previous version. Adding an
-  optional field is not a version change. That rule is what the
-  `allowed_no_decisions` bump failed, and it is written down so the next
-  optional field does not repeat it.
+  optional field is not a version change. Different schemas therefore sit at
+  different numbers, which is what it looks like when a version records the
+  history of one format rather than a release.
 
 ### Not yet
 - The snapshot schema does not yet carry the tag. Writing a typed outcome into

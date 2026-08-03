@@ -27,8 +27,12 @@ That accepts compatible `0.14.x` fixes without moving to a later pre-1.0 minor
 series.
 
 Version 0.15 reads and writes one version of each schema:
-`agentverity.run/v1`, `agentverity.telemetry/v1`, `agentverity.snapshot/v1`,
-`agentverity.evidence/v1` and `agentverity.decision-suite/v1`. JSON reports and telemetry
+`agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v2`,
+`agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
+differ because each records its own format history, not a release. Evidence is
+at v2 because the shape of an observation changed; the decision suite is still
+at v1 because `allowed_no_decisions` is optional and a suite written without it
+parses correctly. JSON reports and telemetry
 exports are append-only artefacts, so consumers must opt into their
 schemas. The evidence loader rejects unknown versions and aggregate-only
 inputs rather than guessing. Promptfoo and DeepEval bridges translate into
@@ -45,6 +49,11 @@ change, because an older reader parses such a file correctly and simply does
 not use the new field. Changing what an existing field means is a version
 change, and so is removing one, and so is altering the type of a value already
 in use.
+
+The corollary is that different schemas sit at different numbers, and that is
+normal. A version records what happened to one format. Levelling them for
+visual uniformity states something false about the ones that did not change,
+and hides the change in the one that did.
 
 That rule exists because a version is an obligation. Every one declared is a
 number somebody later feels obliged to bump, and every bump invites a

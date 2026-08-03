@@ -95,7 +95,7 @@ dependency. See the [complete shared-run example](../examples/deepeval_shared_ru
 
 ```json
 {
-  "schema": "agentverity.evidence/v1",
+  "schema": "agentverity.evidence/v2",
   "layer": "verdict",
   "isolation": "fresh-session",
   "cases": [
@@ -111,7 +111,7 @@ dependency. See the [complete shared-run example](../examples/deepeval_shared_ru
 
 | Field | Required | Meaning |
 |---|---|---|
-| `schema` | yes | `agentverity.evidence/v1`. An unknown version is refused rather than guessed at |
+| `schema` | yes | `agentverity.evidence/v2`. An unknown version is refused rather than guessed at |
 | `layer` | no | `verdict`, `text`, or `tools`. Defaults to `verdict` |
 | `isolation` | no | How trials were separated. Defaults to `unknown`, which is reported |
 | `cases[].input` | yes | The probe text |

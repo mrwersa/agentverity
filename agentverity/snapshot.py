@@ -20,7 +20,7 @@ from agentverity.meter import MeterResult, pairs_for_deterministic_call
 from agentverity.reporting import json_value
 from agentverity.runner import RunResult
 
-SNAPSHOT_SCHEMA = "agentverity.snapshot/v1"
+SNAPSHOT_SCHEMA = "agentverity.snapshot/v2"
 
 
 class SnapshotRefused(ValueError):

@@ -53,13 +53,13 @@ Record those versions in evidence provenance. A change then travels with
 ## Import real verdicts
 
 Store one case per frozen trace in
-[`agentverity.evidence/v1`](imported-evidence.md):
+[`agentverity.evidence/v2`](imported-evidence.md):
 
 The example above is the evidence format for plain decision labels. A judge that sometimes returns no label at all can record why rather than inventing one, using the typed outcomes in [imported evidence](imported-evidence.md). That matters here more than most places: a judge answering with prose is not a stable verdict, and folding those runs into one category would score the judge as more consistent than it is.
 
 ```json
 {
-  "schema": "agentverity.evidence/v1",
+  "schema": "agentverity.evidence/v2",
   "layer": "verdict",
   "isolation": "fresh-instance",
   "provenance": {

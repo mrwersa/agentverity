@@ -118,11 +118,12 @@ already a first-class outcome here. A refusal becomes a categorical outcome
 only when the contract or the adapter declares it as one.
 
 **Shipped:** the types, enforcement in both the pooled and per-route meters,
-and the evidence schema carrying the reason.
+the evidence schema carrying the reason, and contract-declarable no-decision
+outcomes.
 
-**Open:** contract-declarable no-decision outcomes, and snapshot v3. Both fail
-closed rather than half-working, so an adapter emitting a typed outcome meets a
-clear refusal at those two boundaries rather than silent mangling.
+**Open:** snapshot support. A typed outcome cannot be written into a snapshot,
+which fails closed rather than half-working, so an adapter emitting one meets a
+clear refusal at that boundary rather than silent mangling.
 
 ### 3. A generic JSONL importer
 

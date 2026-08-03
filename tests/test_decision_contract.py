@@ -849,3 +849,75 @@ def test_allowed_no_decisions_refuses_a_bare_string():
 
     with pytest.raises(TypeError, match="collection"):
         DecisionContract(allowed=frozenset({"a"}), allowed_no_decisions="refused")
+
+
+def test_a_declared_refusal_appears_in_both_count_views():
+    """It vanished from the per-case view when the key became a tuple.
+
+    `case_label_sets` filtered on `isinstance(value, str)`, which the old
+    prefixed-string key passed and the tuple key does not. So a declared
+    refusal showed in `observed_counts` and disappeared from
+    `observed_case_counts`, which is a public reporting field.
+    """
+    from agentverity import (
+        Decision,
+        DecisionCase,
+        DecisionContract,
+        DecisionSuite,
+        NoDecision,
+    )
+    from agentverity.decision_contract import assess_decision_coverage
+
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed=frozenset({"refund"}),
+            required=frozenset({"refund"}),
+            allowed_no_decisions=frozenset({"refused"}),
+        ),
+        cases=(
+            DecisionCase(input="a", expected="refund"),
+            DecisionCase(input="b", expected="refund"),
+        ),
+    )
+    result = assess_decision_coverage(
+        suite,
+        observed=(Decision("refund"), NoDecision("refused")),
+        per_case=((Decision("refund"),), (NoDecision("refused"),)),
+    )
+
+    assert {c.decision: c.count for c in result.observed_counts} == {
+        "refund": 1,
+        "no decision: refused": 1,
+    }
+    assert {c.decision: c.count for c in result.observed_case_counts} == {
+        "refund": 1,
+        "no decision: refused": 1,
+    }
+
+
+def test_allowed_no_decisions_refuses_a_non_string_member():
+    """It crashed while formatting its own error message."""
+    from agentverity import DecisionContract
+
+    for bad in ({1}, ["refused", 1], [None]):
+        with pytest.raises((TypeError, ValueError)):
+            DecisionContract(allowed=frozenset({"a"}), allowed_no_decisions=bad)
+
+
+def test_the_schema_numbers_record_format_history_not_a_release():
+    """Levelling them says something false about the formats that did not move.
+
+    Evidence moved to v2 because the shape of an observation changed and the
+    0.14.0 reader rejects the new one. The decision suite did not, because
+    `allowed_no_decisions` is optional and a suite without it still parses.
+    """
+    from agentverity.decision_contract import DECISION_SUITE_SCHEMA
+    from agentverity.evidence import EVIDENCE_SCHEMA
+    from agentverity.reporting import RUN_SCHEMA
+    from agentverity.snapshot import SNAPSHOT_SCHEMA
+    from agentverity.telemetry import TELEMETRY_SCHEMA
+
+    assert EVIDENCE_SCHEMA.endswith("/v2"), "the observation shape changed"
+    assert DECISION_SUITE_SCHEMA.endswith("/v1"), "only an optional field was added"
+    for unchanged in (RUN_SCHEMA, SNAPSHOT_SCHEMA, TELEMETRY_SCHEMA):
+        assert unchanged.endswith("/v2"), f"{unchanged} did not change in 0.15"

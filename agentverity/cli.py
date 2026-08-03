@@ -487,7 +487,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     assess_source = assess_parser.add_mutually_exclusive_group(required=True)
     assess_source.add_argument(
-        "--evidence", help="evidence JSON (agentverity.evidence/v1)"
+        "--evidence", help="evidence JSON (agentverity.evidence/v2)"
     )
     assess_source.add_argument(
         "--promptfoo", help="Promptfoo JSON export containing repeated outputs"

@@ -174,7 +174,7 @@ class TestCLI:
         ])
         report = json.loads(capsys.readouterr().out)
         assert exit_code == 0
-        assert report["schema"] == "agentverity.run/v1"
+        assert report["schema"] == "agentverity.run/v2"
         assert report["relations"] == []
         assert report["complete"] is True
 
@@ -499,7 +499,7 @@ def test_assess_prints_the_independence_caveat_when_isolation_is_unknown(
     tmp_path, capsys
 ):
     payload = {
-        "schema": "agentverity.evidence/v1",
+        "schema": "agentverity.evidence/v2",
         "cases": [
             {"input": "a", "observations": ["approve", "approve"]},
             {"input": "b", "observations": ["deny", "deny"]},

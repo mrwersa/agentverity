@@ -98,7 +98,9 @@ class DecisionContract:
                 "allowed_no_decisions must be a collection of reasons, not a "
                 "string; a bare string is iterated as characters"
             )
-        declared = frozenset(self.allowed_no_decisions or ())
+        declared = _normalise_labels(
+            self.allowed_no_decisions or (), field_name="allowed_no_decisions"
+        )
         undeclarable = declared - DECLARABLE_REASONS
         if undeclarable:
             raise ValueError(
@@ -509,11 +511,19 @@ def assess_decision_coverage(
     # One vote per case, however many repeats agreed with it.
     if per_case is None:
         case_label_sets = [
-            {value} if isinstance(value, str) else set() for value in observed
+            {value}
+            if isinstance(value, str) or _is_no_decision_key(value)
+            else set()
+            for value in observed
         ]
     else:
         case_label_sets = [
-            {value for value in case if isinstance(value, str)} for case in per_case
+            {
+                value
+                for value in case
+                if isinstance(value, str) or _is_no_decision_key(value)
+            }
+            for case in per_case
         ]
     case_counter: Counter[str] = Counter()
     for labels in case_label_sets:

@@ -1532,5 +1532,5 @@
     "tool_set": "coinbase-agentkit 0.7.4, seven providers wired by the Strands example",
     "wall_seconds": 919
   },
-  "schema": "agentverity.evidence/v1"
+  "schema": "agentverity.evidence/v2"
 }

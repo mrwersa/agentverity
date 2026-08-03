@@ -12,7 +12,7 @@ from typing import Any
 
 from agentverity.runner import RunResult
 
-TELEMETRY_SCHEMA = "agentverity.telemetry/v1"
+TELEMETRY_SCHEMA = "agentverity.telemetry/v2"
 
 
 def _package_version() -> str:
