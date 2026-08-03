@@ -137,7 +137,18 @@ the evidence format above.
 
 An input appearing once is refused rather than imported, because a single run
 per input carries no comparison. That is the same point the whole importer
-rests on: it removes the second bill, not the first.
+rests on: it removes the second bill, not the first. The refusal is global: one
+stray input stops a ten-thousand line import rather than dropping the offender,
+because assessing a subset nobody chose reports on different evidence than the
+one you handed it. An empty decision is refused for the neighbouring reason. A
+run that produced nothing is a no-decision, and the reasons above say which
+kind.
+
+`assess` reads three sources through one set of options, so a flag the chosen
+source cannot act on is refused rather than discarded. `--provider` and
+`--prompt-id` are Promptfoo's, `--layer` is the JSONL importer's, and the two
+path flags belong to both importers but not to `--evidence`, which records its
+own layer and field names.
 
 ## The file
 

@@ -622,6 +622,40 @@ def _compare_evidence_command(args: argparse.Namespace) -> int:
     return 1 if drift.drifted else 0
 
 
+#: Which assess flags each source can act on. A flag outside its source's
+#: entry is refused rather than ignored: `assess` takes three sources through
+#: one set of options, and a flag the caller set that quietly does nothing is
+#: the same defect as a default that silently overrides one they named.
+_ASSESS_FLAGS: dict[str, tuple[str, ...]] = {
+    "layer": ("jsonl",),
+    "provider": ("promptfoo",),
+    "prompt_id": ("promptfoo",),
+    "input_path": ("promptfoo", "jsonl"),
+    "decision_path": ("promptfoo", "jsonl"),
+}
+
+
+def _refuse_flags_the_source_cannot_use(args: argparse.Namespace) -> None:
+    """Refuse an assess flag the chosen source would discard.
+
+    Raises:
+        ValueError: naming the flag, the chosen source, and where it applies.
+    """
+    source = next(
+        name for name in ("evidence", "promptfoo", "jsonl") if getattr(args, name)
+    )
+    for flag, sources in _ASSESS_FLAGS.items():
+        if getattr(args, flag) is None or source in sources:
+            continue
+        spelled = flag.replace("_", "-")
+        applies = " or ".join(f"--{name}" for name in sources)
+        raise ValueError(
+            f"--{spelled} applies to {applies}, not --{source}. Honouring it "
+            f"here is not possible and discarding it would let --{spelled} "
+            "quietly mean nothing."
+        )
+
+
 def _assess_command(args: argparse.Namespace) -> int:
     """Assess evidence a run collected elsewhere, without calling anything."""
     try:
@@ -638,12 +672,7 @@ def _assess_command(args: argparse.Namespace) -> int:
             )
             if value is not None
         }
-        if args.layer is not None and not args.jsonl:
-            raise ValueError(
-                "--layer applies to --jsonl. An evidence file and a Promptfoo "
-                "export already say what layer they record, and honouring the "
-                "flag there would let it silently disagree with the file."
-            )
+        _refuse_flags_the_source_cannot_use(args)
         if args.promptfoo:
             if suite is None:
                 raise ValueError(

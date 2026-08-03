@@ -220,7 +220,8 @@ def test_the_cli_honours_a_path_that_matches_the_other_importers_default(
     )
 
     # 2 is a refusal, which is what the discarded flag produced. 1 is the
-    # gate calling two repeats undecided, which is the file being read.
+    # blindness check failing one case whose answer never varies, which is the
+    # file being read. `undecided` also exits 2, so 1 is the unambiguous half.
     code = main(["assess", "--jsonl", str(path), "--input-path", "prompt.raw"])
 
     assert code == 1, "the named path was not used"
@@ -291,3 +292,95 @@ def test_a_refusal_names_the_line_it_read(tmp_path, capsys):
 
     assert main(["assess", "--jsonl", str(path)]) == 2
     assert "line 3" in capsys.readouterr().err
+
+
+def test_an_object_decision_must_say_it_is_a_no_decision():
+    """An object is the typed shape, and the only typed shape is a no-decision."""
+    with pytest.raises(EvidenceError, match="'no_decision'"):
+        evidence_from_jsonl(
+            _lines([{"input": "a", "decision": {"kind": "verdict", "label": "x"}}] * 2)
+        )
+
+
+def test_a_suite_must_be_a_suite():
+    with pytest.raises(TypeError, match="DecisionSuite"):
+        evidence_from_jsonl(
+            _lines([{"input": "a", "decision": "x"}] * 2),
+            suite={"cases": [{"input": "a", "expected": "x"}]},
+        )
+
+
+def test_an_input_that_is_not_a_string_is_refused():
+    """Reachable from a genuinely malformed log, so it names the line."""
+    with pytest.raises(EvidenceError, match="line 1"):
+        evidence_from_jsonl(_lines([{"input": 4471, "decision": "x"}] * 2))
+
+
+def test_an_empty_decision_is_refused_as_an_empty_probe_already_is():
+    """`Decision("")` is refused by the type, so importing one is inconsistent.
+
+    Accepted, it reads out of the report as "the agent answered '' on 100% of
+    the probes". A run that produced nothing is a no-decision, and the reason
+    vocabulary exists to say which kind.
+    """
+    with pytest.raises(EvidenceError, match="empty decision"):
+        evidence_from_jsonl(_lines([{"input": "a", "decision": ""}] * 2))
+
+
+def test_the_refusal_says_the_whole_import_stopped():
+    """A 10,000-line log with one stray input is refused entirely.
+
+    Deliberate, and the message has to say so, because the alternative reading
+    is that the offender was dropped and the rest assessed.
+    """
+    lines = _lines(
+        [{"input": "a", "decision": "x"}] * 2 + [{"input": "b", "decision": "y"}]
+    )
+    with pytest.raises(EvidenceError, match="1 of 2 inputs appear once"):
+        evidence_from_jsonl(lines)
+
+
+@pytest.mark.parametrize(
+    ("source", "flag", "value"),
+    [
+        ("--jsonl", "--provider", "openai:gpt-4o"),
+        ("--jsonl", "--prompt-id", "p1"),
+        ("--evidence", "--input-path", "a.b"),
+        ("--evidence", "--decision-path", "a.b"),
+        ("--evidence", "--layer", "tools"),
+    ],
+)
+def test_assess_refuses_a_flag_its_source_would_discard(
+    tmp_path, capsys, source, flag, value
+):
+    """One set of options serves three sources, so the unusable ones refuse.
+
+    `--layer` already refused, and the same argument covers `--provider` and
+    `--prompt-id` on a JSONL file and the path flags on an evidence file: a
+    flag the caller set that quietly does nothing is the `prompt.raw` sentinel
+    with a different name.
+    """
+    from agentverity.cli import main
+
+    if source == "--jsonl":
+        path = tmp_path / "runs.jsonl"
+        path.write_text(
+            '{"input": "a", "decision": "x"}\n{"input": "a", "decision": "x"}\n',
+            encoding="utf-8",
+        )
+    else:
+        path = tmp_path / "evidence.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": "agentverity.evidence/v2",
+                    "layer": "verdict",
+                    "isolation": "unknown",
+                    "cases": [{"input": "a", "observations": ["x", "x"]}],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    assert main(["assess", source, str(path), flag, value]) == 2
+    assert f"{flag} applies to" in capsys.readouterr().err

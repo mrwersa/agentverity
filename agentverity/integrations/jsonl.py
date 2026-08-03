@@ -53,8 +53,21 @@ def _dig(row: Mapping[str, Any], path: str, line_number: int) -> Any:
 
 
 def _observation(value: Any, line_number: int) -> Any:
-    """Read one recorded decision, typed or plain."""
+    """Read one recorded decision, typed or plain.
+
+    An empty string is refused rather than imported. `Decision("")` is already
+    refused by the type, so accepting it here would admit a value the typed
+    layer will not construct, and the report would read "the agent answered ''
+    on 100% of the probes". A run that produced nothing is a no-decision, and
+    the reason vocabulary exists to say which kind.
+    """
     if isinstance(value, str):
+        if not value:
+            raise EvidenceError(
+                f"line {line_number}: an empty decision. A run that produced "
+                "nothing is a no-decision, so record which kind: "
+                f"{', '.join(sorted(NO_DECISION_REASONS))}"
+            )
         return value
     if isinstance(value, list) and all(isinstance(item, str) for item in value):
         return tuple(value)
@@ -144,9 +157,12 @@ def evidence_from_jsonl(
     thin = [probe for probe, runs in grouped.items() if len(runs) < 2]
     if thin:
         raise EvidenceError(
-            f"{len(thin)} input(s) appear once, so no comparison can be formed "
-            f"from them, starting with {thin[0]!r}. Stability is a property of "
-            "repeats: a single run per input tells you what happened once."
+            f"{len(thin)} of {len(grouped)} inputs appear once, so no "
+            f"comparison can be formed from them, starting with {thin[0]!r}. "
+            "The whole import is refused rather than the offending inputs "
+            "dropped, because silently assessing a subset of a log reports on "
+            "evidence nobody chose. Stability is a property of repeats: a "
+            "single run per input tells you what happened once."
         )
 
     return EvidenceSet(
