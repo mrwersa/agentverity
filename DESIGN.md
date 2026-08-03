@@ -351,12 +351,20 @@ working. One condition, one exception. Review found a `TypeError` in one path
 and a `ValueError` in another, and that was not a considered distinction, it
 was two local consistencies that disagreed.
 
+Evidence carries the tag from `agentverity.evidence/v2`. A file claims v2 only
+when it holds a typed outcome, so string-only evidence stays v1 and readable by
+an older build, and a v2 file tags every decision so it carries one
+representation rather than two. A bare string in a v1 file is never promoted:
+it recorded a label an adapter invented rather than a reason this ADR defines.
+Comparison normalises the two, because a bare `"refund"` and a tagged one are
+the same decision and reporting a flip between them would be this ADR's own
+defect at a different seam.
+
 Two consumers are not there yet and the behaviour is fail-closed until they
 are. Decision coverage refuses a `NoDecision` rather than folding every reason
 into one unknown label, so a contract cannot yet declare `refused` as an
-allowed outcome. And the evidence and snapshot schemas do not carry the tag, so
-an adapter emitting a typed outcome should not expect it to survive a
-round-trip through stored evidence.
+allowed outcome. And the snapshot schema does not carry the tag, so writing one
+into a snapshot is refused.
 
 **Alternatives rejected.** A single `UNSET` sentinel, which merges six events
 and can certify a broken harness. Keeping the text fallback, which is the

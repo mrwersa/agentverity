@@ -115,9 +115,14 @@ run of extraction failures look perfectly stable.
 So: an explicit `Decision(label)` against `NoDecision(reason)`, versioned.
 Runtime and extraction failures make the evidence **incomplete**, which is
 already a first-class outcome here. A refusal becomes a categorical outcome
-only when the contract or the adapter declares it as one. This needs an
-evidence-schema and snapshot migration, which is why it comes before the
-importer rather than after.
+only when the contract or the adapter declares it as one.
+
+**Shipped:** the types, enforcement in both the pooled and per-route meters,
+and `agentverity.evidence/v2` carrying the tag with v1 still readable.
+
+**Open:** contract-declarable no-decision outcomes, and snapshot v3. Both fail
+closed rather than half-working, so an adapter emitting a typed outcome meets a
+clear refusal at those two boundaries rather than silent mangling.
 
 ### 3. A generic JSONL importer
 

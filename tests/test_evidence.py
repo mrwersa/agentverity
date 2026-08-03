@@ -584,3 +584,110 @@ class TestSchemaVersionIsClaimedHonestly:
 
         with pytest.raises(EvidenceError, match="carries bare strings only"):
             load_evidence(path)
+
+
+class TestMixedRepresentationDoesNotFlip:
+    """Review found this: a v2 file may hold a bare label beside a tagged one.
+
+    An adapter that has not adopted the types writes `"refund"`; one that has
+    writes `Decision("refund")`. Those are the same decision, and comparing
+    them unequal reports a flip on a decision this package elsewhere says is
+    identical. That is the ADR's own defect at the string-versus-typed seam.
+    """
+
+    def test_a_bare_and_a_tagged_label_are_one_decision(self):
+        from agentverity import Decision, Observation
+        from agentverity.meter import score_runs
+
+        series = [
+            Observation(verdict="refund"),
+            Observation(verdict=Decision("refund")),
+        ] * 2
+
+        assert score_runs([series], k=4).flip_rate == 0.0
+
+    def test_genuinely_different_decisions_still_flip(self):
+        from agentverity import Decision, Observation
+        from agentverity.meter import score_runs
+
+        series = [
+            Observation(verdict="approve"),
+            Observation(verdict=Decision("deny")),
+        ] * 2
+
+        assert score_runs([series], k=4).flip_rate == 1.0
+
+    def test_a_label_still_never_equals_a_reason(self):
+        from agentverity import Decision, NoDecision, Observation
+        from agentverity.meter import score_runs
+
+        series = [
+            Observation(verdict="refused"),
+            Observation(verdict=NoDecision("refused")),
+        ] * 2
+
+        assert score_runs([series], k=4).flip_rate == 1.0
+        assert Decision("refused") != NoDecision("refused")
+
+    def test_a_v2_file_stores_one_representation(self, tmp_path):
+        """An outside reader should not have to handle two shapes."""
+        from agentverity import (
+            Decision,
+            EvidenceCase,
+            EvidenceSet,
+            NoDecision,
+            save_evidence,
+        )
+
+        path = tmp_path / "mixed.json"
+        save_evidence(
+            EvidenceSet(
+                cases=(
+                    EvidenceCase(
+                        input="x",
+                        observations=("refund", Decision("refund"), NoDecision("refused")),
+                    ),
+                )
+            ),
+            path,
+        )
+
+        assert json.loads(path.read_text())["cases"][0]["observations"] == [
+            {"kind": "decision", "label": "refund"},
+            {"kind": "decision", "label": "refund"},
+            {"kind": "no_decision", "reason": "refused"},
+        ]
+
+    def test_a_v1_file_is_written_exactly_as_before(self, tmp_path):
+        from agentverity import EvidenceCase, EvidenceSet, save_evidence
+
+        path = tmp_path / "plain.json"
+        save_evidence(
+            EvidenceSet(cases=(EvidenceCase(input="x", observations=("a", "a")),)),
+            path,
+        )
+
+        assert json.loads(path.read_text())["cases"][0]["observations"] == ["a", "a"]
+
+    def test_a_non_string_reason_is_an_evidence_error(self, tmp_path):
+        """It raised TypeError from set membership before."""
+        from agentverity import load_evidence
+        from agentverity.evidence import EVIDENCE_SCHEMA
+
+        path = tmp_path / "bad.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": EVIDENCE_SCHEMA,
+                    "cases": [
+                        {
+                            "input": "x",
+                            "observations": [{"kind": "no_decision", "reason": ["a"]}] * 2,
+                        }
+                    ],
+                }
+            )
+        )
+
+        with pytest.raises(EvidenceError, match="unknown no-decision reason"):
+            load_evidence(path)

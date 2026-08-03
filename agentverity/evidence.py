@@ -137,10 +137,13 @@ class EvidenceCase:
             if isinstance(value, (str, Decision, NoDecision))
         )
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self, *, tagged: bool = False) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "input": self.input,
-            "observations": [_encode_observation(value) for value in self.observations],
+            "observations": [
+                _encode_observation(value, tagged=tagged)
+                for value in self.observations
+            ],
         }
         if self.expected is not None:
             payload["expected"] = self.expected
@@ -213,7 +216,7 @@ class EvidenceSet:
 
 
     def _schema(self) -> str:
-        """The oldest schema that can describe this evidence.
+        """The minimum schema version that can describe this evidence.
 
         A file carrying nothing but strings is v1, and stays readable by a
         build that predates the tag. Claiming v2 for every file would lock
@@ -227,11 +230,15 @@ class EvidenceSet:
         return EVIDENCE_SCHEMA if typed else LEGACY_EVIDENCE_SCHEMA
 
     def to_dict(self) -> dict[str, Any]:
+        schema = self._schema()
         payload: dict[str, Any] = {
-            "schema": self._schema(),
+            "schema": schema,
             "layer": self.layer,
             "isolation": self.isolation,
-            "cases": [case.to_dict() for case in self.cases],
+            "cases": [
+                case.to_dict(tagged=schema == EVIDENCE_SCHEMA)
+                for case in self.cases
+            ],
         }
         if self.provenance:
             payload["provenance"] = dict(sorted(self.provenance.items()))
@@ -304,12 +311,22 @@ def load_evidence(path: str | Path) -> EvidenceSet:
 
 
 
-def _encode_observation(value: Any) -> Any:
-    """Write one observation. A typed outcome is tagged; anything else is as-is."""
+def _encode_observation(value: Any, *, tagged: bool) -> Any:
+    """Write one observation.
+
+    In a v2 file every categorical decision is tagged, including one supplied
+    as a bare string, so the file carries one representation rather than two.
+    A reader outside this package should not have to handle both shapes to
+    know that ``"refund"`` and a tagged ``refund`` are the same decision.
+
+    A v1 file is written exactly as before.
+    """
     if isinstance(value, Decision):
         return {"kind": "decision", "label": value.label}
     if isinstance(value, NoDecision):
         return {"kind": "no_decision", "reason": value.reason}
+    if tagged and isinstance(value, str) and value:
+        return {"kind": "decision", "label": value}
     return list(value) if isinstance(value, tuple) else value
 
 
@@ -341,7 +358,7 @@ def _decode_observation(value: Any, index: int, schema: str) -> Any:
         return Decision(label)
     if kind == "no_decision":
         reason = value.get("reason")
-        if reason not in NO_DECISION_REASONS:
+        if not isinstance(reason, str) or reason not in NO_DECISION_REASONS:
             raise EvidenceError(
                 f"cases[{index}]: unknown no-decision reason {reason!r}; "
                 f"expected one of {', '.join(sorted(NO_DECISION_REASONS))}"

@@ -190,3 +190,23 @@ def check_scorable(observations: Sequence[object], layer: str = "verdict") -> No
                 "over reruns that did not decide anything. Measure a "
                 "conditional rate deliberately, or fix the probe."
             )
+
+
+def comparison_key(value: object) -> object:
+    """Normalise one observation key so equal decisions compare equal.
+
+    A v2 evidence file may legitimately hold a bare ``"refund"`` written by an
+    adapter that has not adopted the types, beside a ``Decision("refund")``
+    written by one that has. Those are the same decision, and comparing them
+    unequal reports a flip on a decision this package elsewhere says is
+    identical. That is the same "two readings that disagree" defect ADR 2
+    exists to remove, at the string-versus-typed seam.
+
+    Normalising here rather than in ``Observation.key`` is deliberate. ``key``
+    feeds reporting, blindness and snapshot storage, and snapshots refuse a
+    tagged value, so promoting there would refuse every ordinary string
+    verdict. Comparison is the only place that needs one key.
+    """
+    if isinstance(value, str):
+        return Decision(value) if value else value
+    return value
