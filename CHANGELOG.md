@@ -26,6 +26,10 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   policy reach the CLI, which loads every agent through it: without it a
   Strands factory reported `unknown` at the command line and its baseline was
   admitted on the caveat the policy exists to replace.
+- The LangGraph adapters copy their `config` at construction, so the declared
+  isolation and the calls describe one thing. Mutating the mapping afterwards
+  to add a `thread_id` previously sent later repeats down one shared thread
+  while the declaration still claimed independence.
 - `declare_isolation` and `isolation_of` for anyone writing an adapter.
 
 - Isolation now decides whether evidence may certify a baseline.

@@ -602,6 +602,17 @@ baseline rather than quietly admitted. That is a behaviour change for anyone
 using `from_strands` or `from_langgraph_thread` with `snapshot`, and it is the
 change ADR 5 was written to make.
 
+**A declaration decided once cannot describe state read per call.**
+`from_langgraph` computed its level at construction and then read the caller's
+live config mapping on every call, so adding a `thread_id` to that same dict
+afterwards sent the remaining repeats down one shared thread while the
+declaration still said `fresh-session`. The config is copied at construction
+and both the declaration and the calls read that copy. The copy also keeps the
+repeats comparable: a recursion limit that changes mid-run means the trials
+were not asking the same question. The copy is one level deep, so a caller
+mutating something nested inside a callback object can still change behaviour;
+what they cannot change is the isolation, which is what the declaration claims.
+
 Setting the attribute by hand with a level the format defines is trusted, and
 that is the same act as calling `declare_isolation`. What the reader refuses is
 an invented level, which would otherwise arrive as a value no policy covers.

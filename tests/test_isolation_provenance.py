@@ -208,3 +208,51 @@ def test_a_reshaping_wrapper_invents_nothing():
     assert isolation_of(from_callable(from_strands_factory(_Agent))) == (
         "fresh-instance"
     )
+
+
+def test_mutating_the_config_afterwards_cannot_break_the_declaration():
+    """A declaration decided once must not describe a config read per call.
+
+    Before this, `from_langgraph` computed `fresh-session` at construction and
+    then read the caller's live mapping on every call. Adding a `thread_id` to
+    that same dict afterwards sent the remaining repeats down one shared
+    thread while the declaration still claimed independence: the false
+    assertion ADR 6 exists to prevent, arriving through a different door.
+    """
+    graph = _Graph()
+    config = {"configurable": {}}
+    agent = from_langgraph(graph, config=config)
+
+    agent("a")
+    config["configurable"]["thread_id"] = "pinned-after-the-fact"
+    agent("b")
+    agent("c")
+
+    assert len(set(graph.threads)) == 3, "the mutation did not reach the calls"
+    assert isolation_of(agent) == "fresh-session", "and the declaration is true"
+
+
+def test_freezing_does_not_break_pinning_declared_up_front():
+    """The documented opt-out still works, because it is set before freezing."""
+    graph = _Graph()
+    agent = from_langgraph(graph, config={"configurable": {"thread_id": "one"}})
+
+    agent("a")
+    agent("b")
+
+    assert set(graph.threads) == {"one"}
+    assert isolation_of(agent) == "shared-session"
+
+
+def test_the_shared_thread_adapter_also_ignores_later_mutation():
+    """Isolation cannot drift here, but the trials still have to match."""
+    graph = _Graph()
+    config = {"configurable": {}, "recursion_limit": 10}
+    agent = from_langgraph_thread(graph, "fixed", config=config)
+
+    agent("a")
+    config["recursion_limit"] = 99
+    agent("b")
+
+    assert set(graph.threads) == {"fixed"}
+    assert isolation_of(agent) == "shared-session"
