@@ -292,3 +292,49 @@ def test_junit_contract_failure_is_a_failed_release_check():
     assert root.attrib["failures"] == "1"
     assert case is not None
     assert "add reviewed cases" in case.attrib["message"]
+
+
+def test_the_contract_block_carries_two_readings_and_no_duplicate():
+    """Three keys where two were identical is the ambiguity this change removes.
+
+    `observed_counts` is primaries and keeps the name it shipped with.
+    `observed_case_counts` is distinct cases reaching a decision on any repeat,
+    and is what the coverage percentage and `missing_observed` come from.
+    """
+    from agentverity import (
+        DecisionCase,
+        DecisionContract,
+        DecisionSuite,
+        RunConfig,
+        run,
+    )
+    from agentverity.observation import Observation
+    from agentverity.reporting import run_result_to_dict
+
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed=frozenset({"refund", "escalate"}),
+            required=frozenset({"refund", "escalate"}),
+        ),
+        cases=(
+            DecisionCase(input="a", expected="refund"),
+            DecisionCase(input="b", expected="escalate"),
+        ),
+    )
+    routes = {"a": "refund", "b": "escalate"}
+    result = run(
+        lambda text: Observation(
+            text="ok", verdict=routes.get(text.strip().lower()[:1], "refund")
+        ),
+        suite=suite,
+        config=RunConfig(run_meter=False),
+    )
+    contract = run_result_to_dict(result)["decision_contract"]
+
+    assert "primary_observed_counts" not in contract, "no byte-identical duplicate"
+    assert "observed_counts" in contract
+    assert "observed_case_counts" in contract
+    # and the two readings must not contradict the summary they feed
+    required = set(contract["required"])
+    counted = set(contract["observed_case_counts"])
+    assert required - counted == set(contract["missing_observed"])
