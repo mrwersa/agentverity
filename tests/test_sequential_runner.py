@@ -229,3 +229,61 @@ def test_a_suite_run_keeps_its_route_table_when_collection_stops_early():
     named = {route.decision for route in sequential.route_stability.routes}
     assert named == {route.decision for route in fixed.route_stability.routes}
     assert named == {"allow", "block"}
+
+
+def test_a_suite_run_survives_a_failed_input_in_sequential_mode():
+    """The parity fix introduced this, which is the irony worth recording.
+
+    The fixed path hands `stratify_runs` a `None` for a case that produced no
+    usable pairs, and the sequential branch handed it an empty list. Same rule,
+    two shapes: `None` reads as a failed case with zero pairs, `[]` reads as a
+    series that is too short and raises. So a recorded failure became a crash
+    on one path and not the other.
+
+    `test_a_failing_agent_does_not_spin_forever` never reached it, because it
+    uses no suite and every input fails.
+    """
+    def one_bad_input(text: str):
+        if text == "input_2":
+            raise RuntimeError("provider down")
+        return _stable(text)
+
+    results = {}
+    for sequential in (False, True):
+        results[sequential] = run(
+            from_callable(one_bad_input),
+            suite=_suite(),
+            config=RunConfig(sequential=sequential, error_policy="record"),
+        )
+
+    for sequential, result in results.items():
+        assert not result.complete, sequential
+        assert result.route_stability is not None, sequential
+        assert {route.decision for route in result.route_stability.routes} == {
+            "allow", "block",
+        }, sequential
+
+
+def test_the_two_paths_agree_under_a_cap_but_not_by_construction():
+    """A parity claim I made too widely, narrowed to what is true.
+
+    Under a cap the two paths spend the same and answer the same. They are not
+    identical in general: at 72 pairs the exact one-sided test certifies and
+    the two-sided Wilson interval does not, which is the documented 72-versus-73
+    gap and the reason sequential certification costs nothing.
+    """
+    inputs = [f"input_{index}" for index in range(3)] + [
+        f"secret_{index}" for index in range(3)
+    ]
+    calls = {}
+    for sequential in (False, True):
+        agent, _unused = _counted(_stable)
+        calls[sequential] = run(
+            agent, inputs,
+            config=_meter_only(budget=150, sequential=sequential),
+            relations=[],
+        ).meter
+
+    assert calls[False].pair_trials == calls[True].pair_trials == 72
+    assert calls[False].call.startswith("undecided")
+    assert calls[True].call == "verdict-deterministic"

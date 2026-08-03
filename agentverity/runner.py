@@ -1052,8 +1052,22 @@ def run(
             # Parity with the fixed path. A suite run that loses its route
             # table because collection stopped early has lost the analysis
             # most callers came for, and the series are right here.
+            # `None` for a case that produced no usable pairs, matching what
+            # the fixed path hands over. `stratify_runs` reads `None` as a
+            # failed case with zero pairs and an empty list as a series that
+            # is too short, which raises. Same rule, two shapes, and passing
+            # the wrong one turned a recorded failure into a crash.
             route_stability = stratify_runs(
-                list(zip(intended_decisions, series, strict=True)),
+                list(
+                    zip(
+                        intended_decisions,
+                        [
+                            run_series if len(run_series) >= 2 else None
+                            for run_series in series
+                        ],
+                        strict=True,
+                    )
+                ),
                 k=2,
                 layer=config.layer,
                 epsilon=config.epsilon,
