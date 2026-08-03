@@ -641,6 +641,102 @@ grows when a real case forces it.
 *Inferring isolation from observed behaviour.* Rejected in ADR 5 and still
 rejected. Nothing in a sequence of verdicts establishes independence.
 
+## ADR 7: stopping early is bought with predeclared looks, not by peeking at the interval
+
+**Status.** Accepted 2026-08-03. Roadmap item 5, the statistical core.
+
+**Context.** A 5% claim needs 73 zero-flip pairs per route. Collecting that
+budget and then deciding is honest and it is also why a team runs this once. A
+route flipping on a third of its pairs is obvious after a handful, and paying
+for the other sixty is waste.
+
+The tempting version is to compute the Wilson interval after every pair and
+stop when it crosses `epsilon`. That is optional stopping and it destroys the
+coverage the interval claims. The roadmap named three legitimate routes and
+required one to be chosen and written down first.
+
+**Decision.** Predeclared checkpoints with alpha spending, split
+**asymmetrically by direction**. That last part is the whole design and it came
+out of simulating the obvious version first.
+
+The obvious version spends alpha evenly across every look in both directions.
+Simulated, it costs 99 pairs to certify determinism against the 73 the
+fixed-sample interval needs, a 36% tax on every well-behaved route, and the
+early looks never certify anything anyway: with alpha split four ways, no
+attainable flip count certifies before the final checkpoint.
+
+So the early looks only ever fire in one direction, and spending certification
+alpha on them buys nothing. The rule is:
+
+- **Certification is tested once**, at the final predeclared checkpoint, with
+  half the alpha and no multiplicity correction, because there is only one such
+  test.
+- **Early looks test only the stochastic direction**, splitting the other half
+  of the alpha across them by the union bound.
+- Both use exact binomial tails rather than a normal approximation.
+
+Simulated over 4,000 runs per point, against the 73-pair fixed-sample cost:
+
+| true flip rate | usual call | pairs spent |
+|---|---|---|
+| 0.00 | deterministic | **0.99x** |
+| 0.05 | undecided | 0.98x |
+| 0.15 | stochastic | 0.73x |
+| 0.30 | stochastic | **0.34x** |
+| 0.50 | stochastic | **0.25x** |
+
+**Certifying determinism costs nothing**, and an obviously unstable route stops
+in a quarter of the budget. The first design would have taxed the first row by
+36% to buy the last.
+
+**The error guarantee does not rest on the simulation.** Certification is one
+exact binomial test at `alpha / 2`, and stopping early can only remove paths
+that would have reached it, never add one. That holds for any budget.
+
+At the default budget it is stronger than that and worth stating separately,
+because the argument is checkable by eye. Certifying at 72 pairs requires zero
+flips, and a run with no flips cannot have tripped an early look either, so the
+two rules cannot interact at all and the false certification rate is exactly
+`(1 - p)^n`. At `p = epsilon` that is 0.02489 against a budget of 0.025, and a
+400,000-run simulation reads 2.508%, which is that number plus noise. The tests
+assert the closed form.
+
+A larger budget certifies with some flips allowed, three at 200 pairs and
+fifteen at 500, and then only the general argument applies.
+`SequentialPlan.certification_is_closed_form` says which case a plan is in
+rather than leaving a reader to work it out from the default.
+
+**In-flight calls under bounded concurrency.** A decision at a checkpoint reads
+exactly the first `n` pairs **in collection order**. Concurrency overshoots the
+boundary, and those extra results are kept as evidence but never change the
+call. So the count a decision is computed from is fixed in advance rather than
+being whatever happened to have finished, which is what would put the
+multiplicity correction back into doubt. Nothing is wasted by this: if the run
+continues, the overshoot is simply the first part of the next checkpoint.
+
+**Consequences.** Sequential collection is opt-in and the fixed-sample path is
+unchanged. A caller who wants the simplest thing keeps getting it.
+
+The checkpoints have to be declared before collection starts, which is the same
+discipline the rest of the library already asks for with declared suites,
+declared contracts and declared route targets. A checkpoint chosen after seeing
+the data is the peeking this ADR exists to prevent, wearing a different hat.
+
+**Alternatives rejected.**
+
+*Recomputing the Wilson interval after every pair.* The thing that motivated
+the item. It is what a developer writes first, it looks right, and its coverage
+is not what it says.
+
+*A betting or mixture confidence sequence.* Genuinely anytime-valid at every
+observation and sharper than this, so a run could stop at any point rather than
+at four. It is also materially more code, harder to check by hand, and its
+correctness is not visible to a reader the way `(1 - p)^n` is. Left open: if a
+real suite shows the four looks are the binding constraint, that is the
+evidence needed to justify the complexity.
+
+*Spending alpha evenly.* Rejected on the numbers above rather than on taste.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.

@@ -65,6 +65,7 @@ from agentverity.integrations import (
     load_jsonl,
     load_promptfoo,
 )
+from agentverity.isolation import declare_isolation, isolation_of
 from agentverity.meter import (
     PRECISION_LEVELS,
     MeterResult,
@@ -83,6 +84,11 @@ from agentverity.reporting import (
     write_run_json,
 )
 from agentverity.runner import RelationResult, RunConfig, RunResult, run
+from agentverity.sequential import (
+    SequentialPlan,
+    decide_sequentially,
+    plan_sequential,
+)
 from agentverity.snapshot import (
     SNAPSHOT_SCHEMA,
     Snapshot,
@@ -152,6 +158,7 @@ __all__ = [
     "RunConfig",
     "RunError",
     "RunResult",
+    "SequentialPlan",
     "Snapshot",
     "SnapshotChange",
     "SnapshotCompatibilityError",
@@ -165,12 +172,15 @@ __all__ = [
     "compare_evidence",
     "compare_snapshot",
     "create_snapshot",
+    "decide_sequentially",
+    "declare_isolation",
     "detect",
     "evidence_from_deepeval",
     "evidence_from_jsonl",
     "evidence_from_promptfoo",
     "from_callable",
     "input_fingerprint",
+    "isolation_of",
     "load_decision_suite",
     "load_evidence",
     "load_jsonl",
@@ -180,6 +190,7 @@ __all__ = [
     "pairs_for_deterministic_call",
     "plan_repeats",
     "plan_route_repeats",
+    "plan_sequential",
     "record_otel_run",
     "run",
     "run_result_to_dict",

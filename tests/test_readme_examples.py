@@ -256,3 +256,86 @@ def test_the_new_reach_semantics_reach_every_output_surface():
     ).stdout
     section = text.split("3. DECLARED DECISION CONTRACT")[1][:400]
     assert "approve" not in section, "the terminal report agrees with the JSON one"
+
+
+def test_every_changelog_version_has_a_matching_comparison_link() -> None:
+    """The 0.15.0 release moved the sections and left the links behind.
+
+    So `[Unreleased]` still compared against v0.14.0 and the changelog's own
+    links said seventeen merged PRs were unreleased when they had shipped.
+    This has drifted before: a previous release restored stale links by hand,
+    which fixes the instance and not the class.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
+
+    sections = set(re.findall(r"^## \[([^\]]+)\]", changelog, re.MULTILINE))
+    linked = set(re.findall(r"^\[([^\]]+)\]: https://", changelog, re.MULTILINE))
+
+    assert sections - linked == set(), "changelog sections with no link"
+    assert linked - sections == set(), "changelog links with no section"
+
+    version = re.search(
+        r'^version = "([^"]+)"',
+        (root / "pyproject.toml").read_text(encoding="utf-8"),
+        re.MULTILINE,
+    ).group(1)
+    def as_numbers(text: str) -> list[int]:
+        return [int(part) for part in text.split(".")]
+
+    released = {section for section in sections if section != "Unreleased"}
+    latest = max(released, key=as_numbers)
+
+    # Sorting versions as strings put 0.9.1 after 0.15.0, which made an
+    # earlier disjunct here dead and its comment wrong about what it allowed.
+    assert as_numbers(latest) >= as_numbers(version), (
+        f"the changelog's newest section is {latest} and the package is "
+        f"{version}; a released version with no section cannot be described"
+    )
+    assert f"compare/v{latest}...HEAD" in changelog, (
+        "Unreleased must compare against the newest released version"
+    )
+
+
+def test_every_name_the_docs_import_from_the_package_actually_exists() -> None:
+    """A doc that teaches a name the package does not export is a doc that
+    fails on the first line a reader runs.
+
+    `docs/api.md` taught `declare_isolation` in a file where every other
+    example imports from the top-level package, and it was only reachable as
+    `agentverity.isolation.declare_isolation`. Prose is scanned as well as code
+    blocks, because the sentence is what a reader copies.
+
+    The first version stopped at a newline, so the one parenthesised import in
+    that file contributed a lone `(` and its four names went unchecked while
+    the test still claimed to check every import. Both forms are read now.
+    """
+    import re
+    from pathlib import Path
+
+    import agentverity
+
+    root = Path(__file__).resolve().parents[1]
+    pattern = re.compile(
+        r"from agentverity import \s*(?:\(([^)]*)\)|([^\n(]+))", re.MULTILINE
+    )
+    missing, checked = [], 0
+    for path in sorted(root.glob("docs/*.md")) + [root / "README.md"]:
+        text = path.read_text(encoding="utf-8")
+        for parenthesised, inline in pattern.findall(text):
+            block = parenthesised or inline
+            for name in re.split(r"[,\s]+", block.replace("\\", "").strip()):
+                if not name or not name.isidentifier():
+                    continue
+                checked += 1
+                if not hasattr(agentverity, name):
+                    missing.append(f"{path.name}: {name}")
+
+    assert not missing, f"docs import names the package does not export: {missing}"
+    assert checked >= 15, (
+        f"only {checked} imported names found, so the scan is not reading the "
+        "docs it claims to"
+    )

@@ -10,6 +10,21 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `plan_sequential` and `decide_sequentially` stop collecting once the answer
+  is in, without invalidating it. Checkpoints are declared before collection
+  starts, so this is not the Wilson interval recomputed after every pair, which
+  is optional stopping and destroys the coverage the interval claims.
+  The error budget is split by direction rather than evenly. Certification is
+  tested once, at the final checkpoint, so it carries no multiplicity penalty:
+  72 pairs at a 5% tolerance against the fixed sample's 73. The earlier looks
+  test only the stochastic direction, and an obviously unstable route stops in
+  a quarter of the budget.
+  A decision reads exactly the first n pairs in collection order, so results
+  that overshoot a checkpoint under concurrency are kept as evidence and never
+  change a call.
+  Not yet driven by `run`, so the saving is available to a caller driving
+  collection rather than from the command line.
+
 - Adapters declare the isolation they produce, and `run` records it, so the
   admission policy below now applies to a live run instead of only to imported
   evidence. `from_strands_factory` declares `fresh-instance`, `from_langgraph`
@@ -30,7 +45,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   isolation and the calls describe one thing. Mutating the mapping afterwards
   to add a `thread_id` previously sent later repeats down one shared thread
   while the declaration still claimed independence.
-- `declare_isolation` and `isolation_of` for anyone writing an adapter.
+- `declare_isolation` and `isolation_of` for anyone writing an adapter,
+  exported from the top-level package where the rest of the API lives.
 
 - Isolation now decides whether evidence may certify a baseline.
   `shared-session` is refused, `unknown` is admitted with its caveat
@@ -941,7 +957,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/mrwersa/agentverity/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/mrwersa/agentverity/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/mrwersa/agentverity/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/mrwersa/agentverity/compare/v0.13.0...v0.13.1

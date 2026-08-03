@@ -153,6 +153,46 @@ report, JSON, JUnit, OpenTelemetry, and snapshot paths work unchanged.
 `relation_results` is empty, because a relation needs calls no imported file
 contains. See [imported evidence](imported-evidence.md).
 
+Sizing a run, and stopping it early:
+
+```python
+from agentverity import plan_sequential, decide_sequentially
+
+plan = plan_sequential(epsilon=0.05)        # checkpoints, before any call
+call, pairs = decide_sequentially(plan, flip_outcomes)
+```
+
+`plan_sequential(epsilon, alpha=0.05, looks=4, budget=None)` declares the
+checkpoints up front. `decide_sequentially(plan, outcomes)` reads one boolean
+per disjoint pair, in collection order, and returns the call and the pairs it
+took.
+
+The checkpoints have to be declared first because choosing where to look after
+seeing the data is the peeking this avoids. A decision reads exactly the first
+`n` pairs, so results that overshoot a checkpoint under concurrency are kept as
+evidence and never change a call.
+
+Certification is tested once, at the final checkpoint, so it carries no
+multiplicity penalty: 72 pairs at a 5% tolerance against the fixed sample's 73.
+The earlier looks test only the stochastic direction. See DESIGN.md ADR 7,
+including why an even split was measured and rejected.
+
+Writing an adapter?
+
+```python
+from agentverity import declare_isolation
+
+def from_my_framework(build_client):
+    def run(text: str) -> Observation:
+        ...
+    return declare_isolation(run, "fresh-instance")
+```
+
+`run` records what you said, and that value decides whether the evidence may
+certify a baseline. State what happened rather than what you wanted: a shared
+session declared honestly is refused a baseline, and a shared session declared
+as fresh certifies one on a false claim.
+
 Framework bridges translate records without calling the target:
 
 ```python

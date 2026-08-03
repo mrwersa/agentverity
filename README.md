@@ -253,6 +253,13 @@ AgentVerity sizes the run from your tolerance, uses non-overlapping pairs, and
 keeps three answers: stable enough, unstable, or undecided. The default
 `balanced` setting uses a 5% tolerance.
 
+You can also stop early without spoiling the answer. `plan_sequential` fixes
+the checkpoints before collection starts, and `decide_sequentially` stops at
+the first one that decides: a route flipping on a third of its pairs settles in
+a quarter of the budget, and certifying a well-behaved route costs 72 pairs
+rather than 73. Recomputing the interval after every pair and stopping when it
+looks good is optional stopping, and the interval stops meaning what it says.
+
 A small pytest loop can collect calls. The library packages the harder policy:
 evidence sizing, route-specific targets, and one consistent decision across
 text, JSON, JUnit, telemetry, and snapshots.
