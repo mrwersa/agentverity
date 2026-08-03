@@ -397,6 +397,11 @@ def _check_command(args: argparse.Namespace) -> int:
     except (SnapshotRefused, SnapshotCompatibilityError) as exc:
         print(f"snapshot check refused: {exc}", file=sys.stderr)
         return 2
+    # Printed before the verdict either way. A clean check that quietly rests
+    # on weaker provenance than the baseline is the reading this is here to
+    # prevent, and it is exactly the case a reader would otherwise skip.
+    if diff.provenance_note is not None:
+        print(f"provenance: {diff.provenance_note}")
     if diff.clean:
         print(f"snapshot clean: {diff.checked}/{diff.checked} references matched")
         return 0

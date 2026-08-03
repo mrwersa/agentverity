@@ -143,12 +143,26 @@ so it is a separate mapping when someone needs it.
 
 Every interval assumes independent trials. The recorded `isolation` field
 already models this with `fresh-session`, `fresh-instance`, `shared-session`
-and `unknown`, and `shared-session` already produces a caveat.
+and `unknown`, and `shared-session` already produced a caveat.
 
-Strengthen the provenance rather than infer it. Per-trial execution
-identifiers, and adapter assertions about what was actually fresh. Then a
-stated policy: refuse known shared-state evidence for certification, caveat
-`unknown`, and admit `fresh-*`.
+**The policy half is shipped.** `shared-session` evidence is refused a
+baseline, `unknown` is admitted with its caveat travelling, and `fresh-*` is
+admitted. A snapshot stores the isolation it was admitted under, so a later
+check can say when the current run establishes less than the evidence that
+certified the baseline. See DESIGN.md ADR 5.
+
+The caveat had no consequence before this: a run could print "repeats are not
+independent and the interval is narrower than the evidence supports" and then
+be frozen as a baseline on the strength of that interval. A snapshot also
+recorded no isolation at all, so the provenance died at the admission
+boundary.
+
+**The provenance half remains.** Per-trial execution identifiers, and adapter
+assertions about what was actually fresh. This matters more than it sounds:
+the runner sets no isolation, so for a live run the policy is currently inert,
+and only imported evidence can state what it did. Until an adapter can claim
+`fresh-instance` honestly, the strict half applies to the path fewest callers
+use.
 
 Deliberately not attempted: inferring contamination from behaviour. Inputs
 that grow across trials are often legitimate test inputs, and verdicts

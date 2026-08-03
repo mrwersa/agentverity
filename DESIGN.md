@@ -477,6 +477,86 @@ evidence already rejected for tripling a file to record a distinction nothing
 acts on. Leaving snapshots unable to hold one, which is the status quo and
 makes ADR 3 half a feature.
 
+## ADR 5: shared-state evidence is refused a baseline, and a baseline records what it was admitted under
+
+**Status.** Accepted 2026-08-03. Roadmap item 4, the policy half.
+
+**Context.** Every interval this library reports assumes independent trials.
+`EvidenceSet.isolation` has recorded whether they were since v0.12.0, and
+`shared-session` already produces a caveat saying in plain words that "repeats
+are not independent and the interval is narrower than the evidence supports".
+
+That caveat had no consequence. `_require_snapshot_evidence` refuses
+incomplete, underpowered, stochastic, blind, uncovered and contract-failing
+evidence, eight conditions in all, and never looked at isolation. Verified
+before writing this: six probes, eighty identical repeats each, isolation
+`shared-session`, and `create_snapshot` admits it while the caveat sits in
+`result.caveats` describing exactly why the number that admitted it is wrong.
+
+The second half is worse and is not in the roadmap text. **A snapshot recorded
+no isolation at all.** So once admitted, a baseline carried no trace of how its
+evidence was collected, and a later `check` comparing against it could not know
+it was matching against something certified from a shared session. The
+provenance died at the admission boundary.
+
+**Decision.** A stated policy at the one boundary where the number becomes a
+commitment:
+
+- `fresh-session`, `fresh-instance` — **admit.** The caller asserts trials were
+  separated and the interval means what it says.
+- `unknown` — **admit with the caveat travelling.** The evidence may be fine;
+  nothing establishes that it is.
+- `shared-session` — **refused.** The caller has stated the trials were not
+  independent. Certifying a baseline from them publishes an interval the
+  evidence does not support, and doing so *after* printing a caveat saying so
+  is the library disagreeing with itself.
+
+A snapshot stores the isolation it was admitted under, and `check` reports when
+a later run was collected under weaker isolation than the baseline was. Same
+principle as ADR 4: the stored artefact carries what the evidence knew.
+
+**Consequences.** `agentverity.snapshot/v4`. A v3 reader cannot correctly
+interpret a v4 file, because the field it needs to apply the policy is absent
+and there is no safe default: reading a missing isolation as `fresh-*` claims
+provenance nobody asserted, and reading it as `shared-session` refuses
+baselines that were legitimately admitted. That is exactly the bar
+`STABILITY.md` sets for moving a number.
+
+**The policy is inert for live runs today, and that is worth saying rather
+than leaving to be discovered.** The runner never sets isolation, so a
+baseline and a later check both read `unknown` and nothing is refused. It
+bites on imported evidence, which is the only place isolation is recorded.
+The other half of roadmap item 4, per-trial execution identifiers and adapter
+assertions about what was actually fresh, is what makes a live run able to
+claim `fresh-instance` honestly. Until then this change buys the boundary and
+the storage, not enforcement on the path most callers use.
+
+`unknown` remains the default of all three importers, so the strict half of
+this policy is avoidable by not saying. That is deliberate and worth stating
+rather than hiding: the policy refuses a **claim** of shared state, not an
+unstated one. Inferring the unstated case is rejected below. The honest reading
+is that this converts a caveat into a refusal for callers who tell the truth,
+and it is paired with strengthening provenance so that telling the truth
+becomes the easy path.
+
+**Alternatives rejected.**
+
+*Refusing `unknown` too.* It is the default everywhere, including all three
+importers, so this would refuse most imported evidence on the day it shipped
+and teach callers to write `fresh-session` to make the error go away. A policy
+that manufactures false assertions is worse than one with a caveat.
+
+*A flag to override the refusal.* The deliberate shared-thread path
+(`from_langgraph_thread`) exists to measure a conversation, and multi-turn
+stability is out of scope by a separate decision. An override would make the
+policy advisory, and an advisory policy is the caveat that already existed.
+
+*Inferring contamination from behaviour.* Inputs that grow across trials are
+often legitimate test inputs, and verdicts settling partway through a run is
+not evidence of anything. Both reject valid evidence, and neither absence
+establishes independence. Strengthen what is asserted; do not guess at what is
+not.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.

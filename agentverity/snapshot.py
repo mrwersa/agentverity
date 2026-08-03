@@ -22,7 +22,13 @@ from agentverity.runner import RunResult
 
 from .decision import DECLARABLE_REASONS, comparison_key
 
-SNAPSHOT_SCHEMA = "agentverity.snapshot/v3"
+SNAPSHOT_SCHEMA = "agentverity.snapshot/v4"
+
+#: Isolation levels that may certify a baseline. `shared-session` is
+#: refused and `unknown` is admitted with its caveat. See DESIGN.md ADR 5.
+CERTIFIABLE_ISOLATION: frozenset[str] = frozenset(
+    {"fresh-session", "fresh-instance", "unknown"}
+)
 
 
 class SnapshotRefused(ValueError):
@@ -59,6 +65,17 @@ class Snapshot:
     blindness_distinct: int
     decision_contract: DecisionContract | None
     probes: tuple[SnapshotProbe, ...]
+    isolation: str = "unknown"
+
+    @property
+    def independence_asserted(self) -> bool:
+        """Whether the baseline was certified from separated trials.
+
+        `unknown` is admitted and is not an assertion. A later run that does
+        state its isolation is therefore strictly better provenance, and a
+        comparison says so rather than treating the two as equivalent.
+        """
+        return self.isolation.startswith("fresh-")
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-compatible snapshot representation."""
@@ -78,6 +95,7 @@ class Snapshot:
                 "meter_ci_high": self.meter_ci_high,
                 "blindness_skew": self.blindness_skew,
                 "blindness_distinct": self.blindness_distinct,
+                "isolation": self.isolation,
                 "reference_approved": True,
             },
             "decision_contract": (
@@ -116,6 +134,16 @@ class Snapshot:
         if evidence.get("meter_call") != "verdict-deterministic":
             raise SnapshotCompatibilityError(
                 "snapshot was not admitted by deterministic-at-epsilon evidence"
+            )
+        # Validated on read, because a file naming an isolation no policy
+        # covers would otherwise reach a comparison and be reported as a
+        # provenance change against every run.
+        isolation = evidence.get("isolation")
+        if isolation not in CERTIFIABLE_ISOLATION:
+            raise SnapshotCompatibilityError(
+                f"snapshot records isolation {isolation!r}, which cannot have "
+                "certified it; expected one of "
+                + ", ".join(sorted(CERTIFIABLE_ISOLATION))
             )
         try:
             raw_contract = value.get("decision_contract")
@@ -156,6 +184,7 @@ class Snapshot:
                 blindness_distinct=int(evidence["blindness_distinct"]),
                 decision_contract=decision_contract,
                 probes=parsed_probes,
+                isolation=str(isolation),
             )
         except SnapshotCompatibilityError:
             raise
@@ -180,11 +209,43 @@ class SnapshotDiff:
 
     changes: tuple[SnapshotChange, ...]
     checked: int
+    isolation_before: str = "unknown"
+    isolation_after: str = "unknown"
 
     @property
     def clean(self) -> bool:
         """Whether every current observation matches its reference."""
         return not self.changes
+
+    @property
+    def provenance_weakened(self) -> bool:
+        """Whether the current run asserts less about isolation than the baseline.
+
+        Only one case reaches here, because `shared-session` is refused on both
+        sides: a baseline certified from separated trials, checked against a
+        run that does not say. The observations still match, and the match is
+        real. What weakened is how much the new evidence establishes.
+
+        This reports rather than fails, unlike admission. Admission is where a
+        number becomes a commitment. A check compares two runs that both
+        already cleared that bar, and failing here would fail routinely,
+        because `unknown` is the default of every importer.
+        """
+        return self.isolation_before.startswith("fresh-") and not (
+            self.isolation_after.startswith("fresh-")
+        )
+
+    @property
+    def provenance_note(self) -> str | None:
+        """One line naming the weakening, or None when nothing weakened."""
+        if not self.provenance_weakened:
+            return None
+        return (
+            f"the baseline was certified under {self.isolation_before!r} and "
+            f"this run records {self.isolation_after!r}, so the observations "
+            "match but the current evidence establishes less than the "
+            "evidence that admitted the baseline"
+        )
 
 
 def _package_version() -> str:
@@ -281,6 +342,15 @@ def _require_snapshot_evidence(result: RunResult) -> None:
         raise SnapshotRefused("source observations are incomplete")
     if any(value is None for value in result.observed_keys):
         raise SnapshotRefused("source observations are incomplete")
+    if result.isolation not in CERTIFIABLE_ISOLATION:
+        raise SnapshotRefused(
+            f"trials were collected under {result.isolation!r}, so they are "
+            "not independent and every interval above is narrower than the "
+            "evidence supports. A baseline certified from them publishes a "
+            "number this run already said was wrong. Collect repeats from "
+            "separated sessions, or measure a layer that does not assume "
+            "independence."
+        )
 
 
 def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
@@ -308,6 +378,7 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
     )
     return Snapshot(
         schema=SNAPSHOT_SCHEMA,
+        isolation=result.isolation,
         created_at=datetime.now(timezone.utc).isoformat(),
         agentverity_version=_package_version(),
         layer=result.config.layer,
@@ -458,7 +529,12 @@ def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
         for fingerprint in expected
         if _comparable(actual[fingerprint]) != _comparable(expected[fingerprint])
     )
-    return SnapshotDiff(changes=changes, checked=len(expected))
+    return SnapshotDiff(
+        changes=changes,
+        checked=len(expected),
+        isolation_before=snapshot.isolation,
+        isolation_after=result.isolation,
+    )
 
 
 def save_snapshot(snapshot: Snapshot, path: str | Path) -> None:

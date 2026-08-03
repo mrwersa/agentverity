@@ -8,6 +8,27 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- Isolation now decides whether evidence may certify a baseline.
+  `shared-session` is refused, `unknown` is admitted with its caveat
+  travelling, and `fresh-session` and `fresh-instance` are admitted. Before
+  this the caveat had no consequence: the same run printed "repeats are not
+  independent and the interval is narrower than the evidence supports" and
+  then produced a snapshot resting on that interval.
+- A snapshot records the isolation it was admitted under, and `check` reports
+  when the current run establishes less than the evidence that certified the
+  baseline. A snapshot previously recorded no isolation at all, so the
+  provenance died at the admission boundary.
+
+### Changed
+
+- `agentverity.snapshot/v4`. A v3 reader cannot apply the policy, because the
+  field is absent and neither default is safe: reading a missing isolation as
+  `fresh-*` claims provenance nobody asserted, and reading it as
+  `shared-session` refuses baselines that were legitimately admitted.
+
+
 ## [0.15.0] - 2026-08-03
 
 Route reach became three quantities instead of one, the absence of a decision

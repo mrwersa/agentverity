@@ -264,6 +264,9 @@ class RunResult:
         intended_decisions: One reviewed intended decision per input for a
             declared suite, otherwise an empty tuple.
         requested_inputs: Number of distinct inputs requested.
+        isolation: How repeated trials were separated. `unknown` unless the
+            evidence states it, because the library cannot observe it. See
+            DESIGN.md ADR 5 for what each level admits.
     """
 
     meter: MeterResult | None
@@ -281,6 +284,7 @@ class RunResult:
     intended_decisions: tuple[str, ...] = ()
     requested_inputs: int = 0
     duration_seconds: float = 0.0
+    isolation: str = "unknown"
 
     @property
     def complete(self) -> bool:
