@@ -8,6 +8,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-08-03
+
+Isolation stopped being a caveat and became a decision: evidence collected
+from a shared session can no longer certify a baseline, and adapters now state
+what they did rather than leaving it unknown. A run can also stop at a
+declared checkpoint instead of spending its whole budget.
+
+
 ### Added
 
 - `RunConfig(sequential=True)` and `agentverity run --sequential` stop a run at
@@ -976,7 +984,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/mrwersa/agentverity/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/mrwersa/agentverity/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/mrwersa/agentverity/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/mrwersa/agentverity/compare/v0.13.1...v0.13.2
