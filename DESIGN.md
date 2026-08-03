@@ -463,9 +463,11 @@ Comparison normalises through `comparison_key`, so a snapshot storing
 adapter adopting the types would fail every baseline it had written before
 adopting them, which is the string-versus-typed defect one more layer out.
 
-**Consequences.** `agentverity.snapshot/v3`, because a v2 reader rejects an
-object where it expects a string, which is exactly the bar `STABILITY.md` sets
-for a version change. No v2 reader is kept: there are no known external
+**Consequences.** `agentverity.snapshot/v3`. Precisely: a v2 reader does not
+reject a stored no-decision, it loads the object and then compares it unequal
+to every string a current run produces, so every probe reads as changed. A
+silent misread rather than a refusal, which is worse and still meets the bar
+`STABILITY.md` sets: the reader cannot correctly interpret the file. No v2 reader is kept: there are no known external
 consumers, and the one-version rule stands.
 
 **Alternatives rejected.** Flattening a no-decision to its reason string, which

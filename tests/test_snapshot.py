@@ -417,6 +417,38 @@ class TestAStoredOutcomeIsValidatedOnRead:
         with pytest.raises(SnapshotCompatibilityError, match="contract can declare"):
             load_snapshot(path)
 
+    @pytest.mark.parametrize("corrupt", [42, True, 3.14, None])
+    def test_a_corrupt_scalar_is_refused_too(self, tmp_path, corrupt):
+        """It loaded and surfaced as a permanent change rather than a refusal.
+
+        The same reasoning as the reason check: no run produces a number here,
+        so reading one back is a corrupt file rather than an outcome, and a
+        baseline that reports a change forever is worse than one that says the
+        file is broken.
+        """
+        import json
+
+        from agentverity.snapshot import SnapshotCompatibilityError, load_snapshot
+
+        path, doc = self._snapshot_file(tmp_path)
+        doc["probes"][0]["expected"] = corrupt
+        path.write_text(json.dumps(doc))
+
+        with pytest.raises(SnapshotCompatibilityError):
+            load_snapshot(path)
+
+    def test_a_string_and_a_tool_path_still_load(self, tmp_path):
+        """The shapes a run does produce are untouched."""
+        import json
+
+        from agentverity.snapshot import load_snapshot
+
+        path, doc = self._snapshot_file(tmp_path)
+        doc["probes"][0]["expected"] = ["search", "answer"]
+        path.write_text(json.dumps(doc))
+
+        assert load_snapshot(path).probes[0].expected == ["search", "answer"]
+
     def test_a_valid_file_still_loads(self, tmp_path):
         from agentverity.snapshot import load_snapshot
 

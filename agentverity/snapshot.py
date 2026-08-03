@@ -327,8 +327,6 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
     )
 
 
-
-
 def _read_expected(stored: Any) -> Any:
     """Validate a stored outcome as it is read.
 
@@ -342,8 +340,17 @@ def _read_expected(stored: Any) -> Any:
     made legitimately, so reading one back is a corruption rather than an
     outcome.
     """
-    if not isinstance(stored, dict):
+    if isinstance(stored, (str, list, tuple)):
         return json_value(stored)
+    if not isinstance(stored, dict):
+        # A number or a boolean cannot have been written here either, and
+        # loading one turns a corrupt file into a permanent reported change
+        # rather than a refusal. Same rule as the reason check below.
+        raise SnapshotCompatibilityError(
+            f"a stored outcome is {type(stored).__name__}, which no run "
+            "produces. A decision is stored as a string, a tool path as a "
+            "list, and a no-decision as an object."
+        )
     if stored.get("kind") != "no_decision":
         raise SnapshotCompatibilityError(
             "a stored outcome object records a no-decision and needs "
