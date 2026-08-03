@@ -509,3 +509,78 @@ class TestTaggedOutcomeRoundTrip:
         for name in ("evidence-gpt4o_mini.json", "evidence-nova.json", "evidence-nemo.json"):
             evidence = load_evidence(root / name)
             assert len(evidence.cases) == 10
+
+
+class TestSchemaVersionIsClaimedHonestly:
+    """Self-review found both of these before anyone else read the PR.
+
+    Writing v2 for every file locks an older build out of evidence containing
+    nothing new. Accepting a tagged observation inside a file that declares v1
+    makes the version claim meaningless.
+    """
+
+    def _write(self, tmp_path, observations):
+        from agentverity import EvidenceCase, EvidenceSet, save_evidence
+
+        path = tmp_path / "evidence.json"
+        save_evidence(
+            EvidenceSet(cases=(EvidenceCase(input="x", observations=observations),)),
+            path,
+        )
+        return json.loads(path.read_text())["schema"]
+
+    def test_a_file_with_only_strings_stays_v1(self, tmp_path):
+        from agentverity.evidence import LEGACY_EVIDENCE_SCHEMA
+
+        assert self._write(tmp_path, ("a", "a")) == LEGACY_EVIDENCE_SCHEMA
+
+    def test_a_file_carrying_a_typed_outcome_claims_v2(self, tmp_path):
+        from agentverity import Decision
+        from agentverity.evidence import EVIDENCE_SCHEMA
+
+        assert self._write(tmp_path, (Decision("a"), "a")) == EVIDENCE_SCHEMA
+
+    def test_one_typed_outcome_anywhere_is_enough(self, tmp_path):
+        from agentverity import EvidenceCase, EvidenceSet, NoDecision, save_evidence
+        from agentverity.evidence import EVIDENCE_SCHEMA
+
+        path = tmp_path / "evidence.json"
+        save_evidence(
+            EvidenceSet(
+                cases=(
+                    EvidenceCase(input="a", observations=("x", "x")),
+                    EvidenceCase(
+                        input="b", observations=(NoDecision("refused"), "x")
+                    ),
+                )
+            ),
+            path,
+        )
+
+        assert json.loads(path.read_text())["schema"] == EVIDENCE_SCHEMA
+
+    def test_a_v1_file_containing_a_tag_is_refused(self, tmp_path):
+        """A version that does not constrain the contents is not a version."""
+        from agentverity import load_evidence
+        from agentverity.evidence import LEGACY_EVIDENCE_SCHEMA
+
+        path = tmp_path / "lying.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": LEGACY_EVIDENCE_SCHEMA,
+                    "cases": [
+                        {
+                            "input": "x",
+                            "observations": [
+                                {"kind": "no_decision", "reason": "refused"},
+                                {"kind": "no_decision", "reason": "refused"},
+                            ],
+                        }
+                    ],
+                }
+            )
+        )
+
+        with pytest.raises(EvidenceError, match="carries bare strings only"):
+            load_evidence(path)

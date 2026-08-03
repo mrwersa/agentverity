@@ -39,12 +39,16 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   with too few comparable observations, and coverage refusing a `NoDecision`.
   It subclasses `ValueError`, so a caller already catching that keeps working.
 
-- The evidence schema is `agentverity.evidence/v2` and carries a typed outcome
-  tagged, as `{"kind": "decision", "label": ...}` or `{"kind": "no_decision",
-  "reason": ...}`. v1 files still load, and a bare string in one stays a bare
-  string rather than being promoted, because it recorded a label a caller
-  invented rather than the reason ADR 2 defines. Promoting it would rewrite
-  what committed evidence means.
+- `agentverity.evidence/v2` carries a typed outcome tagged, as
+  `{"kind": "decision", "label": ...}` or `{"kind": "no_decision", "reason":
+  ...}`. A file claims v2 only when it actually holds one, so evidence made of
+  plain strings is still written as v1 and stays readable by a build that
+  predates the tag.
+- v1 files still load, and a bare string in one stays a bare string rather
+  than being promoted, because it recorded a label a caller invented rather
+  than the reason ADR 2 defines. Promoting it would rewrite what committed
+  evidence means. A tagged observation inside a file declaring v1 is refused,
+  because a version that does not constrain the contents is not a version.
 
 ### Not yet
 

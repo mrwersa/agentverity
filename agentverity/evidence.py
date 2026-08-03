@@ -211,9 +211,24 @@ class EvidenceSet:
             )
         return None
 
+
+    def _schema(self) -> str:
+        """The oldest schema that can describe this evidence.
+
+        A file carrying nothing but strings is v1, and stays readable by a
+        build that predates the tag. Claiming v2 for every file would lock
+        older readers out of evidence containing nothing new.
+        """
+        typed = any(
+            isinstance(value, (Decision, NoDecision))
+            for case in self.cases
+            for value in case.observations
+        )
+        return EVIDENCE_SCHEMA if typed else LEGACY_EVIDENCE_SCHEMA
+
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
-            "schema": EVIDENCE_SCHEMA,
+            "schema": self._schema(),
             "layer": self.layer,
             "isolation": self.isolation,
             "cases": [case.to_dict() for case in self.cases],
@@ -260,7 +275,8 @@ class EvidenceSet:
                 EvidenceCase(
                     input=entry.get("input", ""),
                     observations=tuple(
-                        _decode_observation(item, index) for item in observations
+                        _decode_observation(item, index, schema)
+                        for item in observations
                     ),
                     expected=entry.get("expected"),
                     errors=entry.get("errors", 0),
@@ -297,7 +313,7 @@ def _encode_observation(value: Any) -> Any:
     return list(value) if isinstance(value, tuple) else value
 
 
-def _decode_observation(value: Any, index: int) -> Any:
+def _decode_observation(value: Any, index: int, schema: str) -> Any:
     """Read one observation.
 
     A bare string stays a bare string. It is not promoted to ``Decision``,
@@ -307,6 +323,14 @@ def _decode_observation(value: Any, index: int) -> Any:
     """
     if not isinstance(value, dict):
         return value
+    if schema == LEGACY_EVIDENCE_SCHEMA:
+        # Otherwise the version claim means nothing: a file could promise bare
+        # strings and hand back typed outcomes.
+        raise EvidenceError(
+            f"cases[{index}]: a tagged observation appears in a file declaring "
+            f"{LEGACY_EVIDENCE_SCHEMA}, which carries bare strings only. "
+            f"Declare {EVIDENCE_SCHEMA} to store typed outcomes."
+        )
     kind = value.get("kind")
     if kind == "decision":
         label = value.get("label")
