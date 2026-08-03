@@ -19,7 +19,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from .decision import NoDecision, OutcomeNotScorable
+from .decision import NoDecision, OutcomeNotScorable, decision_label
 
 DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v1"
 
@@ -405,6 +405,16 @@ def assess_decision_coverage(
         raise ValueError(
             f"per_case has {len(per_case)} groups for {len(suite.cases)} cases; "
             "one group per case, in case order"
+        )
+    # A contract is written in plain labels, so a typed Decision is unwrapped
+    # to the label it carries. Passing the object through reported the route as
+    # both unknown and missing, which is two wrong answers from one value.
+    observed = tuple(decision_label(value) for value in observed)
+    if all_observed is not None:
+        all_observed = tuple(decision_label(value) for value in all_observed)
+    if per_case is not None:
+        per_case = tuple(
+            tuple(decision_label(value) for value in case) for case in per_case
         )
     primary_labels = [
         value if isinstance(value, str) else f"<non-string:{type(value).__name__}>"

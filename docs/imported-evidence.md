@@ -111,7 +111,7 @@ dependency. See the [complete shared-run example](../examples/deepeval_shared_ru
 
 | Field | Required | Meaning |
 |---|---|---|
-| `schema` | yes | `agentverity.evidence/v1`. An unknown version is refused rather than guessed at |
+| `schema` | yes | `agentverity.evidence/v1` or `/v2`. An unknown version is refused rather than guessed at |
 | `layer` | no | `verdict`, `text`, or `tools`. Defaults to `verdict` |
 | `isolation` | no | How trials were separated. Defaults to `unknown`, which is reported |
 | `cases[].input` | yes | The probe text |
@@ -119,6 +119,56 @@ dependency. See the [complete shared-run example](../examples/deepeval_shared_ru
 | `cases[].expected` | no | The route the case was written to exercise |
 | `cases[].errors` | no | Runs that failed rather than returning a decision |
 | `provenance` | no | Free-form: model, harness, collection date |
+
+### v1 and v2
+
+Write **v1** when every observation is a decision label, a text answer, or a
+tool path. That is most evidence, and it stays readable by any build.
+
+Write **v2** when a run produced no decision and you want to say why rather
+than inventing a label for it. v2 tags every categorical outcome:
+
+```json
+{
+  "schema": "agentverity.evidence/v2",
+  "layer": "verdict",
+  "cases": [
+    {
+      "input": "Let the router spend up to 100 USDC",
+      "expected": "approve",
+      "observations": [
+        {"kind": "decision", "label": "approve"},
+        {"kind": "no_decision", "reason": "refused"},
+        {"kind": "decision", "label": "approve"},
+        {"kind": "no_decision", "reason": "extraction_failed"}
+      ]
+    }
+  ]
+}
+```
+
+`reason` is one of `no_tool_selected`, `refused`, `open_ended`,
+`extraction_failed`, `malformed_response`, `runtime_error`. The last three mean
+the harness failed rather than the agent answering, and a series containing one
+is refused rather than scored: zero-flip pairs over repeated extraction
+failures would certify the failure. `open_ended` is refused too, because
+categorical stability is undefined when a run produced no decision, and
+dropping those runs while keeping the repeat count would report stability over
+reruns that decided nothing.
+
+Compatibility rules, all of which the loader enforces:
+
+- A bare string in a **v1** file stays a bare string. It recorded a label the
+  adapter invented, not a reason, and promoting it would rewrite what the file
+  meant when it was written.
+- A **tagged observation inside a v1 file is refused.** A version that does not
+  constrain the contents is not a version.
+- A file is written as **v2 only if it holds a typed outcome**, so string-only
+  evidence is not locked away from an older reader.
+- Comparison treats a bare `"refund"` and a tagged `refund` as **one decision**,
+  so a file mixing adapters does not report a flip between them.
+- `Decision("refused")` and `NoDecision("refused")` are always distinct. That
+  distinction is the reason the tag exists.
 
 ## Averages are refused, and here is why
 

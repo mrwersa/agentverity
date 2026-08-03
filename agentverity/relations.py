@@ -24,8 +24,8 @@ Example::
         rtype="monotone",
         transform=lambda s: s + " urgent",
         check=lambda src, fol: (
-            {"allow": 0, "review": 1, "block": 2}[src.key("verdict")]
-            <= {"allow": 0, "review": 1, "block": 2}[fol.key("verdict")]
+            {"allow": 0, "review": 1, "block": 2}[decision_label(src.key("verdict"))]
+            <= {"allow": 0, "review": 1, "block": 2}[decision_label(fol.key("verdict"))]
         ),
     )
     relations = builtin_relations() + [custom]
@@ -39,6 +39,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from agentverity.observation import Observation
+
+from .decision import comparison_key
 
 AgentFn = Callable[[str], Observation]
 
@@ -92,7 +94,9 @@ def _insert_whitespace(text: str) -> str:
 
 def _verdict_invariant(source: Observation, followup: Observation) -> bool:
     """Invariance check: the verdict (or text fallback) must not change."""
-    return source.key("verdict") == followup.key("verdict")
+    return comparison_key(source.key("verdict")) == comparison_key(
+        followup.key("verdict")
+    )
 
 
 def _tools_invariant(source: Observation, followup: Observation) -> bool:

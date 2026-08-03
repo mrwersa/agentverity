@@ -34,7 +34,7 @@ from typing import Any
 
 from agentverity.observation import Observation
 
-from .decision import check_scorable
+from .decision import check_scorable, comparison_key
 
 AgentFn = Callable[[str], Observation]
 
@@ -409,4 +409,7 @@ def _hashable(v: Any) -> Any:
     """
     if isinstance(v, (list, tuple)):
         return tuple(v)
+    # A bare label and a tagged one are the same decision. Comparing them
+    # unequal reports a flip on a decision this package says is identical.
+    v = comparison_key(v)
     return v.value if hasattr(v, "value") else v

@@ -307,11 +307,18 @@ class TestPersistenceRefusals:
         with pytest.raises(OutcomeNotScorable):
             json_value({"a": [Decision("refund")]}, strict=True)
 
-    def test_evidence_refuses_a_typed_outcome_with_an_actionable_message(self):
+    def test_evidence_now_stores_a_typed_outcome_tagged(self):
+        """v2 carries the tag, so the refusal that stood in for it is gone."""
         from agentverity.evidence import EvidenceCase
 
-        with pytest.raises(OutcomeNotScorable, match="Pass a plain string"):
-            EvidenceCase(input="x", observations=(NoDecision("refused"),))
+        payload = EvidenceCase(
+            input="x", observations=(NoDecision("refused"), Decision("refund"))
+        ).to_dict()
+
+        assert payload["observations"] == [
+            {"kind": "no_decision", "reason": "refused"},
+            {"kind": "decision", "label": "refund"},
+        ]
 
     def test_a_plain_string_still_stores(self):
         from agentverity.evidence import EvidenceCase
@@ -334,3 +341,121 @@ def test_a_non_string_verdict_keeps_its_old_meaning():
     observation = Observation(verdict=["search", "answer"])
 
     assert observation.key("verdict") == ["search", "answer"]
+
+
+class TestOneCanonicalComparison:
+    """Fixing the meter and leaving three consumers was the real defect.
+
+    Review put it precisely: every semantic comparison needs one canonical
+    function, while storage keeps the original representation. These are the
+    four seams where a bare label meets a tagged one.
+    """
+
+    def test_blindness_sees_one_decision_not_two(self):
+        """A constant gate reported skew 0.5 across two identical decisions."""
+        from agentverity.blindness import detect
+
+        result = detect(
+            lambda text: Observation(
+                verdict="allow" if text == "a" else Decision("allow")
+            ),
+            ["a", "b"],
+        )
+
+        assert result.blind is True
+        assert result.skew == 1.0
+        assert result.distinct == 1
+
+    def test_a_typed_decision_satisfies_a_string_contract(self):
+        """It became "<non-string:Decision>": unknown and missing at once."""
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+        from agentverity.decision_contract import assess_decision_coverage
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund"}), required=frozenset({"refund"})
+            ),
+            cases=(DecisionCase(input="a", expected="refund"),),
+        )
+        result = assess_decision_coverage(suite, observed=(Decision("refund"),))
+
+        assert result.missing_observed == ()
+        assert result.unknown_observed == ()
+        assert {c.decision: c.count for c in result.observed_counts} == {"refund": 1}
+
+    def test_an_invariant_relation_does_not_fire_on_representation(self):
+        from agentverity import builtin_relations
+
+        invariant = next(r for r in builtin_relations() if r.rtype == "invariant")
+
+        assert invariant.check(
+            Observation(verdict="refund"), Observation(verdict=Decision("refund"))
+        )
+
+    def test_a_no_decision_still_stops_the_contract(self):
+        """Unwrapping Decision must not also unwrap the thing that is not one."""
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+        from agentverity.decision_contract import assess_decision_coverage
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund"}), required=frozenset({"refund"})
+            ),
+            cases=(DecisionCase(input="a", expected="refund"),),
+        )
+
+        with pytest.raises(OutcomeNotScorable):
+            assess_decision_coverage(suite, observed=(NoDecision("refused"),))
+
+    def test_a_v2_file_assessed_against_a_string_contract(self, tmp_path):
+        """The end-to-end case review asked for, through the real loader."""
+        import json
+
+        from agentverity import (
+            DecisionCase,
+            DecisionContract,
+            DecisionSuite,
+            EvidenceCase,
+            EvidenceSet,
+            assess_evidence,
+            load_evidence,
+            save_evidence,
+        )
+        from agentverity.evidence import EVIDENCE_SCHEMA
+
+        path = tmp_path / "evidence.json"
+        save_evidence(
+            EvidenceSet(
+                cases=(
+                    EvidenceCase(
+                        input="a",
+                        expected="refund",
+                        observations=(Decision("refund"),) * 4,
+                    ),
+                    EvidenceCase(
+                        input="b",
+                        expected="escalate",
+                        observations=("escalate",) * 4,
+                    ),
+                )
+            ),
+            path,
+        )
+        assert json.loads(path.read_text())["schema"] == EVIDENCE_SCHEMA
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund", "escalate"}),
+                required=frozenset({"refund", "escalate"}),
+            ),
+            cases=(
+                DecisionCase(input="a", expected="refund"),
+                DecisionCase(input="b", expected="escalate"),
+            ),
+        )
+        result = assess_evidence(load_evidence(path), suite=suite, epsilon=0.05)
+
+        assert result.decision_coverage.missing_observed == ()
+        assert result.decision_coverage.unknown_observed == ()
+        assert result.decision_coverage.satisfied
+        assert result.meter.flip_rate == 0.0
