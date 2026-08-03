@@ -275,6 +275,73 @@ which is the defect. Introducing a threshold such as "reached on at least k
 repeats", which invents a policy nobody declared and would need its own
 justification.
 
+## ADR 2: the absence of a decision is typed, not a sentinel
+
+**Status.** Accepted 2026-08-03. Roadmap item 2.
+
+**Context.** `Observation.key("verdict")` returns the verdict, or the raw text
+when no verdict is set. For a categorical layer that is the wrong fallback:
+two differently worded refusals compare unequal and count as a changed
+decision, so the meter measures wording rather than choice.
+
+The AgentKit collector shows what callers do about it today. It sets
+`verdict = names[0] if names else "no_tool_selected"`, with a comment
+explaining that leaving the verdict unset would compare refusals by their
+prose. That workaround is correct and it should not be the caller's job.
+
+It also shows the trap in the obvious repair. `no_tool_selected` appears 176
+times across the nova run, and it covers more than one event: a model that
+refused, a model that answered in prose, and a model whose tool call could not
+be read all arrive at the same label. On the "Convert my WETH back into ETH"
+probe it appears 80 times out of 146, which a naive reading would score as a
+strongly stable decision. Nothing decided anything.
+
+At least six distinct events currently reach `verdict=None`: open-ended
+output, a refusal, no tool selected, extraction failure, a malformed provider
+response, and a runtime failure. A single `UNSET` sentinel would make all six
+one stable category, which is worse than the text fallback it replaced,
+because a run of extraction failures would certify perfectly.
+
+**Decision.** Two shapes, not one sentinel.
+
+- `Decision(label)` — the agent chose, and the label is the choice.
+- `NoDecision(reason)` — the agent did not choose, and the reason says why.
+
+`reason` is a closed vocabulary, versioned with the evidence schema:
+
+| reason | meaning | effect on evidence |
+|---|---|---|
+| `no_tool_selected` | contract asked for a tool, none was called | categorical, in-contract only if declared |
+| `refused` | the agent declined, deliberately | categorical, in-contract only if declared |
+| `open_ended` | the layer is categorical, the answer was not | not comparable, excluded from pairs |
+| `extraction_failed` | the adapter could not read a decision | **incomplete** |
+| `malformed_response` | the provider returned something unusable | **incomplete** |
+| `runtime_error` | the call itself failed | **incomplete** |
+
+The split in the last column is the point. The first three are things the
+agent did, and a contract may legitimately declare them as allowed outcomes.
+The last three are things the harness could not do, and they make the evidence
+incomplete rather than becoming a category that can look stable.
+
+Two `NoDecision` values compare equal when their reasons are equal, so two
+reworded refusals are one decision again. A `NoDecision` never compares equal
+to a `Decision`.
+
+**Consequences.** The evidence schema and the snapshot format both gain a
+version, because a stored `"no_tool_selected"` string is ambiguous between a
+label the caller invented and the reason this ADR defines. Reading old
+evidence keeps the string as `Decision("no_tool_selected")`, which is what it
+meant when it was written, and the migration note says so.
+
+Adapters stop needing the workaround. An adapter that cannot read a decision
+returns `NoDecision("extraction_failed")` and the run reports incomplete
+evidence, rather than the caller inventing a label to avoid a text comparison.
+
+**Alternatives rejected.** A single `UNSET` sentinel, which merges six events
+and can certify a broken harness. Keeping the text fallback, which is the
+defect. Letting each adapter invent its own label, which is the status quo and
+puts a statistical decision in a place nobody reviews.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.

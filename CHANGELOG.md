@@ -10,6 +10,20 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `Decision(label)` and `NoDecision(reason)` type what a run decided, or why it
+  did not. Two reworded refusals are now one decision rather than two, because
+  a `NoDecision` compares on its reason. The reason vocabulary is closed and
+  splits in two: `refused` and `no_tool_selected` are things the agent did and
+  a contract may declare them, while `extraction_failed`, `malformed_response`
+  and `runtime_error` are things the harness could not do and make the evidence
+  incomplete. A single sentinel would have merged all six, and a run of
+  extraction failures would then have certified as perfectly stable. See
+  DESIGN.md ADR 2.
+- `Observation.outcome` and `Observation.is_incomplete` read that typed result.
+  A string verdict stays a `Decision`, and an unset verdict on an agent that
+  produced prose is `open_ended`, which is comparable to nothing on a
+  categorical layer.
+
 - `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
   Coinbase AgentKit Strands example exposes, across three models, with every
   observation committed so re-assessing costs nothing. The collector, the

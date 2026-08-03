@@ -1,0 +1,138 @@
+"""What an agent decided, or why it did not decide.
+
+A categorical layer needs one comparison key per run. The old rule was "the
+verdict, or the text if there is no verdict", which compares two reworded
+refusals as different decisions. That measures wording rather than choice.
+
+The obvious repair, a single ``UNSET`` sentinel, is worse. At least six
+distinct events reach an unset verdict, and folding them together makes a run
+of extraction failures look like a perfectly stable decision. On the AgentKit
+nova run, one probe returns no tool 80 times out of 146; a sentinel would score
+that as strong agreement about nothing.
+
+So the absence of a decision is typed and carries its reason, and the reasons
+split into two groups that the evidence treats differently. See DESIGN.md
+ADR 2.
+
+Example::
+
+    from agentverity.decision import Decision, NoDecision
+
+    Decision("refund") == Decision("refund")            # True
+    NoDecision("refused") == NoDecision("refused")      # True, however worded
+    NoDecision("refused") == Decision("refused")        # False
+    NoDecision("extraction_failed").is_incomplete       # True
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Final
+
+#: Reasons an agent did not produce a decision. Closed set, versioned with the
+#: evidence schema, because a stored reason has to mean the same thing later.
+NO_DECISION_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        # Things the agent did. A contract may declare these as allowed
+        # outcomes, and then they are ordinary categorical results.
+        "no_tool_selected",
+        "refused",
+        # The layer is categorical and the answer was not. Comparable to
+        # nothing, so it is excluded from pairs rather than counted as one.
+        "open_ended",
+        # Things the harness could not do. These make the evidence incomplete,
+        # because certifying stability over them would certify the failure.
+        "extraction_failed",
+        "malformed_response",
+        "runtime_error",
+    }
+)
+
+#: Reasons that mean the harness failed rather than the agent answering.
+INCOMPLETE_REASONS: Final[frozenset[str]] = frozenset(
+    {"extraction_failed", "malformed_response", "runtime_error"}
+)
+
+#: Reasons a contract may declare as allowed categorical outcomes.
+DECLARABLE_REASONS: Final[frozenset[str]] = frozenset(
+    {"no_tool_selected", "refused"}
+)
+
+
+@dataclass(frozen=True, slots=True)
+class Decision:
+    """The agent chose, and ``label`` is the choice."""
+
+    label: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.label, str) or not self.label:
+            raise ValueError("a Decision needs a non-empty string label")
+
+    @property
+    def is_incomplete(self) -> bool:
+        return False
+
+    @property
+    def comparable(self) -> bool:
+        """Whether this result can take part in a paired comparison."""
+        return True
+
+    def __str__(self) -> str:
+        return self.label
+
+
+@dataclass(frozen=True, slots=True)
+class NoDecision:
+    """The agent did not choose, and ``reason`` says why.
+
+    Two ``NoDecision`` values are equal when their reasons match, which is what
+    makes two differently worded refusals one decision again. A ``NoDecision``
+    is never equal to a ``Decision``, even one whose label is the same string.
+    """
+
+    reason: str
+
+    def __post_init__(self) -> None:
+        if self.reason not in NO_DECISION_REASONS:
+            raise ValueError(
+                f"unknown no-decision reason {self.reason!r}; "
+                f"expected one of {', '.join(sorted(NO_DECISION_REASONS))}"
+            )
+
+    @property
+    def is_incomplete(self) -> bool:
+        """Whether this means the harness failed rather than the agent answered.
+
+        An incomplete result must not be scored as a stable decision. Certifying
+        stability over repeated extraction failures certifies the failure.
+        """
+        return self.reason in INCOMPLETE_REASONS
+
+    @property
+    def comparable(self) -> bool:
+        """Open-ended output is comparable to nothing on a categorical layer."""
+        return self.reason != "open_ended"
+
+    def __str__(self) -> str:
+        return f"<no decision: {self.reason}>"
+
+
+#: Either shape, wherever one run's categorical result is passed around.
+Outcome = Decision | NoDecision
+
+
+def as_outcome(value: object) -> Outcome:
+    """Read an outcome from a stored or user-supplied value.
+
+    A bare string is a `Decision`, because that is what it meant when it was
+    written. Evidence recorded before ADR 2 stored the reason strings that
+    adapters invented, and reading them as `NoDecision` now would change the
+    meaning of committed files. The schema version, not this function, is what
+    distinguishes the two.
+    """
+    if isinstance(value, (Decision, NoDecision)):
+        return value
+    if isinstance(value, str) and value:
+        return Decision(value)
+    raise ValueError(f"cannot read an outcome from {value!r}")
