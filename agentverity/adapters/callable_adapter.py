@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from agentverity.isolation import declare_isolation, isolation_of
 from agentverity.observation import Observation
 
 
@@ -40,4 +41,11 @@ def from_callable(fn: Callable[[str], Any], *,
         # anything else: stringify into text, keep raw
         return Observation(text=str(out), raw=out)
 
-    return run
+    # Carried through, not invented. This adapter reshapes a return value and
+    # changes nothing about how trials are separated, so an underlying
+    # declaration is still true afterwards. The CLI loads every agent through
+    # here, and dropping it meant an adapter's statement died at the command
+    # line: a Strands factory reported `unknown` and its baseline was admitted
+    # on the caveat the whole policy exists to replace. A plain function still
+    # declares nothing, because it has nothing to carry.
+    return declare_isolation(run, isolation_of(fn))

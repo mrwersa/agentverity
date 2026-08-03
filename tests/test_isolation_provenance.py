@@ -7,6 +7,8 @@ refused. The knowledge existed in the adapters and was discarded.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from agentverity import RunConfig, run
@@ -138,3 +140,71 @@ def test_an_invented_attribute_value_is_not_trusted():
     agent.__agentverity_isolation__ = "perfectly-isolated"
 
     assert isolation_of(agent) == "unknown"
+
+
+def _agent_module(tmp_path, adapter: str) -> str:
+    """Write an agent factory the CLI can import, wrapped by `adapter`."""
+    module = tmp_path / "cli_agent.py"
+    module.write_text(
+        "from agentverity.adapters.strands import "
+        "from_strands, from_strands_factory\n\n\n"
+        "class _Agent:\n"
+        "    def __call__(self, text):\n"
+        "        return {'verdict': 'block' if 'secret' in text else 'allow'}\n\n\n"
+        f"def factory():\n    return {adapter}\n",
+        encoding="utf-8",
+    )
+    return f"{module}:factory"
+
+
+def test_the_cli_carries_an_adapter_declaration_through(tmp_path, capsys):
+    """The CLI loads every agent through `from_callable`, which dropped it.
+
+    So the policy applied to the Python API and not to the command line, and
+    a CLI user snapshotting a Strands agent still got the `unknown` this
+    change exists to replace. That is the path the production-stack example
+    documents, which made the gap the whole feature rather than an edge.
+    """
+    from agentverity.cli import main
+
+    inputs = tmp_path / "inputs.txt"
+    inputs.write_text("\n".join(_balanced_inputs()), encoding="utf-8")
+    snapshot_path = tmp_path / "snapshot.json"
+
+    code = main([
+        "snapshot",
+        "--agent", _agent_module(tmp_path, "from_strands_factory(_Agent)"),
+        "--inputs", str(inputs), "--k", "10",
+        "--output", str(snapshot_path), "--accept-reference",
+    ])
+    capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    assert payload["admission_evidence"]["isolation"] == "fresh-instance"
+
+
+def test_the_cli_refuses_a_baseline_from_a_shared_session_agent(tmp_path, capsys):
+    """The headline refusal, on the path most callers actually use."""
+    from agentverity.cli import main
+
+    inputs = tmp_path / "inputs.txt"
+    inputs.write_text("\n".join(_balanced_inputs()), encoding="utf-8")
+
+    code = main([
+        "snapshot",
+        "--agent", _agent_module(tmp_path, "from_strands(_Agent())"),
+        "--inputs", str(inputs), "--k", "10",
+        "--output", str(tmp_path / "snapshot.json"), "--accept-reference",
+    ])
+
+    assert code == 2
+    assert "not independent" in capsys.readouterr().err
+
+
+def test_a_reshaping_wrapper_invents_nothing():
+    """`from_callable` carries a declaration; it does not create one."""
+    assert isolation_of(from_callable(lambda text: "allow")) == "unknown"
+    assert isolation_of(from_callable(from_strands_factory(_Agent))) == (
+        "fresh-instance"
+    )

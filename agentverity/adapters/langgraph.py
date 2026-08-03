@@ -208,8 +208,9 @@ def from_langgraph_thread(
     Use this only when the conversation is the thing under test. Repeated
     trials on one thread are not independent, and every interval AgentVerity
     reports assumes they are, so it will read narrower than the evidence
-    supports. Record ``isolation: shared-session`` when exporting evidence
-    collected this way, and the report will say so.
+    supports. This adapter declares ``shared-session`` for you, so the report
+    says so and a baseline collected this way is refused rather than admitted
+    with a caveat.
     """
 
     def run(x: str) -> Observation:

@@ -20,6 +20,12 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   repeat then runs on that one thread, so it declares `shared-session` in that
   case. Keying it on the function name would have asserted independence
   exactly where the caller opted out.
+- `from_callable` carries an underlying declaration rather than dropping it.
+  It reshapes a return value and changes nothing about how trials are
+  separated, so the statement is still true afterwards. This is what makes the
+  policy reach the CLI, which loads every agent through it: without it a
+  Strands factory reported `unknown` at the command line and its baseline was
+  admitted on the caveat the policy exists to replace.
 - `declare_isolation` and `isolation_of` for anyone writing an adapter.
 
 - Isolation now decides whether evidence may certify a baseline.

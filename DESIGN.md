@@ -588,11 +588,23 @@ exactly where the caller had turned it off, which is worse than the `unknown`
 it replaced, because the policy would then certify a baseline on the strength
 of a false assertion.
 
+**A reshaping wrapper carries a declaration rather than dropping it.**
+`from_callable` converts a return value into an `Observation` and changes
+nothing about how trials are separated, so an underlying statement survives
+it. This is not a detail: the CLI loads every agent through `from_callable`,
+so without it the policy applied to the Python API and stopped at the command
+line, which is the path the production-stack example documents. A plain
+function still declares nothing, because it has nothing to carry.
+
 **Consequences.** A live `run` through a fresh-per-trial adapter now certifies
 with real provenance, and one through a shared-session adapter is refused a
 baseline rather than quietly admitted. That is a behaviour change for anyone
 using `from_strands` or `from_langgraph_thread` with `snapshot`, and it is the
 change ADR 5 was written to make.
+
+Setting the attribute by hand with a level the format defines is trusted, and
+that is the same act as calling `declare_isolation`. What the reader refuses is
+an invented level, which would otherwise arrive as a value no policy covers.
 
 An assertion is still an assertion. The adapter states what it did, and the
 library cannot see whether a model provider kept state behind it, whether a
