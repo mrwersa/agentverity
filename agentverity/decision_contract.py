@@ -525,7 +525,8 @@ def assess_decision_coverage(
             }
             for case in per_case
         ]
-    case_counter: Counter[str] = Counter()
+    # Holds a label or a ("no_decision", reason) key, so not Counter[str].
+    case_counter: Counter[Any] = Counter()
     for labels in case_label_sets:
         case_counter.update(labels)
     required = suite.contract.required
