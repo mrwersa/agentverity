@@ -27,13 +27,13 @@ That accepts compatible `0.14.x` fixes without moving to a later pre-1.0 minor
 series.
 
 Version 0.15 reads and writes one version of each schema:
-`agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v2`,
+`agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v3`,
 `agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
 differ because each records its own format history, not a release. Evidence is
-at v2 because the shape of an observation changed; the decision suite is still
-at v1 because `allowed_no_decisions` is optional and a suite written without it
-parses correctly. JSON reports and telemetry
-exports are append-only artefacts, so consumers must opt into their
+at v2 and snapshots at v3 because the shape of a stored outcome changed in
+each. The decision suite is still at v1 because `allowed_no_decisions` is
+optional and a suite written without it parses correctly. JSON reports and
+telemetry exports are append-only artefacts, so consumers must opt into their
 schemas. The evidence loader rejects unknown versions and aggregate-only
 inputs rather than guessing. Promptfoo and DeepEval bridges translate into
 that contract while keeping framework packages optional.

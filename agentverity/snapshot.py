@@ -20,7 +20,9 @@ from agentverity.meter import MeterResult, pairs_for_deterministic_call
 from agentverity.reporting import json_value
 from agentverity.runner import RunResult
 
-SNAPSHOT_SCHEMA = "agentverity.snapshot/v2"
+from .decision import comparison_key
+
+SNAPSHOT_SCHEMA = "agentverity.snapshot/v3"
 
 
 class SnapshotRefused(ValueError):
@@ -325,6 +327,20 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
     )
 
 
+
+def _comparable(stored: Any) -> Any:
+    """One comparison key for a stored outcome, whichever shape it is in.
+
+    A snapshot may hold ``"refund"`` from before an adapter adopted the typed
+    outcomes and ``{"kind": "no_decision", ...}`` from after. Comparison has to
+    treat a bare label and a ``Decision`` as one decision, and keep a reason
+    distinct from a label of the same name.
+    """
+    if isinstance(stored, dict) and stored.get("kind") == "no_decision":
+        return ("no_decision", stored.get("reason"))
+    return comparison_key(stored)
+
+
 def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
     """Compare a current, independently admitted run to an approved snapshot."""
     _require_snapshot_evidence(result)
@@ -354,6 +370,10 @@ def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
             "current decision contract does not match the snapshot"
         )
 
+    # Normalised on both sides, so a baseline written before an adapter
+    # adopted the types still matches the runs it makes afterwards. Without it
+    # adoption would fail every existing baseline, which is the
+    # string-versus-typed defect one layer further out.
     expected = {
         probe.input_fingerprint: probe.expected
         for probe in snapshot.probes
@@ -391,10 +411,13 @@ def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
             "current intended decisions do not match the snapshot"
         )
 
+    # Compared through one canonical key, reported as stored. A baseline
+    # written before an adapter adopted the typed outcomes still matches the
+    # runs it makes afterwards, and the diff still shows what is in the file.
     changes = tuple(
         SnapshotChange(fingerprint, expected[fingerprint], actual[fingerprint])
         for fingerprint in expected
-        if actual[fingerprint] != expected[fingerprint]
+        if _comparable(actual[fingerprint]) != _comparable(expected[fingerprint])
     )
     return SnapshotDiff(changes=changes, checked=len(expected))
 

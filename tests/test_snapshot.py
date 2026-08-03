@@ -234,3 +234,93 @@ def test_snapshot_refuses_an_incomplete_declared_contract():
 
     with pytest.raises(SnapshotRefused, match="decision contract"):
         create_snapshot(result, approved=True)
+
+
+class TestBaseliningADeclaredRefusal:
+    """ADR 4. Before this, a contract could declare a refusal and never baseline it.
+
+    The feature worked right up to the point of using it: `create_snapshot`
+    serialises through strict `json_value`, which refused every typed outcome.
+    """
+
+    def _agent(self, refuse: bool = False):
+        from agentverity import NoDecision, Observation
+
+        def run(text: str) -> Observation:
+            if text.startswith("b"):
+                return Observation(
+                    text="I cannot help with that.", verdict=NoDecision("refused")
+                )
+            return Observation(text="ok", verdict="refund")
+
+        return run
+
+    def _suite(self):
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+
+        return DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund"}),
+                required=frozenset({"refund"}),
+                allowed_no_decisions=frozenset({"refused"}),
+            ),
+            cases=(
+                DecisionCase(input="a1", expected="refund"),
+                DecisionCase(input="b1", expected="refund"),
+            ),
+        )
+
+    def test_a_declared_refusal_round_trips_through_a_snapshot(self, tmp_path):
+        import json
+
+        from agentverity import RunConfig, run
+        from agentverity.snapshot import (
+            SNAPSHOT_SCHEMA,
+            create_snapshot,
+            load_snapshot,
+            save_snapshot,
+        )
+
+        result = run(self._agent(), suite=self._suite(), config=RunConfig(budget=200, epsilon=0.2))
+        snapshot = create_snapshot(result, approved=True)
+        path = tmp_path / "baseline.json"
+        save_snapshot(snapshot, path)
+
+        stored = json.loads(path.read_text())
+        assert stored["schema"] == SNAPSHOT_SCHEMA
+        shapes = [probe["expected"] for probe in stored["probes"]]
+        assert {"kind": "no_decision", "reason": "refused"} in shapes
+        assert "refund" in shapes, "a decision stays a plain string"
+
+        assert load_snapshot(path).probes == snapshot.probes
+
+    def test_the_same_agent_still_matches_its_own_baseline(self, tmp_path):
+        from agentverity import RunConfig, run
+        from agentverity.snapshot import compare_snapshot, create_snapshot
+
+        config = RunConfig(budget=200, epsilon=0.2)
+        baseline = create_snapshot(
+            run(self._agent(), suite=self._suite(), config=config),
+            approved=True,
+        )
+        again = run(self._agent(), suite=self._suite(), config=config)
+
+        assert compare_snapshot(baseline, again).changes == ()
+
+    def test_a_baseline_written_before_the_types_still_matches_after(self):
+        """Adoption must not invalidate every baseline a team already holds."""
+        from agentverity import Decision
+        from agentverity.snapshot import _comparable
+
+        # what a pre-adoption run stored, and what a post-adoption run returns
+        assert _comparable("refund") == _comparable(Decision("refund"))
+
+    def test_a_reason_never_matches_a_label_of_the_same_name(self):
+        from agentverity import Decision, NoDecision
+        from agentverity.reporting import json_value
+        from agentverity.snapshot import _comparable
+
+        stored_reason = json_value(NoDecision("refused"), strict=True)
+        stored_label = json_value(Decision("refused"), strict=True)
+
+        assert _comparable(stored_reason) != _comparable(stored_label)

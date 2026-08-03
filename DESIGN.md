@@ -428,6 +428,47 @@ rendered for a report rather than escaping. Making `allowed` hold typed objects,
 survive JSON without inventing the tagged form anyway, and would force every
 existing suite through a migration for a field most of them will never use.
 
+## ADR 4: a snapshot stores a typed outcome the way evidence does
+
+**Status.** Accepted 2026-08-03. Completes roadmap item 2.
+
+**Context.** ADR 2 gave a run a typed outcome and ADR 3 let a contract declare
+one. A snapshot could hold neither: `create_snapshot` serialises through
+`json_value(..., strict=True)`, which refuses a `Decision` or a `NoDecision`
+outright. So an agent whose contract legitimately allows a refusal could be
+measured and assessed, and then could not be baselined. The feature worked
+right up to the point of using it.
+
+**Decision.** The snapshot format carries an outcome exactly as evidence does:
+a decision is a plain string, and a no-decision is
+`{"kind": "no_decision", "reason": ...}`. One encoding across both stored
+formats, so a reader learns the rule once.
+
+Only a **declarable** reason can reach a snapshot, and not because the
+serialiser filters it. A run holding an incomplete outcome is refused by the
+meter long before admission, and an `open_ended` one is refused there too. By
+the time a snapshot is created, the only no-decision that can survive is one a
+contract declared. The serialiser still refuses the others rather than relying
+on that, because a guarantee that depends on an upstream check holding is not a
+guarantee.
+
+Comparison normalises through `comparison_key`, so a snapshot storing
+`"refund"` matches a current run returning `Decision("refund")`. Without it, an
+adapter adopting the types would fail every baseline it had written before
+adopting them, which is the string-versus-typed defect one more layer out.
+
+**Consequences.** `agentverity.snapshot/v3`, because a v2 reader rejects an
+object where it expects a string, which is exactly the bar `STABILITY.md` sets
+for a version change. No v2 reader is kept: there are no known external
+consumers, and the one-version rule stands.
+
+**Alternatives rejected.** Flattening a no-decision to its reason string, which
+loses the distinction from a decision with the same label and would silently
+turn a refusal into a route. Storing the tagged form for decisions too, which
+evidence already rejected for tripling a file to record a distinction nothing
+acts on. Leaving snapshots unable to hold one, which is the status quo and
+makes ADR 3 half a feature.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.
