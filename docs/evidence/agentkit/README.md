@@ -46,16 +46,18 @@ repeat, and counts each case once however many repeats agreed. See
 That is not a bug in the evidence. It is the contract check working, and one
 line of it is worth understanding before anything else here.
 
-`approve` was returned **98 times out of 146**. The contract still reports it
-as never observed, because the contract reads the *first* verdict of each case
-and the first answer to that probe was `get_erc20_token_address`. The route
-table and the contract mean different things by "reached": the table counts
-every repeat, the contract counts the opening answer.
+`approve` was returned **98 times out of 146**, and never as the first answer
+to its probe, which was `get_erc20_token_address` every time. The contract
+used to report it as never observed for exactly that reason: it read the first
+verdict of each case, while the route table read every repeat. The same
+evidence therefore described one route as **stochastic but reached** in one
+section and **never observed** in another.
 
-So a route can be **stochastic but reached** in one section and **never
-observed** in another, from the same evidence. That is a real wrinkle in this
-library, surfaced by its own flagship example, and it is recorded in the
-roadmap rather than tidied away here.
+That was a real defect in this library, surfaced by its own flagship example.
+Coverage now counts the distinct cases that reached a decision on any repeat,
+so `approve` is observed, and counted once rather than ninety-eight times
+because it is one case. The evidence below has not been re-collected and did
+not need to be: what changed is how the library reads it.
 
 The other three are simpler: `fetch_price`, `get_balance` and `get_portfolio`
 genuinely never came back, because these models answered those probes with a
