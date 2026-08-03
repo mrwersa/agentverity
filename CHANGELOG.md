@@ -8,6 +8,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-08-03
+
+Route reach became three quantities instead of one, the absence of a decision
+became a type instead of a missing field, and any harness that can write one
+JSON object per run can now be assessed. Every schema a file is written at is
+listed below, because two of them moved.
+
+
 ### Added
 
 - `evidence_from_jsonl` and `load_jsonl` read repeated decisions from a JSONL
@@ -113,6 +121,19 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   afterwards. A diff still reports what is stored rather than the normalised
   form.
 
+
+- The README opens with the finding rather than the positioning. A recorded
+  `run` shows the result before the tool explains itself, because a reader
+  who has not seen the failure has no reason to care about the library.
+- Design and stability documentation now reflects the shipped 0.14 loop,
+  including temporal comparison, LangGraph isolation, and the externally
+  authored AgentKit evidence. The stale changelog comparison links are also
+  restored through every published minor and patch release.
+- Simple diagrams now keep Mermaid as their reviewable source and SVG as the
+  documentation render, with PNG reserved for Medium. The bespoke release-gate
+  dashboard remains SVG because its denser layout does not benefit from a
+  generic flow renderer.
+
 ### Fixed
 
 - The `run`, `snapshot`, and `check` commands crashed with a Python traceback
@@ -134,20 +155,6 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   a mention in the README, so it was discoverable only from the roadmap. It is
   described where the other checks are, and a test requires every CLI command
   to appear on the front page.
-
-### Changed
-
-- The README opens with the finding rather than the positioning. A recorded
-  `run` shows the result before the tool explains itself, because a reader
-  who has not seen the failure has no reason to care about the library.
-- Design and stability documentation now reflects the shipped 0.14 loop,
-  including temporal comparison, LangGraph isolation, and the externally
-  authored AgentKit evidence. The stale changelog comparison links are also
-  restored through every published minor and patch release.
-- Simple diagrams now keep Mermaid as their reviewable source and SVG as the
-  documentation render, with PNG reserved for Medium. The bespoke release-gate
-  dashboard remains SVG because its denser layout does not benefit from a
-  generic flow renderer.
 
 ## [0.14.0] - 2026-07-31
 
