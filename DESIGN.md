@@ -232,6 +232,49 @@ production requests, instrument model internals, or replace the host's trace
 collector. When called inside an active trace, the span follows the current
 OpenTelemetry context.
 
+## ADR 1: observed route reach counts cases, not primaries and not occurrences
+
+**Status.** Accepted 2026-08-03. Supersedes the primary-only reading in
+`assess_decision_coverage`.
+
+**Context.** The AgentKit run reached `approve` on 98 of 146 repeats and the
+report said the route was never observed. `assess_decision_coverage` read one
+primary result per case for route counts and required-route coverage, and used
+the full repeat set only to detect out-of-contract labels. The docstring gives
+the reason, and the instinct is right: counting every repeat would make one
+case look like a hundred test cases. It was implemented too narrowly, so a
+route the agent demonstrably reached could be reported as missing.
+
+**Decision.** Three quantities, distinct in the model and in every report.
+
+- **intended** — reviewed cases written for the route. Unchanged, from
+  `suite.expected`.
+- **observed** — the number of **distinct cases** that returned the route on
+  **any** repeat. Not primaries only, and not occurrences.
+- **admissible** — route evidence that also meets its declared stability
+  target. Reported by the meter, not by this function.
+
+Required-route coverage is computed from observed. A route reached only on a
+repeat is observed. A route reached ninety-eight times within one case counts
+once.
+
+**Consequences.** `missing_observed` shrinks for suites whose agents reach a
+route inconsistently, which is the intended correction. It does not shrink to
+the point of certifying anything: observed says the route was exercised, and
+admissible is the separate question of whether the evidence about it is
+stable enough to trust. One chance occurrence therefore cannot make unstable
+evidence look adequately covered, because the two are reported separately and
+the gate reads both.
+
+`observed_counts` keeps its primary-result meaning for continuity and is now
+named as such in the report. `observed_case_counts` carries the new quantity.
+
+**Alternatives rejected.** Counting occurrences, which inflates one case into
+many and would make a repeat budget look like breadth. Leaving primary-only,
+which is the defect. Introducing a threshold such as "reached on at least k
+repeats", which invents a policy nobody declared and would need its own
+justification.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.

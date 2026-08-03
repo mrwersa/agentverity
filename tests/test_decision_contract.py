@@ -584,3 +584,91 @@ class TestMinimumCasesIsADeclarationNotACalculation:
     def test_minimums_must_be_a_mapping(self):
         with pytest.raises(TypeError, match="must be a mapping"):
             DecisionContract(allowed={"approve"}, minimum_cases=[("approve", 2)])
+
+
+class TestObservedRouteReach:
+    """Observed coverage counts cases, not primaries and not occurrences.
+
+    See DESIGN.md ADR 1. The AgentKit run reached `approve` on 98 of 146
+    repeats and the report said the route was never observed, because coverage
+    read only the first result of each case.
+    """
+
+    def _suite(self):
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+
+        return DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund", "escalate", "deny"}),
+                required=frozenset({"refund", "escalate"}),
+            ),
+            cases=(
+                DecisionCase(input="a", expected="refund"),
+                DecisionCase(input="b", expected="escalate"),
+            ),
+        )
+
+    def test_a_route_reached_only_on_a_repeat_counts_as_observed(self):
+        from agentverity.decision_contract import assess_decision_coverage
+
+        result = assess_decision_coverage(
+            self._suite(),
+            observed=("refund", "refund"),          # escalate never came first
+            per_case=(("refund",) * 3, ("refund", "escalate", "refund")),
+        )
+
+        assert result.missing_observed == ()
+        # the older reading is preserved and still says escalate never led
+        assert {c.decision: c.count for c in result.observed_counts} == {
+            "refund": 2
+        }
+
+    def test_ninety_eight_occurrences_in_one_case_count_once(self):
+        from agentverity.decision_contract import assess_decision_coverage
+
+        result = assess_decision_coverage(
+            self._suite(),
+            observed=("refund", "refund"),
+            per_case=(("refund",) * 3, ("refund",) + ("escalate",) * 98),
+        )
+        counts = {c.decision: c.count for c in result.observed_case_counts}
+
+        assert counts["escalate"] == 1, "a repeat budget is not breadth"
+        assert counts["refund"] == 2
+
+    def test_without_per_case_the_narrow_reading_still_applies(self):
+        from agentverity.decision_contract import assess_decision_coverage
+
+        result = assess_decision_coverage(self._suite(), observed=("refund", "refund"))
+
+        assert result.missing_observed == ("escalate",)
+
+    def test_the_agentkit_case_recovers_approve_and_nothing_else(self):
+        """The evidence that motivated the change, asserted end to end."""
+        import json
+        from pathlib import Path
+
+        from agentverity import load_decision_suite
+        from agentverity.decision_contract import assess_decision_coverage
+
+        root = Path(__file__).resolve().parents[1] / "docs" / "evidence" / "agentkit"
+        evidence = json.loads((root / "evidence-gpt4o_mini.json").read_text())
+        suite = load_decision_suite(root / "suite.json")
+        per_case = tuple(tuple(case["observations"]) for case in evidence["cases"])
+
+        result = assess_decision_coverage(
+            suite,
+            observed=tuple(case["observations"][0] for case in evidence["cases"]),
+            per_case=per_case,
+        )
+
+        assert "approve" not in result.missing_observed
+        assert set(result.missing_observed) == {
+            "fetch_price",
+            "get_balance",
+            "get_portfolio",
+        }, "routes never returned on any repeat stay missing"
+        approve = next(
+            c for c in result.observed_case_counts if c.decision == "approve"
+        )
+        assert approve.count == 1, "98 observations came from one case"

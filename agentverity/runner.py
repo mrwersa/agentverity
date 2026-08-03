@@ -1090,6 +1090,11 @@ def run(
                 for observation in repeated_observations
             )
             + observed_keys,
+            per_case=tuple(
+                tuple(observation.key(config.layer) for observation in observations)
+                for observations in complete_series
+            )
+            or tuple((key,) for key in observed_keys),
         )
         if suite is not None
         else None

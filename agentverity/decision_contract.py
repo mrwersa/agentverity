@@ -287,6 +287,10 @@ class DecisionCoverageResult:
     unknown_observed: tuple[str, ...]
     # (decision, cases written, cases the contract asks for)
     under_cased: tuple[tuple[str, int, int], ...] = ()
+    # Distinct cases that returned the decision on any repeat. `observed_counts`
+    # keeps the primary-result reading; this is what required-route coverage is
+    # computed from. See DESIGN.md ADR 1.
+    observed_case_counts: tuple[DecisionCount, ...] = ()
 
     @property
     def satisfied(self) -> bool:
@@ -355,13 +359,22 @@ def assess_decision_coverage(
     observed: tuple[Any | None, ...],
     *,
     all_observed: tuple[Any | None, ...] | None = None,
+    per_case: tuple[tuple[Any | None, ...], ...] | None = None,
 ) -> DecisionCoverageResult:
     """Compare intended and observed decisions without judging correctness.
 
-    ``observed`` contains one primary result per case and therefore drives
-    route counts and required-route coverage. ``all_observed`` may include
-    repeated trials. It is used to detect any out-of-contract label without
-    making repeated calls look like additional test cases.
+    ``observed`` is one primary result per case and keeps its own count, which
+    is what ``observed_counts`` reports.
+
+    ``per_case`` groups every repeat by the case it came from. Required-route
+    coverage is computed from it, counting the number of distinct cases that
+    returned a decision on any repeat. A route reached only on a repeat is
+    observed; a route reached ninety-eight times inside one case counts once.
+    Without it the primary results are used, which is the older and narrower
+    reading. See DESIGN.md ADR 1.
+
+    ``all_observed`` may include repeated trials and is used only to detect an
+    out-of-contract label, without making repeated calls look like extra cases.
     """
     if len(observed) != len(suite.cases):
         raise ValueError("observed decisions must align with decision suite cases")
@@ -377,6 +390,18 @@ def assess_decision_coverage(
     ]
     intended_counter = Counter(suite.expected)
     observed_counter = Counter(primary_labels)
+    # One vote per case, however many repeats agreed with it.
+    if per_case is None:
+        case_label_sets = [
+            {value} if isinstance(value, str) else set() for value in observed
+        ]
+    else:
+        case_label_sets = [
+            {value for value in case if isinstance(value, str)} for case in per_case
+        ]
+    case_counter: Counter[str] = Counter()
+    for labels in case_label_sets:
+        case_counter.update(labels)
     required = suite.contract.required
     assert required is not None
     return DecisionCoverageResult(
@@ -389,11 +414,15 @@ def assess_decision_coverage(
             DecisionCount(decision, observed_counter[decision])
             for decision in sorted(observed_counter)
         ),
+        observed_case_counts=tuple(
+            DecisionCount(decision, case_counter[decision])
+            for decision in sorted(case_counter)
+        ),
         missing_intended=tuple(
             sorted(required - frozenset(intended_counter))
         ),
         missing_observed=tuple(
-            sorted(required - frozenset(observed_counter))
+            sorted(required - frozenset(case_counter))
         ),
         unknown_observed=tuple(
             sorted(frozenset(every_label) - suite.contract.allowed)
