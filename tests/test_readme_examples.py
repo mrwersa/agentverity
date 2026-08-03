@@ -306,8 +306,12 @@ def test_every_name_the_docs_import_from_the_package_actually_exists() -> None:
 
     `docs/api.md` taught `declare_isolation` in a file where every other
     example imports from the top-level package, and it was only reachable as
-    `agentverity.isolation.declare_isolation`. Scanning the prose rather than
-    the code blocks, because the sentence is what a reader copies.
+    `agentverity.isolation.declare_isolation`. Prose is scanned as well as code
+    blocks, because the sentence is what a reader copies.
+
+    The first version stopped at a newline, so the one parenthesised import in
+    that file contributed a lone `(` and its four names went unchecked while
+    the test still claimed to check every import. Both forms are read now.
     """
     import re
     from pathlib import Path
@@ -315,12 +319,23 @@ def test_every_name_the_docs_import_from_the_package_actually_exists() -> None:
     import agentverity
 
     root = Path(__file__).resolve().parents[1]
-    missing = []
+    pattern = re.compile(
+        r"from agentverity import \s*(?:\(([^)]*)\)|([^\n(]+))", re.MULTILINE
+    )
+    missing, checked = [], 0
     for path in sorted(root.glob("docs/*.md")) + [root / "README.md"]:
         text = path.read_text(encoding="utf-8")
-        for block in re.findall(r"from agentverity import ([^\n]+)", text):
-            for name in re.split(r"[,\s()]+", block.replace("\\", "")):
-                if name and name.isidentifier() and not hasattr(agentverity, name):
+        for parenthesised, inline in pattern.findall(text):
+            block = parenthesised or inline
+            for name in re.split(r"[,\s]+", block.replace("\\", "").strip()):
+                if not name or not name.isidentifier():
+                    continue
+                checked += 1
+                if not hasattr(agentverity, name):
                     missing.append(f"{path.name}: {name}")
 
     assert not missing, f"docs import names the package does not export: {missing}"
+    assert checked >= 15, (
+        f"only {checked} imported names found, so the scan is not reading the "
+        "docs it claims to"
+    )
