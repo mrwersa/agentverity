@@ -689,12 +689,22 @@ Simulated over 4,000 runs per point, against the 73-pair fixed-sample cost:
 in a quarter of the budget. The first design would have taxed the first row by
 36% to buy the last.
 
-**The error guarantee does not rest on the simulation.** Certification fires
-only when the final checkpoint sees zero flips, and zero flips means no early
-look could have fired either, so the two rules cannot interact. The false
-certification rate is therefore exactly `(1 - p)^n`, which at `p = epsilon` and
-72 pairs is 0.02489 against a budget of 0.025. A 400,000-run simulation reads
-2.508%, which is that number plus noise. The tests assert the closed form.
+**The error guarantee does not rest on the simulation.** Certification is one
+exact binomial test at `alpha / 2`, and stopping early can only remove paths
+that would have reached it, never add one. That holds for any budget.
+
+At the default budget it is stronger than that and worth stating separately,
+because the argument is checkable by eye. Certifying at 72 pairs requires zero
+flips, and a run with no flips cannot have tripped an early look either, so the
+two rules cannot interact at all and the false certification rate is exactly
+`(1 - p)^n`. At `p = epsilon` that is 0.02489 against a budget of 0.025, and a
+400,000-run simulation reads 2.508%, which is that number plus noise. The tests
+assert the closed form.
+
+A larger budget certifies with some flips allowed, three at 200 pairs and
+fifteen at 500, and then only the general argument applies.
+`SequentialPlan.certification_is_closed_form` says which case a plan is in
+rather than leaving a reader to work it out from the default.
 
 **In-flight calls under bounded concurrency.** A decision at a checkpoint reads
 exactly the first `n` pairs **in collection order**. Concurrency overshoots the

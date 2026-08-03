@@ -10,9 +10,13 @@ history.
 
 ## Where it is now
 
-As of 0.14.0 the loop is complete for a categorical decision layer, and a
+As of 0.15.0 the loop is complete for a categorical decision layer, and a
 [worked example](https://github.com/mrwersa/agent-release-gate) runs it beside
 authority analysis on one agent, offline.
+
+Items 1 to 4 below are shipped and item 5 is half shipped, so the summary that
+follows is the released 0.15.0 picture plus what has merged since. Read each
+item for the detail, including what was deliberately not built.
 
 | | command | what it establishes |
 |---|---|---|
@@ -84,7 +88,11 @@ cannot move one surface silently.
 
 ### 1. Separate intended, observed, and admissible route reach
 
-`DecisionCoverageResult` already carries intended and observed counts. The
+**Shipped.** Observed coverage counts cases rather than occurrences, so a route
+returned on 98 of 146 repeats no longer reports as never observed, and the
+three quantities stay distinct in the model and in every report.
+
+`DecisionCoverageResult` already carried intended and observed counts. The
 defect is narrower than it first looks: observed coverage reads only the
 primary result of each case, so a route the model reached on 98 of 146 repeats
 reports as never observed.

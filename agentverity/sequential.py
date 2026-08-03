@@ -83,6 +83,23 @@ class SequentialPlan:
         """The most pairs this plan will ever ask for."""
         return self.checkpoints[-1]
 
+    @property
+    def certification_is_closed_form(self) -> bool:
+        """Whether the false-certification rate is exactly `(1 - p) ** budget`.
+
+        True when `certify_at_most` is zero, which is the default: certifying
+        then requires a run with no flips at all, and a run with no flips
+        cannot have tripped an early look either, so the two rules cannot
+        interact and the rate is the probability of that single event.
+
+        A larger budget certifies with some flips allowed, at 200 pairs it is
+        three and at 500 it is fifteen, and then the closed form does not
+        apply. The guarantee still does: certification is one exact binomial
+        test at `alpha / 2`, and stopping early can only remove paths that
+        would have reached it, never add one.
+        """
+        return self.certify_at_most == 0
+
     def call_at(self, checkpoint: int, flips: int) -> str | None:
         """The decision at one checkpoint, or None to keep collecting.
 
@@ -204,9 +221,10 @@ def decide_sequentially(
             in the order the pairs were collected.
 
     Returns:
-        The call, and how many pairs it took. `UNDECIDED` with the full budget
-        when the outcomes run out early, because a short run has not settled
-        anything.
+        The call, and how many pairs were actually read. `UNDECIDED` when the
+        outcomes run out before a checkpoint, paired with the count collected
+        rather than the budget, because reporting a spend that did not happen
+        would misstate what the run cost.
     """
     flips = seen = 0
     remaining = iter(outcomes)

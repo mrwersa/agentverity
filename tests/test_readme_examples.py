@@ -283,14 +283,18 @@ def test_every_changelog_version_has_a_matching_comparison_link() -> None:
         (root / "pyproject.toml").read_text(encoding="utf-8"),
         re.MULTILINE,
     ).group(1)
-    released = sorted(
-        section for section in sections if section != "Unreleased"
-    )
-    latest = max(released, key=lambda text: [int(part) for part in text.split(".")])
+    def as_numbers(text: str) -> list[int]:
+        return [int(part) for part in text.split(".")]
 
-    # The released series and the packaged version agree, or the next release
-    # is being prepared on this branch and the section is already written.
-    assert latest in {version, released[-1]}
+    released = {section for section in sections if section != "Unreleased"}
+    latest = max(released, key=as_numbers)
+
+    # Sorting versions as strings put 0.9.1 after 0.15.0, which made an
+    # earlier disjunct here dead and its comment wrong about what it allowed.
+    assert as_numbers(latest) >= as_numbers(version), (
+        f"the changelog's newest section is {latest} and the package is "
+        f"{version}; a released version with no section cannot be described"
+    )
     assert f"compare/v{latest}...HEAD" in changelog, (
         "Unreleased must compare against the newest released version"
     )

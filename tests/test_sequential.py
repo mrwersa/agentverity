@@ -203,3 +203,40 @@ def test_running_out_before_the_first_look_is_undecided_too():
     short = plan.checkpoints[0] - 1
 
     assert decide_sequentially(plan, [False] * short) == (UNDECIDED, short)
+
+
+@pytest.mark.parametrize(
+    ("budget", "certify_at_most"), [(None, 0), (200, 3), (500, 15)]
+)
+def test_the_closed_form_is_a_property_of_the_default_not_of_the_design(
+    budget, certify_at_most
+):
+    """The commit message for the first draft overstated this.
+
+    Certifying at the default budget needs zero flips, so no early look can
+    have fired and the rate is exactly `(1 - p) ** n`. A larger budget allows
+    some flips, and then only the general argument holds: one exact binomial
+    test at `alpha / 2`, which early stopping can only make less likely to be
+    reached.
+    """
+    plan = plan_sequential(0.05, budget=budget)
+
+    assert plan.certify_at_most == certify_at_most
+    assert plan.certification_is_closed_form is (certify_at_most == 0)
+
+
+@pytest.mark.parametrize("budget", [None, 200, 500])
+def test_the_certification_test_stays_inside_its_budget_at_any_size(budget):
+    """The general guarantee, asserted where the closed form does not reach."""
+    from agentverity.sequential import _at_most
+
+    plan = plan_sequential(0.05, budget=budget)
+
+    assert _at_most(plan.budget, plan.certify_at_most, 0.05) <= plan.alpha / 2
+
+
+def test_running_out_reports_what_was_collected_not_what_was_planned():
+    """The docstring claimed the budget. A spend that did not happen."""
+    plan = plan_sequential(0.05)
+
+    assert decide_sequentially(plan, [False] * 40) == (UNDECIDED, 40)
