@@ -44,6 +44,7 @@ from agentverity.execution import (
     map_indexed_inputs,
     map_inputs,
 )
+from agentverity.isolation import isolation_of
 from agentverity.meter import (
     PRECISION_LEVELS,
     MeterResult,
@@ -855,6 +856,9 @@ def run(
         A :class:`RunResult` with meter, blindness, and per-relation results.
     """
     started = time.perf_counter()
+    # Read once, before anything wraps or replaces the callable, so the value
+    # is the adapter's own statement rather than something a later layer lost.
+    declared = isolation_of(agent)
     if (inputs is None) == (suite is None):
         raise ValueError("provide exactly one of inputs or suite")
     if suite is not None:
@@ -1138,4 +1142,5 @@ def run(
         intended_decisions=intended_decisions,
         requested_inputs=len(inputs),
         duration_seconds=time.perf_counter() - started,
+        isolation=declared,
     )

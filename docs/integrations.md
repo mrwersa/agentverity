@@ -115,6 +115,31 @@ agent = from_strands_factory(build_fresh_agent)
 The factory can reuse a stateless model client, but it must create a fresh
 agent session.
 
+### The adapter records which one you chose
+
+Each adapter declares the isolation it produces, and that value decides
+whether the run may certify a baseline:
+
+| Adapter | Declares | May certify |
+|---|---|---|
+| `from_strands_factory` | `fresh-instance` | yes |
+| `from_langgraph` | `fresh-session` | yes |
+| `from_strands` | `shared-session` | **no** |
+| `from_langgraph_thread` | `shared-session` | **no** |
+| `from_callable` | nothing, so `unknown` | yes, with a caveat |
+
+So `snapshot` through `from_strands` is refused rather than admitted with a
+caveat nobody reads. Both shared paths exist for measuring a conversation,
+which is a different question from repeated-trial stability.
+
+`from_langgraph` declares `shared-session` when you pin a `thread_id` in its
+`config`, because every repeat then runs on that one thread. The declaration
+follows what the adapter did, not which function you called.
+
+Writing your own adapter? `declare_isolation(run, "fresh-instance")` before
+returning it. Say what happened rather than what you wanted: the value only
+means something if it is true.
+
 ## Test a multi-agent system
 
 Wrap the scope that owns the decision:

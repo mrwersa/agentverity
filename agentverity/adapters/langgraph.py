@@ -44,6 +44,7 @@ import uuid
 from collections.abc import Callable
 from typing import Any
 
+from agentverity.isolation import declare_isolation
 from agentverity.observation import Observation
 
 # Where a decision plausibly lives in a returned state, in the order tried.
@@ -167,15 +168,29 @@ def from_langgraph(
             tries ``verdict``, ``decision``, ``route``, then ``classification``.
         config: Extra config merged into every call, for recursion limits or
             callbacks. A ``thread_id`` given here is respected rather than
-            replaced, which is how you opt out deliberately.
+            replaced, which is how you opt out deliberately. The mapping is
+            copied at construction, so mutating it afterwards changes nothing:
+            the declared isolation and the calls have to describe one thing.
 
     Returns:
         A function ``(input: str) -> Observation``.
     """
 
+    # Frozen here, and both the declaration and every call read this copy.
+    # Reading the caller's dict per call let the two disagree: declare
+    # `fresh-session`, then add a thread_id to that same dict afterwards, and
+    # the remaining repeats share a thread while the declaration still claims
+    # independence. That is the false assertion this design exists to prevent,
+    # arriving through a different door. Freezing also keeps the repeats
+    # comparable, since a recursion limit that changes mid-run means the
+    # trials were not asking the same question.
+    frozen: dict[str, Any] = {} if config is None else dict(config)
+    frozen_configurable = dict(frozen.get("configurable", {}))
+    pinned = "thread_id" in frozen_configurable
+
     def run(x: str) -> Observation:
-        merged: dict[str, Any] = {} if config is None else dict(config)
-        configurable = dict(merged.get("configurable", {}))
+        merged = dict(frozen)
+        configurable = dict(frozen_configurable)
         configurable.setdefault("thread_id", f"agentverity-{uuid.uuid4()}")
         merged["configurable"] = configurable
 
@@ -186,7 +201,10 @@ def from_langgraph(
         )
         return extract(graph.invoke(state, config=merged), verdict_key=verdict_key)
 
-    return run
+    # Computed from the frozen copy, not from which function was called. A
+    # caller-supplied thread_id is the documented way to opt out, and every
+    # repeat then runs on that one thread.
+    return declare_isolation(run, "shared-session" if pinned else "fresh-session")
 
 
 def from_langgraph_thread(
@@ -202,13 +220,19 @@ def from_langgraph_thread(
     Use this only when the conversation is the thing under test. Repeated
     trials on one thread are not independent, and every interval AgentVerity
     reports assumes they are, so it will read narrower than the evidence
-    supports. Record ``isolation: shared-session`` when exporting evidence
-    collected this way, and the report will say so.
+    supports. This adapter declares ``shared-session`` for you, so the report
+    says so and a baseline collected this way is refused rather than admitted
+    with a caveat.
     """
 
+    # Frozen for the same reason, though isolation cannot drift here: this
+    # path forces the thread on every call and is already `shared-session`.
+    frozen: dict[str, Any] = {} if config is None else dict(config)
+    frozen_configurable = dict(frozen.get("configurable", {}))
+
     def run(x: str) -> Observation:
-        merged: dict[str, Any] = {} if config is None else dict(config)
-        configurable = dict(merged.get("configurable", {}))
+        merged = dict(frozen)
+        configurable = dict(frozen_configurable)
         configurable["thread_id"] = thread_id
         merged["configurable"] = configurable
 
@@ -219,4 +243,7 @@ def from_langgraph_thread(
         )
         return extract(graph.invoke(state, config=merged), verdict_key=verdict_key)
 
-    return run
+    # The whole point of this function. Evidence collected here is refused a
+    # baseline, which is the documented consequence rather than a surprise:
+    # repeats on one thread are successive turns, not independent trials.
+    return declare_isolation(run, "shared-session")

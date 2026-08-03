@@ -157,12 +157,22 @@ be frozen as a baseline on the strength of that interval. A snapshot also
 recorded no isolation at all, so the provenance died at the admission
 boundary.
 
-**The provenance half remains.** Per-trial execution identifiers, and adapter
-assertions about what was actually fresh. This matters more than it sounds:
-the runner sets no isolation, so for a live run the policy is currently inert,
-and only imported evidence can state what it did. Until an adapter can claim
-`fresh-instance` honestly, the strict half applies to the path fewest callers
-use.
+**Adapter provenance is shipped.** Every adapter declares what it did, `run`
+reads it, and the policy above now applies to a live run. `from_strands_factory`
+declares `fresh-instance`, `from_langgraph` declares `fresh-session`, the two
+shared paths declare `shared-session` and are refused a baseline, and
+`from_callable` declares nothing because a plain function says nothing. The
+declaration is computed from what the adapter did rather than which function
+was called, because `from_langgraph` respects a caller-supplied `thread_id`
+and would otherwise claim independence exactly where the caller turned it off.
+See DESIGN.md ADR 6.
+
+**Per-trial execution identifiers are deferred**, not done. They answer a
+different question from the one above: not what isolation was intended, but
+evidence that the trials were in fact distinct. That needs another evidence
+schema move, one release after two of them, for auditability nobody has asked
+for. Same rule as everything else here: a schema grows when a real case forces
+it.
 
 Deliberately not attempted: inferring contamination from behaviour. Inputs
 that grow across trials are often legitimate test inputs, and verdicts
