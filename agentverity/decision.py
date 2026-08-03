@@ -29,6 +29,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
+
+class OutcomeNotScorable(ValueError):
+    """This evidence cannot be scored as it stands, and the message says why.
+
+    Raised wherever a typed outcome reaches a consumer that cannot honestly
+    account for it: a repeat series holding a harness failure, a series with
+    too few comparable observations, or a contract that cannot yet declare a
+    no-decision outcome.
+
+    It subclasses ``ValueError`` because that is what the meter already raised
+    for unscorable evidence, and because the neighbouring refusals in this
+    package (``EvidenceError``, ``SnapshotRefused``) do the same. One type for
+    one condition, so a caller catching it catches every path.
+    """
+
+
 #: Reasons an agent did not produce a decision. Closed set, versioned with the
 #: evidence schema, because a stored reason has to mean the same thing later.
 NO_DECISION_REASONS: Final[frozenset[str]] = frozenset(

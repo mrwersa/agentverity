@@ -19,7 +19,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from .decision import NoDecision
+from .decision import NoDecision, OutcomeNotScorable
 
 DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v1"
 
@@ -394,7 +394,7 @@ def assess_decision_coverage(
     for group in (observed, all_observed or (), *(per_case or ())):
         for value in group:
             if isinstance(value, NoDecision):
-                raise TypeError(
+                raise OutcomeNotScorable(
                     f"a NoDecision({value.reason!r}) reached decision coverage. "
                     "Contracts cannot yet declare no-decision outcomes, so this "
                     "would be counted as an unknown label rather than as the "

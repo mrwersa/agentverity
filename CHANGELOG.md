@@ -33,6 +33,11 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   ...}`, so a decision whose label happens to be `refused` is distinguishable
   from a run that refused.
 
+- `OutcomeNotScorable` is raised by every path that cannot account for a typed
+  outcome: the meter refusing an incomplete series, the meter refusing a series
+  with too few comparable observations, and coverage refusing a `NoDecision`.
+  It subclasses `ValueError`, so a caller already catching that keeps working.
+
 ### Not yet
 
 - A contract cannot declare a no-decision outcome as allowed. Coverage refuses

@@ -10,7 +10,13 @@ from __future__ import annotations
 
 import pytest
 
-from agentverity import Decision, NoDecision, Observation, as_outcome
+from agentverity import (
+    Decision,
+    NoDecision,
+    Observation,
+    OutcomeNotScorable,
+    as_outcome,
+)
 from agentverity.decision import (
     DECLARABLE_REASONS,
     INCOMPLETE_REASONS,
@@ -180,7 +186,9 @@ class TestEnforcement:
             cases=(DecisionCase(input="a", expected="refund"),),
         )
 
-        with pytest.raises(TypeError, match="cannot yet declare no-decision"):
+        with pytest.raises(
+            OutcomeNotScorable, match="cannot yet declare no-decision"
+        ):
             assess_decision_coverage(suite, observed=(NoDecision("refused"),))
 
     def test_the_json_report_can_hold_a_typed_outcome(self):
@@ -214,3 +222,39 @@ class TestEnforcement:
         result = score_runs([[Observation(verdict="refund")] * 4], k=4)
 
         assert result.flip_rate == 0.0
+
+
+def test_one_exception_type_covers_every_unscorable_path():
+    """Review found TypeError in one path and ValueError in another.
+
+    They are the same condition: this evidence cannot be scored as it stands.
+    Two types meant a caller catching one missed the other, which is a smaller
+    version of the disagreement this whole change removes. It was not a
+    deliberate distinction, it was two local consistencies that disagreed.
+    """
+    from agentverity import DecisionCase, DecisionContract, DecisionSuite
+    from agentverity.decision_contract import assess_decision_coverage
+    from agentverity.meter import score_runs
+
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed=frozenset({"refund"}), required=frozenset({"refund"})
+        ),
+        cases=(DecisionCase(input="a", expected="refund"),),
+    )
+    paths = [
+        lambda: score_runs(
+            [[Observation(verdict=NoDecision("extraction_failed"))] * 4], k=4
+        ),
+        lambda: score_runs(
+            [[Observation(verdict=NoDecision("open_ended"))] * 4], k=4
+        ),
+        lambda: assess_decision_coverage(suite, observed=(NoDecision("refused"),)),
+    ]
+    for call in paths:
+        with pytest.raises(OutcomeNotScorable):
+            call()
+    # and it stays catchable as ValueError, which is what the meter raised before
+    for call in paths:
+        with pytest.raises(ValueError):
+            call()

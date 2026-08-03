@@ -34,7 +34,7 @@ from typing import Any
 
 from agentverity.observation import Observation
 
-from .decision import NoDecision
+from .decision import NoDecision, OutcomeNotScorable
 
 AgentFn = Callable[[str], Observation]
 
@@ -394,7 +394,7 @@ def score_runs(
         # take part in a pair at all.
         incomplete = [o for o in observations if _incomplete(o, layer)]
         if incomplete:
-            raise ValueError(
+            raise OutcomeNotScorable(
                 "a repeat series contains "
                 f"{incomplete[0].key(layer)}, which means the harness failed "
                 "rather than the agent answering. Evidence containing it is "
@@ -403,7 +403,7 @@ def score_runs(
         observations = [o for o in observations if _comparable(o, layer)]
         length = len(observations)
         if length < 2:
-            raise ValueError(
+            raise OutcomeNotScorable(
                 "every repeat series must contain at least two comparable "
                 f"observations, got {length} after excluding outcomes that "
                 "compare to nothing"

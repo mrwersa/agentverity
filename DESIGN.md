@@ -338,6 +338,12 @@ workaround was invented. An adapter that cannot read a decision returns
 `NoDecision("extraction_failed")` and the meter refuses to score the series
 rather than counting repeated failures as a stable decision.
 
+Every path that cannot honestly account for a typed outcome raises the same
+`OutcomeNotScorable`, which subclasses `ValueError` so existing handlers keep
+working. One condition, one exception. Review found a `TypeError` in one path
+and a `ValueError` in another, and that was not a considered distinction, it
+was two local consistencies that disagreed.
+
 Two consumers are not there yet and the behaviour is fail-closed until they
 are. Decision coverage refuses a `NoDecision` rather than folding every reason
 into one unknown label, so a contract cannot yet declare `refused` as an

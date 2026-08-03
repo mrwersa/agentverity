@@ -34,6 +34,7 @@ from agentverity.decision import (
     Decision,
     NoDecision,
     Outcome,
+    OutcomeNotScorable,
     as_outcome,
 )
 from agentverity.decision_contract import (
@@ -137,6 +138,7 @@ __all__ = [
     "NoDecision",
     "Observation",
     "Outcome",
+    "OutcomeNotScorable",
     "ProgressEvent",
     "Relation",
     "RelationCoverage",
