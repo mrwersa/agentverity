@@ -147,9 +147,13 @@ The two unstable routes are `transfer` and `approve`, two of the three the
 suite marks critical. Pooled, the same evidence reads 8.5% and does not say
 which routes carry it.
 
-Running `assess` on that evidence returns **NOT TRUSTWORTHY**, and the reason
-is worth reading: the contract counts the first answer per case, the route
-table counts every repeat, and they disagree about what "reached" means.
+Running `assess` on that evidence still returns **NOT TRUSTWORTHY**, and the
+reason changed for the better. It used to be a disagreement inside the report:
+the contract counted the first answer per case while the route table counted
+every repeat, so `approve` came back 98 times and was reported as never
+reached. Coverage now counts the distinct cases that reached a decision on any
+repeat, so `approve` is observed. Three routes remain genuinely unreached, and
+the refusal is about them rather than about an inconsistency.
 
 [The evidence, and the commands to re-run it for nothing](https://github.com/mrwersa/agentverity/tree/main/docs/evidence/agentkit)
 

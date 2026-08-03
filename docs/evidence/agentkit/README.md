@@ -31,23 +31,33 @@ TRUSTWORTHY**:
 ```console
 $ agentverity assess --evidence evidence-gpt4o_mini.json --suite suite.json
   NOT TRUSTWORTHY - the declared decision contract is incomplete: required
-  decisions were represented by cases but not returned: approve, fetch_price,
+  decisions were represented by cases but not returned: fetch_price,
   get_balance, get_portfolio.
 ```
+
+`approve` used to appear in that list, and it was the strongest evidence in
+this directory for a defect the library has since fixed. The model returned
+`approve` on 98 of 146 repeats, and coverage read only the first result of
+each case, so a route the agent demonstrably reached was reported as never
+reached. Coverage now counts the distinct cases that reached a decision on any
+repeat, and counts each case once however many repeats agreed. See
+`DESIGN.md` ADR 1.
 
 That is not a bug in the evidence. It is the contract check working, and one
 line of it is worth understanding before anything else here.
 
-`approve` was returned **98 times out of 146**. The contract still reports it
-as never observed, because the contract reads the *first* verdict of each case
-and the first answer to that probe was `get_erc20_token_address`. The route
-table and the contract mean different things by "reached": the table counts
-every repeat, the contract counts the opening answer.
+`approve` was returned **98 times out of 146**, and never as the first answer
+to its probe, which was `get_erc20_token_address` every time. The contract
+used to report it as never observed for exactly that reason: it read the first
+verdict of each case, while the route table read every repeat. The same
+evidence therefore described one route as **stochastic but reached** in one
+section and **never observed** in another.
 
-So a route can be **stochastic but reached** in one section and **never
-observed** in another, from the same evidence. That is a real wrinkle in this
-library, surfaced by its own flagship example, and it is recorded in the
-roadmap rather than tidied away here.
+That was a real defect in this library, surfaced by its own flagship example.
+Coverage now counts the distinct cases that reached a decision on any repeat,
+so `approve` is observed, and counted once rather than ninety-eight times
+because it is one case. The evidence below has not been re-collected and did
+not need to be: what changed is how the library reads it.
 
 The other three are simpler: `fetch_price`, `get_balance` and `get_portfolio`
 genuinely never came back, because these models answered those probes with a

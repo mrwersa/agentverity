@@ -366,6 +366,10 @@ def assess_evidence(
                 for item in series
                 for observation in item
             ),
+            per_case=tuple(
+                tuple(observation.key(evidence.layer) for observation in item)
+                for item in series
+            ),
         )
 
     repeats = min(len(item) for item in series)

@@ -588,3 +588,73 @@ class TestBudgetAndPrecision:
         result = run(agent, self.INPUTS)
         assert isinstance(result.config.k, int)
         assert isinstance(result.config.epsilon, float)
+
+
+class TestReachWithoutTheMeter:
+    """Coverage must survive the meter being off, and partial meter failure.
+
+    Both were runtime blockers found in review. `complete_series` is assigned
+    only inside the meter branch, and it drops failed entries, so building
+    per-case groups from it crashed with the meter off and silently shifted
+    every later case onto the wrong contract row when one case failed.
+    """
+
+    def _suite(self):
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+
+        return DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund", "escalate"}),
+                required=frozenset({"refund", "escalate"}),
+            ),
+            cases=(
+                DecisionCase(input="a", expected="refund"),
+                DecisionCase(input="b", expected="escalate"),
+                DecisionCase(input="c", expected="refund"),
+            ),
+        )
+
+    def test_a_contract_suite_runs_with_the_meter_disabled(self):
+        from agentverity import RunConfig, run
+        from agentverity.observation import Observation
+
+        # relations mutate the input, so route on the normalised form
+        routes = {"a": "refund", "b": "escalate", "c": "refund"}
+        result = run(
+            lambda text: Observation(
+                text="ok", verdict=routes.get(text.strip().lower()[:1], "refund")
+            ),
+            suite=self._suite(),
+            config=RunConfig(run_meter=False),
+        )
+
+        assert result.decision_coverage is not None
+        assert result.decision_coverage.missing_observed == ()
+
+    def test_a_failure_in_the_first_case_does_not_shift_the_others(self):
+        """The alignment bug: drop case one and case two takes its row."""
+        from agentverity import RunConfig, run
+        from agentverity.observation import Observation
+
+        routes = {"a": "refund", "b": "escalate", "c": "refund"}
+
+        def agent(text: str) -> Observation:
+            key = text.strip().lower()[:1]
+            if key == "a":
+                raise RuntimeError("first case fails")
+            return Observation(text="ok", verdict=routes.get(key, "refund"))
+
+        result = run(
+            agent,
+            suite=self._suite(),
+            config=RunConfig(budget=30, error_policy="record"),
+        )
+
+        counts = {
+            c.decision: c.count
+            for c in result.decision_coverage.observed_case_counts
+        }
+        # b and c kept their own routes rather than inheriting a's row
+        assert counts.get("escalate") == 1
+        assert counts.get("refund") == 1
+        assert result.errors
