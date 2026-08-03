@@ -483,3 +483,67 @@ def test_an_empty_tool_path_is_a_trajectory_that_called_nothing():
     )
 
     assert evidence.cases[0].observations == ((), ())
+
+
+@pytest.mark.parametrize(
+    ("source", "extra"),
+    [
+        ("jsonl", ["--input-path", "input", "--decision-path", "decision"]),
+        ("promptfoo", ["--provider", "local", "--prompt-id", "router"]),
+    ],
+)
+def test_flags_a_source_owns_can_be_combined(tmp_path, capsys, source, extra):
+    """The refusal is per flag, so every flag a source owns must combine.
+
+    The single-flag cases pass even if the guard rejected any second option,
+    because none of them supplies one.
+    """
+    from agentverity.cli import main
+
+    argv = ["assess", f"--{source}", _source_file(source, tmp_path), *extra]
+    if source == "promptfoo":
+        suite = tmp_path / "suite.json"
+        suite.write_text(
+            json.dumps(
+                {
+                    "schema": "agentverity.decision-suite/v1",
+                    "contract": {"allowed": ["x"], "required": ["x"]},
+                    "cases": [{"input": "a", "expected": "x"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        argv += ["--suite", str(suite)]
+
+    main(argv)
+
+    assert "applies to" not in capsys.readouterr().err
+
+
+def test_an_empty_tool_path_survives_the_whole_cli_path(tmp_path, capsys):
+    """The shape is pinned at the API. This pins it through the command.
+
+    Between the two sits argument parsing, the layer flag, the evidence
+    validator and the report, and an empty tuple is the kind of value one of
+    them drops without saying so.
+    """
+    from agentverity.cli import main
+
+    path = tmp_path / "runs.jsonl"
+    path.write_text(
+        '{"input": "a", "decision": []}\n{"input": "a", "decision": []}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["assess", "--jsonl", str(path), "--layer", "tools"])
+    printed = capsys.readouterr()
+
+    # 1 is the blindness check. A refusal would be 2, and the report has to
+    # render the empty trajectory rather than quietly reading it as no answer.
+    assert code == 1
+    assert "refused" not in printed.err
+    # The headline wraps, so compare on collapsed whitespace.
+    assert "the agent answered () on 100% of the probes" in " ".join(
+        printed.out.split()
+    )
+    assert "repeats: 2, layer: tools" in printed.out
