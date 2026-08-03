@@ -26,7 +26,7 @@ from .decision import (
     decision_label,
 )
 
-DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v2"
+DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v1"
 
 
 def _normalise_labels(value: Any, *, field_name: str) -> frozenset[str]:
@@ -43,18 +43,29 @@ def _normalise_labels(value: Any, *, field_name: str) -> frozenset[str]:
 
 
 
-def _is_no_decision_key(label: str) -> bool:
-    return label.startswith("<no-decision:")
+
+def _is_no_decision_key(value: Any) -> bool:
+    return (
+        isinstance(value, tuple) and len(value) == 2 and value[0] == "no_decision"
+    )
 
 
-def no_decision_key(reason: str) -> str:
-    """The name a declared no-decision outcome is counted under.
+def no_decision_key(reason: str) -> tuple[str, str]:
+    """The internal key a declared no-decision outcome is counted under.
 
-    Prefixed so it can never collide with a label. A contract may allow both
-    ``refused`` as a decision and ``refused`` as a reason, and a report has to
-    show which one occurred.
+    A tuple rather than a prefixed string, so it cannot collide with a label
+    and never needs stripping back out. A contract may allow both ``refused``
+    as a decision and ``refused`` as a reason, and a report has to say which
+    one occurred. `allowed` keeps exactly the labels the caller supplied.
     """
-    return f"<no-decision:{reason}>"
+    return ("no_decision", reason)
+
+
+def display_decision(key: Any) -> str:
+    """Render a counting key for a human, at the reporting boundary only."""
+    if isinstance(key, tuple) and len(key) == 2 and key[0] == "no_decision":
+        return f"no decision: {key[1]}"
+    return str(key)
 
 
 @dataclass(frozen=True)
@@ -82,6 +93,11 @@ class DecisionContract:
     allowed_no_decisions: frozenset[str] = field(default_factory=frozenset)
 
     def __post_init__(self) -> None:
+        if isinstance(self.allowed_no_decisions, str):
+            raise TypeError(
+                "allowed_no_decisions must be a collection of reasons, not a "
+                "string; a bare string is iterated as characters"
+            )
         declared = frozenset(self.allowed_no_decisions or ())
         undeclarable = declared - DECLARABLE_REASONS
         if undeclarable:
@@ -101,9 +117,6 @@ class DecisionContract:
             allowed
             if self.required is None
             else _normalise_labels(self.required, field_name="required")
-        )
-        allowed = allowed | frozenset(
-            no_decision_key(reason) for reason in declared
         )
         critical = _normalise_labels(self.critical, field_name="critical")
         if not allowed:
@@ -173,14 +186,8 @@ class DecisionContract:
         """Return a stable JSON-compatible representation."""
         assert self.required is not None
         payload: dict[str, Any] = {
-            # The prefixed keys are an internal counting name, not a label a
-            # caller declared, so they never appear in the written contract.
-            "allowed": sorted(
-                label for label in self.allowed if not _is_no_decision_key(label)
-            ),
-            "required": sorted(
-                label for label in self.required if not _is_no_decision_key(label)
-            ),
+            "allowed": sorted(self.allowed),
+            "required": sorted(self.required),
             "critical": sorted(self.critical),
         }
         if self.allowed_no_decisions:
@@ -327,6 +334,8 @@ class DecisionSuite:
 class DecisionCount:
     """One decision label and its number of intended or observed cases."""
 
+    #: Display name. A declared no-decision renders as "no decision: <reason>",
+    #: because the internal counting key never leaves this module.
     decision: str
     count: int
 
@@ -480,10 +489,13 @@ def assess_decision_coverage(
         per_case = tuple(
             tuple(canonical(value) for value in case) for case in per_case
         )
+    def as_counted(value: Any) -> Any:
+        if isinstance(value, str) or _is_no_decision_key(value):
+            return value
+        return f"<non-string:{type(value).__name__}>"
+
     primary_labels = [
-        value if isinstance(value, str) else f"<non-string:{type(value).__name__}>"
-        for value in observed
-        if value is not None
+        as_counted(value) for value in observed if value is not None
     ]
     # Every label the caller showed us, from whichever argument carried it. A
     # repeat that only appears in `per_case` must still be checked against the
@@ -491,11 +503,7 @@ def assess_decision_coverage(
     seen: list[Any] = list(all_observed if all_observed is not None else observed)
     if per_case is not None:
         seen.extend(value for case in per_case for value in case)
-    every_label = [
-        value if isinstance(value, str) else f"<non-string:{type(value).__name__}>"
-        for value in seen
-        if value is not None
-    ]
+    every_label = [as_counted(value) for value in seen if value is not None]
     intended_counter = Counter(suite.expected)
     observed_counter = Counter(primary_labels)
     # One vote per case, however many repeats agreed with it.
@@ -515,16 +523,16 @@ def assess_decision_coverage(
     return DecisionCoverageResult(
         contract=suite.contract,
         intended_counts=tuple(
-            DecisionCount(decision, intended_counter[decision])
+            DecisionCount(display_decision(decision), intended_counter[decision])
             for decision in sorted(intended_counter)
         ),
         observed_counts=tuple(
-            DecisionCount(decision, observed_counter[decision])
-            for decision in sorted(observed_counter)
+            DecisionCount(display_decision(decision), observed_counter[decision])
+            for decision in sorted(observed_counter, key=display_decision)
         ),
         observed_case_counts=tuple(
-            DecisionCount(decision, case_counter[decision])
-            for decision in sorted(case_counter)
+            DecisionCount(display_decision(decision), case_counter[decision])
+            for decision in sorted(case_counter, key=display_decision)
         ),
         missing_intended=tuple(
             sorted(required - frozenset(intended_counter))
@@ -532,8 +540,22 @@ def assess_decision_coverage(
         missing_observed=tuple(
             sorted(required - frozenset(case_counter))
         ),
+        # The counting keyspace is local: the contract's own `allowed` keeps
+        # exactly the labels the caller supplied, and a declared no-decision is
+        # permitted here without being smuggled into it.
         unknown_observed=tuple(
-            sorted(frozenset(every_label) - suite.contract.allowed)
+            display_decision(key)
+            for key in sorted(
+                (
+                    frozenset(every_label)
+                    - suite.contract.allowed
+                    - {
+                        no_decision_key(reason)
+                        for reason in suite.contract.allowed_no_decisions
+                    }
+                ),
+                key=display_decision,
+            )
         ),
         # Counted from reviewed cases rather than from what the agent returned.
         # The declaration is about how thoroughly a route was written, and an

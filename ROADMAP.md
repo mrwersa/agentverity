@@ -118,7 +118,7 @@ already a first-class outcome here. A refusal becomes a categorical outcome
 only when the contract or the adapter declares it as one.
 
 **Shipped:** the types, enforcement in both the pooled and per-route meters,
-and `agentverity.evidence/v2` carrying the tag with v1 still readable.
+and the evidence schema carrying the reason.
 
 **Open:** contract-declarable no-decision outcomes, and snapshot v3. Both fail
 closed rather than half-working, so an adapter emitting a typed outcome meets a

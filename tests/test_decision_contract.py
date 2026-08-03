@@ -766,18 +766,17 @@ class TestDeclarableNoDecisions:
     def test_a_reason_never_merges_with_a_label_of_the_same_name(self):
         """`refused` as a decision and `refused` as a reason are different."""
         from agentverity import Decision, NoDecision
-        from agentverity.decision_contract import (
-            assess_decision_coverage,
-            no_decision_key,
-        )
+        from agentverity.decision_contract import assess_decision_coverage
 
         result = assess_decision_coverage(
             self._suite(), observed=(Decision("refused"), NoDecision("refused"))
         )
         counts = {c.decision: c.count for c in result.observed_counts}
 
+        # The label and the reason are counted apart, and the report renders
+        # the reason rather than leaking the internal key.
         assert counts["refused"] == 1
-        assert counts[no_decision_key("refused")] == 1
+        assert counts["no decision: refused"] == 1
 
     def test_an_undeclared_reason_is_still_refused(self):
         """Silence is not permission."""
@@ -822,3 +821,31 @@ class TestDeclarableNoDecisions:
         assert contract["allowed"] == ["refund", "refused"]
         assert contract["allowed_no_decisions"] == ["refused"]
         assert not any("<no-decision:" in label for label in contract["required"])
+
+
+def test_a_declared_reason_never_enters_the_public_allowed_set():
+    """The first version put a synthetic label there and stripped it on write.
+
+    A caller reading `contract.allowed` got back something they never supplied,
+    and a legitimate label sharing the prefix would have vanished on round
+    trip. The counting keyspace is internal and is rendered only for a report.
+    """
+    from agentverity import DecisionContract
+
+    contract = DecisionContract(
+        allowed=frozenset({"refund", "refused"}),
+        required=frozenset({"refund"}),
+        allowed_no_decisions=frozenset({"refused"}),
+    )
+
+    assert contract.allowed == frozenset({"refund", "refused"})
+    assert contract.required == frozenset({"refund"})
+    assert not any("no_decision" in label for label in contract.allowed)
+
+
+def test_allowed_no_decisions_refuses_a_bare_string():
+    """It was iterated as characters, reporting d, e, f, r, s, u as unknown."""
+    from agentverity import DecisionContract
+
+    with pytest.raises(TypeError, match="collection"):
+        DecisionContract(allowed=frozenset({"a"}), allowed_no_decisions="refused")

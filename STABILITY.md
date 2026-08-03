@@ -26,26 +26,38 @@ agentverity~=0.14.0
 That accepts compatible `0.14.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.14 reads and writes exactly one version of each schema:
-`agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v2`,
-`agentverity.evidence/v2` and `agentverity.decision-suite/v2`. JSON reports and telemetry
-exports are append-only artefacts, so consumers must opt into their v2
+Version 0.15 reads and writes one version of each schema:
+`agentverity.run/v1`, `agentverity.telemetry/v1`, `agentverity.snapshot/v1`,
+`agentverity.evidence/v1` and `agentverity.decision-suite/v1`. JSON reports and telemetry
+exports are append-only artefacts, so consumers must opt into their
 schemas. The evidence loader rejects unknown versions and aggregate-only
 inputs rather than guessing. Promptfoo and DeepEval bridges translate into
 that contract while keeping framework packages optional.
 
-## One version of each schema
+## Schema versions, and when one changes
 
-Before 1.0 this package reads exactly one version of each schema it defines,
-and refuses anything else by name. There is no compatibility layer, because
-there are no released consumers to be compatible with, and a dual-read path is
-a promise that costs more than it is worth while the format is still moving.
+Every artefact this package writes carries a schema version, and the loader
+refuses a version it does not recognise rather than guessing at the contents.
 
-Migration after 1.0 will be a stated policy rather than an accident. Until
-then, a file at an unrecognised version is refused with a message naming its
-version and the current one. It is never silently reinterpreted, because
-guessing at an old file's meaning is how a stored decision quietly changes
-what it meant.
+**A version changes only when a reader cannot correctly interpret a file
+written at the previous version.** Adding an optional field is not a version
+change, because an older reader parses such a file correctly and simply does
+not use the new field. Changing what an existing field means is a version
+change, and so is removing one, and so is altering the type of a value already
+in use.
+
+That rule exists because a version is an obligation. Every one declared is a
+number somebody later feels obliged to bump, and every bump invites a
+compatibility branch for files nobody holds. A version that sits still for a
+long time is evidence the format is stable, not evidence the versioning is
+unused.
+
+Before 1.0 this package reads exactly one version of each schema. There is no
+compatibility layer, because there are no known external consumers and a
+dual-read path costs more than it is worth while the format is still moving.
+An unrecognised version is refused by name and never silently reinterpreted,
+because guessing at an old file's meaning is how a stored decision quietly
+changes what it meant.
 
 ## What remains open
 

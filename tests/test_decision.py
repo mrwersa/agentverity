@@ -287,7 +287,7 @@ class TestPersistenceRefusals:
         from agentverity.reporting import json_value
 
         for value in (Decision("refund"), NoDecision("refused")):
-            with pytest.raises(OutcomeNotScorable, match="cannot be persisted yet"):
+            with pytest.raises(OutcomeNotScorable, match="cannot be stored in a"):
                 json_value(value, strict=True)
 
     def test_the_run_report_still_serialises_it_tagged(self):

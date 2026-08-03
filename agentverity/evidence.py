@@ -30,7 +30,7 @@ from typing import Any
 from .decision import NO_DECISION_REASONS, Decision, NoDecision
 from .observation import Observation
 
-EVIDENCE_SCHEMA = "agentverity.evidence/v2"
+EVIDENCE_SCHEMA = "agentverity.evidence/v1"
 
 LAYERS = ("verdict", "text", "tools")
 

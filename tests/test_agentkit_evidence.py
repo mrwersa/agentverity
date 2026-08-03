@@ -177,3 +177,31 @@ def test_nova_answered_with_prose_on_eight_probes() -> None:
 
     assert len(with_prose) == 8
     assert "eight of ten probes" in README
+
+
+def test_the_collector_writes_what_the_loader_reads() -> None:
+    """The collector shipped a schema string the loader had stopped accepting.
+
+    Running it would have produced evidence rejected on the next line. Any
+    producer in this repository has to name the version the loader reads, and
+    a literal in a docs script is exactly the place that goes stale unwatched.
+    """
+    from pathlib import Path
+
+    from agentverity.evidence import EVIDENCE_SCHEMA
+
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "docs" / "evidence" / "agentkit" / "collect.py"
+    ).read_text(encoding="utf-8")
+
+    assert EVIDENCE_SCHEMA in source
+    assert "agentverity.evidence/v" in source
+    written = {
+        line.split('"agentverity.evidence/')[1].split('"')[0]
+        for line in source.splitlines()
+        if '"agentverity.evidence/' in line
+    }
+    assert written == {EVIDENCE_SCHEMA.split("/")[1]}, (
+        f"collect.py names {written}, the loader reads {EVIDENCE_SCHEMA}"
+    )

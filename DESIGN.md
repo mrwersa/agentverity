@@ -351,7 +351,7 @@ working. One condition, one exception. Review found a `TypeError` in one path
 and a `ValueError` in another, and that was not a considered distinction, it
 was two local consistencies that disagreed.
 
-Evidence carries the reason from `agentverity.evidence/v2`. A decision is
+Evidence carries the reason from `agentverity.evidence/v1`. A decision is
 written as a plain string and a no-decision as an object, which is one reading
 rule and the smallest form that stays unambiguous. Tagging decisions too would
 triple a repeat-heavy file to record a distinction nothing acts on.
@@ -368,11 +368,10 @@ Storage keeps the original representation, which is why neither lives in
 refuse a tagged value, so normalising there would refuse every ordinary string
 verdict.
 
-Two consumers are not there yet and the behaviour is fail-closed until they
-are. Decision coverage refuses a `NoDecision` rather than folding every reason
-into one unknown label, so a contract cannot yet declare `refused` as an
-allowed outcome. And the snapshot schema does not carry the tag, so writing one
-into a snapshot is refused.
+Coverage takes a declared no-decision outcome and refuses an undeclared one,
+which ADR 3 covers. One consumer is not there yet and fails closed until it is:
+the snapshot format has no shape for a typed outcome, so writing one into a
+snapshot is refused rather than flattened.
 
 **Alternatives rejected.** A single `UNSET` sentinel, which merges six events
 and can certify a broken harness. Keeping the text fallback, which is the
@@ -411,18 +410,21 @@ declared allowed, because a contract cannot make a broken harness acceptable.
 An undeclared `NoDecision` keeps the existing refusal, so silence still fails
 closed rather than being read as permission.
 
-**Consequences.** The decision-suite schema moves to
-`agentverity.decision-suite/v2` and every suite in the repository is rewritten
-at it. There is no v1 read path, because nothing is released and a dual-read
-path is a promise costing more than it is worth while the format moves.
+**Consequences.** `allowed_no_decisions` is additive and optional, so it is
+not a schema change: every suite written before it parses correctly without
+it. See `STABILITY.md` for when a version does move.
 
 Coverage counts a declared no-decision outcome under its reason, never under a
 label. `refused` in `allowed_no_decisions` and `refused` in `allowed` are two
 different declarations, and a suite may hold both without ambiguity.
 
 **Alternatives rejected.** Putting the reason in `allowed`, which merges the
-two shapes. Prefixed strings such as `"no_decision:refused"`, which is the same
-merge with extra parsing. Making `allowed` hold typed objects, which does not
+two shapes. A prefixed string such as `"<no-decision:refused>"` as the counting
+key, which the first implementation used: it leaked a synthetic label into the
+public `allowed` set, had to be stripped again on write, and would have made a
+real label sharing the prefix vanish on round trip. The counting key is a tuple
+instead, which cannot collide with a label and never needs stripping, and it is
+rendered for a report rather than escaping. Making `allowed` hold typed objects, which does not
 survive JSON without inventing the tagged form anyway, and would force every
 existing suite through a migration for a field most of them will never use.
 

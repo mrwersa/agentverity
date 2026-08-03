@@ -44,5 +44,5 @@
     "collected_by": "your-harness 1.4.2",
     "model": "example-model-v3"
   },
-  "schema": "agentverity.evidence/v2"
+  "schema": "agentverity.evidence/v1"
 }
