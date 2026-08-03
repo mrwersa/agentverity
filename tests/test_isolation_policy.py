@@ -180,3 +180,29 @@ def test_the_saved_file_carries_the_new_schema(tmp_path):
     save_snapshot(_snapshot("fresh-instance"), path)
 
     assert json.loads(path.read_text())["schema"] == "agentverity.snapshot/v4"
+
+
+def test_an_older_baseline_is_told_what_to_do_about_it():
+    """A refusal that names no remedy sends the reader to the changelog.
+
+    The remedy is re-admission rather than an upgrade script, and the reason
+    is the reason the field exists: isolation cannot be back-filled, because
+    nobody asserted it when the file was written. Guessing it during a
+    migration would manufacture exactly the provenance the policy establishes.
+    """
+    payload = _snapshot("fresh-session").to_dict()
+    payload["schema"] = "agentverity.snapshot/v3"
+
+    with pytest.raises(SnapshotCompatibilityError) as refused:
+        Snapshot.from_dict(payload)
+
+    assert "Re-run and snapshot again" in str(refused.value)
+    assert "manufacture the provenance" in str(refused.value)
+
+
+def test_an_unrelated_schema_gets_no_snapshot_migration_advice():
+    """The advice is about agentverity snapshots, not any stray JSON file."""
+    with pytest.raises(SnapshotCompatibilityError) as refused:
+        Snapshot.from_dict({"schema": "something.else/v1"})
+
+    assert "Re-run and snapshot again" not in str(refused.value)

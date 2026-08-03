@@ -27,6 +27,18 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   field is absent and neither default is safe: reading a missing isolation as
   `fresh-*` claims provenance nobody asserted, and reading it as
   `shared-session` refuses baselines that were legitimately admitted.
+- `check` can print a `provenance:` line before its verdict. A parser reading
+  the first line of output to decide pass or fail now sees it on a weakened
+  run. Exit codes are unchanged: `0` clean, `1` drift, `2` refused.
+
+### Migration
+
+- **A stored v3 snapshot is refused, and re-admission is the path.** There is
+  no upgrade script and there should not be one: a v3 file does not record how
+  its trials were isolated, and filling that in now would manufacture the
+  provenance the policy exists to establish. Re-run and snapshot again,
+  stating the isolation the run actually had. The refusal says this, so the
+  answer arrives where the problem does.
 
 
 ## [0.15.0] - 2026-08-03

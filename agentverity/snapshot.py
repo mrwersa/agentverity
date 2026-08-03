@@ -118,10 +118,28 @@ class Snapshot:
         """Parse and validate a snapshot dictionary."""
         schema = value.get("schema")
         if schema != SNAPSHOT_SCHEMA:
-            raise SnapshotCompatibilityError(
+            message = (
                 f"unsupported snapshot schema: {schema!r}; this build reads "
                 f"{SNAPSHOT_SCHEMA}"
             )
+            # A holder of an older baseline needs the answer where the
+            # problem appears, not only in a changelog. The answer is
+            # re-admission rather than an upgrade script, and the reason is
+            # the same one the field exists for: isolation cannot be
+            # back-filled, because nobody asserted it when the file was
+            # written. Guessing it here would invent the provenance the
+            # policy is meant to establish.
+            if isinstance(schema, str) and schema.startswith(
+                "agentverity.snapshot/"
+            ):
+                message += (
+                    ". There is no upgrade for an older snapshot: it does not "
+                    "record how its trials were isolated, and inventing that "
+                    "now would manufacture the provenance this check exists "
+                    "to establish. Re-run and snapshot again, stating the "
+                    "isolation the run actually had."
+                )
+            raise SnapshotCompatibilityError(message)
         config = value.get("config")
         evidence = value.get("admission_evidence")
         probes = value.get("probes")
