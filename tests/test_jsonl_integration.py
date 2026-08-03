@@ -225,3 +225,69 @@ def test_the_cli_honours_a_path_that_matches_the_other_importers_default(
 
     assert code == 1, "the named path was not used"
     assert "no 'prompt.raw'" not in capsys.readouterr().err
+
+
+def test_a_tool_path_file_is_reachable_from_the_cli(tmp_path, capsys):
+    """The importer accepted tool paths that the CLI could not ask for.
+
+    `--jsonl` advertised "a list of tool names" as a decision, and the library
+    honoured it, but `assess` had no `--layer` flag. So the only way to reach
+    it was the Python API, and the CLI failed with "verdict observations must
+    be strings" naming a layer the caller never chose.
+    """
+    from agentverity.cli import main
+
+    path = tmp_path / "runs.jsonl"
+    path.write_text(
+        "\n".join(
+            json.dumps({"input": "a", "decision": ["get_balance", "pay"]})
+            for _ in range(2)
+        ),
+        encoding="utf-8",
+    )
+
+    # 1 is the blindness check failing one case whose answer never varies,
+    # which is the file being read. 2 was the refusal.
+    assert main(["assess", "--jsonl", str(path), "--layer", "tools"]) == 1
+    assert "must be strings" not in capsys.readouterr().err
+
+
+def test_layer_is_refused_where_it_would_be_ignored(tmp_path, capsys):
+    """An evidence file records its own layer, so the flag cannot also set it.
+
+    Accepting and discarding it is the same defect as the `prompt.raw`
+    sentinel: a flag the caller set that quietly does nothing.
+    """
+    from agentverity.cli import main
+
+    evidence = tmp_path / "evidence.json"
+    evidence.write_text(
+        json.dumps(
+            {
+                "schema": "agentverity.evidence/v2",
+                "layer": "verdict",
+                "isolation": "unknown",
+                "cases": [{"input": "a", "observations": ["x", "x"]}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["assess", "--evidence", str(evidence), "--layer", "tools"]) == 2
+    assert "--layer applies to --jsonl" in capsys.readouterr().err
+
+
+def test_a_refusal_names_the_line_it_read(tmp_path, capsys):
+    """A ten-thousand line log is the ordinary case, not the exception."""
+    from agentverity.cli import main
+
+    path = tmp_path / "runs.jsonl"
+    path.write_text(
+        '{"input": "a", "decision": "x"}\n'
+        '{"input": "a", "decision": "x"}\n'
+        '{"prompt": "a"}\n',
+        encoding="utf-8",
+    )
+
+    assert main(["assess", "--jsonl", str(path)]) == 2
+    assert "line 3" in capsys.readouterr().err

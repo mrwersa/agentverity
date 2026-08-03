@@ -35,14 +35,18 @@ from ..decision_contract import DecisionSuite
 from ..evidence import EvidenceCase, EvidenceError, EvidenceSet
 
 
-def _dig(row: Mapping[str, Any], path: str) -> Any:
-    """Read a dotted path out of one row, or raise saying which part failed."""
+def _dig(row: Mapping[str, Any], path: str, line_number: int) -> Any:
+    """Read a dotted path out of one row, or raise saying which part failed.
+
+    Names the line as well as the missing part. Every other refusal here does,
+    and a file with ten thousand lines is the ordinary case.
+    """
     value: Any = row
     for part in path.split("."):
         if not isinstance(value, Mapping) or part not in value:
             raise EvidenceError(
-                f"no {path!r} in this line; {part!r} is missing. Name the "
-                "field with --input-path or --decision-path."
+                f"line {line_number}: no {path!r} in this line; {part!r} is "
+                "missing. Name the field with --input-path or --decision-path."
             )
         value = value[part]
     return value
@@ -122,13 +126,13 @@ def evidence_from_jsonl(
                 f"line {number} is {type(row).__name__}, not an object. One "
                 "JSON object per run, in the order they were produced."
             )
-        probe = _dig(row, input_path)
+        probe = _dig(row, input_path, number)
         if not isinstance(probe, str) or not probe.strip():
             raise EvidenceError(
                 f"line {number}: {input_path!r} must be a non-empty string"
             )
         grouped.setdefault(probe, []).append(
-            _observation(_dig(row, decision_path), number)
+            _observation(_dig(row, decision_path, number), number)
         )
 
     if not grouped:

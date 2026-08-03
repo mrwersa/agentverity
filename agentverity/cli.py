@@ -522,6 +522,16 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     assess_parser.add_argument(
+        "--layer",
+        choices=("verdict", "text", "tools"),
+        default=None,
+        help=(
+            "--jsonl only: what the recorded decisions are. Use 'tools' when "
+            "each decision is a list of tool names. An evidence file and a "
+            "Promptfoo export carry their own layer"
+        ),
+    )
+    assess_parser.add_argument(
         "--provider",
         default=None,
         help="Promptfoo provider id when the export contains a matrix",
@@ -628,6 +638,12 @@ def _assess_command(args: argparse.Namespace) -> int:
             )
             if value is not None
         }
+        if args.layer is not None and not args.jsonl:
+            raise ValueError(
+                "--layer applies to --jsonl. An evidence file and a Promptfoo "
+                "export already say what layer they record, and honouring the "
+                "flag there would let it silently disagree with the file."
+            )
         if args.promptfoo:
             if suite is None:
                 raise ValueError(
@@ -647,6 +663,7 @@ def _assess_command(args: argparse.Namespace) -> int:
                 args.jsonl,
                 suite=suite,
                 isolation=args.isolation,
+                layer=args.layer or "verdict",
                 **paths,
             )
         else:

@@ -124,9 +124,16 @@ before importing it and you change the answer: four runs that flip on every
 pair become four runs that never flip, because sorting puts each decision
 beside itself. Import in the order the runs were produced, or do not import.
 
-A decision is a string. A tool path is a list of names. A run that produced no
-decision is `{"kind": "no_decision", "reason": "refused"}`, using the same
-vocabulary as the evidence format above.
+A decision is a string. A tool path is a list of names, and that is a
+different layer, so say so:
+
+```bash
+agentverity assess --jsonl runs.jsonl --layer tools
+```
+
+A run that produced no decision is
+`{"kind": "no_decision", "reason": "refused"}`, using the same vocabulary as
+the evidence format above.
 
 An input appearing once is refused rather than imported, because a single run
 per input carries no comparison. That is the same point the whole importer
