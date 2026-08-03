@@ -34,7 +34,7 @@ from typing import Any
 
 from agentverity.observation import Observation
 
-from .decision import NoDecision, OutcomeNotScorable
+from .decision import check_scorable
 
 AgentFn = Callable[[str], Observation]
 
@@ -334,21 +334,6 @@ def measure(
 
 
 
-def _incomplete(observation: Observation, layer: str) -> bool:
-    """Whether this run means the harness failed rather than the agent answered."""
-    if layer != "verdict":
-        return False
-    key = observation.key(layer)
-    return isinstance(key, NoDecision) and key.is_incomplete
-
-
-def _comparable(observation: Observation, layer: str) -> bool:
-    """Whether this run can take part in a paired comparison on this layer."""
-    if layer != "verdict":
-        return True
-    key = observation.key(layer)
-    return not isinstance(key, NoDecision) or key.comparable
-
 
 def score_runs(
     runs: Iterable[Iterable[Observation]],
@@ -392,22 +377,7 @@ def score_runs(
         # failures would compare equal and contribute zero-flip pairs, which
         # certifies the failure. And an outcome comparable to nothing cannot
         # take part in a pair at all.
-        incomplete = [o for o in observations if _incomplete(o, layer)]
-        if incomplete:
-            raise OutcomeNotScorable(
-                "a repeat series contains "
-                f"{incomplete[0].key(layer)}, which means the harness failed "
-                "rather than the agent answering. Evidence containing it is "
-                "incomplete and must not be scored for stability."
-            )
-        observations = [o for o in observations if _comparable(o, layer)]
-        length = len(observations)
-        if length < 2:
-            raise OutcomeNotScorable(
-                "every repeat series must contain at least two comparable "
-                f"observations, got {length} after excluding outcomes that "
-                "compare to nothing"
-            )
+        check_scorable(observations, layer)
         keys = [observation.key(layer) for observation in observations]
         if len({_hashable(v) for v in keys}) > 1:
             inputs_with_flip += 1

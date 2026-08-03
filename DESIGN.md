@@ -313,15 +313,22 @@ because a run of extraction failures would certify perfectly.
 |---|---|---|
 | `no_tool_selected` | contract asked for a tool, none was called | categorical, in-contract only if declared |
 | `refused` | the agent declined, deliberately | categorical, in-contract only if declared |
-| `open_ended` | the layer is categorical, the answer was not | not comparable, excluded from pairs |
+| `open_ended` | the layer is categorical, the answer was not | **refused**, stability is undefined |
 | `extraction_failed` | the adapter could not read a decision | **incomplete** |
 | `malformed_response` | the provider returned something unusable | **incomplete** |
 | `runtime_error` | the call itself failed | **incomplete** |
 
-The split in the last column is the point. The first three are things the
-agent did, and a contract may legitimately declare them as allowed outcomes.
-The last three are things the harness could not do, and they make the evidence
+The split in the last column is the point. The first two are things the agent
+did, and a contract may legitimately declare them as allowed outcomes. The
+last three are things the harness could not do, and they make the evidence
 incomplete rather than becoming a category that can look stable.
+
+`open_ended` is neither, and is refused rather than filtered. Dropping those
+runs and pairing what remains while keeping the original repeat count would
+report stability across reruns that did not decide anything. A conditional
+rate is a defensible thing to want and it needs excluded counts, a stated
+interpretation, and reporting across every surface, so it is a later decision
+rather than a silent one.
 
 Two `NoDecision` values compare equal when their reasons are equal, so two
 reworded refusals are one decision again. A `NoDecision` never compares equal

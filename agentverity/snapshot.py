@@ -296,7 +296,7 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
         else (None,) * len(result.input_fingerprints)
     )
     probes = tuple(
-        SnapshotProbe(fingerprint, json_value(observed), intended_decision)
+        SnapshotProbe(fingerprint, json_value(observed, strict=True), intended_decision)
         for fingerprint, observed, intended_decision in zip(
             result.input_fingerprints,
             result.observed_keys,
@@ -359,7 +359,7 @@ def compare_snapshot(snapshot: Snapshot, result: RunResult) -> SnapshotDiff:
         for probe in snapshot.probes
     }
     actual = {
-        fingerprint: json_value(observed)
+        fingerprint: json_value(observed, strict=True)
         for fingerprint, observed in zip(
             result.input_fingerprints,
             result.observed_keys,

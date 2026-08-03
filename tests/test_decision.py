@@ -167,12 +167,29 @@ class TestEnforcement:
             with pytest.raises(ValueError, match="harness failed"):
                 score_runs([[Observation(verdict=NoDecision(reason))] * 4], k=4)
 
-    def test_open_ended_contributes_no_pairs(self):
-        """Comparable to nothing means it cannot be half of a comparison."""
+    def test_open_ended_is_refused_rather_than_filtered(self):
+        """Filtering it and keeping the repeat count overstates the report.
+
+        Dropping the runs that did not decide, pairing what remains, and still
+        reporting 146 repeats would say the verdict held across reruns where no
+        verdict existed. Categorical stability is undefined there.
+        """
         from agentverity.meter import score_runs
 
-        with pytest.raises(ValueError, match="comparable observations"):
+        with pytest.raises(OutcomeNotScorable, match="undefined"):
             score_runs([[Observation(verdict=NoDecision("open_ended"))] * 4], k=4)
+
+    def test_both_scoring_paths_share_one_gate(self):
+        """The per-route path accepted what the pooled path refused."""
+        from agentverity.meter import score_runs
+        from agentverity.stratified import stratify_runs
+
+        for reason in ("extraction_failed", "open_ended"):
+            series = [Observation(verdict=NoDecision(reason))] * 4
+            with pytest.raises(OutcomeNotScorable):
+                score_runs([series], k=4)
+            with pytest.raises(OutcomeNotScorable):
+                stratify_runs([("route_a", series)], k=4, epsilon=0.05)
 
     def test_a_no_decision_reaching_the_contract_is_refused_not_mangled(self):
         """It used to become "<non-string:NoDecision>", folding every reason."""
@@ -258,3 +275,62 @@ def test_one_exception_type_covers_every_unscorable_path():
     for call in paths:
         with pytest.raises(ValueError):
             call()
+
+
+class TestPersistenceRefusals:
+    """Unversioned formats must refuse the tag, not quietly carry it.
+
+    `json_value` gained tagged serialisation for the run report, and
+    `create_snapshot` calls the same function, so snapshots silently began
+    storing a shape the unchanged schema version does not describe.
+    """
+
+    def test_a_snapshot_refuses_a_typed_outcome(self):
+        from agentverity.reporting import json_value
+
+        for value in (Decision("refund"), NoDecision("refused")):
+            with pytest.raises(OutcomeNotScorable, match="cannot be persisted yet"):
+                json_value(value, strict=True)
+
+    def test_the_run_report_still_serialises_it_tagged(self):
+        """The report is regenerated from the run, so a new shape costs nothing."""
+        from agentverity.reporting import json_value
+
+        assert json_value(NoDecision("refused")) == {
+            "kind": "no_decision",
+            "reason": "refused",
+        }
+
+    def test_strict_reaches_into_containers(self):
+        from agentverity.reporting import json_value
+
+        with pytest.raises(OutcomeNotScorable):
+            json_value({"a": [Decision("refund")]}, strict=True)
+
+    def test_evidence_refuses_a_typed_outcome_with_an_actionable_message(self):
+        from agentverity.evidence import EvidenceCase
+
+        with pytest.raises(OutcomeNotScorable, match="Pass a plain string"):
+            EvidenceCase(input="x", observations=(NoDecision("refused"),))
+
+    def test_a_plain_string_still_stores(self):
+        from agentverity.evidence import EvidenceCase
+
+        payload = EvidenceCase(input="x", observations=("refund", "refund")).to_dict()
+
+        assert payload["observations"] == ["refund", "refund"]
+
+
+def test_key_and_outcome_agree_on_an_empty_verdict():
+    """They disagreed: outcome said open-ended while key returned ""."""
+    observation = Observation(verdict="", text="here is some prose")
+
+    assert observation.key("verdict") == "here is some prose"
+    assert observation.outcome == NoDecision("open_ended")
+
+
+def test_a_non_string_verdict_keeps_its_old_meaning():
+    """The empty-string fix must not swallow a sequence verdict."""
+    observation = Observation(verdict=["search", "answer"])
+
+    assert observation.key("verdict") == ["search", "answer"]

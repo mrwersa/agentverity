@@ -26,6 +26,7 @@ Example::
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -152,3 +153,40 @@ def as_outcome(value: object) -> Outcome:
     if isinstance(value, str) and value:
         return Decision(value)
     raise ValueError(f"cannot read an outcome from {value!r}")
+
+
+def check_scorable(observations: Sequence[object], layer: str = "verdict") -> None:
+    """Refuse a repeat series that cannot honestly be scored for stability.
+
+    One helper, called from both pooled and per-route scoring, because two
+    implementations of the same rule is how the per-route path silently
+    accepted repeated extraction failures while the pooled path refused them.
+
+    Args:
+        observations: One repeat series. Anything exposing ``key(layer)``.
+        layer: The comparison layer. Only ``"verdict"`` carries typed outcomes.
+
+    Raises:
+        OutcomeNotScorable: If the series holds a harness failure, or any
+            open-ended result.
+    """
+    if layer != "verdict":
+        return
+    for observation in observations:
+        key = observation.key(layer) if hasattr(observation, "key") else observation
+        if not isinstance(key, NoDecision):
+            continue
+        if key.is_incomplete:
+            raise OutcomeNotScorable(
+                f"a repeat series contains {key}, which means the harness "
+                "failed rather than the agent answering. Evidence containing "
+                "it is incomplete and must not be scored for stability."
+            )
+        if not key.comparable:
+            raise OutcomeNotScorable(
+                f"a repeat series contains {key}. Categorical stability is "
+                "undefined when a run produced no decision, and dropping those "
+                "runs while keeping the repeat count would report stability "
+                "over reruns that did not decide anything. Measure a "
+                "conditional rate deliberately, or fix the probe."
+            )

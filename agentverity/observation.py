@@ -87,6 +87,11 @@ class Observation:
             # behaviour and the reason ADR 2 exists.
             if isinstance(self.verdict, (Decision, NoDecision)):
                 return self.verdict
+            # An empty string is not a decision. Treating it as one made this
+            # path disagree with `outcome`, which called it open-ended. Other
+            # non-string verdicts, such as a sequence, keep their old meaning.
+            if isinstance(self.verdict, str) and not self.verdict:
+                return self.text
             return self.verdict if self.verdict is not None else self.text
         if on == "text":
             return self.text
