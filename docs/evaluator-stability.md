@@ -59,7 +59,7 @@ The example above is `agentverity.evidence/v1`, which is what evidence made of p
 
 ```json
 {
-  "schema": "agentverity.evidence/v1",
+  "schema": "agentverity.evidence/v2",
   "layer": "verdict",
   "isolation": "fresh-instance",
   "provenance": {

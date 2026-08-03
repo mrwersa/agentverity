@@ -21,7 +21,6 @@ from agentverity.reporting import json_value
 from agentverity.runner import RunResult
 
 SNAPSHOT_SCHEMA = "agentverity.snapshot/v2"
-LEGACY_SNAPSHOT_SCHEMA = "agentverity.snapshot/v1"
 
 
 class SnapshotRefused(ValueError):
@@ -98,9 +97,10 @@ class Snapshot:
     def from_dict(cls, value: dict[str, Any]) -> Snapshot:
         """Parse and validate a snapshot dictionary."""
         schema = value.get("schema")
-        if schema not in {SNAPSHOT_SCHEMA, LEGACY_SNAPSHOT_SCHEMA}:
+        if schema != SNAPSHOT_SCHEMA:
             raise SnapshotCompatibilityError(
-                f"unsupported snapshot schema: {schema!r}"
+                f"unsupported snapshot schema: {schema!r}; this build reads "
+                f"{SNAPSHOT_SCHEMA}"
             )
         config = value.get("config")
         evidence = value.get("admission_evidence")

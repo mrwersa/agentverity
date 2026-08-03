@@ -351,11 +351,10 @@ working. One condition, one exception. Review found a `TypeError` in one path
 and a `ValueError` in another, and that was not a considered distinction, it
 was two local consistencies that disagreed.
 
-Evidence carries the tag from `agentverity.evidence/v2`. A file claims v2 only
-when it holds a typed outcome, so string-only evidence stays v1 and readable by
-an older build, and a v2 file tags every decision so it carries one
-representation rather than two. A bare string in a v1 file is never promoted:
-it recorded a label an adapter invented rather than a reason this ADR defines.
+Evidence carries the reason from `agentverity.evidence/v2`. A decision is
+written as a plain string and a no-decision as an object, which is one reading
+rule and the smallest form that stays unambiguous. Tagging decisions too would
+triple a repeat-heavy file to record a distinction nothing acts on.
 Comparison normalises the two, because a bare `"refund"` and a tagged one are
 the same decision and reporting a flip between them would be this ADR's own
 defect at a different seam.
@@ -379,6 +378,53 @@ into a snapshot is refused.
 and can certify a broken harness. Keeping the text fallback, which is the
 defect. Letting each adapter invent its own label, which is the status quo and
 puts a statistical decision in a place nobody reviews.
+
+## ADR 3: a contract declares no-decision outcomes in their own field
+
+**Status.** Accepted 2026-08-03. Completes roadmap item 2.
+
+**Context.** ADR 2 says `refused` and `no_tool_selected` are things the agent
+did, and that a contract may declare them as allowed outcomes. Nothing
+implemented that, so coverage refused any `NoDecision` outright. An agent that
+legitimately declines could collect evidence and be scored for stability, and
+then could not be assessed against a contract at all. Half a product.
+
+The obvious shortcut is to put `"refused"` in `allowed` beside the ordinary
+labels. That destroys the distinction ADR 2 exists for: `Decision("refused")`
+and `NoDecision("refused")` are different outcomes, and a single `allowed` set
+of strings cannot say which one a contract meant.
+
+**Decision.** A separate field.
+
+```python
+DecisionContract(
+    allowed=frozenset({"refund", "escalate"}),
+    allowed_no_decisions=frozenset({"refused"}),
+)
+```
+
+Only the two declarable reasons may appear there. `extraction_failed`,
+`malformed_response` and `runtime_error` are harness failures and can never be
+declared allowed, because a contract cannot make a broken harness acceptable.
+`open_ended` cannot either, because categorical stability is undefined over it.
+
+An undeclared `NoDecision` keeps the existing refusal, so silence still fails
+closed rather than being read as permission.
+
+**Consequences.** The decision-suite schema moves to
+`agentverity.decision-suite/v2` and every suite in the repository is rewritten
+at it. There is no v1 read path, because nothing is released and a dual-read
+path is a promise costing more than it is worth while the format moves.
+
+Coverage counts a declared no-decision outcome under its reason, never under a
+label. `refused` in `allowed_no_decisions` and `refused` in `allowed` are two
+different declarations, and a suite may hold both without ambiguity.
+
+**Alternatives rejected.** Putting the reason in `allowed`, which merges the
+two shapes. Prefixed strings such as `"no_decision:refused"`, which is the same
+merge with extra parsing. Making `allowed` hold typed objects, which does not
+survive JSON without inventing the tagged form anyway, and would force every
+existing suite through a migration for a field most of them will never use.
 
 ## 7. Candidate direction after independent use
 

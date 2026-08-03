@@ -1,30 +1,48 @@
 {
-  "schema": "agentverity.evidence/v1",
-  "layer": "verdict",
-  "isolation": "fresh-session",
-  "provenance": {
-    "collected_by": "your-harness 1.4.2",
-    "model": "example-model-v3",
-    "collected_at": "2026-07-28"
-  },
   "cases": [
     {
-      "input": "My card was charged twice for the same order.",
       "expected": "duplicate_charge",
-      "observations": ["duplicate_charge", "duplicate_charge", "duplicate_charge",
-                       "duplicate_charge", "duplicate_charge", "duplicate_charge"]
+      "input": "My card was charged twice for the same order.",
+      "observations": [
+        "duplicate_charge",
+        "duplicate_charge",
+        "duplicate_charge",
+        "duplicate_charge",
+        "duplicate_charge",
+        "duplicate_charge"
+      ]
     },
     {
-      "input": "The shop promised a refund but it has not arrived.",
       "expected": "refund_delay",
-      "observations": ["refund_delay", "refund_delay", "refund_delay",
-                       "refund_delay", "refund_delay", "refund_delay"]
+      "input": "The shop promised a refund but it has not arrived.",
+      "observations": [
+        "refund_delay",
+        "refund_delay",
+        "refund_delay",
+        "refund_delay",
+        "refund_delay",
+        "refund_delay"
+      ]
     },
     {
-      "input": "I do not recognise this card purchase.",
       "expected": "card_security",
-      "observations": ["card_security", "merchant_dispute", "card_security",
-                       "merchant_dispute", "card_security", "merchant_dispute"]
+      "input": "I do not recognise this card purchase.",
+      "observations": [
+        "card_security",
+        "merchant_dispute",
+        "card_security",
+        "merchant_dispute",
+        "card_security",
+        "merchant_dispute"
+      ]
     }
-  ]
+  ],
+  "isolation": "fresh-session",
+  "layer": "verdict",
+  "provenance": {
+    "collected_at": "2026-07-28",
+    "collected_by": "your-harness 1.4.2",
+    "model": "example-model-v3"
+  },
+  "schema": "agentverity.evidence/v2"
 }

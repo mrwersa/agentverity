@@ -26,13 +26,26 @@ agentverity~=0.14.0
 That accepts compatible `0.14.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.14 writes `agentverity.run/v2`, `agentverity.telemetry/v2`,
-`agentverity.snapshot/v2`, and `agentverity.evidence/v1`. The snapshot loader
-accepts v1 files and migrates them in memory. JSON reports and telemetry
+Version 0.14 reads and writes exactly one version of each schema:
+`agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v2`,
+`agentverity.evidence/v2` and `agentverity.decision-suite/v2`. JSON reports and telemetry
 exports are append-only artefacts, so consumers must opt into their v2
 schemas. The evidence loader rejects unknown versions and aggregate-only
 inputs rather than guessing. Promptfoo and DeepEval bridges translate into
 that contract while keeping framework packages optional.
+
+## One version of each schema
+
+Before 1.0 this package reads exactly one version of each schema it defines,
+and refuses anything else by name. There is no compatibility layer, because
+there are no released consumers to be compatible with, and a dual-read path is
+a promise that costs more than it is worth while the format is still moving.
+
+Migration after 1.0 will be a stated policy rather than an accident. Until
+then, a file at an unrecognised version is refused with a message naming its
+version and the current one. It is never silently reinterpreted, because
+guessing at an old file's meaning is how a stored decision quietly changes
+what it meant.
 
 ## What remains open
 

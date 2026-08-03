@@ -31,7 +31,6 @@ from .decision import NO_DECISION_REASONS, Decision, NoDecision
 from .observation import Observation
 
 EVIDENCE_SCHEMA = "agentverity.evidence/v2"
-LEGACY_EVIDENCE_SCHEMA = "agentverity.evidence/v1"
 
 LAYERS = ("verdict", "text", "tools")
 
@@ -137,12 +136,11 @@ class EvidenceCase:
             if isinstance(value, (str, Decision, NoDecision))
         )
 
-    def to_dict(self, *, tagged: bool = False) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "input": self.input,
             "observations": [
-                _encode_observation(value, tagged=tagged)
-                for value in self.observations
+                _encode_observation(value) for value in self.observations
             ],
         }
         if self.expected is not None:
@@ -215,30 +213,12 @@ class EvidenceSet:
         return None
 
 
-    def _schema(self) -> str:
-        """The minimum schema version that can describe this evidence.
-
-        A file carrying nothing but strings is v1, and stays readable by a
-        build that predates the tag. Claiming v2 for every file would lock
-        older readers out of evidence containing nothing new.
-        """
-        typed = any(
-            isinstance(value, (Decision, NoDecision))
-            for case in self.cases
-            for value in case.observations
-        )
-        return EVIDENCE_SCHEMA if typed else LEGACY_EVIDENCE_SCHEMA
-
     def to_dict(self) -> dict[str, Any]:
-        schema = self._schema()
         payload: dict[str, Any] = {
-            "schema": schema,
+            "schema": EVIDENCE_SCHEMA,
             "layer": self.layer,
             "isolation": self.isolation,
-            "cases": [
-                case.to_dict(tagged=schema == EVIDENCE_SCHEMA)
-                for case in self.cases
-            ],
+            "cases": [case.to_dict() for case in self.cases],
         }
         if self.provenance:
             payload["provenance"] = dict(sorted(self.provenance.items()))
@@ -250,10 +230,10 @@ class EvidenceSet:
         if not isinstance(value, dict):
             raise EvidenceError("evidence root must be an object")
         schema = value.get("schema")
-        if schema not in {EVIDENCE_SCHEMA, LEGACY_EVIDENCE_SCHEMA}:
+        if schema != EVIDENCE_SCHEMA:
             raise EvidenceError(
                 f"unsupported evidence schema: {schema!r}; this build reads "
-                f"{EVIDENCE_SCHEMA} and {LEGACY_EVIDENCE_SCHEMA}"
+                f"{EVIDENCE_SCHEMA}"
             )
         raw_cases = value.get("cases")
         if not isinstance(raw_cases, list):
@@ -282,8 +262,7 @@ class EvidenceSet:
                 EvidenceCase(
                     input=entry.get("input", ""),
                     observations=tuple(
-                        _decode_observation(item, index, schema)
-                        for item in observations
+                        _decode_observation(item, index) for item in observations
                     ),
                     expected=entry.get("expected"),
                     errors=entry.get("errors", 0),
@@ -311,51 +290,35 @@ def load_evidence(path: str | Path) -> EvidenceSet:
 
 
 
-def _encode_observation(value: Any, *, tagged: bool) -> Any:
-    """Write one observation.
+def _encode_observation(value: Any) -> Any:
+    """Write one observation, in the smallest form that stays unambiguous.
 
-    In a v2 file every categorical decision is tagged, including one supplied
-    as a bare string, so the file carries one representation rather than two.
-    A reader outside this package should not have to handle both shapes to
-    know that ``"refund"`` and a tagged ``refund`` are the same decision.
+    A decision is a bare string, whether it arrived as one or as a
+    ``Decision``. The two are the same decision and comparison treats them as
+    one, so tagging both would triple the size of a repeat-heavy file to record
+    a distinction nothing acts on.
 
-    A v1 file is written exactly as before.
+    A no-decision is an object, because its reason must not be confused with a
+    label of the same name. So the reading rule is one line: a string is a
+    decision, an object is a no-decision and says why.
     """
     if isinstance(value, Decision):
-        return {"kind": "decision", "label": value.label}
+        return value.label
     if isinstance(value, NoDecision):
         return {"kind": "no_decision", "reason": value.reason}
-    if tagged and isinstance(value, str) and value:
-        return {"kind": "decision", "label": value}
     return list(value) if isinstance(value, tuple) else value
 
 
-def _decode_observation(value: Any, index: int, schema: str) -> Any:
+def _decode_observation(value: Any, index: int) -> Any:
     """Read one observation.
 
-    A bare string stays a bare string. It is not promoted to ``Decision``,
-    because v1 files stored labels adapters invented and the meter compares
-    strings and typed outcomes by equality either way. The tag is what carries
-    the distinction, and only v2 writes one.
+    A bare string is accepted and stays a bare string, because a hand-written
+    file may reasonably carry plain labels and comparison normalises the two
+    anyway. Written files always tag.
     """
     if not isinstance(value, dict):
         return value
-    if schema == LEGACY_EVIDENCE_SCHEMA:
-        # Otherwise the version claim means nothing: a file could promise bare
-        # strings and hand back typed outcomes.
-        raise EvidenceError(
-            f"cases[{index}]: a tagged observation appears in a file declaring "
-            f"{LEGACY_EVIDENCE_SCHEMA}, which carries bare strings only. "
-            f"Declare {EVIDENCE_SCHEMA} to store typed outcomes."
-        )
     kind = value.get("kind")
-    if kind == "decision":
-        label = value.get("label")
-        if not isinstance(label, str) or not label:
-            raise EvidenceError(
-                f"cases[{index}]: a tagged decision needs a non-empty 'label'"
-            )
-        return Decision(label)
     if kind == "no_decision":
         reason = value.get("reason")
         if not isinstance(reason, str) or reason not in NO_DECISION_REASONS:
@@ -365,8 +328,9 @@ def _decode_observation(value: Any, index: int, schema: str) -> Any:
             )
         return NoDecision(reason)
     raise EvidenceError(
-        f"cases[{index}]: an observation object needs a 'kind' of 'decision' "
-        f"or 'no_decision', got {kind!r}"
+        f"cases[{index}]: an observation object records a no-decision and "
+        f"needs 'kind': 'no_decision', got {kind!r}. A decision is written as "
+        "a plain string."
     )
 
 

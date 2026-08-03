@@ -203,9 +203,7 @@ class TestEnforcement:
             cases=(DecisionCase(input="a", expected="refund"),),
         )
 
-        with pytest.raises(
-            OutcomeNotScorable, match="cannot yet declare no-decision"
-        ):
+        with pytest.raises(OutcomeNotScorable, match="does not allow it"):
             assess_decision_coverage(suite, observed=(NoDecision("refused"),))
 
     def test_the_json_report_can_hold_a_typed_outcome(self):
@@ -315,9 +313,10 @@ class TestPersistenceRefusals:
             input="x", observations=(NoDecision("refused"), Decision("refund"))
         ).to_dict()
 
+        # A decision is a plain string; only a no-decision needs an object.
         assert payload["observations"] == [
             {"kind": "no_decision", "reason": "refused"},
-            {"kind": "decision", "label": "refund"},
+            "refund",
         ]
 
     def test_a_plain_string_still_stores(self):

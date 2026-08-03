@@ -39,22 +39,30 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   with too few comparable observations, and coverage refusing a `NoDecision`.
   It subclasses `ValueError`, so a caller already catching that keeps working.
 
-- `agentverity.evidence/v2` carries a typed outcome tagged, as
-  `{"kind": "decision", "label": ...}` or `{"kind": "no_decision", "reason":
-  ...}`. A file claims v2 only when it actually holds one, so evidence made of
-  plain strings is still written as v1 and stays readable by a build that
-  predates the tag.
-- v1 files still load, and a bare string in one stays a bare string rather
-  than being promoted, because it recorded a label a caller invented rather
-  than the reason ADR 2 defines. Promoting it would rewrite what committed
-  evidence means. A tagged observation inside a file declaring v1 is refused,
-  because a version that does not constrain the contents is not a version.
+- `agentverity.evidence/v2` records a no-decision as
+  `{"kind": "no_decision", "reason": ...}` and a decision as a plain string.
+  One reading rule, and the smallest form that stays unambiguous: tagging both
+  would triple a repeat-heavy file to record a distinction nothing acts on,
+  because comparison already treats a bare label and a `Decision` as one.
+
+- `DecisionContract.allowed_no_decisions` declares which no-decision outcomes
+  satisfy a contract. Its own field, because `refused` there and `refused` in
+  `allowed` are two different declarations, and coverage counts them
+  separately. Only `refused` and `no_tool_selected` may be declared: a harness
+  failure cannot be made acceptable, and categorical stability is undefined
+  over an open-ended answer. Declaring a reason permits it and does not require
+  it. An undeclared one is still refused, because silence is not permission.
+- `agentverity.decision-suite/v2` carries that field.
+
+### Removed
+
+- Reading `agentverity.evidence/v1`, `agentverity.decision-suite/v1` and
+  `agentverity.snapshot/v1`. Nothing is released and nothing consumes them, so
+  a dual-read path was a promise costing more than it was worth while the
+  format is still moving. Every artefact in the repository is rewritten at the
+  current version, and `STABILITY.md` states the one-version rule.
 
 ### Not yet
-
-- A contract cannot declare a no-decision outcome as allowed. Coverage refuses
-  a `NoDecision` rather than folding every reason into one unknown label, which
-  is the fail-closed behaviour until the tagged contract representation lands.
 - The snapshot schema does not yet carry the tag. Writing a typed outcome into
   a snapshot is refused with an actionable message rather than silently
   persisting a shape the schema version does not describe.

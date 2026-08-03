@@ -1,20 +1,8 @@
 {
-  "schema": "agentverity.evidence/v1",
-  "layer": "verdict",
-  "isolation": "fresh-instance",
-  "provenance": {
-    "model": "amazon/nova-micro-v1",
-    "gateway": "openrouter",
-    "collected_at": "2026-08-01",
-    "repeats_per_case": 146,
-    "tool_set": "coinbase-agentkit 0.7.4, seven providers wired by the Strands example",
-    "observed_cost_usd": 0.1435,
-    "wall_seconds": 919
-  },
   "cases": [
     {
-      "input": "How much ETH is in my wallet?",
       "expected": "get_balance",
+      "input": "How much ETH is in my wallet?",
       "observations": [
         "get_balance",
         "get_balance",
@@ -165,8 +153,8 @@
       ]
     },
     {
-      "input": "What address is this wallet and which network is it on?",
       "expected": "get_wallet_details",
+      "input": "What address is this wallet and which network is it on?",
       "observations": [
         "get_wallet_details",
         "get_wallet_details",
@@ -317,8 +305,8 @@
       ]
     },
     {
-      "input": "Send 5 USDC to 0x1234567890abcdef1234567890abcdef12345678",
       "expected": "transfer",
+      "input": "Send 5 USDC to 0x1234567890abcdef1234567890abcdef12345678",
       "observations": [
         "get_erc20_token_address",
         "get_erc20_token_address",
@@ -469,8 +457,8 @@
       ]
     },
     {
-      "input": "Transfer 0.01 ETH to 0x1234567890abcdef1234567890abcdef12345678",
       "expected": "native_transfer",
+      "input": "Transfer 0.01 ETH to 0x1234567890abcdef1234567890abcdef12345678",
       "observations": [
         "native_transfer",
         "transfer",
@@ -621,8 +609,8 @@
       ]
     },
     {
-      "input": "Wrap 0.5 ETH into WETH",
       "expected": "wrap_eth",
+      "input": "Wrap 0.5 ETH into WETH",
       "observations": [
         "wrap_eth",
         "wrap_eth",
@@ -773,8 +761,8 @@
       ]
     },
     {
-      "input": "Convert my WETH back into ETH",
       "expected": "unwrap_eth",
+      "input": "Convert my WETH back into ETH",
       "observations": [
         "unwrap_eth",
         "no_tool_selected",
@@ -925,8 +913,8 @@
       ]
     },
     {
-      "input": "I need some testnet funds to try this out",
       "expected": "request_faucet_funds",
+      "input": "I need some testnet funds to try this out",
       "observations": [
         "no_tool_selected",
         "request_faucet_funds",
@@ -1077,8 +1065,8 @@
       ]
     },
     {
-      "input": "What is the current price of ETH?",
       "expected": "fetch_price",
+      "input": "What is the current price of ETH?",
       "observations": [
         "fetch_price_feed",
         "fetch_price_feed",
@@ -1229,8 +1217,8 @@
       ]
     },
     {
-      "input": "Let the Uniswap router spend up to 100 of my USDC",
       "expected": "approve",
+      "input": "Let the Uniswap router spend up to 100 of my USDC",
       "observations": [
         "get_erc20_token_address",
         "get_erc20_token_address",
@@ -1381,8 +1369,8 @@
       ]
     },
     {
-      "input": "Show me everything in this wallet",
       "expected": "get_portfolio",
+      "input": "Show me everything in this wallet",
       "observations": [
         "get_wallet_details",
         "get_wallet_details",
@@ -1532,5 +1520,17 @@
         "get_wallet_details"
       ]
     }
-  ]
+  ],
+  "isolation": "fresh-instance",
+  "layer": "verdict",
+  "provenance": {
+    "collected_at": "2026-08-01",
+    "gateway": "openrouter",
+    "model": "amazon/nova-micro-v1",
+    "observed_cost_usd": 0.1435,
+    "repeats_per_case": 146,
+    "tool_set": "coinbase-agentkit 0.7.4, seven providers wired by the Strands example",
+    "wall_seconds": 919
+  },
+  "schema": "agentverity.evidence/v2"
 }
