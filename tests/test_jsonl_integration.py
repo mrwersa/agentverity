@@ -12,6 +12,7 @@ import json
 import pytest
 
 from agentverity import NoDecision, assess_evidence, evidence_from_jsonl
+from agentverity.cli import _ASSESS_FLAGS
 from agentverity.evidence import EvidenceError
 
 
@@ -340,35 +341,26 @@ def test_the_refusal_says_the_whole_import_stopped():
         evidence_from_jsonl(lines)
 
 
-@pytest.mark.parametrize(
-    ("source", "flag", "value"),
-    [
-        ("--jsonl", "--provider", "openai:gpt-4o"),
-        ("--jsonl", "--prompt-id", "p1"),
-        ("--evidence", "--input-path", "a.b"),
-        ("--evidence", "--decision-path", "a.b"),
-        ("--evidence", "--layer", "tools"),
-    ],
-)
-def test_assess_refuses_a_flag_its_source_would_discard(
-    tmp_path, capsys, source, flag, value
-):
-    """One set of options serves three sources, so the unusable ones refuse.
+#: A value each flag will accept, so the matrix below can be generated from
+#: the table it is testing rather than restated beside it.
+_FLAG_VALUES = {
+    "layer": "tools",
+    "provider": "local",
+    "prompt_id": "router",
+    "input_path": "input",
+    "decision_path": "decision",
+}
 
-    `--layer` already refused, and the same argument covers `--provider` and
-    `--prompt-id` on a JSONL file and the path flags on an evidence file: a
-    flag the caller set that quietly does nothing is the `prompt.raw` sentinel
-    with a different name.
-    """
-    from agentverity.cli import main
 
-    if source == "--jsonl":
+def _source_file(source: str, tmp_path) -> str:
+    """A minimal readable file for each assess source."""
+    if source == "jsonl":
         path = tmp_path / "runs.jsonl"
         path.write_text(
             '{"input": "a", "decision": "x"}\n{"input": "a", "decision": "x"}\n',
             encoding="utf-8",
         )
-    else:
+    elif source == "evidence":
         path = tmp_path / "evidence.json"
         path.write_text(
             json.dumps(
@@ -381,6 +373,113 @@ def test_assess_refuses_a_flag_its_source_would_discard(
             ),
             encoding="utf-8",
         )
+    else:
+        path = tmp_path / "promptfoo.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "version": 3,
+                    "results": [
+                        {
+                            "testIdx": 0,
+                            "promptId": "router",
+                            "provider": {"id": "local"},
+                            "prompt": {"raw": "a"},
+                            "response": {"output": "x"},
+                            "failureReason": 0,
+                        }
+                        for _ in range(2)
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+    return str(path)
 
-    assert main(["assess", source, str(path), flag, value]) == 2
-    assert f"{flag} applies to" in capsys.readouterr().err
+
+@pytest.mark.parametrize(
+    ("source", "flag"),
+    sorted(
+        (source, flag)
+        for flag, sources in _ASSESS_FLAGS.items()
+        for source in ("evidence", "promptfoo", "jsonl")
+        if source not in sources
+    ),
+)
+def test_every_unusable_flag_combination_refuses(tmp_path, capsys, source, flag):
+    """Generated from `_ASSESS_FLAGS`, so adding a flag adds its cases too.
+
+    The first version of this test listed five combinations by hand and missed
+    three, which is the failure mode a hand-written matrix has: the table and
+    the test agree only until someone edits one of them. Reading the table the
+    code uses means a new flag cannot be added without its refusals being
+    covered.
+    """
+    from agentverity.cli import main
+
+    spelled = f"--{flag.replace('_', '-')}"
+    argv = [
+        "assess",
+        f"--{source}",
+        _source_file(source, tmp_path),
+        spelled,
+        _FLAG_VALUES[flag],
+    ]
+
+    assert main(argv) == 2
+    assert f"{spelled} applies to" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("source", "extra"),
+    [
+        ("jsonl", ["--input-path", "input"]),
+        ("jsonl", ["--decision-path", "decision"]),
+        ("jsonl", []),
+        ("promptfoo", ["--provider", "local"]),
+        ("promptfoo", ["--prompt-id", "router"]),
+        ("evidence", []),
+    ],
+)
+def test_a_usable_flag_combination_still_reads_the_file(
+    tmp_path, capsys, source, extra
+):
+    """The refusal must not have caught a combination that ought to work.
+
+    A guard written only against its failures can pass by refusing everything.
+    """
+    from agentverity.cli import main
+
+    argv = ["assess", f"--{source}", _source_file(source, tmp_path), *extra]
+    if source == "promptfoo":
+        suite = tmp_path / "suite.json"
+        suite.write_text(
+            json.dumps(
+                {
+                    "schema": "agentverity.decision-suite/v1",
+                    "contract": {"allowed": ["x"], "required": ["x"]},
+                    "cases": [{"input": "a", "expected": "x"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        argv += ["--suite", str(suite)]
+
+    main(argv)
+
+    assert "applies to" not in capsys.readouterr().err
+
+
+def test_an_empty_tool_path_is_a_trajectory_that_called_nothing():
+    """`[]` reads as `()` rather than being refused, and that is deliberate.
+
+    On the tools layer an empty trajectory is a real observation: the agent
+    called nothing. Two of them agree, and reporting that as stable is honest,
+    because the agent did consistently call nothing. It is not the same as a
+    verdict-layer no-decision, which says why the agent did not choose.
+    """
+    evidence = evidence_from_jsonl(
+        _lines([{"input": "a", "decision": []}] * 2), layer="tools"
+    )
+
+    assert evidence.cases[0].observations == ((), ())
