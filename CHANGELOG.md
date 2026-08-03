@@ -23,8 +23,11 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   The call comes from the plan, and both the terminal report and the JSON say
   which count decided. Reading the Wilson interval at a stopping point it did
   not choose is the optional stopping this avoids, believed rather than done.
-  Refused together with declared route stability targets, because both size the
-  same run.
+  `budget` still caps the calls, and a budget too small to reach a decision
+  gives `undecided` here exactly as it does on the fixed-sample path. Refused
+  together with declared route stability targets, because a cap bounds early
+  stopping happily while a second sizing rule conflicts with it.
+  A suite run keeps its per-route table, so stopping early costs no analysis.
 
 - `plan_sequential` and `decide_sequentially` stop collecting once the answer
   is in, without invalidating it. Checkpoints are declared before collection

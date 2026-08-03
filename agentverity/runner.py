@@ -145,10 +145,12 @@ class RunConfig:
             for the same string. Set to False to give each phase its own
             independent draw, at roughly double the agent calls.
         sequential: If True, collect in rounds and stop at the first declared
-            checkpoint that decides, rather than spending the whole budget.
-            Off by default: the fixed-sample path is simpler and a caller who
-            wants the simplest thing should keep getting it. See DESIGN.md
-            ADR 7 for what the checkpoints buy and cost.
+            checkpoint that decides. `budget` still caps the calls, and a
+            budget too small to reach a decision gives `undecided` here exactly
+            as it does on the fixed-sample path. Off by default: the
+            fixed-sample path is simpler and a caller who wants the simplest
+            thing should keep getting it. See DESIGN.md ADR 7 for what the
+            checkpoints buy and cost.
         max_workers: Maximum number of distinct inputs to process concurrently.
             Repeated calls for one input remain sequential. Defaults to one
             because stateful agents may not be thread-safe.
@@ -854,9 +856,17 @@ def _collect_sequentially(
     """Collect two repeats per input per round, stopping at the first decision.
 
     A round adds exactly one pair to every input, so pairs arrive in a defined
-    order: input order within a round, rounds in the order they ran. That
-    ordering is what `decide_sequentially` needs, and it is the order the calls
-    actually happened in rather than one imposed afterwards.
+    order: input index within a round, rounds in the order they ran. Declared
+    in advance and deterministic, which is what the checkpoints need. Under
+    `max_workers > 1` it is not literal completion order, and it does not need
+    to be: what matters is that the order cannot depend on the results.
+
+    `config.budget` is honoured. It caps meter calls, and a cap is compatible
+    with stopping early in a way a second *sizing* rule is not, which is why
+    declared route targets are refused here and a budget is not. A round that
+    would cross the cap is not started, so a caller who sizes a budget below
+    what certification needs gets `undecided` from this path exactly as they
+    would from the fixed-sample one.
 
     Args:
         agent: The agent under measurement.
@@ -874,10 +884,14 @@ def _collect_sequentially(
     errors: list[RunError] = []
     failed: set[int] = set()
     remaining = list(plan.checkpoints)
+    spent = 0
 
     while remaining and len(failed) < len(inputs):
         live = [(index, text) for index, text in enumerate(inputs)
                 if index not in failed]
+        if config.budget is not None and spent + 2 * len(live) > config.budget:
+            break
+        spent += 2 * len(live)
         round_work = map_indexed_inputs(
             live,
             lambda index, text: [agent(text), agent(text)],
@@ -1033,6 +1047,17 @@ def run(
                 ),
                 sequential_call=sequential_call,
                 sequential_pairs=sequential_pairs,
+            )
+        if suite is not None:
+            # Parity with the fixed path. A suite run that loses its route
+            # table because collection stopped early has lost the analysis
+            # most callers came for, and the series are right here.
+            route_stability = stratify_runs(
+                list(zip(intended_decisions, series, strict=True)),
+                k=2,
+                layer=config.layer,
+                epsilon=config.epsilon,
+                targets=suite.contract.stability_targets,
             )
         if config.reuse_unchanged_calls:
             for index, run_series in enumerate(series):

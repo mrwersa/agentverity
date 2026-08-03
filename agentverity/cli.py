@@ -135,10 +135,10 @@ def _add_execution_options(
         action="store_true",
         help=(
             "Collect in rounds and stop at the first declared checkpoint that "
-            "decides, instead of spending the whole budget. An obviously "
-            "unstable route settles in a fraction of the calls and a stable "
-            "one costs no more. Cannot be combined with declared route "
-            "stability targets, which already size the run."
+            "decides. An obviously unstable route settles in a fraction of the "
+            "calls and a stable one costs no more. --budget still caps the "
+            "spend. Cannot be combined with declared route stability targets, "
+            "which already size the run."
         ),
     )
 
