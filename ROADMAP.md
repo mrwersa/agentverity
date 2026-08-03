@@ -123,11 +123,21 @@ adopted the types still matches the runs it makes afterwards.
 
 ### 3. A generic JSONL importer
 
-Once the two above are settled. The evidence schema already refuses
-aggregates, which is the part that matters; an importer is a mapping onto it.
-Worth stating plainly so the value is not oversold: an imported run with one
-observation per case remains `undecided`. The importer removes the second
-bill, not the first.
+**Shipped.** One JSON object per run, dotted paths for the input and decision
+fields, exposed as `agentverity assess --jsonl`. The evidence schema already
+refused aggregates, which was the part that mattered, so the importer is a
+mapping onto it.
+
+Two things it refuses rather than accepts. An input appearing once, because a
+single run carries no comparison. And nothing at all about ordering: the file
+order is the pairing order, so a log sorted by decision reports a stability
+the run never had. That is stated in the docs and pinned by a test.
+
+The value is still worth not overselling: an imported run with one observation
+per case remains `undecided`. It removes the second bill, not the first.
+
+LangSmith remains unbridged. Its export is a shape rather than a convention,
+so it is a separate mapping when someone needs it.
 
 ### 4. Isolation provenance, and what to do with it
 

@@ -156,7 +156,12 @@ contains. See [imported evidence](imported-evidence.md).
 Framework bridges translate records without calling the target:
 
 ```python
-from agentverity import evidence_from_deepeval, evidence_from_promptfoo
+from agentverity import (
+    evidence_from_deepeval,
+    evidence_from_jsonl,
+    evidence_from_promptfoo,
+    load_jsonl,
+)
 ```
 
 `evidence_from_deepeval(test_cases, ...)` groups repeated precomputed
@@ -164,3 +169,13 @@ from agentverity import evidence_from_deepeval, evidence_from_promptfoo
 selects one provider/prompt cell from a Promptfoo JSON export and matches
 rendered inputs back to the reviewed suite. The latter is also available
 through `agentverity assess --promptfoo`.
+
+`evidence_from_jsonl(lines, ...)` and `load_jsonl(path, ...)` understand no
+tool at all. They read one JSON object per run, and `input_path` and
+`decision_path` name the fields as dotted paths, so a harness with no bridge
+and a production log go through the same door. Exposed as
+`agentverity assess --jsonl`.
+
+The order of the lines is the order runs are paired, and an input appearing
+once is refused rather than imported, because a single run carries no
+comparison.

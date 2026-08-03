@@ -16,6 +16,7 @@ from agentverity.decision_contract import DecisionSuite, load_decision_suite
 from agentverity.drift import compare_evidence
 from agentverity.evidence import EvidenceError, assess_evidence, load_evidence
 from agentverity.execution import ProgressEvent
+from agentverity.integrations.jsonl import load_jsonl
 from agentverity.integrations.promptfoo import load_promptfoo
 from agentverity.meter import (
     PRECISION_LEVELS,
@@ -492,6 +493,13 @@ def _build_parser() -> argparse.ArgumentParser:
     assess_source.add_argument(
         "--promptfoo", help="Promptfoo JSON export containing repeated outputs"
     )
+    assess_source.add_argument(
+        "--jsonl",
+        help=(
+            "JSONL from any harness: one JSON object per run, in the order "
+            "produced. Name the fields with --input-path and --decision-path."
+        ),
+    )
     assess_parser.add_argument(
         "--suite", default=None, help="optional decision suite to check against"
     )
@@ -499,12 +507,29 @@ def _build_parser() -> argparse.ArgumentParser:
     assess_parser.add_argument(
         "--decision-path",
         default=None,
-        help="dot path to a decision inside a structured Promptfoo output",
+        help=(
+            "dot path to the decision in each row. Defaults to the source's "
+            "own convention: a Promptfoo structured output, or 'decision' "
+            "for --jsonl"
+        ),
     )
     assess_parser.add_argument(
         "--input-path",
-        default="prompt.raw",
-        help="dot path to the reviewed input in each Promptfoo result row",
+        default=None,
+        help=(
+            "dot path to the reviewed input in each row. Defaults to "
+            "'prompt.raw' for --promptfoo and 'input' for --jsonl"
+        ),
+    )
+    assess_parser.add_argument(
+        "--layer",
+        choices=("verdict", "text", "tools"),
+        default=None,
+        help=(
+            "--jsonl only: what the recorded decisions are. Use 'tools' when "
+            "each decision is a list of tool names. An evidence file and a "
+            "Promptfoo export carry their own layer"
+        ),
     )
     assess_parser.add_argument(
         "--provider",
@@ -597,10 +622,57 @@ def _compare_evidence_command(args: argparse.Namespace) -> int:
     return 1 if drift.drifted else 0
 
 
+#: Which assess flags each source can act on. A flag outside its source's
+#: entry is refused rather than ignored: `assess` takes three sources through
+#: one set of options, and a flag the caller set that quietly does nothing is
+#: the same defect as a default that silently overrides one they named.
+_ASSESS_FLAGS: dict[str, tuple[str, ...]] = {
+    "layer": ("jsonl",),
+    "provider": ("promptfoo",),
+    "prompt_id": ("promptfoo",),
+    "input_path": ("promptfoo", "jsonl"),
+    "decision_path": ("promptfoo", "jsonl"),
+}
+
+
+def _refuse_flags_the_source_cannot_use(args: argparse.Namespace) -> None:
+    """Refuse an assess flag the chosen source would discard.
+
+    Raises:
+        ValueError: naming the flag, the chosen source, and where it applies.
+    """
+    source = next(
+        name for name in ("evidence", "promptfoo", "jsonl") if getattr(args, name)
+    )
+    for flag, sources in _ASSESS_FLAGS.items():
+        if getattr(args, flag) is None or source in sources:
+            continue
+        spelled = flag.replace("_", "-")
+        applies = " or ".join(f"--{name}" for name in sources)
+        raise ValueError(
+            f"--{spelled} applies to {applies}, not --{source}. Honouring it "
+            f"here is not possible and discarding it would let --{spelled} "
+            "quietly mean nothing."
+        )
+
+
 def _assess_command(args: argparse.Namespace) -> int:
     """Assess evidence a run collected elsewhere, without calling anything."""
     try:
         suite = load_decision_suite(args.suite) if args.suite else None
+        # Each importer carries its own field-name defaults, so the CLI
+        # forwards a path only when one was named. Defaulting here instead
+        # would make one flag mean two conventions, and passing
+        # `--input-path prompt.raw` to --jsonl would then be silently ignored.
+        paths = {
+            name: value
+            for name, value in (
+                ("input_path", args.input_path),
+                ("decision_path", args.decision_path),
+            )
+            if value is not None
+        }
+        _refuse_flags_the_source_cannot_use(args)
         if args.promptfoo:
             if suite is None:
                 raise ValueError(
@@ -610,11 +682,18 @@ def _assess_command(args: argparse.Namespace) -> int:
             evidence = load_promptfoo(
                 args.promptfoo,
                 suite,
-                decision_path=args.decision_path,
-                input_path=args.input_path,
                 provider=args.provider,
                 prompt_id=args.prompt_id,
                 isolation=args.isolation,
+                **paths,
+            )
+        elif args.jsonl:
+            evidence = load_jsonl(
+                args.jsonl,
+                suite=suite,
+                isolation=args.isolation,
+                layer=args.layer or "verdict",
+                **paths,
             )
         else:
             evidence = load_evidence(args.evidence)

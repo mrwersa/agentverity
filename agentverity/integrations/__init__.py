@@ -6,10 +6,13 @@ quality metrics and never call the target again.
 """
 
 from .deepeval import evidence_from_deepeval
+from .jsonl import evidence_from_jsonl, load_jsonl
 from .promptfoo import evidence_from_promptfoo, load_promptfoo
 
 __all__ = [
     "evidence_from_deepeval",
+    "evidence_from_jsonl",
     "evidence_from_promptfoo",
+    "load_jsonl",
     "load_promptfoo",
 ]

@@ -4,6 +4,9 @@ You probably already run your agent repeatedly. promptfoo, DeepEval, LangSmith,
 a script someone wrote. Running it again through AgentVerity to get an
 admission decision pays for the same information twice.
 
+The first two have a bridge, the script someone wrote has `--jsonl`, and
+anything can write the evidence format directly.
+
 `agentverity assess` reads the observations you already collected.
 
 ```console
@@ -90,6 +93,62 @@ result = assess_evidence(evidence, suite)
 
 The bridge uses structural typing and does not add DeepEval as a runtime
 dependency. See the [complete shared-run example](../examples/deepeval_shared_run.py).
+
+## JSONL: any harness, no bridge
+
+Promptfoo and DeepEval each have a bridge because each has an export shape.
+This one has none: a line per run, and you name the fields.
+
+```jsonl
+{"input": "charged twice for 4471", "decision": "billing"}
+{"input": "charged twice for 4471", "decision": "card_security"}
+{"input": "where is my refund", "decision": "refund"}
+{"input": "where is my refund", "decision": "refund"}
+```
+
+```bash
+agentverity assess --jsonl runs.jsonl --suite payment_decisions.json
+```
+
+```python
+from agentverity import load_jsonl
+
+evidence = load_jsonl("runs.jsonl", suite=suite,
+                      input_path="probe.text", decision_path="result.route")
+```
+
+Both paths are dotted, so a nested row needs no reshaping first.
+
+**The order in the file is the order runs are paired.** Sort a log by decision
+before importing it and you change the answer: four runs that flip on every
+pair become four runs that never flip, because sorting puts each decision
+beside itself. Import in the order the runs were produced, or do not import.
+
+A decision is a string. A tool path is a list of names, and that is a
+different layer, so say so:
+
+```bash
+agentverity assess --jsonl runs.jsonl --layer tools
+```
+
+A run that produced no decision is
+`{"kind": "no_decision", "reason": "refused"}`, using the same vocabulary as
+the evidence format above.
+
+An input appearing once is refused rather than imported, because a single run
+per input carries no comparison. That is the same point the whole importer
+rests on: it removes the second bill, not the first. The refusal is global: one
+stray input stops a ten-thousand line import rather than dropping the offender,
+because assessing a subset nobody chose reports on different evidence than the
+one you handed it. An empty decision is refused for the neighbouring reason. A
+run that produced nothing is a no-decision, and the reasons above say which
+kind.
+
+`assess` reads three sources through one set of options, so a flag the chosen
+source cannot act on is refused rather than discarded. `--provider` and
+`--prompt-id` are Promptfoo's, `--layer` is the JSONL importer's, and the two
+path flags belong to both importers but not to `--evidence`, which records its
+own layer and field names.
 
 ## The file
 

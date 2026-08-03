@@ -10,6 +10,19 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `evidence_from_jsonl` and `load_jsonl` read repeated decisions from a JSONL
+  file any harness can produce: one JSON object per run, with dotted paths
+  naming the input and decision fields. `agentverity assess --jsonl` exposes
+  it. A harness with no bridge, a production log and a converted CSV are
+  between them most of the evidence teams already hold.
+  The order in the file is the order runs are paired, so a log sorted by
+  decision reports a stability the run never had. An input appearing once is
+  refused rather than imported, because it carries no comparison, and the
+  refusal stops the whole import rather than dropping the offending input.
+- `agentverity assess` refuses a flag the chosen source cannot act on rather
+  than discarding it. It reads three sources through one set of options, and a
+  flag the caller set that quietly does nothing is the same defect as a default
+  that silently overrides one they named.
 - `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
   Coinbase AgentKit Strands example exposes, across three models, with every
   observation committed so re-assessing costs nothing. The collector, the

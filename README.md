@@ -64,8 +64,18 @@ That last command performs arithmetic over saved decisions. It makes no model
 or provider calls.
 
 Already using [DeepEval](https://deepeval.com/)? Pass the same precomputed
-`LLMTestCase` objects to `evidence_from_deepeval`. Any harness can use the
-[small neutral evidence format](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md).
+`LLMTestCase` objects to `evidence_from_deepeval`. Using neither, but holding a
+log with one line per run? Name the two fields and import it:
+
+```bash
+agentverity assess --jsonl runs.jsonl \
+  --input-path probe.text --decision-path result.route
+```
+
+Order matters there, and the
+[small neutral evidence format](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md)
+says why: runs are paired in the order the file gives them, so a log sorted by
+decision reports a stability the run never had.
 
 If you would rather AgentVerity make the calls itself, install the adapter for
 your framework. The core has no agent library as a dependency, so this is the
