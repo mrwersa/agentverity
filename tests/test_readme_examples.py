@@ -256,3 +256,41 @@ def test_the_new_reach_semantics_reach_every_output_surface():
     ).stdout
     section = text.split("3. DECLARED DECISION CONTRACT")[1][:400]
     assert "approve" not in section, "the terminal report agrees with the JSON one"
+
+
+def test_every_changelog_version_has_a_matching_comparison_link() -> None:
+    """The 0.15.0 release moved the sections and left the links behind.
+
+    So `[Unreleased]` still compared against v0.14.0 and the changelog's own
+    links said seventeen merged PRs were unreleased when they had shipped.
+    This has drifted before: a previous release restored stale links by hand,
+    which fixes the instance and not the class.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
+
+    sections = set(re.findall(r"^## \[([^\]]+)\]", changelog, re.MULTILINE))
+    linked = set(re.findall(r"^\[([^\]]+)\]: https://", changelog, re.MULTILINE))
+
+    assert sections - linked == set(), "changelog sections with no link"
+    assert linked - sections == set(), "changelog links with no section"
+
+    version = re.search(
+        r'^version = "([^"]+)"',
+        (root / "pyproject.toml").read_text(encoding="utf-8"),
+        re.MULTILINE,
+    ).group(1)
+    released = sorted(
+        section for section in sections if section != "Unreleased"
+    )
+    latest = max(released, key=lambda text: [int(part) for part in text.split(".")])
+
+    # The released series and the packaged version agree, or the next release
+    # is being prepared on this branch and the section is already written.
+    assert latest in {version, released[-1]}
+    assert f"compare/v{latest}...HEAD" in changelog, (
+        "Unreleased must compare against the newest released version"
+    )
