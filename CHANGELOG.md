@@ -10,6 +10,22 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `RunConfig(sequential=True)` and `agentverity run --sequential` stop a run at
+  the first declared checkpoint that decides. Collection goes in rounds of one
+  pair per input, and a decision reads exactly the first n pairs, so a round
+  that overshoots a checkpoint waits for the next one rather than moving the
+  boundary.
+  Measured against the default sizing: an agent flipping 30% of the time
+  finishes in 33% to 60% fewer calls, and a stable agent saves little or
+  nothing because the planner already sizes the fixed-sample path close to the
+  checkpoint budget. It is for not paying to confirm what a run has already
+  shown, which is why it is opt-in.
+  The call comes from the plan, and both the terminal report and the JSON say
+  which count decided. Reading the Wilson interval at a stopping point it did
+  not choose is the optional stopping this avoids, believed rather than done.
+  Refused together with declared route stability targets, because both size the
+  same run.
+
 - `plan_sequential` and `decide_sequentially` stop collecting once the answer
   is in, without invalidating it. Checkpoints are declared before collection
   starts, so this is not the Wilson interval recomputed after every pair, which

@@ -48,6 +48,7 @@ from agentverity.isolation import isolation_of
 from agentverity.meter import (
     PRECISION_LEVELS,
     MeterResult,
+    pair_flipped,
     plan_repeats,
     resolve_epsilon,
     score_runs,
@@ -57,6 +58,8 @@ from agentverity.relations import (
     Relation,
     builtin_relations,
 )
+from agentverity.sequential import UNDECIDED as UNDECIDED_CALL
+from agentverity.sequential import plan_sequential
 from agentverity.stratified import (
     RelationCoverage,
     RoutePlan,
@@ -141,6 +144,11 @@ class RunConfig:
             the source side of every relation, instead of calling the agent again
             for the same string. Set to False to give each phase its own
             independent draw, at roughly double the agent calls.
+        sequential: If True, collect in rounds and stop at the first declared
+            checkpoint that decides, rather than spending the whole budget.
+            Off by default: the fixed-sample path is simpler and a caller who
+            wants the simplest thing should keep getting it. See DESIGN.md
+            ADR 7 for what the checkpoints buy and cost.
         max_workers: Maximum number of distinct inputs to process concurrently.
             Repeated calls for one input remain sequential. Defaults to one
             because stateful agents may not be thread-safe.
@@ -157,6 +165,7 @@ class RunConfig:
     run_meter: bool = True
     run_blindness: bool = True
     reuse_unchanged_calls: bool = True
+    sequential: bool = False
     max_workers: int = 1
     error_policy: ErrorPolicy = "raise"
 
@@ -568,6 +577,16 @@ class RunResult:
             lines.append(f"   call:        {m.call}")
             lines.append(f"   flip rate:   {m.flip_rate:.1%} ({m.pair_flips}/{m.pair_trials} pairs)")
             lines.append(f"   Wilson CI:   [{m.ci_low:.3f}, {m.ci_high:.3f}] at epsilon={m.epsilon}")
+            if m.sequential_call is not None:
+                # Said plainly, because the interval above is computed over
+                # every pair collected while the decision read only the first
+                # n. Leaving the reader to assume the interval decided is the
+                # optional stopping this design avoids, believed rather than
+                # done.
+                lines.append(
+                    f"   decided by:  a declared checkpoint at "
+                    f"{m.sequential_pairs} pairs, not the interval above"
+                )
             repeats = (
                 str(m.repeats)
                 if m.max_repeats in {None, m.repeats}
@@ -826,6 +845,66 @@ def _resolve(config: RunConfig, inputs: Iterable[str]) -> RunConfig:
     return replace(config, k=k, epsilon=epsilon)
 
 
+def _collect_sequentially(
+    agent: AgentFn,
+    inputs: list[str],
+    config: RunConfig,
+    on_progress: ProgressCallback | None,
+) -> tuple[list[list[Observation]], list[RunError], str, int]:
+    """Collect two repeats per input per round, stopping at the first decision.
+
+    A round adds exactly one pair to every input, so pairs arrive in a defined
+    order: input order within a round, rounds in the order they ran. That
+    ordering is what `decide_sequentially` needs, and it is the order the calls
+    actually happened in rather than one imposed afterwards.
+
+    Args:
+        agent: The agent under measurement.
+        inputs: The probe set.
+        config: The run configuration, already resolved.
+        on_progress: Optional progress callback.
+
+    Returns:
+        The repeat series per input, any recorded errors, the call the plan
+        took, and the pairs that call rests on.
+    """
+    plan = plan_sequential(config.epsilon)
+    series: list[list[Observation]] = [[] for _ in inputs]
+    outcomes: list[bool] = []
+    errors: list[RunError] = []
+    failed: set[int] = set()
+    remaining = list(plan.checkpoints)
+
+    while remaining and len(failed) < len(inputs):
+        live = [(index, text) for index, text in enumerate(inputs)
+                if index not in failed]
+        round_work = map_indexed_inputs(
+            live,
+            lambda index, text: [agent(text), agent(text)],
+            phase="meter",
+            max_workers=config.max_workers,
+            error_policy=config.error_policy,
+            on_progress=on_progress,
+        )
+        errors.extend(round_work.errors)
+        for (index, _), pair in zip(live, round_work.values, strict=True):
+            if pair is None:
+                failed.add(index)
+                continue
+            series[index].extend(pair)
+            outcomes.append(pair_flipped(pair[0], pair[1], config.layer))
+        # A checkpoint is reached, not stepped past: the decision reads exactly
+        # the first n pairs, so extra pairs from this round wait for the next
+        # one rather than moving the boundary.
+        while remaining and len(outcomes) >= remaining[0]:
+            checkpoint = remaining.pop(0)
+            call = plan.call_at(checkpoint, sum(outcomes[:checkpoint]))
+            if call is not None:
+                return series, errors, call, checkpoint
+
+    return series, errors, UNDECIDED_CALL, len(outcomes)
+
+
 def run(
     agent: AgentFn,
     inputs: Iterable[str] | None = None,
@@ -923,7 +1002,43 @@ def run(
                 "budget, or choose deployment-relevant targets."
             )
 
-    if config.run_meter:
+    sequential_call: str | None = None
+    sequential_pairs: int | None = None
+    if config.run_meter and config.sequential:
+        if suite is not None and suite.contract.stability_targets:
+            raise ValueError(
+                "sequential collection and declared route stability targets "
+                "size the same run two different ways. Targets already fix the "
+                "repeats each route needs, so choose one: drop sequential=True, "
+                "or drop the targets and let the checkpoints decide."
+            )
+        series, meter_errors, sequential_call, sequential_pairs = (
+            _collect_sequentially(agent, list(inputs), config, on_progress)
+        )
+        errors.extend(meter_errors)
+        complete_series = [run_series for run_series in series if len(run_series) >= 2]
+        for index, run_series in enumerate(series):
+            if len(run_series) >= 2:
+                case_series[index] = tuple(run_series)
+        repeated_observations = [
+            observation for run_series in complete_series for observation in run_series
+        ]
+        if complete_series:
+            meter_result = replace(
+                score_runs(
+                    complete_series,
+                    k=2,
+                    layer=config.layer,
+                    epsilon=config.epsilon,
+                ),
+                sequential_call=sequential_call,
+                sequential_pairs=sequential_pairs,
+            )
+        if config.reuse_unchanged_calls:
+            for index, run_series in enumerate(series):
+                if run_series:
+                    source_observations[index] = run_series[0]
+    elif config.run_meter:
         meter_work = map_inputs(
             inputs,
             lambda index, text: [agent(text) for _ in range(repeats_per_input[index])],
