@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .decision import Decision, NoDecision, OutcomeNotScorable
 from .observation import Observation
 
 EVIDENCE_SCHEMA = "agentverity.evidence/v1"
@@ -62,6 +63,19 @@ class EvidenceCase:
     def __post_init__(self) -> None:
         if not isinstance(self.input, str) or not self.input.strip():
             raise EvidenceError("case input must be a non-empty string")
+        # The evidence schema carries bare strings. A typed outcome would not
+        # count as an observation below, so the caller would meet a confusing
+        # "fewer than two observations" instead of the real reason.
+        for value in self.observations:
+            if isinstance(value, (Decision, NoDecision)):
+                raise OutcomeNotScorable(
+                    f"a typed {type(value).__name__} cannot be stored in "
+                    f"{EVIDENCE_SCHEMA} yet. The schema carries bare strings, "
+                    "so a stored reason would be indistinguishable from a "
+                    "label a caller invented. Pass a plain string, or keep the "
+                    "typed outcome in memory until the tagged schema lands. "
+                    "See DESIGN.md ADR 2."
+                )
         observations = tuple(
             tuple(value) if isinstance(value, list) else value
             for value in self.observations

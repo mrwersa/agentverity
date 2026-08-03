@@ -10,11 +10,13 @@ from xml.etree import ElementTree as ET
 
 from agentverity.runner import RunResult
 
+from .decision import Decision, NoDecision, OutcomeNotScorable
+
 RUN_SCHEMA = "agentverity.run/v2"
 JUNIT_SUITE_NAME = "agentverity"
 
 
-def json_value(value: Any) -> Any:
+def json_value(value: Any, *, strict: bool = False) -> Any:
     """Convert an observation key to a lossless JSON value.
 
     AgentVerity refuses unsupported objects rather than hiding them behind a
@@ -24,13 +26,39 @@ def json_value(value: Any) -> Any:
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     if isinstance(value, (list, tuple)):
-        return [json_value(item) for item in value]
+        return [json_value(item, strict=strict) for item in value]
     if isinstance(value, Mapping):
         if not all(isinstance(key, str) for key in value):
             raise TypeError("JSON observation mappings must have string keys")
-        return {key: json_value(item) for key, item in value.items()}
+        return {key: json_value(item, strict=strict) for key, item in value.items()}
+    # A typed outcome serialises tagged, so a reader can tell a decision whose
+    # label happens to be "refused" from a run that refused. See DESIGN.md ADR 2.
+    #
+    # The run report is regenerated from the run, so a new shape there costs a
+    # reader nothing. Stored formats are different: `strict` is set by callers
+    # that persist under a schema version which does not yet describe the tag,
+    # and they refuse rather than writing a shape the version does not promise.
+    if isinstance(value, Decision):
+        if strict:
+            raise OutcomeNotScorable(
+                f"a typed Decision({value.label!r}) cannot be persisted yet. "
+                "The evidence and snapshot schemas do not carry the tag, so "
+                "storing it would write a shape the schema version does not "
+                "describe. Pass the label as a plain string until the tagged "
+                "schema lands. See DESIGN.md ADR 2."
+            )
+        return {"kind": "decision", "label": value.label}
+    if isinstance(value, NoDecision):
+        if strict:
+            raise OutcomeNotScorable(
+                f"a NoDecision({value.reason!r}) cannot be persisted yet. The "
+                "evidence and snapshot schemas do not carry the tag, so a "
+                "stored reason would be indistinguishable from a label a "
+                "caller invented. See DESIGN.md ADR 2."
+            )
+        return {"kind": "no_decision", "reason": value.reason}
     if hasattr(value, "value"):
-        return json_value(value.value)
+        return json_value(value.value, strict=strict)
     raise TypeError(
         f"observation key of type {type(value).__name__!r} is not JSON-compatible"
     )

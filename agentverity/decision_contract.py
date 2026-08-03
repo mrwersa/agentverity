@@ -19,6 +19,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from .decision import NoDecision, OutcomeNotScorable
+
 DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v1"
 
 
@@ -384,6 +386,21 @@ def assess_decision_coverage(
     """
     if len(observed) != len(suite.cases):
         raise ValueError("observed decisions must align with decision suite cases")
+    # A NoDecision reaching here would be stringified to "<non-string:...>",
+    # folding every reason into one label. That is exactly the sentinel the
+    # typed outcome exists to avoid, so refuse rather than mangle. Declaring a
+    # no-decision outcome as allowed is not built yet, and pretending otherwise
+    # would let a refusal certify as an ordinary route. See DESIGN.md ADR 2.
+    for group in (observed, all_observed or (), *(per_case or ())):
+        for value in group:
+            if isinstance(value, NoDecision):
+                raise OutcomeNotScorable(
+                    f"a NoDecision({value.reason!r}) reached decision coverage. "
+                    "Contracts cannot yet declare no-decision outcomes, so this "
+                    "would be counted as an unknown label rather than as the "
+                    "reason it carries. Track it outside the contract until the "
+                    "tagged contract representation lands."
+                )
     if per_case is not None and len(per_case) != len(suite.cases):
         raise ValueError(
             f"per_case has {len(per_case)} groups for {len(suite.cases)} cases; "

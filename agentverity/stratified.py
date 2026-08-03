@@ -29,6 +29,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from .decision import check_scorable
 from .meter import _hashable, classify_call, pairs_for_deterministic_call, wilson_ci
 from .observation import Observation
 
@@ -245,6 +246,10 @@ def stratify_runs(
                 "every repeat series must contain at least two observations, "
                 f"got {length}"
             )
+        # The same gate the pooled meter uses. Two copies of this rule is how
+        # this path accepted repeated extraction failures while the other
+        # refused them.
+        check_scorable(observations, layer)
         keys = [observation.key(layer) for observation in observations]
         for index in range(0, length - 1, 2):
             trials[decision] += 1

@@ -34,6 +34,8 @@ from typing import Any
 
 from agentverity.observation import Observation
 
+from .decision import check_scorable
+
 AgentFn = Callable[[str], Observation]
 
 
@@ -331,6 +333,8 @@ def measure(
     return score_runs(runs, k=k, layer=layer, epsilon=epsilon)
 
 
+
+
 def score_runs(
     runs: Iterable[Iterable[Observation]],
     *,
@@ -368,6 +372,12 @@ def score_runs(
                 "every repeat series must contain at least two observations, "
                 f"got {length}"
             )
+        # Enforcement, not decoration. ADR 2 says a harness failure makes the
+        # evidence incomplete; if the meter ignored that, repeated extraction
+        # failures would compare equal and contribute zero-flip pairs, which
+        # certifies the failure. And an outcome comparable to nothing cannot
+        # take part in a pair at all.
+        check_scorable(observations, layer)
         keys = [observation.key(layer) for observation in observations]
         if len({_hashable(v) for v in keys}) > 1:
             inputs_with_flip += 1

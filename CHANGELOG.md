@@ -10,6 +10,46 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Added
 
+- `Decision(label)` and `NoDecision(reason)` type what a run decided, or why it
+  did not. Two reworded refusals are now one decision rather than two, because
+  a `NoDecision` compares on its reason. The reason vocabulary is closed and
+  splits in two: `refused` and `no_tool_selected` are things the agent did and
+  a contract may declare them, while `extraction_failed`, `malformed_response`
+  and `runtime_error` are things the harness could not do and make the evidence
+  incomplete. A single sentinel would have merged all six, and a run of
+  extraction failures would then have certified as perfectly stable. See
+  DESIGN.md ADR 2.
+- `Observation.outcome` and `Observation.is_incomplete` read that typed result.
+  A string verdict stays a `Decision`, and an unset verdict on an agent that
+  produced prose is `open_ended`, which is comparable to nothing on a
+  categorical layer.
+- Both the pooled meter and per-route stratification refuse a series they
+  cannot honestly score, through one shared check. Repeated extraction
+  failures would otherwise contribute zero-flip pairs and certify the failure.
+  An `open_ended` result is refused rather than filtered out: dropping those
+  runs while keeping the repeat count would report stability across reruns
+  that did not decide anything.
+- The JSON report serialises a typed outcome tagged, as
+  `{"kind": "decision", "label": ...}` or `{"kind": "no_decision", "reason":
+  ...}`, so a decision whose label happens to be `refused` is distinguishable
+  from a run that refused.
+
+- `OutcomeNotScorable` is raised by every path that cannot account for a typed
+  outcome: the meter refusing an incomplete series, the meter refusing a series
+  with too few comparable observations, and coverage refusing a `NoDecision`.
+  It subclasses `ValueError`, so a caller already catching that keeps working.
+
+### Not yet
+
+- A contract cannot declare a no-decision outcome as allowed. Coverage refuses
+  a `NoDecision` rather than folding every reason into one unknown label, which
+  is the fail-closed behaviour until the tagged contract representation lands.
+- The evidence and snapshot schemas do not yet carry the tag, so a stored bare
+  string is still read as a `Decision`. That is deliberate: it is what the
+  string meant when it was written. Writing a typed outcome into either format
+  is refused with an actionable message rather than silently persisting a
+  shape the schema version does not describe.
+
 - `docs/evidence/agentkit/`: 4,380 real model calls against the tool set the
   Coinbase AgentKit Strands example exposes, across three models, with every
   observation committed so re-assessing costs nothing. The collector, the

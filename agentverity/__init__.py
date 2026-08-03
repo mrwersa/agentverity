@@ -27,6 +27,16 @@ from importlib.metadata import PackageNotFoundError, version
 
 from agentverity.adapters import from_callable
 from agentverity.blindness import BlindnessResult, detect
+from agentverity.decision import (
+    DECLARABLE_REASONS,
+    INCOMPLETE_REASONS,
+    NO_DECISION_REASONS,
+    Decision,
+    NoDecision,
+    Outcome,
+    OutcomeNotScorable,
+    as_outcome,
+)
 from agentverity.decision_contract import (
     DECISION_SUITE_SCHEMA,
     DecisionCase,
@@ -103,13 +113,17 @@ from agentverity.telemetry import (
 
 __all__ = [
     "DECISION_SUITE_SCHEMA",
+    "DECLARABLE_REASONS",
     "EVIDENCE_SCHEMA",
+    "INCOMPLETE_REASONS",
     "JUNIT_SUITE_NAME",
+    "NO_DECISION_REASONS",
     "PRECISION_LEVELS",
     "RUN_SCHEMA",
     "SNAPSHOT_SCHEMA",
     "TELEMETRY_SCHEMA",
     "BlindnessResult",
+    "Decision",
     "DecisionCase",
     "DecisionContract",
     "DecisionCount",
@@ -121,7 +135,10 @@ __all__ = [
     "EvidenceSet",
     "FlipPair",
     "MeterResult",
+    "NoDecision",
     "Observation",
+    "Outcome",
+    "OutcomeNotScorable",
     "ProgressEvent",
     "Relation",
     "RelationCoverage",
@@ -140,6 +157,7 @@ __all__ = [
     "SnapshotProbe",
     "SnapshotRefused",
     "StratifiedStability",
+    "as_outcome",
     "assess_evidence",
     "builtin_relations",
     "compare_evidence",
