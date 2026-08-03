@@ -26,13 +26,40 @@ agentverity~=0.14.0
 That accepts compatible `0.14.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.14 writes `agentverity.run/v2`, `agentverity.telemetry/v2`,
-`agentverity.snapshot/v2`, and `agentverity.evidence/v1`. The snapshot loader
-accepts v1 files and migrates them in memory. JSON reports and telemetry
+Version 0.14 writes `agentverity.run/v2`, `agentverity.telemetry/v2` and
+`agentverity.snapshot/v2`. Evidence and decision suites are written at the
+**minimum version that can describe them**: `agentverity.evidence/v2` only when
+a file carries a typed outcome, and `agentverity.decision-suite/v2` only when a
+contract declares a no-decision outcome. Everything else stays v1 and readable
+by an older build. The snapshot loader accepts v1 files and migrates them in
+memory. JSON reports and telemetry
 exports are append-only artefacts, so consumers must opt into their v2
 schemas. The evidence loader rejects unknown versions and aggregate-only
 inputs rather than guessing. Promptfoo and DeepEval bridges translate into
 that contract while keeping framework packages optional.
+
+## Sunsetting a legacy schema
+
+Reading a legacy schema is a promise with a cost, so it gets an end rather than
+drifting. The policy, applied to every schema this package reads:
+
+1. A legacy version stays readable for **at least two minor releases** after
+   the version that replaced it ships.
+2. The release that stops reading it says so in `CHANGELOG.md` under
+   **Removed**, names the last version that could read it, and gives the
+   command to migrate.
+3. A file at a sunset version is refused with a message naming its version and
+   the current one. It is never silently reinterpreted, because guessing at an
+   old file's meaning is how a stored decision quietly changes what it meant.
+
+| Legacy schema | Readable since | Earliest removal |
+|---|---|---|
+| `agentverity.snapshot/v1` | superseded in 0.11 | 0.15 |
+| `agentverity.evidence/v1` | superseded in 0.15 | 0.17 |
+| `agentverity.decision-suite/v1` | superseded in 0.15 | 0.17 |
+
+Migration is `load` then `save` with the current build, which rewrites a file
+at the minimum version that describes it.
 
 ## What remains open
 

@@ -19,9 +19,15 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from .decision import NoDecision, OutcomeNotScorable, decision_label
+from .decision import (
+    DECLARABLE_REASONS,
+    NoDecision,
+    OutcomeNotScorable,
+    decision_label,
+)
 
-DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v1"
+DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v2"
+LEGACY_DECISION_SUITE_SCHEMA = "agentverity.decision-suite/v1"
 
 
 def _normalise_labels(value: Any, *, field_name: str) -> frozenset[str]:
@@ -35,6 +41,21 @@ def _normalise_labels(value: Any, *, field_name: str) -> frozenset[str]:
     if any(not isinstance(label, str) or not label.strip() for label in labels):
         raise ValueError(f"{field_name} must contain non-empty strings")
     return labels
+
+
+
+def _is_no_decision_key(label: str) -> bool:
+    return label.startswith("<no-decision:")
+
+
+def no_decision_key(reason: str) -> str:
+    """The name a declared no-decision outcome is counted under.
+
+    Prefixed so it can never collide with a label. A contract may allow both
+    ``refused`` as a decision and ``refused`` as a reason, and a report has to
+    show which one occurred.
+    """
+    return f"<no-decision:{reason}>"
 
 
 @dataclass(frozen=True)
@@ -56,13 +77,34 @@ class DecisionContract:
     critical: frozenset[str] = field(default_factory=frozenset)
     stability_targets: Mapping[str, float] = field(default_factory=dict)
     minimum_cases: Mapping[str, int] = field(default_factory=dict)
+    # Reasons a run may legitimately produce no decision and still satisfy this
+    # contract. Its own field, because `refused` here and `refused` in
+    # `allowed` are two different declarations. See DESIGN.md ADR 3.
+    allowed_no_decisions: frozenset[str] = field(default_factory=frozenset)
 
     def __post_init__(self) -> None:
+        declared = frozenset(self.allowed_no_decisions or ())
+        undeclarable = declared - DECLARABLE_REASONS
+        if undeclarable:
+            raise ValueError(
+                "allowed_no_decisions may only hold "
+                f"{', '.join(sorted(DECLARABLE_REASONS))}; got "
+                f"{', '.join(sorted(undeclarable))}. A harness failure cannot "
+                "be declared acceptable, and categorical stability is "
+                "undefined over an open-ended answer."
+            )
+        object.__setattr__(self, "allowed_no_decisions", declared)
         allowed = _normalise_labels(self.allowed, field_name="allowed")
+        # `required` defaults to every allowed label. A declared no-decision
+        # outcome is permitted, not demanded: a contract saying a refusal is
+        # acceptable is not a contract insisting the agent refuse something.
         required = (
             allowed
             if self.required is None
             else _normalise_labels(self.required, field_name="required")
+        )
+        allowed = allowed | frozenset(
+            no_decision_key(reason) for reason in declared
         )
         critical = _normalise_labels(self.critical, field_name="critical")
         if not allowed:
@@ -132,10 +174,18 @@ class DecisionContract:
         """Return a stable JSON-compatible representation."""
         assert self.required is not None
         payload: dict[str, Any] = {
-            "allowed": sorted(self.allowed),
-            "required": sorted(self.required),
+            # The prefixed keys are an internal counting name, not a label a
+            # caller declared, so they never appear in the written contract.
+            "allowed": sorted(
+                label for label in self.allowed if not _is_no_decision_key(label)
+            ),
+            "required": sorted(
+                label for label in self.required if not _is_no_decision_key(label)
+            ),
             "critical": sorted(self.critical),
         }
+        if self.allowed_no_decisions:
+            payload["allowed_no_decisions"] = sorted(self.allowed_no_decisions)
         if self.stability_targets:
             payload["stability_targets"] = dict(sorted(self.stability_targets.items()))
         if self.minimum_cases:
@@ -154,6 +204,9 @@ class DecisionContract:
                 critical=value.get("critical", ()),
                 stability_targets=value.get("stability_targets", {}),
                 minimum_cases=value.get("minimum_cases", {}),
+                allowed_no_decisions=frozenset(
+                    value.get("allowed_no_decisions", ())
+                ),
             )
         except KeyError as exc:
             raise ValueError("decision contract is missing 'allowed'") from exc
@@ -230,7 +283,11 @@ class DecisionSuite:
     def to_dict(self) -> dict[str, Any]:
         """Return the versioned, portable suite representation."""
         return {
-            "schema": DECISION_SUITE_SCHEMA,
+            "schema": (
+                DECISION_SUITE_SCHEMA
+                if self.contract.allowed_no_decisions
+                else LEGACY_DECISION_SUITE_SCHEMA
+            ),
             "contract": self.contract.to_dict(),
             "cases": [case.to_dict() for case in self.cases],
         }
@@ -240,9 +297,20 @@ class DecisionSuite:
         """Parse and validate a versioned decision suite."""
         if not isinstance(value, dict):
             raise TypeError("decision suite root must be an object")
-        if value.get("schema") != DECISION_SUITE_SCHEMA:
+        schema = value.get("schema")
+        if schema not in {DECISION_SUITE_SCHEMA, LEGACY_DECISION_SUITE_SCHEMA}:
             raise ValueError(
-                f"unsupported decision suite schema: {value.get('schema')!r}"
+                f"unsupported decision suite schema: {schema!r}; this build "
+                f"reads {DECISION_SUITE_SCHEMA} and {LEGACY_DECISION_SUITE_SCHEMA}"
+            )
+        if schema == LEGACY_DECISION_SUITE_SCHEMA and (
+            value.get("contract") or {}
+        ).get("allowed_no_decisions"):
+            raise ValueError(
+                "allowed_no_decisions appears in a suite declaring "
+                f"{LEGACY_DECISION_SUITE_SCHEMA}, which does not carry it. "
+                f"Declare {DECISION_SUITE_SCHEMA} to allow a no-decision "
+                "outcome."
             )
         # A missing key is malformed input, not a type error. Loading reports
         # every malformed suite as ValueError so one except clause covers a
@@ -391,15 +459,16 @@ def assess_decision_coverage(
     # typed outcome exists to avoid, so refuse rather than mangle. Declaring a
     # no-decision outcome as allowed is not built yet, and pretending otherwise
     # would let a refusal certify as an ordinary route. See DESIGN.md ADR 2.
+    declared = suite.contract.allowed_no_decisions
     for group in (observed, all_observed or (), *(per_case or ())):
         for value in group:
-            if isinstance(value, NoDecision):
+            if isinstance(value, NoDecision) and value.reason not in declared:
                 raise OutcomeNotScorable(
-                    f"a NoDecision({value.reason!r}) reached decision coverage. "
-                    "Contracts cannot yet declare no-decision outcomes, so this "
-                    "would be counted as an unknown label rather than as the "
-                    "reason it carries. Track it outside the contract until the "
-                    "tagged contract representation lands."
+                    f"a NoDecision({value.reason!r}) reached decision coverage "
+                    "and the contract does not allow it. Add the reason to "
+                    "allowed_no_decisions to declare it an acceptable outcome, "
+                    "or fix the probe. Silence is not permission: counting it "
+                    "as a label would merge it with a decision of the same name."
                 )
     if per_case is not None and len(per_case) != len(suite.cases):
         raise ValueError(
@@ -409,12 +478,21 @@ def assess_decision_coverage(
     # A contract is written in plain labels, so a typed Decision is unwrapped
     # to the label it carries. Passing the object through reported the route as
     # both unknown and missing, which is two wrong answers from one value.
-    observed = tuple(decision_label(value) for value in observed)
+    # A Decision is unwrapped to the label a contract speaks. A declared
+    # NoDecision is counted under a name that cannot collide with any label,
+    # because `refused` in `allowed_no_decisions` and `refused` in `allowed`
+    # are two different declarations. See DESIGN.md ADR 3.
+    def canonical(value: Any) -> Any:
+        if isinstance(value, NoDecision):
+            return no_decision_key(value.reason)
+        return decision_label(value)
+
+    observed = tuple(canonical(value) for value in observed)
     if all_observed is not None:
-        all_observed = tuple(decision_label(value) for value in all_observed)
+        all_observed = tuple(canonical(value) for value in all_observed)
     if per_case is not None:
         per_case = tuple(
-            tuple(decision_label(value) for value in case) for case in per_case
+            tuple(canonical(value) for value in case) for case in per_case
         )
     primary_labels = [
         value if isinstance(value, str) else f"<non-string:{type(value).__name__}>"

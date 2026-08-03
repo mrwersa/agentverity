@@ -380,6 +380,55 @@ and can certify a broken harness. Keeping the text fallback, which is the
 defect. Letting each adapter invent its own label, which is the status quo and
 puts a statistical decision in a place nobody reviews.
 
+## ADR 3: a contract declares no-decision outcomes in their own field
+
+**Status.** Accepted 2026-08-03. Completes roadmap item 2.
+
+**Context.** ADR 2 says `refused` and `no_tool_selected` are things the agent
+did, and that a contract may declare them as allowed outcomes. Nothing
+implemented that, so coverage refused any `NoDecision` outright. An agent that
+legitimately declines could collect evidence and be scored for stability, and
+then could not be assessed against a contract at all. Half a product.
+
+The obvious shortcut is to put `"refused"` in `allowed` beside the ordinary
+labels. That destroys the distinction ADR 2 exists for: `Decision("refused")`
+and `NoDecision("refused")` are different outcomes, and a single `allowed` set
+of strings cannot say which one a contract meant.
+
+**Decision.** A separate field.
+
+```python
+DecisionContract(
+    allowed=frozenset({"refund", "escalate"}),
+    allowed_no_decisions=frozenset({"refused"}),
+)
+```
+
+Only the two declarable reasons may appear there. `extraction_failed`,
+`malformed_response` and `runtime_error` are harness failures and can never be
+declared allowed, because a contract cannot make a broken harness acceptable.
+`open_ended` cannot either, because categorical stability is undefined over it.
+
+An undeclared `NoDecision` keeps the existing refusal, so silence still fails
+closed rather than being read as permission.
+
+**Consequences.** The decision-suite schema follows the same discipline as
+evidence: a suite claims `agentverity.decision-suite/v2` only when it declares
+a no-decision outcome, so every existing suite stays v1 and readable by a build
+that predates the field. A suite declaring the field under v1 is refused, for
+the same reason a v1 evidence file may not carry a tag: a version that does not
+constrain the contents is not a version.
+
+Coverage counts a declared no-decision outcome under its reason, never under a
+label. `refused` in `allowed_no_decisions` and `refused` in `allowed` are two
+different declarations, and a suite may hold both without ambiguity.
+
+**Alternatives rejected.** Putting the reason in `allowed`, which merges the
+two shapes. Prefixed strings such as `"no_decision:refused"`, which is the same
+merge with extra parsing. Making `allowed` hold typed objects, which does not
+survive JSON without inventing the tagged form anyway, and would force every
+existing suite through a migration for a field most of them will never use.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.

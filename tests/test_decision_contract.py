@@ -9,6 +9,7 @@ import pytest
 from agentverity import from_callable, run
 from agentverity.decision_contract import (
     DECISION_SUITE_SCHEMA,
+    LEGACY_DECISION_SUITE_SCHEMA,
     DecisionCase,
     DecisionContract,
     DecisionSuite,
@@ -117,7 +118,9 @@ def test_suite_round_trip_is_versioned(tmp_path):
     save_decision_suite(_suite(), path)
     payload = json.loads(path.read_text())
 
-    assert payload["schema"] == DECISION_SUITE_SCHEMA
+    # A suite that declares no no-decision outcome needs nothing v2 carries,
+    # so it stays v1 and readable by a build that predates the field.
+    assert payload["schema"] == LEGACY_DECISION_SUITE_SCHEMA
     assert load_decision_suite(path) == _suite()
 
 
@@ -727,3 +730,134 @@ class TestPerCaseValidation:
         )
 
         assert "invented" in result.unknown_observed
+
+
+class TestDeclarableNoDecisions:
+    """A contract may allow a refusal. See DESIGN.md ADR 3.
+
+    Before this, coverage refused any NoDecision, so an agent that legitimately
+    declines could be scored for stability and never assessed against a
+    contract at all.
+    """
+
+    def _suite(self, declared=frozenset({"refused"})):
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+
+        return DecisionSuite(
+            contract=DecisionContract(
+                allowed=frozenset({"refund", "refused"}),
+                required=frozenset({"refund"}),
+                allowed_no_decisions=declared,
+            ),
+            cases=(
+                DecisionCase(input="a", expected="refund"),
+                DecisionCase(input="b", expected="refund"),
+            ),
+        )
+
+    def test_a_declared_refusal_is_accepted(self):
+        from agentverity import Decision, NoDecision
+        from agentverity.decision_contract import assess_decision_coverage
+
+        result = assess_decision_coverage(
+            self._suite(), observed=(Decision("refund"), NoDecision("refused"))
+        )
+
+        assert result.unknown_observed == ()
+        assert result.missing_observed == ()
+
+    def test_a_reason_never_merges_with_a_label_of_the_same_name(self):
+        """`refused` as a decision and `refused` as a reason are different."""
+        from agentverity import Decision, NoDecision
+        from agentverity.decision_contract import (
+            assess_decision_coverage,
+            no_decision_key,
+        )
+
+        result = assess_decision_coverage(
+            self._suite(), observed=(Decision("refused"), NoDecision("refused"))
+        )
+        counts = {c.decision: c.count for c in result.observed_counts}
+
+        assert counts["refused"] == 1
+        assert counts[no_decision_key("refused")] == 1
+
+    def test_an_undeclared_reason_is_still_refused(self):
+        """Silence is not permission."""
+        from agentverity import Decision, NoDecision, OutcomeNotScorable
+        from agentverity.decision_contract import assess_decision_coverage
+
+        with pytest.raises(OutcomeNotScorable, match="does not allow it"):
+            assess_decision_coverage(
+                self._suite(),
+                observed=(Decision("refund"), NoDecision("no_tool_selected")),
+            )
+
+    def test_a_harness_failure_cannot_be_declared(self):
+        from agentverity import DecisionContract
+
+        for reason in ("extraction_failed", "malformed_response", "runtime_error"):
+            with pytest.raises(ValueError, match="may only hold"):
+                DecisionContract(
+                    allowed=frozenset({"a"}),
+                    allowed_no_decisions=frozenset({reason}),
+                )
+
+    def test_open_ended_cannot_be_declared(self):
+        from agentverity import DecisionContract
+
+        with pytest.raises(ValueError, match="may only hold"):
+            DecisionContract(
+                allowed=frozenset({"a"}), allowed_no_decisions=frozenset({"open_ended"})
+            )
+
+    def test_declaring_a_reason_does_not_make_it_required(self):
+        """Permitted is not demanded."""
+        assert self._suite().contract.required == frozenset({"refund"})
+
+    def test_a_suite_claims_v2_only_when_it_declares_one(self, tmp_path):
+        from agentverity import save_decision_suite
+        from agentverity.decision_contract import (
+            DECISION_SUITE_SCHEMA,
+            LEGACY_DECISION_SUITE_SCHEMA,
+        )
+
+        plain = tmp_path / "plain.json"
+        save_decision_suite(self._suite(declared=frozenset()), plain)
+        assert json.loads(plain.read_text())["schema"] == LEGACY_DECISION_SUITE_SCHEMA
+
+        declaring = tmp_path / "declaring.json"
+        save_decision_suite(self._suite(), declaring)
+        assert json.loads(declaring.read_text())["schema"] == DECISION_SUITE_SCHEMA
+
+    def test_a_v1_suite_declaring_one_is_refused(self, tmp_path):
+        from agentverity import load_decision_suite
+        from agentverity.decision_contract import LEGACY_DECISION_SUITE_SCHEMA
+
+        path = tmp_path / "lying.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": LEGACY_DECISION_SUITE_SCHEMA,
+                    "contract": {
+                        "allowed": ["refund"],
+                        "allowed_no_decisions": ["refused"],
+                    },
+                    "cases": [{"input": "a", "expected": "refund"}],
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="does not carry it"):
+            load_decision_suite(path)
+
+    def test_the_internal_counting_key_never_leaks_into_the_file(self, tmp_path):
+        from agentverity import save_decision_suite
+
+        path = tmp_path / "suite.json"
+        save_decision_suite(self._suite(), path)
+        contract = json.loads(path.read_text())["contract"]
+
+        assert contract["allowed"] == ["refund", "refused"]
+        assert contract["allowed_no_decisions"] == ["refused"]
+        assert not any("<no-decision:" in label for label in contract["required"])

@@ -50,11 +50,19 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   evidence means. A tagged observation inside a file declaring v1 is refused,
   because a version that does not constrain the contents is not a version.
 
-### Not yet
+- `DecisionContract.allowed_no_decisions` declares which no-decision outcomes
+  satisfy a contract. Its own field, because `refused` there and `refused` in
+  `allowed` are two different declarations, and coverage counts them
+  separately. Only `refused` and `no_tool_selected` may be declared: a harness
+  failure cannot be made acceptable, and categorical stability is undefined
+  over an open-ended answer. Declaring a reason permits it and does not require
+  it. An undeclared one is still refused, because silence is not permission.
+- `agentverity.decision-suite/v2` carries that field, and a suite claims it only
+  when it declares one. A suite declaring it under v1 is refused.
+- `STABILITY.md` now states when a legacy schema stops being read, rather than
+  leaving it to drift.
 
-- A contract cannot declare a no-decision outcome as allowed. Coverage refuses
-  a `NoDecision` rather than folding every reason into one unknown label, which
-  is the fail-closed behaviour until the tagged contract representation lands.
+### Not yet
 - The snapshot schema does not yet carry the tag. Writing a typed outcome into
   a snapshot is refused with an actionable message rather than silently
   persisting a shape the schema version does not describe.
