@@ -85,6 +85,14 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
             "call": result.meter.call,
             "advice": result.meter.advice,
         }
+        if result.meter.sequential_call is not None:
+            # The same statement the terminal report makes. A semantic change
+            # that moves one surface and not the other is the defect ADR 1
+            # exists to remove, so the JSON says which count decided too.
+            meter["decided_by"] = {
+                "rule": "declared-checkpoint",
+                "pairs": result.meter.sequential_pairs,
+            }
 
     blindness = None
     if result.blindness is not None:

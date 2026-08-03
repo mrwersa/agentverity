@@ -130,6 +130,17 @@ def _add_execution_options(
         action="store_true",
         help="Print non-plaintext phase progress to stderr.",
     )
+    parser.add_argument(
+        "--sequential",
+        action="store_true",
+        help=(
+            "Collect in rounds and stop at the first declared checkpoint that "
+            "decides. An obviously unstable route settles in a fraction of the "
+            "calls and a stable one costs no more. --budget still caps the "
+            "spend. Cannot be combined with declared route stability targets, "
+            "which already size the run."
+        ),
+    )
 
 
 def _add_meter_options(parser: argparse.ArgumentParser) -> None:
@@ -238,6 +249,7 @@ def _run_command(args: argparse.Namespace) -> int:
         layer=args.layer,
         run_meter=not args.no_meter,
         run_blindness=not args.no_blindness,
+        sequential=args.sequential,
         max_workers=args.max_workers,
         error_policy=args.error_policy,
     )

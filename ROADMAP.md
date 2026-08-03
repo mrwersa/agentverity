@@ -201,9 +201,30 @@ The even split was built and measured first. It costs 99 pairs to certify and
 its early looks never certify anything, so it taxed every good route to buy an
 early exit for bad ones. That is in the ADR because the number is the argument.
 
-**Runner integration remains.** The plan is not yet driven by `run`, so the
-saving is available to a caller who drives collection and not yet to the
-`run` command.
+**Runner integration is shipped**, as `RunConfig(sequential=True)` and
+`agentverity run --sequential`. Collection goes in rounds of one pair per
+input, and the first checkpoint that decides ends the run. The call comes from
+the plan and the report says so, because reading the Wilson interval at a
+stopping point it did not choose is the optional stopping the design avoids,
+believed rather than done.
+
+**What it is worth, measured rather than asserted.** Against the default
+fixed-sample sizing:
+
+| probe set | stable agent | agent flipping 30% |
+|---|---|---|
+| 6 inputs | 7% fewer calls | **50% fewer** |
+| 20 inputs | none | **60% fewer** |
+| 50 inputs | none | **33% fewer** |
+
+So this is for not paying to confirm what a run has already shown. On a stable
+agent the planner already sizes the fixed path close to the checkpoint budget
+and there is nothing to save, which is why the feature is opt-in rather than
+the default.
+
+Sequential collection and declared route stability targets are refused
+together. Both size the same run, and letting one quietly win is how a caller
+ends up with neither.
 
 A 5% claim needs 73 zero-change pairs per route. Collecting the full planned
 budget and then deciding is the honest way to spend that, and it is also why a

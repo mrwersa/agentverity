@@ -234,6 +234,12 @@ class MeterResult:
         inputs_with_flip: Number of inputs that showed at least one flip.
         ci_low: Lower bound of the Wilson CI on the flip rate.
         ci_high: Upper bound of the Wilson CI on the flip rate.
+        sequential_call: The decision a declared checkpoint took, when
+            collection stopped early. `call` returns it in preference to the
+            interval, because the interval did not choose the stopping point.
+        sequential_pairs: Pairs the sequential plan read to decide, which is
+            the count the decision rests on rather than however many were
+            collected.
     """
 
     layer: str
@@ -246,6 +252,8 @@ class MeterResult:
     ci_low: float
     ci_high: float
     max_repeats: int | None = None
+    sequential_call: str | None = None
+    sequential_pairs: int | None = None
 
     @property
     def flip_rate(self) -> float:
@@ -263,7 +271,15 @@ class MeterResult:
             epsilon. A bare ``"deterministic"`` would conflate real stability
             with an underpowered probe, so an interval straddling epsilon is
             ``"undecided"``.
+
+            When collection stopped at a declared checkpoint, that decision is
+            returned instead. Reading the Wilson interval at a stopping point
+            it did not choose is the optional stopping the sequential design
+            exists to avoid, so the interval below stays descriptive and the
+            plan decides. See DESIGN.md ADR 7.
         """
+        if self.sequential_call is not None:
+            return self.sequential_call
         return classify_call(self.ci_low, self.ci_high, self.epsilon)
 
     @property
@@ -383,7 +399,7 @@ def score_runs(
             inputs_with_flip += 1
         for i in range(0, length - 1, 2):
             pair_trials += 1
-            if _hashable(keys[i]) != _hashable(keys[i + 1]):
+            if pair_flipped(observations[i], observations[i + 1], layer):
                 pair_flips += 1
     lo, hi = wilson_ci(pair_flips, pair_trials)
     return MeterResult(
@@ -398,6 +414,17 @@ def score_runs(
         ci_high=hi,
         max_repeats=max(lengths),
     )
+
+
+def pair_flipped(first: Any, second: Any, layer: str = "verdict") -> bool:
+    """Whether two observations of one input disagree at `layer`.
+
+    One implementation, because two are how the pooled and per-route paths
+    once disagreed about which series they would score. Sequential collection
+    needs the same question answered pair by pair as it goes, and answering it
+    a second way would let a run stop on one rule and be scored by another.
+    """
+    return _hashable(first.key(layer)) != _hashable(second.key(layer))
 
 
 def _hashable(v: Any) -> Any:
