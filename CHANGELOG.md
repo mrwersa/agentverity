@@ -8,6 +8,19 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- `agentverity snapshot --sequential` and `check --sequential` were parsed and
+  discarded. The flag sits on the shared parser and only `run` read it, so a
+  caller asking a snapshot to stop early got the full fixed-sample spend and no
+  indication otherwise. Six inputs now record 72 pairs rather than 78.
+- `STABILITY.md` named `agentverity.snapshot/v3` as the schema this version
+  reads, while 0.16.0 writes v4 and refuses v3 outright, so the document told a
+  reader their stored baseline was readable by the release that rejects it.
+  Guarded now: every schema the code writes must be named there, and no
+  superseded number may still be advertised.
+
+
 ## [0.16.0] - 2026-08-03
 
 Isolation stopped being a caveat and became a decision: evidence collected
