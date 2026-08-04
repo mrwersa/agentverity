@@ -17,8 +17,12 @@ No model is called. Everything below is arithmetic over decisions you recorded.
 
 ## Promptfoo: direct import
 
-Promptfoo already supports repeated runs and JSON export. Keep its assertions
-for quality, then assess the same outputs:
+Promptfoo already supports repeated runs and JSON export. Since 0.121.18 it
+can also repeat a single test case with `tests[].options.repeat`, overriding
+the global `--repeat` count for that case. Either way a count is a setting,
+not a judgement: it decides how many times the model is called, while
+AgentVerity decides whether that many calls can support a baseline at your
+tolerance. Keep its assertions for quality, then assess the same outputs:
 
 ```console
 $ promptfoo eval --repeat 26 --output results.json
