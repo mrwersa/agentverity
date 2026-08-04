@@ -46,7 +46,7 @@ built-in catalogue rather than adding to it**, so include the built-ins
 yourself when you want both:
 
 ```python
-from agentverity.relations import builtin_relations
+from agentverity import builtin_relations
 
 def catalogue():
     return [*builtin_relations(), currency]

@@ -64,6 +64,29 @@ because the contract does not declare which relations should apply to which
 routes. A requested catalogue that changes no input at all remains vacuous and
 fails.
 
+The catalogue is yours to extend. A `Relation` is a transform and a check, and
+a user relation is scored, tabled and counted towards route coverage exactly
+like a built-in:
+
+```python
+from agentverity import Relation, builtin_relations, run
+
+currency = Relation(
+    name="currency-symbol-invariance",
+    rtype="invariant",
+    transform=lambda text: text.replace("GBP ", "£"),
+    check=lambda source, followup: source.verdict == followup.verdict,
+)
+result = run(agent, inputs, relations=[*builtin_relations(), currency])
+```
+
+`rtype` is `invariant`, `monotone`, or `directional`, and the set is closed
+because the report renders by type. A relation with an empty name, an unknown
+type, or a transform that is not callable is refused when you construct it,
+before any call is made. From the command line,
+`agentverity run --relations module:func` loads a function returning your
+relations. See [custom relations](custom-relations.md).
+
 The contract path is available for the `verdict` layer. It checks coverage,
 not per-case correctness. Keep labelled assertions or a quality evaluator
 beside it.
