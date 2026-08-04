@@ -17,8 +17,7 @@ to it, so include them yourself when you want both.
 
 from __future__ import annotations
 
-from agentverity import Relation
-from agentverity.relations import builtin_relations
+from agentverity import Relation, builtin_relations
 
 
 def currency_symbol_invariance() -> Relation:

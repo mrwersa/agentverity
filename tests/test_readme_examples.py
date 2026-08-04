@@ -409,3 +409,69 @@ def test_the_documented_schema_versions_are_the_ones_the_code_writes() -> None:
         and f"{family}/v{number}" not in shipped
     ]
     assert not stale, f"STABILITY.md still advertises: {stale}"
+
+
+def test_the_docs_import_from_the_shallowest_path_that_works() -> None:
+    """Two import paths for one name teaches a convention that is not one.
+
+    `docs/custom-relations.md` and `examples/custom_relation.py` reached for
+    `agentverity.relations.builtin_relations` in the same file that imported
+    `Relation` from the top level, while both are exported from the top level.
+    A reader copying that learns the deep path is sometimes required, and it
+    never is when a re-export exists.
+
+    The neighbouring guard checks that a documented name exists. This one
+    checks it is documented at the path a reader should use.
+    """
+    import re
+    from pathlib import Path
+
+    import agentverity
+
+    root = Path(__file__).resolve().parents[1]
+    deeper = []
+    for path in (
+        [*sorted(root.glob("docs/*.md")), root / "README.md"]
+        + sorted(root.glob("examples/*.py"))
+    ):
+        text = path.read_text(encoding="utf-8")
+        for module, names in re.findall(
+            r"from agentverity\.([a-z_.]+) import ([^\n(]+)", text
+        ):
+            for name in re.split(r"[,\s]+", names.strip()):
+                if name and name.isidentifier() and hasattr(agentverity, name):
+                    deeper.append(
+                        f"{path.name}: agentverity.{module}.{name} is also "
+                        f"agentverity.{name}"
+                    )
+
+    assert not deeper, "docs reach past a top-level export: " + "; ".join(deeper)
+
+
+def test_every_example_is_named_somewhere_a_reader_looks() -> None:
+    """An example nobody links to is an example nobody finds.
+
+    The same argument as `compare-evidence`, which shipped as the 0.13.0
+    headline and reached 0.14.0 mentioned only in the roadmap. Five examples
+    were reachable only by browsing the directory.
+    """
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    prose = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in [
+            *sorted(root.glob("docs/*.md")),
+            root / "README.md",
+            root / "examples" / "README.md",
+        ]
+    )
+
+    missing = sorted(
+        path.name
+        for path in sorted(root.glob("examples/*"))
+        if path.name not in {"README.md", "__pycache__"}
+        and path.name not in prose
+    )
+
+    assert not missing, f"examples nothing points at: {missing}"

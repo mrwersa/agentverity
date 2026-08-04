@@ -89,7 +89,7 @@ def _load_callable(spec: str, *, flag: str, kind: str) -> Callable:
     return loaded
 
 
-def _load_relations(spec: str) -> list:
+def _load_relations(spec: str) -> list[Relation]:
     """Load a user relation catalogue from ``module:func``.
 
     The function is called with no arguments and returns the relations to run,

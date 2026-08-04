@@ -21,10 +21,19 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 - `docs/custom-relations.md` and `examples/custom_relation.py` document the
   protocol, including the part worth knowing before writing one: an input the
   transform leaves unchanged is skipped rather than passed, because a transform
-  that returns its input asks the agent the same question twice.
+  that returns its input asks the agent the same question twice. `docs/api.md`
+  carries the shape too, so a reader of the API guide is not sent elsewhere for
+  it.
+- `examples/README.md` says what each example demonstrates. Five of them were
+  reachable only by browsing the directory, which is the argument that already
+  applies to CLI commands nothing names.
 
 ### Changed
 
+- Documentation and examples import from the shallowest path that works.
+  `builtin_relations` and `from_callable` were reached through their defining
+  modules in files that imported their neighbours from the top level, which
+  teaches a reader that the deep path is sometimes required. It is not.
 - `Relation` refuses an empty name, an unknown type, or a transform or check
   that is not callable, at construction rather than mid-run. A broken relation
   was previously discovered after the source calls had been made and paid for.

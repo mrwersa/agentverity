@@ -6,8 +6,7 @@ near-constant agent should trip the blindness detector).
 Usage::
 
     from examples.toy_agent import stochastic_gate, constant_gate, deterministic_gate
-    from agentverity.adapters import from_callable
-    from agentverity import run
+    from agentverity import from_callable, run
 
     agent = from_callable(stochastic_gate(flip_prob=0.15, seed=42))
     result = run(agent, inputs=["hello", "a secret", "world", "foo"])
@@ -74,8 +73,7 @@ def deterministic_gate():
 
 
 if __name__ == "__main__":
-    from agentverity import run
-    from agentverity.adapters import from_callable
+    from agentverity import from_callable, run
 
     inputs = [
         "hello world",
