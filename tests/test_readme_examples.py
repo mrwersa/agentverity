@@ -185,6 +185,31 @@ def test_the_docs_pin_names_the_current_minor_series() -> None:
     assert not stale, f"docs pin {', '.join(stale)}; this release is {version}"
 
 
+def test_the_roadmap_opener_tracks_the_current_release_series() -> None:
+    """The roadmap's release framing should not lag the package version.
+
+    This caught the 0.15 -> 0.16 drift in the release branch: the roadmap
+    opener still described the 0.15.0 picture and item 5 as half shipped after
+    the release had moved on.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    version = re.search(
+        r'^version = "([^"]+)"',
+        (root / "pyproject.toml").read_text(encoding="utf-8"),
+        re.MULTILINE,
+    ).group(1)
+
+    roadmap = (root / "ROADMAP.md").read_text(encoding="utf-8")
+
+    assert f"As of {version}" in roadmap
+    assert f"released {version} picture" in roadmap
+    assert "Items 1 to 5 below are shipped" in roadmap
+    assert "item 6 remains optional" in roadmap
+
+
 def test_every_cli_command_is_discoverable_from_the_readme() -> None:
     """A command the README never names is a command nobody finds.
 
