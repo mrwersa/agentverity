@@ -259,9 +259,27 @@ substituted for it.
 
 ### 7. User-extensible relations
 
-Last. The catalogue is a closed set of transforms. A documented protocol for
-registering a domain relation, with the coverage report treating a user
-relation the same as a built-in.
+**Shipped.** `agentverity run --relations module:func` takes a function
+returning your relations, and a user relation is scored, tabled and counted
+towards per-route coverage exactly like a built-in. See
+[docs/custom-relations.md](docs/custom-relations.md) and
+`examples/custom_relation.py`.
+
+Half of this already worked and the roadmap did not say so: `Relation` was
+public and `run(relations=[...])` always accepted one, so a Python caller could
+extend the catalogue. The command line could not reach it at all, which is the
+gap that actually mattered, since the CLI is where a first external user
+starts.
+
+The other half was validation. A relation with no name, an unknown type, or a
+transform that is not callable constructed happily and failed mid-run, after
+the source calls had been paid for. Refused on construction now, and a
+catalogue that returns nothing or returns the wrong type is refused when the
+flag is loaded.
+
+Deliberately not added: a plugin registry or entry points. A function returning
+relations is the whole protocol, it needs no installation step, and it keeps
+the catalogue something a reader can see rather than something they discover.
 
 ## Then, if evidence demands it
 

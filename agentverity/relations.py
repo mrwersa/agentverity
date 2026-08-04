@@ -44,6 +44,11 @@ from .decision import comparison_key
 
 AgentFn = Callable[[str], Observation]
 
+#: The relation types the report and the coverage table understand. A
+#: relation declaring anything else would be counted and rendered under a name
+#: no reader can interpret, so the set is closed and checked on construction.
+RELATION_TYPES: frozenset[str] = frozenset({"invariant", "monotone", "directional"})
+
 INVARIANT = "invariant"
 MONOTONE = "monotone"
 DIRECTIONAL = "directional"
@@ -68,6 +73,32 @@ class Relation:
     transform: Callable[[str], str]
     check: Callable[[Observation, Observation], bool]
     description: str = ""
+
+    def __post_init__(self) -> None:
+        """Refuse a relation that cannot be run or reported.
+
+        Checked here rather than mid-run, because a relation is discovered to
+        be broken after the source calls have been made and paid for. The same
+        reason the CLI refuses a bad `--agent` before loading probes.
+
+        Raises:
+            ValueError: If the name is empty or the type is not one the report
+                understands.
+            TypeError: If the transform or the check is not callable.
+        """
+        if not isinstance(self.name, str) or not self.name.strip():
+            raise ValueError("a relation needs a non-empty name for the report")
+        if self.rtype not in RELATION_TYPES:
+            raise ValueError(
+                f"unknown relation type {self.rtype!r}; expected one of "
+                + ", ".join(sorted(RELATION_TYPES))
+            )
+        for role, value in (("transform", self.transform), ("check", self.check)):
+            if not callable(value):
+                raise TypeError(
+                    f"relation {self.name!r} needs a callable {role}, got "
+                    f"{type(value).__name__}"
+                )
 
 
 def _strip_accents(text: str) -> str:

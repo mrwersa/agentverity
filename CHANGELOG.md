@@ -8,6 +8,29 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `agentverity run --relations module:func` runs your own relation catalogue,
+  as `module:func` or `file.py:func`. The function takes no arguments and
+  returns relations, or a single `Relation`, which is the shape
+  `builtin_relations` already had. It replaces the built-in catalogue rather
+  than extending it, so include the built-ins yourself when you want both.
+  A user relation is scored, tabled and counted towards per-route relation
+  coverage exactly like a built-in. Only `run` executes relations, so only
+  `run` offers the flag.
+- `docs/custom-relations.md` and `examples/custom_relation.py` document the
+  protocol, including the part worth knowing before writing one: an input the
+  transform leaves unchanged is skipped rather than passed, because a transform
+  that returns its input asks the agent the same question twice.
+
+### Changed
+
+- `Relation` refuses an empty name, an unknown type, or a transform or check
+  that is not callable, at construction rather than mid-run. A broken relation
+  was previously discovered after the source calls had been made and paid for.
+  `RELATION_TYPES` names the closed set.
+
+
 ## [0.17.0] - 2026-08-04
 
 A minor rather than a patch, and deliberately. The fixes below correct flags
