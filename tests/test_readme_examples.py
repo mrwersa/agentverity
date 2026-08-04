@@ -206,8 +206,10 @@ def test_the_roadmap_opener_tracks_the_current_release_series() -> None:
 
     assert f"As of {version}" in roadmap
     assert f"released {version} picture" in roadmap
-    assert "Items 1 to 5 below are shipped" in roadmap
-    assert "item 6 remains optional" in roadmap
+    # Which items are shipped is prose that legitimately changes as they ship,
+    # and a guard asserting the sentence verbatim fails for the right reason
+    # only once. After that it is edited to match, which teaches the habit of
+    # editing guards. The version is derivable and is what can drift silently.
 
 
 def test_every_cli_command_is_discoverable_from_the_readme() -> None:
@@ -364,3 +366,46 @@ def test_every_name_the_docs_import_from_the_package_actually_exists() -> None:
         f"only {checked} imported names found, so the scan is not reading the "
         "docs it claims to"
     )
+
+
+def test_the_documented_schema_versions_are_the_ones_the_code_writes() -> None:
+    """`STABILITY.md` names the schemas a stored file must match.
+
+    It shipped in 0.16.0 saying `agentverity.snapshot/v3` while the release
+    wrote v4 and refused v3 outright, so the document told a reader their
+    stored baseline was readable by the one version that rejects it. The
+    version pins beside it were guarded and the schema list was not, which is
+    how a paragraph can be half-checked and read as wholly checked.
+    """
+    from pathlib import Path
+
+    from agentverity.decision_contract import DECISION_SUITE_SCHEMA
+    from agentverity.evidence import EVIDENCE_SCHEMA
+    from agentverity.reporting import RUN_SCHEMA
+    from agentverity.snapshot import SNAPSHOT_SCHEMA
+    from agentverity.telemetry import TELEMETRY_SCHEMA
+
+    stability = (
+        Path(__file__).resolve().parents[1] / "STABILITY.md"
+    ).read_text(encoding="utf-8")
+
+    shipped = {
+        RUN_SCHEMA,
+        TELEMETRY_SCHEMA,
+        SNAPSHOT_SCHEMA,
+        EVIDENCE_SCHEMA,
+        DECISION_SUITE_SCHEMA,
+    }
+    for schema in shipped:
+        assert f"`{schema}`" in stability, f"STABILITY.md never names {schema}"
+
+    # And no superseded number is still being advertised as current.
+    families = {schema.rsplit("/", 1)[0] for schema in shipped}
+    stale = [
+        f"{family}/v{number}"
+        for family in families
+        for number in range(1, 10)
+        if f"`{family}/v{number}`" in stability
+        and f"{family}/v{number}" not in shipped
+    ]
+    assert not stale, f"STABILITY.md still advertises: {stale}"

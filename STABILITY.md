@@ -27,11 +27,13 @@ That accepts compatible `0.16.x` fixes without moving to a later pre-1.0 minor
 series.
 
 Version 0.16 reads and writes one version of each schema:
-`agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v3`,
+`agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v4`,
 `agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
 differ because each records its own format history, not a release. Evidence is
-at v2 and snapshots at v3 because the shape of a stored outcome changed in
-each. The decision suite is still at v1 because `allowed_no_decisions` is
+at v2 because the shape of a stored outcome changed. Snapshots are at v4 for
+that and again for recording the isolation a baseline was admitted under, so a
+v3 file is refused rather than read: it cannot say how its trials were
+separated, and guessing would invent the provenance the check establishes. The decision suite is still at v1 because `allowed_no_decisions` is
 optional and a suite written without it parses correctly. JSON reports and
 telemetry exports are append-only artefacts, so consumers must opt into their
 schemas. The evidence loader rejects unknown versions and aggregate-only
