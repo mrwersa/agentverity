@@ -8,6 +8,25 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-08-04
+
+Promptfoo has allowed a per-test repeat count since 0.121.18. The docs now say
+what that knob does and does not do: a count decides how many calls to make,
+and sizing that count from a tolerance stays the judgement AgentVerity adds.
+No runtime behaviour changed.
+
+### Changed
+
+- `docs/imported-evidence.md` records the promptfoo per-test `options.repeat`
+  knob and restates the boundary: the count is a setting, the sizing and the
+  tri-state verdict are the assessment.
+- The README's rerun-count section makes the same point in two sentences, so
+  a reader arriving from a promptfoo tutorial does not mistake the knob for
+  the judgement.
+- The `promptfoo_bridge` example notes that per-test counts import the same
+  way as one global count, because the importer matches each rendered input
+  back to a reviewed suite case.
+
 ## [0.18.0] - 2026-08-04
 
 The last item on the ordered roadmap. The relation catalogue is yours to
@@ -1060,7 +1079,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.18.1...HEAD
+[0.18.1]: https://github.com/mrwersa/agentverity/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/mrwersa/agentverity/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/mrwersa/agentverity/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/mrwersa/agentverity/compare/v0.15.0...v0.16.0

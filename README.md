@@ -249,6 +249,10 @@ Picking three or five reruns by convention is guesswork:
 - A claim below 5% needs 73 zero-change pairs.
 - A short quiet run is therefore `undecided`, not proven stable.
 
+Promptfoo and DeepEval both let you choose the count, and promptfoo has
+allowed a per-test count since 0.121.18. A knob is still a knob: choosing
+five is guesswork until a tolerance sizes it.
+
 AgentVerity sizes the run from your tolerance, uses non-overlapping pairs, and
 keeps three answers: stable enough, unstable, or undecided. The default
 `balanced` setting uses a 5% tolerance.

@@ -32,6 +32,11 @@ tolerance. It deliberately leaves each quiet one-case route undecided because
 ../payment_decisions.json` shows the larger zero-change budget before you
 spend it.
 
+The fixture uses a single global repeat count. Promptfoo has also allowed a
+per-test count since 0.121.18 (`tests[].options.repeat`), and the importer
+handles that the same way: each rendered input is matched back to a reviewed
+suite case, so a case with its own count simply contributes its own pairs.
+
 An export containing several providers or prompts is refused. Select one
 configuration with `--provider` and `--prompt-id` so differences between
 models or prompts are not misreported as stochasticity.
