@@ -8,6 +8,15 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-08-04
+
+A minor rather than a patch, and deliberately. The fixes below correct flags
+that were accepted and discarded, and correcting them removes one and refuses
+another combination, which is a command-line contract change. `STABILITY.md`
+promises that patch releases preserve those contracts, so this is where the
+work belongs.
+
+
 ### Fixed
 
 - `agentverity snapshot --sequential` was parsed and discarded. The flag sat on
@@ -1005,7 +1014,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/mrwersa/agentverity/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/mrwersa/agentverity/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/mrwersa/agentverity/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/mrwersa/agentverity/compare/v0.13.2...v0.14.0

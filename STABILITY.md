@@ -20,13 +20,13 @@ scope statement, not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.16.0
+agentverity~=0.17.0
 ```
 
-That accepts compatible `0.16.x` fixes without moving to a later pre-1.0 minor
+That accepts compatible `0.17.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.16 reads and writes one version of each schema:
+Version 0.17 reads and writes one version of each schema:
 `agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v4`,
 `agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
 differ because each records its own format history, not a release. Evidence is

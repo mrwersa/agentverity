@@ -154,7 +154,7 @@ a valid target when that step owns a release contract. Open-ended answer or
 trajectory quality is outside scope unless the system also exposes a reviewed
 decision layer. See `docs/applicability.md`.
 
-## 4. Status (2026-08-02)
+## 4. Status (2026-08-04)
 
 - M1 core: DONE — observation, meter, blindness, relations, runner, CLI.
 - M2 Strands adapter: DONE — adapter written, tested, worked example runs.
@@ -204,6 +204,24 @@ decision layer. See `docs/applicability.md`.
   4,380 model calls across three models and twenty externally authored tools.
   It demonstrates why stability, correctness, and authority must remain
   separate claims.
+- M16 route reach and typed outcomes: DONE in v0.15.0. Observed coverage counts
+  cases rather than occurrences, and the absence of a decision carries its
+  reason instead of collapsing six distinct events into one unset verdict.
+  See ADR 1 and ADR 2.
+- M17 evidence a harness can write: DONE in v0.15.0. A generic JSONL importer
+  alongside the Promptfoo and DeepEval bridges, so a log with one object per
+  run needs no bridge of its own. The file order is the pairing order.
+- M18 isolation as a decision: DONE in v0.16.0. Evidence from a shared session
+  cannot certify a baseline, adapters state what they did rather than leaving
+  it unknown, and a snapshot records the isolation that admitted it.
+  See ADR 5 and ADR 6.
+- M19 sequential collection: DONE in v0.16.0. Predeclared checkpoints end a run
+  once the answer is in, with certification tested once so it costs no more
+  than the fixed sample. See ADR 7.
+
+The milestone list is the build log and the ADRs carry the reasoning. Anything
+from M16 onwards has an ADR, because each changed reach semantics or the
+statistical procedure, which is the bar the roadmap sets for writing one.
 
 ## 5. Reporting boundary
 
