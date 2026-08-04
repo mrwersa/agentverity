@@ -18,6 +18,9 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   A user relation is scored, tabled and counted towards per-route relation
   coverage exactly like a built-in. Only `run` executes relations, so only
   `run` offers the flag.
+  A catalogue that raises is not flattened into a refusal, matching how an
+  `--agent` factory behaves: a bug in your own module surfaces with the stack
+  you need to fix it.
 - `docs/custom-relations.md` and `examples/custom_relation.py` document the
   protocol, including the part worth knowing before writing one: an input the
   transform leaves unchanged is skipped rather than passed, because a transform

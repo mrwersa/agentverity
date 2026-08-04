@@ -87,9 +87,13 @@ results are called vacuous rather than green.
 
 A relation with no name, an unknown type, or a transform or check that is not
 callable is refused when you construct it, before any agent call is made. A
-catalogue that returns nothing, or returns something that is not a `Relation`,
-is refused when the flag is loaded, for the same reason: a broken catalogue
-discovered mid-run has already spent the source calls.
+catalogue that returns nothing, returns `None`, or returns something that is
+not a `Relation` is refused when the flag is loaded, for the same reason: a
+broken catalogue discovered mid-run has already spent the source calls.
+
+A catalogue function that *raises* is not flattened into a refusal. The
+traceback surfaces, exactly as it does for an `--agent` factory that raises,
+because a bug in your own module is something you need the stack for.
 
 Relation results are never collected from imported evidence, because a relation
 needs calls the imported file did not make.

@@ -97,7 +97,17 @@ def _load_relations(spec: str) -> list[Relation]:
     one domain relation is the ordinary case and wrapping it in a list is
     friction with no purpose.
     """
+    # The call is deliberately unguarded, matching `--agent`. A bug inside a
+    # caller's own module surfaces with its traceback, because flattening it
+    # into a one-line refusal hides the stack they need to fix it. What is
+    # refused below is a catalogue that ran fine and returned something
+    # unusable.
     produced = _load_callable(spec, flag="--relations", kind="relations")()
+    if produced is None:
+        raise ValueError(
+            f"{spec!r} returned None. Return a Relation, or a list of them, "
+            "the way builtin_relations does."
+        )
     relations = [produced] if isinstance(produced, Relation) else list(produced)
     if not relations:
         raise ValueError(

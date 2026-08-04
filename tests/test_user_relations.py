@@ -243,3 +243,64 @@ def test_the_documented_example_runs():
     assert any(r.name == "currency-symbol-invariance" for r in catalogue)
     assert len(catalogue) == len(builtin_relations()) + 1
     assert isinstance(module["domain_only"](), Relation)
+
+
+def test_a_catalogue_returning_none_names_the_contract(tmp_path, capsys):
+    """`'NoneType' object is not iterable` points at the wrong half.
+
+    It reads as a problem with how the library iterates, when the problem is
+    that the function returned nothing to iterate.
+    """
+    catalogue = _catalogue_file(tmp_path, "def nothing():\n    return None\n")
+
+    code = main([
+        "run", "--agent", "examples.toy_agent:deterministic_gate",
+        "--inputs", _inputs_file(tmp_path), "--relations", f"{catalogue}:nothing",
+    ])
+
+    assert code == 2
+    assert "returned None" in capsys.readouterr().err
+
+
+def test_a_catalogue_that_raises_surfaces_like_a_factory_that_raises(tmp_path):
+    """The convention, matched rather than reversed.
+
+    `test_run_factory_exception_is_not_a_refusal` decided that a bug inside a
+    caller's own module surfaces with its traceback instead of being flattened
+    into a one-line refusal, because the stack is what they need. A user
+    catalogue is caller code by the same argument, so it behaves the same way.
+    Pinned here so the two cannot drift.
+    """
+    catalogue = _catalogue_file(
+        tmp_path, "def boom():\n    raise KeyError('missing config')\n"
+    )
+
+    with pytest.raises(KeyError, match="missing config"):
+        main([
+            "run", "--agent", "examples.toy_agent:deterministic_gate",
+            "--inputs", _inputs_file(tmp_path), "--relations", f"{catalogue}:boom",
+        ])
+
+
+@pytest.mark.parametrize("command", ["run"])
+def test_the_happy_path_exits_zero_not_merely_prints(tmp_path, capsys, command):
+    """Review finding: the CLI tests asserted output and not status.
+
+    A command that printed the right table and exited 1 would have passed
+    them, and exit codes are what a CI gate reads.
+    """
+    catalogue = _catalogue_file(tmp_path, '''def catalogue():
+    return Relation(
+        name="upper-invariance", rtype="invariant",
+        transform=lambda text: text.upper(),
+        check=lambda source, followup: source.verdict == followup.verdict,
+    )
+''')
+
+    code = main([
+        command, "--agent", "examples.toy_agent:deterministic_gate",
+        "--inputs", _inputs_file(tmp_path), "--relations", f"{catalogue}:catalogue",
+    ])
+
+    assert code == 0
+    assert "upper-invariance" in capsys.readouterr().out
