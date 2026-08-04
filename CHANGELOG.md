@@ -8,6 +8,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-08-04
+
+The last item on the ordered roadmap. The relation catalogue is yours to
+extend, from the command line as well as from Python, and a relation that
+cannot be run or reported is refused when you build it rather than partway
+through a run you have already paid for.
+
+A minor rather than a patch: `Relation` now refuses names, types and callables
+it used to accept, which is a change to a public contract.
+
+
 ### Added
 
 - `agentverity run --relations module:func` runs your own relation catalogue,
@@ -1049,7 +1060,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/mrwersa/agentverity/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/mrwersa/agentverity/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/mrwersa/agentverity/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/mrwersa/agentverity/compare/v0.14.0...v0.15.0
