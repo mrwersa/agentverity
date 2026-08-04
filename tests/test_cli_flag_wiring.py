@@ -56,7 +56,9 @@ def _commands_declaring(flag: str) -> list[str]:
 
 def test_the_flag_is_declared_where_it_is_expected():
     """Guards the guard: a typo here would make everything below vacuous."""
-    assert _commands_declaring("--sequential") == ["check", "run", "snapshot"]
+    # `check` deliberately does not offer it: it reproduces the sizing the
+    # snapshot recorded, down to `k`, so it cannot also size from checkpoints.
+    assert _commands_declaring("--sequential") == ["run", "snapshot"]
     assert len(_shared_flags()) >= 20
 
 
@@ -179,3 +181,32 @@ def test_sequential_actually_changes_what_a_snapshot_records(tmp_path, capsys):
 
     assert recorded["fixed"] == 78
     assert recorded["sequential"] == 72
+
+
+def test_check_does_not_offer_a_flag_it_could_not_honour(tmp_path, capsys):
+    """A parse error the caller sees at once, not a refusal after loading.
+
+    `check` builds its config from the snapshot, `k` included, and `k` and
+    sequential collection size the same run two different ways. Wiring the
+    flag through anyway produced a runtime refusal after the agent had been
+    imported, which is a worse way to learn the same thing.
+    """
+    with pytest.raises(SystemExit):
+        main(["check", "--agent", "a:b", "--inputs", "x", "--snapshot", "y",
+              "--sequential"])
+
+    assert "unrecognized arguments: --sequential" in capsys.readouterr().err
+
+
+def test_k_and_sequential_are_refused_together():
+    """Two rules sizing one run, and the silent winner was the wrong one.
+
+    Sequential collection ignored `k` outright: on six inputs `k=4` asked for
+    24 calls and spent 144, and `k=40` asked for 240 and spent the same 144.
+    """
+    with pytest.raises(ValueError, match="cannot both hold"):
+        cli.run(
+            lambda text: text,
+            ["a", "b"],
+            config=RunConfig(k=4, sequential=True),
+        )

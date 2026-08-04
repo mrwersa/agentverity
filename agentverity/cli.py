@@ -130,6 +130,16 @@ def _add_execution_options(
         action="store_true",
         help="Print non-plaintext phase progress to stderr.",
     )
+
+
+def _add_sequential_option(parser: argparse.ArgumentParser) -> None:
+    """Offered only where the command sizes its own collection.
+
+    `check` reproduces the sizing the snapshot recorded, down to `k`, so it
+    cannot also size from checkpoints. Leaving the flag off its parser makes
+    that a parse error the caller sees immediately, rather than a refusal
+    after the agent has been loaded.
+    """
     parser.add_argument(
         "--sequential",
         action="store_true",
@@ -400,7 +410,6 @@ def _check_command(args: argparse.Namespace) -> int:
             epsilon=snapshot.epsilon,
             blindness_threshold=snapshot.blindness_threshold,
             layer=snapshot.layer,
-            sequential=args.sequential,
             max_workers=args.max_workers,
             error_policy=args.error_policy,
         ),
@@ -450,6 +459,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_agent_inputs(run_parser)
     _add_meter_options(run_parser)
+    _add_sequential_option(run_parser)
     _add_execution_options(run_parser)
     run_parser.add_argument(
         "--no-meter",
@@ -591,6 +601,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_agent_inputs(snapshot_parser)
     _add_meter_options(snapshot_parser)
+    _add_sequential_option(snapshot_parser)
     _add_execution_options(snapshot_parser, default_error_policy="record")
     snapshot_parser.add_argument(
         "--output",
