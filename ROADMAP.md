@@ -10,13 +10,13 @@ history.
 
 ## Where it is now
 
-As of 0.15.0 the loop is complete for a categorical decision layer, and a
+As of 0.16.0 the loop is complete for a categorical decision layer, and a
 [worked example](https://github.com/mrwersa/agent-release-gate) runs it beside
 authority analysis on one agent, offline.
 
-Items 1 to 4 below are shipped and item 5 is half shipped, so the summary that
-follows is the released 0.15.0 picture plus what has merged since. Read each
-item for the detail, including what was deliberately not built.
+Items 1 to 5 below are shipped, and item 6 remains optional, so the summary
+that follows is the released 0.16.0 picture plus what has merged since. Read
+each item for the detail, including what was deliberately not built.
 
 | | command | what it establishes |
 |---|---|---|

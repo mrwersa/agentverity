@@ -147,7 +147,8 @@ class RunConfig:
         sequential: If True, collect in rounds and stop at the first declared
             checkpoint that decides. `budget` still caps the calls, and a
             budget too small to reach a decision gives `undecided` here exactly
-            as it does on the fixed-sample path. Off by default: the
+            as it does on the fixed-sample path. Refused together with `k`,
+            which fixes the repeat count and so sizes the same run twice. Off by default: the
             fixed-sample path is simpler and a caller who wants the simplest
             thing should keep getting it. See DESIGN.md ADR 7 for what the
             checkpoints buy and cost.
@@ -964,6 +965,23 @@ def run(
         raise ValueError("inputs must not be empty")
     _reject_duplicates(inputs)
     requested_config = config or RunConfig()
+    # Checked against what the caller asked for, before `_resolve` fills `k`
+    # in. Validating this in `__post_init__` refuses the resolver's own output,
+    # because `_resolve` rebuilds the config with `k` set.
+    #
+    # Refused rather than letting one quietly win, and `k` was the one losing:
+    # sequential collection ignored it, so `k=4` on six inputs asked for 24
+    # calls and spent 144, and `k=40` asked for 240 and spent the same 144.
+    # `budget` is threaded instead of refused because a cap bounds early
+    # stopping happily. `k` fixes the repeat count outright, which is a second
+    # rule sizing one run, the same conflict as declared route targets.
+    if requested_config.sequential and requested_config.k is not None:
+        raise ValueError(
+            "k fixes the repeats per input and sequential collection sizes the "
+            "run from its checkpoints, so the two cannot both hold. Drop k to "
+            "let the checkpoints decide, or drop sequential=True to collect "
+            "exactly k. Use budget to cap the spend either way."
+        )
     config = _resolve(requested_config, inputs)
     if suite is not None and config.layer != "verdict":
         raise ValueError("decision contracts require the verdict observation layer")

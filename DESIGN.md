@@ -720,9 +720,14 @@ unchanged. A caller who wants the simplest thing keeps getting it.
 A declared **budget still caps the run**, and the two paths agree under one: a
 budget too small to reach a decision produces `undecided` from both. A budget
 is threaded rather than refused because a cap bounds early stopping happily,
-where a second rule that *sizes* the run does not. That is the distinction, and
-it is why declared route stability targets are refused alongside sequential
-collection while a budget is not.
+where a second rule that *sizes* the run does not.
+
+That distinction decides every other interaction. Declared route stability
+targets and an explicit `k` both size the run, so both are refused alongside
+sequential collection. `check` is refused too, and at the parser rather than at
+runtime: it rebuilds its configuration from the snapshot, `k` included, so it
+cannot also size from checkpoints. A caller learns that before the agent is
+loaded rather than after.
 
 The checkpoints have to be declared before collection starts, which is the same
 discipline the rest of the library already asks for with declared suites,
