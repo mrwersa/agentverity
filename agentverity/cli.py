@@ -23,6 +23,7 @@ from agentverity.meter import (
     pairs_for_deterministic_call,
     resolve_epsilon,
 )
+from agentverity.relations import Relation
 from agentverity.reporting import (
     run_result_to_dict,
     run_result_to_junit_xml,
@@ -47,29 +48,71 @@ class CliRefusal(Exception):
 
 def _load_agent(spec: str) -> Callable:
     """Load an agent factory from ``module:func`` or ``file.py:func``."""
+    return _load_callable(spec, flag="--agent", kind="agent")
+
+
+def _load_callable(spec: str, *, flag: str, kind: str) -> Callable:
+    """Load a named callable from ``module:func`` or ``file.py:func``.
+
+    Shared by `--agent` and `--relations` deliberately. Two loaders for one
+    spelling is how the second one grows a different error message, a
+    different handling of a missing file, and eventually a different meaning
+    for the same string a caller typed.
+    """
     if ":" not in spec:
         raise ValueError(
-            f"--agent must be 'module:func' or 'file.py:func', got {spec!r}"
+            f"{flag} must be 'module:func' or 'file.py:func', got {spec!r}"
         )
     module_path, func_name = spec.rsplit(":", 1)
     if module_path.endswith(".py"):
         source = Path(module_path).resolve()
         if not source.is_file():
-            raise FileNotFoundError(f"agent module not found: {source}")
+            raise FileNotFoundError(f"{kind} module not found: {source}")
         module_spec = importlib.util.spec_from_file_location(
-            "_agentverity_user_agent",
+            f"_agentverity_user_{kind}",
             source,
         )
         if module_spec is None or module_spec.loader is None:
-            raise ImportError(f"cannot load agent module: {source}")
+            raise ImportError(f"cannot load {kind} module: {source}")
         module = importlib.util.module_from_spec(module_spec)
         module_spec.loader.exec_module(module)
     else:
         module = importlib.import_module(module_path)
-    factory = getattr(module, func_name)
-    if not callable(factory):
+    try:
+        loaded = getattr(module, func_name)
+    except AttributeError as exc:
+        raise AttributeError(
+            f"{module_path!r} has no {func_name!r} for {flag}"
+        ) from exc
+    if not callable(loaded):
         raise TypeError(f"{spec!r} is not callable")
-    return factory
+    return loaded
+
+
+def _load_relations(spec: str) -> list:
+    """Load a user relation catalogue from ``module:func``.
+
+    The function is called with no arguments and returns the relations to run,
+    mirroring `builtin_relations`. A single `Relation` is accepted too, since
+    one domain relation is the ordinary case and wrapping it in a list is
+    friction with no purpose.
+    """
+    produced = _load_callable(spec, flag="--relations", kind="relations")()
+    relations = [produced] if isinstance(produced, Relation) else list(produced)
+    if not relations:
+        raise ValueError(
+            f"{spec!r} returned no relations. Use --no-relations to run the "
+            "diagnostics without any, which says so in the report rather than "
+            "leaving an empty catalogue to look like a clean pass."
+        )
+    for relation in relations:
+        if not isinstance(relation, Relation):
+            raise TypeError(
+                f"{spec!r} returned a {type(relation).__name__}, not a "
+                "Relation. Build one with agentverity.Relation so the report "
+                "and the coverage table can read it."
+            )
+    return relations
 
 
 def _load_inputs(path: str) -> list[str]:
@@ -250,6 +293,30 @@ def _run_command(args: argparse.Namespace) -> int:
     except CliRefusal as exc:
         print(f"run refused: {exc}", file=sys.stderr)
         return 2
+    try:
+        # Loaded before the agent runs, because a broken catalogue discovered
+        # mid-run has already spent the source calls.
+        if args.relations is not None and args.no_relations:
+            raise ValueError(
+                "--relations names a catalogue to run and --no-relations says "
+                "to run none. Drop one."
+            )
+        relations = (
+            []
+            if args.no_relations
+            else _load_relations(args.relations)
+            if args.relations is not None
+            else None
+        )
+    except (
+        AttributeError,
+        FileNotFoundError,
+        ImportError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        print(f"run refused: {exc}", file=sys.stderr)
+        return 2
     config = RunConfig(
         budget=args.budget,
         precision=args.precision,
@@ -268,7 +335,7 @@ def _run_command(args: argparse.Namespace) -> int:
             agent,
             inputs,
             suite=suite,
-            relations=[] if args.no_relations else None,
+            relations=relations,
             config=config,
             on_progress=_progress if args.progress else None,
         )
@@ -475,6 +542,18 @@ def _build_parser() -> argparse.ArgumentParser:
         "--no-relations",
         action="store_true",
         help="Run diagnostics only, without metamorphic relations.",
+    )
+    run_parser.add_argument(
+        "--relations",
+        default=None,
+        metavar="MODULE:FUNC",
+        help=(
+            "Your own relation catalogue, as 'module:func' or 'file.py:func'. "
+            "The function takes no arguments and returns Relation objects, or "
+            "one Relation. Replaces the built-in catalogue rather than adding "
+            "to it, so include the built-ins yourself if you want both. Only "
+            "'run' executes relations, so only 'run' offers this."
+        ),
     )
     run_parser.add_argument(
         "--format",

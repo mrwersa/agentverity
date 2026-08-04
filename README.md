@@ -341,6 +341,7 @@ observability remain separate parts of the stack.
 - [Which agents fit, and what the result does not prove](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md)
 - [Why arbitrary rerun counts fail](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
 - [How to read and budget per-route evidence](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md)
+- [Write a relation the built-in catalogue cannot express](https://github.com/mrwersa/agentverity/blob/main/docs/custom-relations.md)
 - [Reuse Promptfoo, DeepEval, or generic evidence without duplicate calls](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md)
 - [Qualify a categorical LLM judge without confusing stability with validity](https://github.com/mrwersa/agentverity/blob/main/docs/evaluator-stability.md)
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
