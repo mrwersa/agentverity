@@ -208,7 +208,7 @@ def test_a_filter_that_matches_no_cell_is_refused():
 
 def test_missing_or_short_cases_are_refused():
     payload = export(row(0, "approve"), row(0, "approve"), row(1, "review"))
-    with pytest.raises(EvidenceError, match="run with --repeat 2"):
+    with pytest.raises(EvidenceError, match=r"Raise --repeat, or this case's own"):
         evidence_from_promptfoo(payload, suite())
 
 
@@ -343,3 +343,94 @@ def test_the_shipped_promptfoo_export_reproduces_the_readme_numbers():
     # The contract check passes, which is the point: it would not have caught
     # the unstable route on its own.
     assert result.decision_coverage.satisfied is True
+
+
+def test_a_short_case_names_the_knob_that_actually_controls_it():
+    """Promptfoo 0.121.18 lets a case carry its own count, which wins.
+
+    The advice used to name `--repeat` alone. A caller who set
+    `tests[].options.repeat: 1` on one case would raise the global flag,
+    see nothing change, and have no way to learn why from the message.
+    """
+    from agentverity.decision_contract import (
+        DecisionCase,
+        DecisionContract,
+        DecisionSuite,
+    )
+    from agentverity.integrations.promptfoo import evidence_from_promptfoo
+
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed=frozenset({"refund", "billing"}),
+            required=frozenset({"refund", "billing"}),
+        ),
+        cases=(
+            DecisionCase(input="where is my refund", expected="refund"),
+            DecisionCase(input="charged twice", expected="billing"),
+        ),
+    )
+    rows = [
+        {
+            "testIdx": index,
+            "promptId": "p",
+            "provider": {"id": "local"},
+            "prompt": {"raw": text},
+            "response": {"output": decision},
+            "failureReason": 0,
+        }
+        for index, (text, decision, count) in enumerate(
+            (("where is my refund", "refund", 8), ("charged twice", "billing", 1))
+        )
+        for _ in range(count)
+    ]
+
+    with pytest.raises(EvidenceError) as refused:
+        evidence_from_promptfoo({"version": 3, "results": rows}, suite)
+
+    message = str(refused.value)
+    assert "tests[].options.repeat" in message
+    assert "overrides the global count" in message
+
+
+def test_uneven_per_case_counts_each_contribute_their_own_pairs():
+    """The claim the 0.18.1 docs make about per-test repeat, asserted.
+
+    Eight repeats on one case and two on another is legal in promptfoo and
+    must import as four pairs and one, not be levelled to the smaller count.
+    """
+    from agentverity.decision_contract import (
+        DecisionCase,
+        DecisionContract,
+        DecisionSuite,
+    )
+    from agentverity.integrations.promptfoo import evidence_from_promptfoo
+
+    suite = DecisionSuite(
+        contract=DecisionContract(
+            allowed=frozenset({"refund", "billing"}),
+            required=frozenset({"refund", "billing"}),
+        ),
+        cases=(
+            DecisionCase(input="where is my refund", expected="refund"),
+            DecisionCase(input="charged twice", expected="billing"),
+        ),
+    )
+    rows = [
+        {
+            "testIdx": index,
+            "promptId": "p",
+            "provider": {"id": "local"},
+            "prompt": {"raw": text},
+            "response": {"output": decision},
+            "failureReason": 0,
+        }
+        for index, (text, decision, count) in enumerate(
+            (("where is my refund", "refund", 8), ("charged twice", "billing", 2))
+        )
+        for _ in range(count)
+    ]
+
+    evidence = evidence_from_promptfoo({"version": 3, "results": rows}, suite)
+
+    assert [case.usable_pairs for case in evidence.cases] == [4, 1]
+    assert evidence.total_pairs == 5

@@ -8,6 +8,16 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- A Promptfoo case with too few observations advised `--repeat` alone. Since
+  promptfoo 0.121.18 a case can carry its own count in
+  `tests[].options.repeat`, and that overrides the global flag, so a caller who
+  set a per-test count was sent to the one control that could not change the
+  case. Both knobs are named now. Found by testing the claim the 0.18.1 docs
+  make rather than by reading them.
+
+
 ## [0.18.1] - 2026-08-04
 
 Promptfoo has allowed a per-test repeat count since 0.121.18. The docs now say

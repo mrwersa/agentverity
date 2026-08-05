@@ -160,10 +160,17 @@ def evidence_from_promptfoo(
     for index, declared in enumerate(suite.cases):
         observations = grouped.get(index, [])
         if len(observations) < 2:
+            # Both knobs are named, because since promptfoo 0.121.18 a case
+            # can carry its own count in `tests[].options.repeat`, and that
+            # overrides the global flag. Advising `--repeat` alone sends a
+            # caller who set a per-test count to the one control that will not
+            # change this case.
             raise EvidenceError(
                 f"Promptfoo case {index} ({declared.input!r}) has "
-                f"{len(observations)} usable observation(s); run with "
-                "--repeat 2 or higher"
+                f"{len(observations)} usable observation(s); a comparison "
+                "needs at least two. Raise --repeat, or this case's own "
+                "tests[].options.repeat if it sets one, which overrides the "
+                "global count"
             )
         cases.append(
             EvidenceCase(
