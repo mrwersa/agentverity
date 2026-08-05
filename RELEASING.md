@@ -41,8 +41,13 @@ Cut a release when any of these is true:
   says the same thing better is not a reason on its own. Copy edits are the
   most frequent change here, and treating each as a release is the same
   missing rule in a third shape.
-- **A roadmap item finished.** That is the unit a reader tracks, so it is the
-  unit worth publishing against.
+- **A roadmap item finished and changed the package.** That is the unit a
+  reader tracks, so it is the unit worth publishing against, but only when
+  something in the wheel moved. An item whose whole output is evidence or
+  documentation has already reached its reader on merge, and this trigger and
+  the documentation entry below would otherwise fire against each other. That
+  collision is not hypothetical: the first item finished after this section
+  was written produced a directory of evidence and nothing else.
 - **A defect that reaches a user is fixed.** Wrong output, a misleading
   message, a refused input that should be accepted.
 
