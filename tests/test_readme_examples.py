@@ -475,3 +475,37 @@ def test_every_example_is_named_somewhere_a_reader_looks() -> None:
     )
 
     assert not missing, f"examples nothing points at: {missing}"
+
+
+def test_the_release_trigger_matches_the_sibling_project_word_for_word() -> None:
+    """One rule in two repositories drifts unless something compares them.
+
+    The section exists because the absence of a release trigger produced two
+    opposite failures, seventeen unreleased pull requests here and a four-day
+    unreleased fix there. Wording that diverges is how one of them quietly
+    grows an exception. Only the opening paragraph differs, because each
+    repository names its own history first.
+
+    Skipped when the sibling is not checked out, since it is a separate
+    repository and not a dependency.
+    """
+    from pathlib import Path
+
+    import pytest
+
+    sibling = Path.home() / "code" / "agentmandate" / "RELEASING.md"
+    if not sibling.is_file():
+        pytest.skip("agentmandate is not checked out beside this repository")
+
+    def rule(text: str) -> str:
+        start = text.index("## When to cut one")
+        body = text[start : text.index("## Cut a release", start)]
+        # Drop the opening paragraph: each repository leads with its own
+        # history, and the rule is everything after it.
+        return body.split("\n\n", 2)[2]
+
+    here = rule(Path(__file__).resolve().parents[1].joinpath("RELEASING.md")
+                .read_text(encoding="utf-8"))
+    there = rule(sibling.read_text(encoding="utf-8"))
+
+    assert here == there, "the release trigger has drifted between the projects"
