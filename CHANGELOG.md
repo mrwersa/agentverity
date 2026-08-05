@@ -8,6 +8,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-08-05
+
+Promptfoo has allowed a per-test repeat count since 0.121.18, and that count
+overrides the global `--repeat` flag. The importer's refusal message for a
+case with too few observations used to name only the global flag, so a caller
+who set the per-test count could not learn why raising the global one changed
+nothing. The message now names both knobs.
+
 ### Fixed
 
 - A Promptfoo case with too few observations advised `--repeat` alone. Since
@@ -1089,7 +1097,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.18.1...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.18.2...HEAD
+[0.18.2]: https://github.com/mrwersa/agentverity/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/mrwersa/agentverity/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/mrwersa/agentverity/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/mrwersa/agentverity/compare/v0.16.0...v0.17.0
