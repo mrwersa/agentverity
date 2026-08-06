@@ -6,6 +6,13 @@ one question: given the same request twice, does a model pick the same tool?
 Everything here re-runs. The evidence files hold the individual observations,
 so `summarise.py` and `agentverity assess` cost nothing.
 
+![Ranked two ways over the same 4,380 calls, the winner changes](ranking.png)
+
+Ranked by how often a model gave one answer per probe, `mistral-small` leads on
+10 of 10 and is correct on 5. Ranked by whether it chose the reviewed tool,
+`gpt-4o-mini` leads on 7 and is steady on 8. A gate reading only the first
+column prefers the model that is correct less often.
+
 ## What was measured, and what was not
 
 The target is the tool set of the
