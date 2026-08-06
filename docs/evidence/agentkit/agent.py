@@ -134,7 +134,7 @@ def build(model: str):
 
 # Three vendors, three sizes. Nova Micro is deliberate continuity: the earlier
 # AgentVerity write-up measured the same model on Bedrock.
-def nemo():
+def mistral_small():
     # mistral-nemo was rate-limited upstream during this run; mistral-small
     # is the same vendor at a usable tier.
     return build("mistralai/mistral-small-3.2-24b-instruct")
