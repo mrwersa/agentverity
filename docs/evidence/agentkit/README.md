@@ -145,7 +145,10 @@ agentverity assess --evidence docs/evidence/agentkit/evidence-gpt4o_mini.json \
 ```
 
 Collecting again costs 0.70 USD and about 30 minutes of wall time across the
-three models, and needs an `OPENROUTER_API_KEY`:
+three models, and needs an `OPENROUTER_API_KEY`. The third factory is named
+`mistral_small` rather than `nemo` because `mistral-nemo` was rate-limited
+upstream on the day of the run and `mistral-small` was substituted. The
+evidence file carries the model it actually ran in `provenance.model`:
 
 ```bash
 agentverity plan --suite suite.json          # price it first: 1460 calls per model

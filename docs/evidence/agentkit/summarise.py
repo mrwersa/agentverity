@@ -15,7 +15,7 @@ import json
 import pathlib
 
 HERE = pathlib.Path(__file__).resolve().parent
-FILES = ("evidence-nova.json", "evidence-gpt4o_mini.json", "evidence-nemo.json")
+FILES = ("evidence-nova.json", "evidence-gpt4o_mini.json", "evidence-mistral_small.json")
 
 
 def main() -> int:

@@ -26,7 +26,7 @@ MAIN_README = (Path(__file__).resolve().parents[1] / "README.md").read_text(
 )
 SUITE = json.loads((EVIDENCE / "suite.json").read_text(encoding="utf-8"))
 EXPECTED = {c["input"]: c["expected"] for c in SUITE["cases"]}
-FILES = ("evidence-nova.json", "evidence-gpt4o_mini.json", "evidence-nemo.json")
+FILES = ("evidence-nova.json", "evidence-gpt4o_mini.json", "evidence-mistral_small.json")
 
 
 def load(name: str) -> dict:
@@ -48,7 +48,7 @@ def score(evidence: dict) -> tuple[int, int]:
     [
         ("evidence-nova.json", 4, 1),
         ("evidence-gpt4o_mini.json", 7, 8),
-        ("evidence-nemo.json", 5, 10),
+        ("evidence-mistral_small.json", 5, 10),
     ],
 )
 def test_the_readme_table_matches_the_evidence(
@@ -93,11 +93,11 @@ def _coverage(name: str):
 
 def test_the_headline_holds() -> None:
     """The claim is that ranking on stability alone prefers the worse agent."""
-    nemo_correct, nemo_single = score(load("evidence-nemo.json"))
+    mistral_correct, mistral_single = score(load("evidence-mistral_small.json"))
     gpt_correct, gpt_single = score(load("evidence-gpt4o_mini.json"))
 
-    assert nemo_single > gpt_single, "nemo should be the more stable"
-    assert nemo_correct < gpt_correct, "and the less correct"
+    assert mistral_single > gpt_single, "mistral-small should be the more stable"
+    assert mistral_correct < gpt_correct, "and the less correct"
 
 
 def test_the_quoted_cost_and_duration_match_provenance() -> None:

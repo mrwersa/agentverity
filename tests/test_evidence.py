@@ -480,7 +480,7 @@ class TestTaggedOutcomeRoundTrip:
         from agentverity import load_evidence
 
         root = Path(__file__).resolve().parents[1] / "docs" / "evidence" / "agentkit"
-        for name in ("evidence-gpt4o_mini.json", "evidence-nova.json", "evidence-nemo.json"):
+        for name in ("evidence-gpt4o_mini.json", "evidence-nova.json", "evidence-mistral_small.json"):
             evidence = load_evidence(root / name)
             assert len(evidence.cases) == 10
 
