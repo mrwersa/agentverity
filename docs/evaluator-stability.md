@@ -13,9 +13,12 @@ Repeat the judge on the same frozen trace and rubric, then keep each categorical
 verdict. AgentVerity can qualify that evidence using the same three outcomes it
 uses for an agent route:
 
-- stable enough at the declared tolerance
-- unstable above that tolerance
-- undecided because too little evidence was collected
+- `deterministic`, stable enough at the declared tolerance
+- `stochastic`, moving more than that tolerance allows
+- `undecided`, because too little evidence was collected either way
+
+The summary line in the example below says "unstable" for the middle case,
+which is the same verdict in a sentence rather than in a table.
 
 ## Run the provider-free example
 

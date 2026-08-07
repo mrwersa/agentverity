@@ -38,6 +38,11 @@ AgentVerity reuses the same Promptfoo export and finds this:
      card_security <-> merchant_dispute  x8
 ```
 
+Three words there are the tool's own. A **flip** is a decision that changed
+between two runs of the same case, **stochastic** means the route moves more
+than your tolerance allows, and **undecided** means the run did not collect
+enough evidence to say either way.
+
 The contract check passes, but the decision switches between `card_security`
 and `merchant_dispute` in 8 of 13 paired reruns. Those labels send work to
 different queues, controls, and owners, and a moving reference makes every
@@ -98,9 +103,9 @@ pip install "agentverity[langgraph]"   # LangGraph
 
 It keeps three outcomes separate:
 
-- **stable enough** for the declared tolerance
-- **unstable** above that tolerance
-- **undecided** because the run did not collect enough evidence
+- `deterministic`, stable enough for the declared tolerance
+- `stochastic`, moving more than that tolerance allows
+- `undecided`, because the run did not collect enough evidence either way
 
 Once you have two runs, `agentverity compare-evidence before.json after.json`
 answers the question a single report cannot: **what moved?** It reports which
@@ -254,7 +259,7 @@ allowed a per-test count since 0.121.18. A knob is still a knob: choosing
 five is guesswork until a tolerance sizes it.
 
 AgentVerity sizes the run from your tolerance, uses non-overlapping pairs, and
-keeps three answers: stable enough, unstable, or undecided. The default
+keeps three answers: `deterministic`, `stochastic`, or `undecided`. The default
 `balanced` setting uses a 5% tolerance.
 
 You can also stop early without spoiling the answer. `agentverity run
