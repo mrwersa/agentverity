@@ -8,6 +8,26 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-08-08
+
+The README named the three stability verdicts as "stable enough, unstable,
+undecided" in two places, and `docs/evaluator-stability.md` in a third. The
+command prints `deterministic`, `stochastic`, and `undecided`. The word
+`unstable` appears nowhere in the package, so a reader who followed the PyPI
+description and then ran `assess` saw two of the three words change under
+them. The sample output in the README's opening section also carried no
+explanation of `flip`, `stochastic`, or `undecided` at all.
+
+### Fixed
+
+- Documentation named two of the three stability verdicts differently from
+  the values `assess` prints and the snapshot records. All three lists now
+  use `deterministic`, `stochastic`, and `undecided`.
+- The README's opening sample output showed `flips`, `stochastic`, and
+  `undecided` with no gloss. Each is now defined once, immediately after the
+  block where it first appears.
+
+
 ## [0.18.2] - 2026-08-05
 
 Promptfoo has allowed a per-test repeat count since 0.121.18, and that count
@@ -1097,7 +1117,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.18.2...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.18.3...HEAD
+[0.18.3]: https://github.com/mrwersa/agentverity/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/mrwersa/agentverity/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/mrwersa/agentverity/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/mrwersa/agentverity/compare/v0.17.0...v0.18.0
