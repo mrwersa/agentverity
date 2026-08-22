@@ -21,9 +21,11 @@ readable artifact alongside the required minor version and migration notes.
 
 Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit
-classification has a separate [executable contract](cli-exit-contract.md).
-Existing behavioral tests cover parts of those surfaces; they still require a
-final audit before 1.0.
+classification has a separate [executable contract](cli-exit-contract.md), and
+the main Python boundaries now have a preliminary
+[return-semantics audit](return-semantics-audit.md). Exact prose, public class
+members, and exhaustive report semantics still require a final audit before
+1.0.
 
 ## Provenance and reproduction
 

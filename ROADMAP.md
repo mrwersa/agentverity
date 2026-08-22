@@ -92,7 +92,7 @@ remaining class, behavior, documentation, security, and adopter checks keep the
 1.0 gate open.
 
 All six commands now execute against a reviewed 0/1/2 behavior matrix in CI.
-This closes process-classification drift, not the remaining return semantics,
+This closes process-classification drift, not public class members,
 help/documentation parity, security review, or adopter validation.
 
 Every current data surface now executes against a reviewed 0.19.0 retention
@@ -100,6 +100,12 @@ matrix covering inputs, observations, fingerprints, errors, decisions, and
 relation names. This establishes the implementation baseline and corrects an
 overbroad snapshot claim; the independent security review and wider threat
 model remain open before 1.0.
+
+Representative public Python boundaries now execute against a published-wheel
+return-semantics fixture, including all ten canonical run statuses and the
+planning, assessment, drift, snapshot, and reporting families. Public class
+members, exact help/documentation parity, independent adoption, and release
+security review keep the final 1.0 audit open.
 
 ## Delivery and release strategy
 
