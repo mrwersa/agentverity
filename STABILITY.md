@@ -81,6 +81,10 @@ defaults from 0.19.0. It does not yet cover class internals, help prose,
 return-object semantics, or exit behavior, so the final compatibility audit
 remains open.
 
+The [CLI exit contract](docs/cli-exit-contract.md) exercises representative
+offline paths for every command and each process class it supports. Exact help
+and report prose remain outside that contract.
+
 ## What remains open
 
 The relation API and convenience adapters are the likeliest surfaces to change.
