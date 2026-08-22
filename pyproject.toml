@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentverity"
-version = "0.18.4"
+version = "0.19.0"
 description = "Evidence checks for regression baselines on AI agents with bounded decisions"
 readme = "README.md"
 license = "Apache-2.0"

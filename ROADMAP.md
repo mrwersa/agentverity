@@ -9,7 +9,7 @@ evidence-led 12-month plan. It is direction, not a release promise;
 
 ## Current state
 
-As of 0.18.4, this is the released 0.18.4 picture: a complete local
+As of 0.19.0, this is the released 0.19.0 picture: a complete local
 qualification loop for bounded categorical decisions.
 
 | Need | Interface | Established behavior |

@@ -380,6 +380,6 @@ coverage, and the branch-protection `CI gate` requires that job to pass.
 ## Status and licence
 
 Alpha. Pin a minor series for production use, for example
-`agentverity~=0.18.0`. Patch releases preserve the public API.
+`agentverity~=0.19.0`. Patch releases preserve the public API.
 
 Apache-2.0. Contributions are welcome through the pull-request workflow.
