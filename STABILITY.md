@@ -75,6 +75,12 @@ the three durable reader paths against files written by 0.16.0, the earliest
 minor that produced every currently supported schema. There are no migration
 paths to test: older evidence and snapshot schemas are deliberately refused.
 
+The preliminary [public surface audit](docs/public-surface-audit.md) also pins
+top-level exports, signatures, public constants, commands, flags, and parser
+defaults from 0.19.0. It does not yet cover class internals, help prose,
+return-object semantics, or exit behavior, so the final compatibility audit
+remains open.
+
 ## What remains open
 
 The relation API and convenience adapters are the likeliest surfaces to change.

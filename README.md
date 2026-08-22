@@ -355,6 +355,7 @@ observability remain separate parts of the stack.
 - [Qualify a categorical LLM judge without confusing stability with validity](https://github.com/mrwersa/agentverity/blob/main/docs/evaluator-stability.md)
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
 - [Cross-version compatibility audit](https://github.com/mrwersa/agentverity/blob/main/docs/compatibility-audit.md)
+- [Public Python and CLI surface audit](https://github.com/mrwersa/agentverity/blob/main/docs/public-surface-audit.md)
 - [Runnable examples, and what each one shows](https://github.com/mrwersa/agentverity/blob/main/examples/README.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - [API stability and path to 1.0](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)

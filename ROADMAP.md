@@ -86,6 +86,11 @@ by 0.16.0. This closes the earlier-minor fixture check for the supported schema
 set; the final API/CLI audit, security review, and independent integration keep
 1.0 readiness open.
 
+A machine-checked 0.19.0 inventory now makes top-level Python signatures and
+parser-enforced CLI drift reviewable. This is a preliminary surface audit; the
+remaining class, behavior, documentation, security, and adopter checks keep the
+1.0 gate open.
+
 ## Delivery and release strategy
 
 Each roadmap item is one reviewable branch and pull request. Finish its stated
