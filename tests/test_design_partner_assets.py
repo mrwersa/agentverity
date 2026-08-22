@@ -6,6 +6,7 @@ BRIEF = ROOT / "docs" / "design-partners.md"
 PLAYBOOK = ROOT / "docs" / "design-partner-playbook.md"
 ISSUE_FORM = ROOT / ".github" / "ISSUE_TEMPLATE" / "design-partner.yml"
 FUNNEL = ROOT / "docs" / "templates" / "design-partner-funnel.csv"
+ENGAGEMENT_LOG = ROOT / "docs" / "ecosystem-engagement-log.md"
 
 
 def test_the_design_partner_pilot_is_discoverable() -> None:
@@ -46,3 +47,14 @@ def test_the_acquisition_gate_is_consistent_with_the_roadmap() -> None:
     for target in ("20 relevant teams", "six discovery", "three qualified pilot"):
         assert target in roadmap
         assert target in playbook
+
+
+def test_public_engagement_stays_separate_from_private_outreach() -> None:
+    """The public evidence log must not become a contact or follow-up tracker."""
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    engagement_log = ENGAGEMENT_LOG.read_text(encoding="utf-8")
+
+    assert "docs/ecosystem-engagement-log.md" in agents
+    assert "does not count as a design-partner contact" in engagement_log
+    assert "## Open follow-ups" not in engagement_log
+    assert "- Next action:" not in engagement_log

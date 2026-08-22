@@ -28,6 +28,10 @@ This is the easiest way to break CI without touching library code:
 
 So: change an example or public export → update README/docs and regenerate assets in the same commit.
 
+## Separate public engagement from private outreach
+
+`docs/ecosystem-engagement-log.md` is an append-only record of public artifacts we already authored, not a contact tracker. It may link an attributable public issue or comment after publication, but must not name prospective targets, private contacts, planned follow-ups, or outreach sequencing. Those details live only in the private tracker described by `docs/design-partner-playbook.md`. Public engagement does not increment the design-partner funnel unless a separate contact meets the playbook definition. Before contacting anyone, consult the private tracker; if it is unavailable, do not infer or repeat outreach from the public log.
+
 ## Versioning and releases
 
 The version number lives **only** in `pyproject.toml`; `agentverity.__version__` reads installed distribution metadata, and the CI package job fails if pyproject, metadata, and `__version__` disagree — never hardcode a second literal.
