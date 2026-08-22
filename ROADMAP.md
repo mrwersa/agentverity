@@ -91,6 +91,10 @@ parser-enforced CLI drift reviewable. This is a preliminary surface audit; the
 remaining class, behavior, documentation, security, and adopter checks keep the
 1.0 gate open.
 
+All six commands now execute against a reviewed 0/1/2 behavior matrix in CI.
+This closes process-classification drift, not the remaining return semantics,
+help/documentation parity, security review, or adopter validation.
+
 ## Delivery and release strategy
 
 Each roadmap item is one reviewable branch and pull request. Finish its stated

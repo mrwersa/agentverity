@@ -1,0 +1,12 @@
+{
+  "commands": {
+    "assess": {"finding": 1, "interpretable": 0, "refusal": 2},
+    "check": {"clean": 0, "drift": 1, "refusal": 2},
+    "compare-evidence": {"drift": 1, "no_drift": 0, "refusal": 2},
+    "plan": {"planned": 0, "usage_error": 2},
+    "run": {"finding": 1, "interpretable": 0, "refusal": 2},
+    "snapshot": {"admitted": 0, "refusal": 2}
+  },
+  "baseline": "agentverity==0.19.0",
+  "schema": "agentverity.cli-exit-contract/v1"
+}
