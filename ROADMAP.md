@@ -52,6 +52,12 @@ and the maintainer [acquisition playbook](docs/design-partner-playbook.md). Thes
 make the funnel executable; the roadmap outcome remains open until the contact,
 conversation, and pilot metrics are actually met.
 
+Method validation now has a reproducible [simulation and exact-boundary
+cross-check](docs/method-validation.md), including an independence sensitivity
+model. It confirms conservative baseline admission under independent pairs,
+documents Wilson's nominal rather than exact two-sided calibration, and shows
+why declared isolation is load-bearing. Independent expert review remains open.
+
 ## Phase 2: 3–6 months — interoperate where demand is proven
 
 | Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |
