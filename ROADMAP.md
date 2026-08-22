@@ -95,6 +95,12 @@ All six commands now execute against a reviewed 0/1/2 behavior matrix in CI.
 This closes process-classification drift, not the remaining return semantics,
 help/documentation parity, security review, or adopter validation.
 
+Every current data surface now executes against a reviewed 0.19.0 retention
+matrix covering inputs, observations, fingerprints, errors, decisions, and
+relation names. This establishes the implementation baseline and corrects an
+overbroad snapshot claim; the independent security review and wider threat
+model remain open before 1.0.
+
 ## Delivery and release strategy
 
 Each roadmap item is one reviewable branch and pull request. Finish its stated
