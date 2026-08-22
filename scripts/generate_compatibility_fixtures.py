@@ -25,10 +25,12 @@ from agentverity import (
     Snapshot,
     SnapshotProbe,
     __version__,
+    plan_repeats,
     save_decision_suite,
     save_evidence,
     save_snapshot,
 )
+from agentverity.meter import wilson_ci
 
 
 def generate(output: Path, expected_version: str) -> None:
@@ -67,16 +69,18 @@ def generate(output: Path, expected_version: str) -> None:
         isolation="fresh-session",
         provenance={"fixture": "cross-version", "producer": expected_version},
     )
+    repeats = plan_repeats(2, epsilon=0.05)
+    pair_trials = 2 * (repeats // 2)
     snapshot = Snapshot(
         schema=SNAPSHOT_SCHEMA,
         created_at="2026-08-01T00:00:00+00:00",
         agentverity_version=expected_version,
         layer="verdict",
         epsilon=0.05,
-        k=74,
+        k=repeats,
         blindness_threshold=0.9,
-        meter_pair_trials=74,
-        meter_ci_high=0.04935,
+        meter_pair_trials=pair_trials,
+        meter_ci_high=wilson_ci(0, pair_trials)[1],
         blindness_skew=0.5,
         blindness_distinct=2,
         decision_contract=contract,

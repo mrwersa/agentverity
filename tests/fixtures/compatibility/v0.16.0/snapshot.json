@@ -4,7 +4,7 @@
     "blindness_skew": 0.5,
     "isolation": "fresh-session",
     "meter_call": "verdict-deterministic",
-    "meter_ci_high": 0.04935,
+    "meter_ci_high": 0.049351503566216516,
     "meter_pair_trials": 74,
     "reference_approved": true
   },
