@@ -1,4 +1,4 @@
-# CLI exit behavior contract
+# CLI exit behaviour contract
 
 AgentVerity uses three process outcomes: `0` for interpretable completion, `1`
 for a reviewable finding, and `2` for a refusal or evidence that cannot support

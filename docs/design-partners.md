@@ -1,7 +1,7 @@
 # AgentVerity Design-Partner Pilot
 
 AgentVerity is looking for teams that need to decide whether repeated,
-categorical agent behavior is strong enough to freeze as a regression
+categorical agent behaviour is strong enough to freeze as a regression
 baseline. The pilot tests that narrow job on a real system; it is not a sales
 programme and does not require a hosted service.
 

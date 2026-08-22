@@ -38,7 +38,7 @@ def test_readme_shows_the_finding_before_positioning_itself():
 
     problem = readme.index("## The 60-second problem")
     install = readme.index("## Try it without model calls")
-    positioning = readme.index("| What you run | Question it answers |")
+    positioning = readme.index("| Layer | Question |")
 
     assert problem < install < positioning
     # Nothing between the title and the problem except the badges and one

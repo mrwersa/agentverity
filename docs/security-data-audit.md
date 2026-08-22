@@ -61,11 +61,11 @@ contract.
   reviewed. Apply repository, CI-artifact, and telemetry-backend retention
   policies independently.
 - Adapter and provider logging occurs outside AgentVerity's serializers. This
-  audit does not establish their behavior.
+  audit does not establish their behaviour.
 
 ## Remaining Review Gate
 
-This audit makes current behavior explicit and regression-tested. It does not
+This audit makes current behaviour explicit and regression-tested. It does not
 cover dependency vulnerabilities, hostile file-size/resource-exhaustion tests,
 filesystem permissions, CI secret handling, or an independent review of the
 threat model. Those checks remain required before the 1.0 security criterion
