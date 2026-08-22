@@ -30,6 +30,14 @@ contain each raw input plus its intended decision. Treat them like test
 fixtures, not privacy-minimised reports. The generated JSON, JUnit, snapshot,
 and OpenTelemetry outputs do not copy those raw inputs.
 
+Imported evidence also retains raw inputs and observations. Its `provenance`
+mapping is caller supplied and is not filtered. JSON, JUnit, and terminal
+diagnostics can echo observation values on finding paths, while JSON and
+terminal output retain recorded exception messages. The executable
+[security and data-retention audit](docs/security-data-audit.md) maps each
+surface and its caveats; “excluded” never means a provider, adapter, exporter,
+or caller-controlled field cannot log the same value elsewhere.
+
 ## Concurrent execution
 
 Concurrency is disabled by default. `max_workers` overlaps distinct inputs but

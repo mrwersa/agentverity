@@ -14,8 +14,10 @@ scope statement, not a waiver for silent breakage.
 - JSON reports and snapshots carry explicit schema versions. The snapshot
   loader rejects an unsupported schema, while reports expose their version for
   downstream validation.
-- Stored prompts and outputs remain excluded from default reports, snapshots,
-  JUnit, and OpenTelemetry exports.
+- Raw probe-input fields remain excluded from generated reports, snapshots,
+  JUnit, progress, and OpenTelemetry exports. Snapshots intentionally retain
+  approved observations, and diagnostic paths can retain values described in
+  the [security and data-retention audit](docs/security-data-audit.md).
 
 Production users should pin the current minor series:
 
@@ -106,6 +108,11 @@ AgentVerity reaches 1.0 after all of the following are true:
 
 Criterion 2 is now exercised for the current reader schemas. The remaining
 criteria, and any future migration introduced before 1.0, remain open.
+
+The preliminary data-retention audit now has a versioned matrix and executable
+sentinel checks across every in-tree output surface. It corrects the earlier
+overbroad snapshot guarantee, but does not replace the independent release
+security review required by criterion 4.
 
 Download count alone is not an exit criterion. The goal is evidence that the
 contract works outside the examples that shaped it.

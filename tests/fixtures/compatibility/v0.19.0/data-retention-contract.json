@@ -1,0 +1,76 @@
+{
+  "baseline": "agentverity==0.19.0",
+  "classifications": [
+    "retained",
+    "conditionally-retained",
+    "excluded",
+    "not-applicable"
+  ],
+  "schema": "agentverity.data-retention-contract/v1",
+  "surfaces": {
+    "decision-suite": {
+      "decision_labels": "retained",
+      "exception_messages": "not-applicable",
+      "input_fingerprints": "excluded",
+      "observation_values": "not-applicable",
+      "raw_inputs": "retained",
+      "relation_names": "not-applicable"
+    },
+    "imported-evidence": {
+      "decision_labels": "retained",
+      "exception_messages": "conditionally-retained",
+      "input_fingerprints": "conditionally-retained",
+      "observation_values": "retained",
+      "raw_inputs": "retained",
+      "relation_names": "conditionally-retained"
+    },
+    "json-report": {
+      "decision_labels": "retained",
+      "exception_messages": "retained",
+      "input_fingerprints": "retained",
+      "observation_values": "conditionally-retained",
+      "raw_inputs": "excluded",
+      "relation_names": "retained"
+    },
+    "junit-report": {
+      "decision_labels": "conditionally-retained",
+      "exception_messages": "excluded",
+      "input_fingerprints": "excluded",
+      "observation_values": "conditionally-retained",
+      "raw_inputs": "excluded",
+      "relation_names": "retained"
+    },
+    "opentelemetry": {
+      "decision_labels": "excluded",
+      "exception_messages": "excluded",
+      "input_fingerprints": "excluded",
+      "observation_values": "excluded",
+      "raw_inputs": "excluded",
+      "relation_names": "excluded"
+    },
+    "progress": {
+      "decision_labels": "excluded",
+      "exception_messages": "excluded",
+      "input_fingerprints": "retained",
+      "observation_values": "excluded",
+      "raw_inputs": "excluded",
+      "relation_names": "excluded"
+    },
+    "snapshot": {
+      "decision_labels": "retained",
+      "exception_messages": "excluded",
+      "input_fingerprints": "retained",
+      "observation_values": "retained",
+      "raw_inputs": "excluded",
+      "relation_names": "excluded"
+    },
+    "terminal-summary": {
+      "decision_labels": "conditionally-retained",
+      "exception_messages": "retained",
+      "input_fingerprints": "excluded",
+      "observation_values": "conditionally-retained",
+      "raw_inputs": "excluded",
+      "relation_names": "retained"
+    }
+  }
+}
