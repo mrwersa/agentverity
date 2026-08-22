@@ -1,0 +1,49 @@
+{
+  "admission_evidence": {
+    "blindness_distinct": 2,
+    "blindness_skew": 0.5,
+    "isolation": "fresh-session",
+    "meter_call": "verdict-deterministic",
+    "meter_ci_high": 0.049351503566216516,
+    "meter_pair_trials": 74,
+    "reference_approved": true
+  },
+  "agentverity_version": "0.16.0",
+  "config": {
+    "blindness_threshold": 0.9,
+    "epsilon": 0.05,
+    "k": 74,
+    "layer": "verdict"
+  },
+  "created_at": "2026-08-01T00:00:00+00:00",
+  "decision_contract": {
+    "allowed": [
+      "approve",
+      "review"
+    ],
+    "allowed_no_decisions": [
+      "refused"
+    ],
+    "critical": [],
+    "required": [
+      "approve",
+      "review"
+    ]
+  },
+  "probes": [
+    {
+      "expected": "approve",
+      "input_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intended": "approve"
+    },
+    {
+      "expected": {
+        "kind": "no_decision",
+        "reason": "refused"
+      },
+      "input_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "intended": "review"
+    }
+  ],
+  "schema": "agentverity.snapshot/v4"
+}

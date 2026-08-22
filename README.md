@@ -354,6 +354,7 @@ observability remain separate parts of the stack.
 - [Reuse Promptfoo, DeepEval, or generic evidence without duplicate calls](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md)
 - [Qualify a categorical LLM judge without confusing stability with validity](https://github.com/mrwersa/agentverity/blob/main/docs/evaluator-stability.md)
 - [Integrations and AgentCore validation](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md)
+- [Cross-version compatibility audit](https://github.com/mrwersa/agentverity/blob/main/docs/compatibility-audit.md)
 - [Runnable examples, and what each one shows](https://github.com/mrwersa/agentverity/blob/main/examples/README.md)
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - [API stability and path to 1.0](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)

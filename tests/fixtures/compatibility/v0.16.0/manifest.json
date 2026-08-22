@@ -1,0 +1,8 @@
+{
+  "producer": "agentverity==0.16.0",
+  "schemas": {
+    "decision_suite": "agentverity.decision-suite/v1",
+    "evidence": "agentverity.evidence/v2",
+    "snapshot": "agentverity.snapshot/v4"
+  }
+}

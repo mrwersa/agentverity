@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {
+      "expected": "approve",
+      "input": "routine request"
+    },
+    {
+      "expected": "review",
+      "input": "ambiguous request"
+    }
+  ],
+  "contract": {
+    "allowed": [
+      "approve",
+      "review"
+    ],
+    "allowed_no_decisions": [
+      "refused"
+    ],
+    "critical": [],
+    "required": [
+      "approve",
+      "review"
+    ]
+  },
+  "schema": "agentverity.decision-suite/v1"
+}
