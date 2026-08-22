@@ -5,7 +5,7 @@ local log. It must not change what AgentVerity evidence means. The reusable
 fixtures and assertions in `tests/integration_contract.py` keep every in-tree
 importer aligned.
 
-## Required behavior
+## Required behaviour
 
 An importer must:
 

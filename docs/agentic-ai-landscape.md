@@ -1,4 +1,4 @@
-# Agentic-AI Evaluation Landscape and Strategy
+# Agentic AI evaluation landscape and strategy
 
 **Research date:** 22 August 2026
 
@@ -21,7 +21,7 @@ contracts; isolation provenance; and refusal to turn weak evidence green.
 AgentVerity should not become another scoring library, trace store, benchmark,
 or agent host.
 
-This conclusion combines verified repository behavior and primary or official
+This conclusion combines verified repository behaviour and primary or official
 external sources. Where a vendor's reviewed documentation did not establish a
 capability, this report says so; absence from the documentation is not proof
 that no private or newer capability exists. Strategic judgments are labelled
@@ -59,7 +59,7 @@ Agent evaluation is a lifecycle, not one score:
 
 Anthropic's agent-evaluation guidance similarly separates tasks, trials,
 graders, transcripts, outcomes, and the harness, and recommends multiple
-trials because agent behavior varies. It also warns that LLM judges need
+trials because agent behaviour varies. It also warns that LLM judges need
 calibration against expert human judgment
 ([Anthropic](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)).
 The 2026 ACL survey describes a move toward more realistic and continuously
@@ -136,7 +136,7 @@ An importer must therefore reject ambiguous mappings rather than infer them.
 
 ### Verified implementation
 
-The 0.18.3 package is a zero-mandatory-dependency Python 3.10–3.14 library and
+The 0.19.0 package is a zero-mandatory-dependency Python 3.10–3.14 library and
 CLI. Its public workflow is:
 
 - `plan` prices a suite before calls are made;
@@ -145,7 +145,7 @@ CLI. Its public workflow is:
 - `assess` imports Promptfoo, DeepEval test cases, or generic JSONL evidence;
 - `snapshot` admits reviewed evidence, `check` compares a later run with that
   baseline, and `compare-evidence` compares two collection windows;
-- terminal, versioned JSON, JUnit XML, and privacy-minimized OpenTelemetry
+- terminal, versioned JSON, JUnit XML, and privacy-minimised OpenTelemetry
   reporting serve people, CI, and telemetry backends.
 
 The statistical core forms disjoint observation pairs and places a Wilson
@@ -167,17 +167,19 @@ telemetry, snapshots, and decision suites are versioned as
 use `agentverity.run/v2`. Raw evidence can contain prompts and outputs, while
 the OpenTelemetry summary intentionally omits prompts, outputs, fingerprints,
 labels, relation names, and errors; fingerprints are identifiers, not
-anonymization.
+anonymisation.
 
 ### Validation and maturity
 
-On 22 August 2026 the full suite collected 801 tests: 796 passed, five skipped,
-and statement coverage was 95.65% against a 90% CI floor. CI also spans Python
-3.10–3.14, Ruff, package construction, and wheel smoke tests. Committed AgentKit
-evidence contains 4,380 model calls across three models; its result demonstrates
-the core caveat empirically—a highly stable agent can still be less correct.
-The AgentCore canary validates production-shaped integration but has only six
-pairs per route, so it is not a per-route certificate.
+At research close, the full offline suite passed with statement coverage above
+the 90% CI floor. CI also spans Python 3.10–3.14, Ruff, package construction,
+and wheel smoke tests. Versioned audits now exercise durable readers, public
+signatures and class members, return semantics, CLI exit classes, and data
+retention. Committed AgentKit evidence contains 4,380 model calls across three
+models; its result demonstrates the core caveat empirically—a highly stable
+agent can still be less correct. The AgentCore canary validates a
+production-shaped integration but has only six pairs per route, so it is not a
+per-route certificate.
 
 Maturity is the principal weakness. The repository was created on 24 July
 2026 and, as of the research date, public adoption signals remained
@@ -185,8 +187,9 @@ single-digit and the contribution history was maintainer-led. These are crude
 indicators, not quality measures, but they show that independent validation is
 not yet established
 ([repository snapshot](https://github.com/mrwersa/agentverity)). The project
-correctly remains alpha: it has neither a full public compatibility audit nor
-demonstrated independent adopters.
+correctly remains alpha: its preliminary compatibility artefacts still need
+final documentation-parity and release review, and it has not demonstrated
+independent adoption.
 
 ### Limitations that must stay visible
 
@@ -213,10 +216,10 @@ the small built-in harness; they need an auditable release decision more than
 another score dashboard.
 
 **Jobs to be done.** Determine the call budget before testing; distinguish
-stable, unstable, and insufficient evidence; find which route is weak; prevent
-blind or shared-session evidence from becoming a baseline; preserve the
-contract and provenance behind a release gate; and compare later evidence
-without rerunning the original platform.
+`deterministic`, `stochastic`, and `undecided` evidence; find which route is
+weak; prevent blind or shared-session evidence from becoming a baseline;
+preserve the contract and provenance behind a release gate; and compare later
+evidence without rerunning the original platform.
 
 **Complements.** DeepEval, Promptfoo, Ragas, and custom graders judge quality;
 LangSmith, Braintrust, Phoenix, Langfuse, MLflow, OpenAI, and AgentCore run,
@@ -232,7 +235,7 @@ need to be portable and auditable.
 strong enough to freeze?”* Do not claim generic agent reliability. The wedge
 is conservative admission, not the Wilson formula alone: the defensible unit
 is statistics plus contracts, route semantics, provenance, schemas, reports,
-and explicit refusal behavior.
+and explicit refusal behaviour.
 
 ## SWOT and opportunity
 

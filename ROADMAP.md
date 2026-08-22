@@ -3,28 +3,28 @@
 AgentVerity answers one question: **is this repeated categorical evidence
 strong enough to save as a regression baseline?** It does not decide whether
 an answer is correct, safe, or useful. This roadmap turns the
-[agentic-AI landscape review](docs/agentic-ai-landscape.md) into an OSS-first,
+[agentic AI landscape review](docs/agentic-ai-landscape.md) into an OSS-first,
 evidence-led 12-month plan. It is direction, not a release promise;
 `DESIGN.md` retains milestone and architectural-decision history.
 
 ## Current state
 
-As of 0.19.0, this is the released 0.19.0 picture: a complete local
-qualification loop for bounded categorical decisions.
+As of 0.19.0, the released 0.19.0 picture is a complete local qualification
+loop for bounded categorical decisions.
 
-| Need | Interface | Established behavior |
+| Need | Interface | Established behaviour |
 |---|---|---|
 | Price and collect | `plan`, `run` | Fixed or predeclared sequential budgets; callable, Strands, and LangGraph adapters |
 | Reuse evidence | `assess` | Promptfoo, DeepEval test cases, and generic JSONL raw runs; aggregates refused |
 | Qualify | report | Wilson-bound tri-state calls, per-route evidence, blindness, relations, and declared contracts |
 | Admit and revisit | `snapshot`, `check`, `compare-evidence` | Versioned baselines, drift checks, isolation policy, and independent evidence-window comparison |
-| Automate | terminal, JSON, JUnit, OTEL | CI-friendly outputs and privacy-minimized telemetry |
+| Automate | terminal, JSON, JUnit, OTEL | CI-friendly outputs and privacy-minimised telemetry |
 
 CI covers Python 3.10–3.14, enforces Ruff and at least 90% statement coverage,
 and builds and smoke-tests the wheel. AgentKit and AgentCore assets exercise
-real integration paths. These are strong implementation signals, but not
-independent adoption. The project remains alpha until an external integration
-and compatibility audit validate the public surface.
+real integration paths. Preliminary compatibility audits cover the current
+public structure and representative behaviour, but independent adoption,
+documentation parity, and final security and release review remain open.
 
 ## Decision rules
 
@@ -45,7 +45,7 @@ and compatibility audit validate the public surface.
 | Independent design partners | Maintainer-controlled examples do not prove usefulness. Observe real qualification decisions and publish credible case studies. | Three independent teams complete a trial; two redistributable evidence fixtures or case studies; findings logged, including failures | Acquisition pipeline, hands-on support, and permission to publish; selection bias and support burden | Continue feature work only where at least two teams share the problem; otherwise narrow the claim |
 | Onboarding and category clarity | Users confuse stability with correctness or do not know whether their agent fits. Make fit, non-fit, and first result understandable in one session. | Five fresh-user walkthroughs; four reach an interpretable report in 15 minutes; no participant mistakes `TRUSTWORTHY` for correctness after reading the result | Stable quickstart and representative sample; risk of optimizing only for experts | Build copy/examples from observed confusion; defer UI work unless the CLI is the measured blocker |
 | Integration demand discovery | LangSmith and telemetry exports vary, so guessed importers would be brittle. Collect real raw-run shapes and rank demand. | At least three samples from two organizations and two source systems; each can identify input, decision, trial order, and isolation or expose the missing field | Data-sharing/privacy constraints and changing exports | No vendor importer without three independent requests plus testable fixtures; publish a mapping recipe instead |
-| Method validation | Unit tests do not independently validate coverage, optional-stopping behavior, or dependence sensitivity. Make the statistical claim reproducible and reviewable. | Public simulation notebook/script reproduces boundary behavior; review by one independent statistician or evaluation researcher; discrepancies become tracked decisions | Reviewer availability; simulations can reveal redesign needs | Fix correctness findings before integrations; defer new methods that lack a precise guarantee |
+| Method validation | Unit tests do not independently validate coverage, optional-stopping behaviour, or dependence sensitivity. Make the statistical claim reproducible and reviewable. | Public simulation notebook/script reproduces boundary behaviour; review by one independent statistician or evaluation researcher; discrepancies become tracked decisions | Reviewer availability; simulations can reveal redesign needs | Fix correctness findings before integrations; defer new methods that lack a precise guarantee |
 
 Acquisition starts with the public [design-partner pilot](docs/design-partners.md)
 and the maintainer [acquisition playbook](docs/design-partner-playbook.md). These
@@ -79,39 +79,19 @@ independently contributed integration meets its adopter and maintenance gate.
 | Verifiable provenance | Declared isolation does not prove distinct executions, and snapshots cannot fully identify the tested target. Preserve enough identity for audits without collecting secrets. | External cases validate optional trial/execution IDs and target revision identities; privacy review completed; old evidence remains readable | Schema design and real audit requirements; identifiers can leak or imply guarantees they do not provide | Version the schema only after two external cases require the same fields; otherwise retain declarations and caveats |
 | Statistical hardening | Individual route intervals may be mistaken for a suite-wide guarantee, and correlated trials can be overconfident. Quantify or explicitly bound those limitations. | Simulation suite covers dependence and multiple routes; docs distinguish individual and family-wise claims; one reviewed decision on optional suite-wide control | Phase 1 method review; added conservatism may make call budgets impractical | Build an opt-in method only with a named guarantee and acceptable measured cost; otherwise document and defer |
 | Ecosystem partnerships | A qualifier is useful only when it fits existing evaluation stacks. Establish maintained, reciprocal interoperability. | Three active ecosystem relationships; two partner-maintained fixtures or references; three independent public cases in total | Partner priorities and maintenance ownership; concentration risk | Count a partnership only when users can run an artifact, not when a logo or announcement exists |
-| 1.0 readiness | Adopters need durable APIs, schemas, and migration behavior. Complete the alpha exit criteria in `STABILITY.md`. | Public API/CLI/schema audit; cross-version fixtures; clean security review; independent integration; documentation parity; supported-version policy | All prior evidence and maintainer capacity; premature stability can freeze mistakes | Release 1.0 only when every criterion is evidenced; otherwise continue 0.x without deadline pressure |
+| 1.0 readiness | Adopters need durable APIs, schemas, and migration behaviour. Complete the alpha exit criteria in `STABILITY.md`. | Public API/CLI/schema audit; cross-version fixtures; clean security review; independent integration; documentation parity; supported-version policy | All prior evidence and maintainer capacity; premature stability can freeze mistakes | Release 1.0 only when every criterion is evidenced; otherwise continue 0.x without deadline pressure |
 
 The current loaders now read and canonically rewrite durable fixtures produced
 by 0.16.0. This closes the earlier-minor fixture check for the supported schema
 set; the final API/CLI audit, security review, and independent integration keep
 1.0 readiness open.
 
-A machine-checked 0.19.0 inventory now makes top-level Python signatures and
-parser-enforced CLI drift reviewable. This is a preliminary surface audit; the
-remaining help/documentation parity, security, and adopter checks keep the 1.0
-gate open.
-
-All six commands now execute against a reviewed 0/1/2 behavior matrix in CI.
-This closes process-classification drift, not help/documentation parity,
-security review, or adopter validation.
-
-Every current data surface now executes against a reviewed 0.19.0 retention
-matrix covering inputs, observations, fingerprints, errors, decisions, and
-relation names. This establishes the implementation baseline and corrects an
-overbroad snapshot claim; the independent security review and wider threat
-model remain open before 1.0.
-
-Representative public Python boundaries now execute against a published-wheel
-return-semantics fixture, including all ten canonical run statuses and the
-planning, assessment, drift, snapshot, and reporting families. Public class
-members now have a separate structural inventory; exact help/documentation
-parity, independent adoption, and release security review keep the final 1.0
-audit open.
-
-All 35 exported classes now have a published-wheel inventory of fields,
-default policy, methods, class methods, static methods, and properties. This
-closes structural member drift, while focused tests continue to own behavioral
-meaning.
+The 0.19.0 compatibility baseline is now machine checked across top-level
+signatures and CLI options, all six commands' 0/1/2 exit classes,
+representative Python return semantics, all exported class members, and every
+in-tree data-retention surface. These artefacts make drift reviewable; they do
+not replace help/documentation parity, independent adoption, security review,
+or final release review.
 
 ## Delivery and release strategy
 
@@ -119,7 +99,7 @@ Each roadmap item is one reviewable branch and pull request. Finish its stated
 artifact and checks, request independent review, apply accepted feedback, and
 merge before starting the next item. Do not combine unrelated roadmap items to
 manufacture a larger release. A PR is the unit of review; a package release is
-triggered only by user-visible package behavior, following `RELEASING.md`.
+triggered only by user-visible package behaviour, following `RELEASING.md`.
 
 | Change delivered | Release treatment |
 |---|---|

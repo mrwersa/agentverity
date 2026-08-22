@@ -1,8 +1,9 @@
 # API stability and the path to 1.0
 
-AgentVerity is alpha because its public interface has not completed a
-compatibility audit or been validated by independent adopters. The label is a
-scope statement, not a waiver for silent breakage.
+AgentVerity is alpha because its public interface has not completed its final
+1.0 review or been validated by independent adopters. Preliminary executable
+audits already make accidental drift visible. The label is a scope statement,
+not a waiver for silent breakage.
 
 ## Guarantees before 1.0
 
@@ -35,8 +36,9 @@ differ because each records its own format history, not a release. Evidence is
 at v2 because the shape of a stored outcome changed. Snapshots are at v4 for
 that and again for recording the isolation a baseline was admitted under, so a
 v3 file is refused rather than read: it cannot say how its trials were
-separated, and guessing would invent the provenance the check establishes. The decision suite is still at v1 because `allowed_no_decisions` is
-optional and a suite written without it parses correctly. JSON reports and
+separated, and guessing would invent the provenance the check establishes.
+The decision suite is still at v1 because `allowed_no_decisions` is optional
+and a suite written without it parses correctly. JSON reports and
 telemetry exports are append-only artefacts, so consumers must opt into their
 schemas. The evidence loader rejects unknown versions and aggregate-only
 inputs rather than guessing. Promptfoo and DeepEval bridges translate into
@@ -77,28 +79,23 @@ the three durable reader paths against files written by 0.16.0, the earliest
 minor that produced every currently supported schema. There are no migration
 paths to test: older evidence and snapshot schemas are deliberately refused.
 
-The preliminary [public surface audit](docs/public-surface-audit.md) also pins
-top-level exports, signatures, public constants, commands, flags, and parser
-defaults from 0.19.0. It does not yet cover class internals, help prose,
-return-object semantics, or exit behavior. Separate executable contracts now
-cover those surfaces, including a structural
-[class-member audit](docs/class-member-audit.md). Help/documentation parity and
-the final release review keep the compatibility audit open.
+The preliminary compatibility suite now covers four complementary surfaces
+from the published 0.19.0 wheel:
 
-The [CLI exit contract](docs/cli-exit-contract.md) exercises representative
-offline paths for every command and each process class it supports. Exact help
-and report prose remain outside that contract.
+- the [public surface audit](docs/public-surface-audit.md) pins top-level
+  exports, signatures, constants, commands, flags, and parser defaults;
+- the [CLI exit contract](docs/cli-exit-contract.md) executes representative
+  offline paths for every command and supported process class;
+- the [return-semantics audit](docs/return-semantics-audit.md) executes all ten
+  canonical `RunResult.status` paths and representative planning, assessment,
+  drift, snapshot, and reporting returns; and
+- the [class-member audit](docs/class-member-audit.md) inventories declared
+  fields, defaults, methods, class methods, static methods, and properties for
+  all 35 top-level exported classes.
 
-The [return-semantics audit](docs/return-semantics-audit.md) executes all ten
-canonical `RunResult.status` paths and representative planning, assessment,
-drift, snapshot, JSON, JUnit, and OpenTelemetry returns from the published
-0.19.0 wheel. It does not freeze exact prose or every report scenario; class
-structure is covered separately below.
-
-The [class-member audit](docs/class-member-audit.md) inventories declared
-fields, defaults, methods, class methods, static methods, and properties for
-all 35 top-level exported classes. It establishes structural compatibility,
-not every method's behavioral meaning.
+These audits establish reviewable structure and representative behaviour.
+They do not freeze exact help or report prose, exhaustively specify every
+method, or replace documentation-parity and final release review.
 
 ## What remains open
 

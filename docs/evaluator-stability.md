@@ -17,9 +17,6 @@ uses for an agent route:
 - `stochastic`, moving more than that tolerance allows
 - `undecided`, because too little evidence was collected either way
 
-The summary line in the example below says "unstable" for the middle case,
-which is the same verdict in a sentence rather than in a table.
-
 ## Run the provider-free example
 
 ```bash
@@ -28,12 +25,12 @@ python examples/evaluator_stability.py
 
 The example contains recorded verdicts for three traces. One human-labelled
 class contains a trace that alternates between `pass` and `uncertain`, so the
-class is reported as unstable.
+class is reported as `stochastic`.
 
 ```text
 Evaluator verdict stability
 NOT READY - decision changes exceed declared stability targets for: pass.
-unstable human-labelled classes: pass
+stochastic human-labelled classes: pass
 Validity still requires comparison with human-labelled examples.
 ```
 
@@ -56,9 +53,10 @@ Record those versions in evidence provenance. A change then travels with
 ## Import real verdicts
 
 Store one case per frozen trace in
-[`agentverity.evidence/v2`](imported-evidence.md):
-
-The example above is the evidence format for plain decision labels. A judge that sometimes returns no label at all can record why rather than inventing one, using the typed outcomes in [imported evidence](imported-evidence.md). That matters here more than most places: a judge answering with prose is not a stable verdict, and folding those runs into one category would score the judge as more consistent than it is.
+[`agentverity.evidence/v2`](imported-evidence.md). A judge that sometimes
+returns no label can record a typed no-decision reason rather than inventing a
+category. A prose answer is not a stable categorical verdict, and grouping
+such runs under one label would overstate consistency.
 
 ```json
 {

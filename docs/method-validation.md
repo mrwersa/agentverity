@@ -1,6 +1,6 @@
 # Statistical Method Validation
 
-This asset cross-checks the operating behavior of AgentVerity's fixed Wilson
+This asset cross-checks the operating behaviour of AgentVerity's fixed Wilson
 and predeclared sequential rules. It also measures how quickly their
 conclusions degrade when pair independence is false. The exact arguments in
 `DESIGN.md` remain the basis of the method; Monte Carlo is a reproducible

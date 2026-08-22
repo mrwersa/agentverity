@@ -63,19 +63,10 @@ def test_the_readme_table_matches_the_evidence(
     assert (int(row.group(1)), int(row.group(2))) == (correct, single)
 
 
-@pytest.mark.parametrize("name", FILES)
-def test_the_main_readme_quotes_the_same_table(name: str) -> None:
-    """The front page carries these numbers too, so it drifts too."""
-    evidence = load(name)
-    correct, single = score(evidence)
-    row = re.search(
-        rf"^{re.escape(evidence['provenance']['model'])}\s+(\d+)/10\s+(\d+)/10$",
-        MAIN_README,
-        flags=re.MULTILINE,
-    )
-
-    assert row, f"{evidence['provenance']['model']} is not in the main README table"
-    assert (int(row.group(1)), int(row.group(2))) == (correct, single)
+def test_the_main_readme_routes_readers_to_the_evidence_report() -> None:
+    """Keep detailed figures canonical in one report, linked from the front page."""
+    assert "docs/evidence/agentkit" in MAIN_README
+    assert "4,380 calls" in MAIN_README
 
 
 def _coverage(name: str):

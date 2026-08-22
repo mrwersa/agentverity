@@ -1,6 +1,6 @@
 # Return Semantics Compatibility Audit
 
-This preliminary audit records observable Python return behavior published by
+This preliminary audit records observable Python return behaviour published by
 AgentVerity 0.19.0. It complements the signature inventory and CLI exit
 contract: a callable can keep the same signature and still break callers by
 changing the type, status, or field relationship it returns.
@@ -20,12 +20,12 @@ offline agents and evidence. Its reviewed fixture pins:
   relation results;
 - evidence drift types, material-change fields, provenance changes, and
   serialized keys;
-- snapshot admission plus clean and changed `SnapshotDiff` behavior; and
+- snapshot admission plus clean and changed `SnapshotDiff` behaviour; and
 - JSON, JUnit, and OpenTelemetry return types, schemas, classifications, and
   field/attribute sets for a successful declared-contract run.
 
 CI recollects those semantics and compares them with
-`tests/fixtures/compatibility/v0.19.0/return-semantics.json`. A behavior change
+`tests/fixtures/compatibility/v0.19.0/return-semantics.json`. A behaviour change
 therefore requires a readable fixture diff rather than passing unnoticed.
 
 ## Provenance and Reproduction
@@ -51,7 +51,7 @@ attributes because they are not stable return semantics.
 
 This fixture does not freeze exact headlines, help prose, floating-point
 confidence bounds, arbitrary provider values, class methods, or every field on
-every result object. Existing focused tests still define more behavior than
+every result object. Existing focused tests still define more behaviour than
 this compatibility sample. Public class structure now has a separate
 [member audit](class-member-audit.md); help/documentation parity, independent
 adoption, and release security review keep the final 1.0 audit open.

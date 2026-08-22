@@ -1,19 +1,15 @@
 # AgentVerity design
 
-AgentVerity is a test adequacy tool for agents that choose among named
-decisions. Adequacy criteria measure the test suite rather than the program:
-statement coverage, branch coverage, and mutation score all ask whether the
-tests were worth reading. AgentVerity asks the same kind of question for an
-agent. Its diversity check is a lower bound rather than an equivalent of
-branch coverage. It detects a probe set that collapses onto one highly
-dominant observed decision. An optional decision contract separately checks
-whether every required label was intended and observed. Neither check knows
-whether every important boundary within a decision was exercised. Decision
-stability is a
-precondition for that dynamic signal because unstable decisions make the
-observed distribution unrepeatable. The target may be a deterministic gate or
-an LLM agent. This document records the technical boundaries and the reasons
-behind them.
+AgentVerity qualifies repeated categorical evidence before it becomes a
+regression baseline. It measures whether decisions are stable enough for a
+declared tolerance, whether the probe set collapsed onto one dominant
+decision, and—when a contract is supplied—whether required decisions were
+intended and observed. These are evidence-adequacy checks, not correctness,
+safety, or comprehensive behavioural coverage.
+
+This document records the architecture and accepted design decisions. Use the
+[README](README.md) for the product overview, [ROADMAP.md](ROADMAP.md) for
+current direction, and [CHANGELOG.md](CHANGELOG.md) for shipped history.
 
 Both checks are dynamic by design. Static analysis can inspect orchestration
 branches, route schemas, and expected labels. For a source-available
@@ -37,7 +33,12 @@ quality evaluators on metric breadth or with observability systems on trace
 storage and dashboards. It qualifies one observed run, not the correctness,
 safety, or complete route coverage of the agent.
 
-## Related approaches (reviewed 2026-07-06)
+## Historical design context
+
+The comparison below records the alternatives considered on 6 July 2026. It
+is not a current buying guide; the dated
+[agent-evaluation landscape](docs/agentic-ai-landscape.md) owns current tool
+positioning.
 
 | Tool | Non-determinism | Relation checks | Suite-quality diagnostic | License |
 |---|---|---|---|---|
@@ -138,7 +139,8 @@ Adapters are optional imports. The core installs without any agent library.
 - `snapshot.py` — admits and checks reviewed frozen baselines.
 - `execution.py` — overlaps distinct inputs while serialising one probe series.
 - `reporting.py` — emits versioned JSON without raw probe text.
-- `cli.py` — `run`, `snapshot`, and `check`.
+- `cli.py` — `plan`, `run`, `assess`, `compare-evidence`, `snapshot`, and
+  `check`.
 
 ## 3. Scope discipline (what it is NOT)
 
@@ -154,7 +156,11 @@ a valid target when that step owns a release contract. Open-ended answer or
 trajectory quality is outside scope unless the system also exposes a reviewed
 decision layer. See `docs/applicability.md`.
 
-## 4. Status (2026-08-04)
+## 4. Historical implementation record (through 2026-08-04)
+
+This milestone record explains which design decisions produced the current
+architecture. It is not the current roadmap or release inventory; use
+[ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md) for those.
 
 - M1 core: DONE — observation, meter, blindness, relations, runner, CLI.
 - M2 Strands adapter: DONE — adapter written, tested, worked example runs.

@@ -1,13 +1,10 @@
 # Assessing runs you already have
 
-You probably already run your agent repeatedly. promptfoo, DeepEval, LangSmith,
-a script someone wrote. Running it again through AgentVerity to get an
-admission decision pays for the same information twice.
-
-The first two have a bridge, the script someone wrote has `--jsonl`, and
-anything can write the evidence format directly.
-
-`agentverity assess` reads the observations you already collected.
+If another evaluator or harness already collected repeated decisions, do not
+pay to run them again. `agentverity assess` reads Promptfoo exports,
+precomputed DeepEval cases, generic JSONL, or AgentVerity's native evidence
+format. Every path requires ordered individual observations; aggregate scores
+are not enough.
 
 ```console
 $ agentverity assess --evidence runs.json --suite suite.json

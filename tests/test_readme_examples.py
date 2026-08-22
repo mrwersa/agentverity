@@ -38,12 +38,30 @@ def test_readme_shows_the_finding_before_positioning_itself():
 
     problem = readme.index("## The 60-second problem")
     install = readme.index("## Try it without model calls")
-    positioning = readme.index("| What you run | Question it answers |")
+    positioning = readme.index("| Layer | Question |")
 
     assert problem < install < positioning
     # Nothing between the title and the problem except the badges and one
     # paragraph saying what this is.
     assert problem < 1200, f"{problem} characters of preamble before the problem"
+
+
+def test_readme_python_quickstart_runs_without_relation_violations() -> None:
+    """The first Python example should not teach through a distracting failure."""
+    import re
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    match = re.search(
+        r"Plain Python callables.*?```python\n(.*?)\n```", readme, re.DOTALL
+    )
+    assert match, "README Python quickstart is missing"
+
+    namespace: dict = {}
+    exec(match.group(1), namespace)  # noqa: S102 - execute our own documentation
+    result = namespace["result"]
+
+    assert result.status == "deterministic"
+    assert all(item.violated == 0 for item in result.relation_results)
 
 
 def _run_example() -> str:

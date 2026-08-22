@@ -44,7 +44,7 @@ notes where appropriate.
 
 ## Scope Boundary
 
-This is a structural audit, not a claim that every method behavior is frozen.
-The return-semantics fixture and focused behavioral tests cover representative
+This is a structural audit, not a claim that every method behaviour is frozen.
+The return-semantics fixture and focused behavioural tests cover representative
 meaning. Exact CLI help/documentation parity, exact report prose, independent
 adoption, and the release security review remain open before 1.0.

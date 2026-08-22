@@ -48,4 +48,4 @@ A release PR publishes automatically after merge to `main`: set the version, mov
 
 ## Security & data handling
 
-Never commit customer prompts, model outputs, credentials, or trace identifiers. Suites, snapshots, exception text, and generated evidence under `docs/evidence/` are potentially sensitive; SHA-256 fingerprints identify inputs but are not anonymization. Report vulnerabilities privately via GitHub Security Advisories.
+Never commit customer prompts, model outputs, credentials, or trace identifiers. Suites, snapshots, exception text, and generated evidence under `docs/evidence/` are potentially sensitive; SHA-256 fingerprints identify inputs but are not anonymisation. Report vulnerabilities privately via GitHub Security Advisories.

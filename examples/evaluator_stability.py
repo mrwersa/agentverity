@@ -75,7 +75,7 @@ def main() -> None:
     print(result.headline)
     if result.route_stability is not None:
         print(
-            "unstable human-labelled classes: "
+            "stochastic human-labelled classes: "
             + ", ".join(result.route_stability.stochastic)
         )
     print("Validity still requires comparison with human-labelled examples.")
