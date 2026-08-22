@@ -75,7 +75,7 @@ Plain Python callables need no extra dependency:
 from agentverity import from_callable, run
 
 def route(text):
-    return "billing" if "charge" in text else "cash_withdrawal"
+    return "billing" if "charge" in text.lower() else "cash_withdrawal"
 
 agent = from_callable(lambda text: {"verdict": route(text)})
 result = run(agent, inputs=["duplicate charge", "cash withdrawal"])
