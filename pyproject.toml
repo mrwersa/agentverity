@@ -1,10 +1,11 @@
 [build-system]
-requires = ["hatchling"]
+# Hatchling 1.32 emits core metadata 2.5, which Twine 6.2 cannot validate yet.
+requires = ["hatchling>=1.27,<1.32"]
 build-backend = "hatchling.build"
 
 [project]
 name = "agentverity"
-version = "0.18.3"
+version = "0.18.4"
 description = "Evidence checks for regression baselines on AI agents with bounded decisions"
 readme = "README.md"
 license = "Apache-2.0"

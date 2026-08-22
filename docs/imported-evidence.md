@@ -118,7 +118,8 @@ agentverity assess --jsonl runs.jsonl --suite payment_decisions.json
 from agentverity import load_jsonl
 
 evidence = load_jsonl("runs.jsonl", suite=suite,
-                      input_path="probe.text", decision_path="result.route")
+                      input_path="probe.text", decision_path="result.route",
+                      provenance={"harness": "internal-eval", "model": "router-v3"})
 ```
 
 Both paths are dotted, so a nested row needs no reshaping first.
@@ -153,6 +154,11 @@ source cannot act on is refused rather than discarded. `--provider` and
 `--prompt-id` are Promptfoo's, `--layer` is the JSONL importer's, and the two
 path flags belong to both importers but not to `--evidence`, which records its
 own layer and field names.
+
+Adding another source? Follow the repository's
+[integration conformance contract](integration-contract.md). Its shared
+fixtures pin ordering, aggregate refusal, provenance, isolation, and evidence
+round trips across every in-tree importer.
 
 ## The file
 
