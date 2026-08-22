@@ -26,7 +26,7 @@ agentverity~=0.19.0
 That accepts compatible `0.19.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.18 reads and writes one version of each schema:
+Version 0.19 reads and writes one version of each schema:
 `agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v4`,
 `agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
 differ because each records its own format history, not a release. Evidence is
@@ -70,6 +70,11 @@ An unrecognised version is refused by name and never silently reinterpreted,
 because guessing at an old file's meaning is how a stored decision quietly
 changes what it meant.
 
+The [cross-version compatibility audit](docs/compatibility-audit.md) checks
+the three durable reader paths against files written by 0.16.0, the earliest
+minor that produced every currently supported schema. There are no migration
+paths to test: older evidence and snapshot schemas are deliberately refused.
+
 ## What remains open
 
 The relation API and convenience adapters are the likeliest surfaces to change.
@@ -88,6 +93,9 @@ AgentVerity reaches 1.0 after all of the following are true:
    feeds its interface problems back into the project.
 4. Security, data-retention, and failure-mode documentation receive a release
    review against the implementation.
+
+Criterion 2 is now exercised for the current reader schemas. The remaining
+criteria, and any future migration introduced before 1.0, remain open.
 
 Download count alone is not an exit criterion. The goal is evidence that the
 contract works outside the examples that shaped it.

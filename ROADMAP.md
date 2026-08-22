@@ -81,6 +81,11 @@ independently contributed integration meets its adopter and maintenance gate.
 | Ecosystem partnerships | A qualifier is useful only when it fits existing evaluation stacks. Establish maintained, reciprocal interoperability. | Three active ecosystem relationships; two partner-maintained fixtures or references; three independent public cases in total | Partner priorities and maintenance ownership; concentration risk | Count a partnership only when users can run an artifact, not when a logo or announcement exists |
 | 1.0 readiness | Adopters need durable APIs, schemas, and migration behavior. Complete the alpha exit criteria in `STABILITY.md`. | Public API/CLI/schema audit; cross-version fixtures; clean security review; independent integration; documentation parity; supported-version policy | All prior evidence and maintainer capacity; premature stability can freeze mistakes | Release 1.0 only when every criterion is evidenced; otherwise continue 0.x without deadline pressure |
 
+The current loaders now read and canonically rewrite durable fixtures produced
+by 0.16.0. This closes the earlier-minor fixture check for the supported schema
+set; the final API/CLI audit, security review, and independent integration keep
+1.0 readiness open.
+
 ## Delivery and release strategy
 
 Each roadmap item is one reviewable branch and pull request. Finish its stated

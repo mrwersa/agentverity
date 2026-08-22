@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "expected": "approve",
+      "input": "routine request",
+      "observations": [
+        "approve",
+        "approve"
+      ]
+    },
+    {
+      "expected": "review",
+      "input": "ambiguous request",
+      "observations": [
+        {
+          "kind": "no_decision",
+          "reason": "refused"
+        },
+        {
+          "kind": "no_decision",
+          "reason": "refused"
+        }
+      ]
+    }
+  ],
+  "isolation": "fresh-session",
+  "layer": "verdict",
+  "provenance": {
+    "fixture": "cross-version",
+    "producer": "0.16.0"
+  },
+  "schema": "agentverity.evidence/v2"
+}
