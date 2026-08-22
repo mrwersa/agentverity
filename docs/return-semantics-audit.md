@@ -52,6 +52,6 @@ attributes because they are not stable return semantics.
 This fixture does not freeze exact headlines, help prose, floating-point
 confidence bounds, arbitrary provider values, class methods, or every field on
 every result object. Existing focused tests still define more behavior than
-this compatibility sample. The final 1.0 audit remains open for public class
-members, help/documentation parity, independent adoption, and release security
-review.
+this compatibility sample. Public class structure now has a separate
+[member audit](class-member-audit.md); help/documentation parity, independent
+adoption, and release security review keep the final 1.0 audit open.
