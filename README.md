@@ -358,6 +358,7 @@ observability remain separate parts of the stack.
 - [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - [API stability and path to 1.0](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)
 - [Security and data handling](https://github.com/mrwersa/agentverity/blob/main/SECURITY.md)
+- [Agentic-AI evaluation landscape, positioning, and 12-month strategy](https://github.com/mrwersa/agentverity/blob/main/docs/agentic-ai-landscape.md)
 
 Read the design story:
 [Introducing AgentVerity: What Does a Green Agent Test Prove?](https://mrwersa.medium.com/introducing-agentverity-what-does-a-green-agent-test-prove-fa6ebbfda2d3)
