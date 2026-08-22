@@ -8,6 +8,22 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-08-22
+
+### Added
+
+- Generic JSONL imports accept optional provenance metadata, so converted
+  harness exports can retain their source, model, and collection context.
+- A reusable integration conformance kit checks that Promptfoo, DeepEval, and
+  JSONL imports preserve ordering, provenance, isolation, and evidence round
+  trips while refusing aggregate-only input.
+
+### Fixed
+
+- Isolated builds pin Hatchling below 1.32 until the release toolchain accepts
+  the core metadata 2.5 that version emits, preventing an otherwise valid
+  release from failing at `twine check`.
+
 ## [0.18.3] - 2026-08-08
 
 The README named the three stability verdicts as "stable enough, unstable,
@@ -1117,7 +1133,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.18.3...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/mrwersa/agentverity/compare/v0.18.3...v0.19.0
 [0.18.3]: https://github.com/mrwersa/agentverity/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/mrwersa/agentverity/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/mrwersa/agentverity/compare/v0.18.0...v0.18.1

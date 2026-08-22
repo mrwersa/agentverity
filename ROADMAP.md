@@ -9,7 +9,7 @@ evidence-led 12-month plan. It is direction, not a release promise;
 
 ## Current state
 
-As of 0.18.3, this is the released 0.18.3 picture: a complete local
+As of 0.19.0, this is the released 0.19.0 picture: a complete local
 qualification loop for bounded categorical decisions.
 
 | Need | Interface | Established behavior |
@@ -66,6 +66,11 @@ why declared isolation is load-bearing. Independent expert review remains open.
 | OpenTelemetry/OpenInference ingestion | Traces should be reusable across backends without one adapter per vendor. Define a strict mapping for categorical trials. | Fixtures from at least two backends produce identical evidence; ambiguous/missing attributes fail with actionable diagnostics | OpenTelemetry/OpenInference conventions and real span samples; telemetry rarely carries reviewed contracts | Build an importer only if the mapping is unambiguous; otherwise ship a producer recipe or sidecar contract |
 | Integration contract and fixture kit | Contributors need a stable way to add sources without weakening evidence. Make raw-run requirements and conformance tests reusable. | One independently contributed integration; all importers pass ordering, aggregate-refusal, provenance, and round-trip fixtures | Documented minimal protocol and review capacity; surface-area growth | Accept an integration only with a maintainer, fixtures, and a real adopter; otherwise keep it external |
 | Cross-tool release-gate examples | Users need to see evaluator, trace system, and qualifier working together. Demonstrate complementarity rather than replacement. | Two reproducible examples use an external grader/runner plus AgentVerity; costs and non-guarantees are explicit | Partner fixtures and stable integrations; examples can become marketing without evidence | Publish only reproducible, version-pinned cases; defer unsupported logos and claims |
+
+The integration contract now has shared ordered-run and aggregate fixtures,
+and Promptfoo, DeepEval, and generic JSONL pass the same provenance, isolation,
+ordering, refusal, and round-trip checks. The item remains open until an
+independently contributed integration meets its adopter and maintenance gate.
 
 ## Phase 3: 6–12 months — harden provenance and prepare 1.0
 

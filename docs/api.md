@@ -236,8 +236,9 @@ through `agentverity assess --promptfoo`.
 `evidence_from_jsonl(lines, ...)` and `load_jsonl(path, ...)` understand no
 tool at all. They read one JSON object per run, and `input_path` and
 `decision_path` name the fields as dotted paths, so a harness with no bridge
-and a production log go through the same door. Exposed as
-`agentverity assess --jsonl`.
+and a production log go through the same door. Python callers can pass a
+`provenance` mapping to retain the harness, model, and collection context.
+Exposed as `agentverity assess --jsonl`.
 
 The order of the lines is the order runs are paired, and an input appearing
 once is refused rather than imported, because a single run carries no

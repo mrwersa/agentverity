@@ -98,6 +98,7 @@ def evidence_from_jsonl(
     decision_path: str = "decision",
     layer: str = "verdict",
     isolation: str = "unknown",
+    provenance: Mapping[str, Any] | None = None,
 ) -> EvidenceSet:
     """Read one line per run into an evidence set.
 
@@ -111,6 +112,9 @@ def evidence_from_jsonl(
         layer: The layer the decisions represent.
         isolation: How the runs were separated. Left `unknown` unless the
             caller can state it, and reported rather than assumed.
+        provenance: Optional source metadata such as the harness, model, or
+            collection time. Values must be JSON-compatible if the evidence
+            will be serialized.
 
     Returns:
         An `EvidenceSet` in the order the file gave, ready to assess.
@@ -176,6 +180,7 @@ def evidence_from_jsonl(
         ),
         layer=layer,
         isolation=isolation,
+        provenance=dict(provenance or {}),
     )
 
 

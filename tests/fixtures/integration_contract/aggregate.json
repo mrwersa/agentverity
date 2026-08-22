@@ -1,0 +1,7 @@
+{
+  "input": "routine request",
+  "counts": {
+    "approve": 2,
+    "review": 1
+  }
+}
