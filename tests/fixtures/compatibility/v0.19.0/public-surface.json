@@ -1,0 +1,1263 @@
+{
+  "producer": "agentverity==0.19.0",
+  "surface": {
+    "cli": {
+      "commands": {
+        "assess": [
+          {
+            "action": "_HelpAction",
+            "dest": "help",
+            "names": [
+              "-h",
+              "--help"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "evidence",
+            "names": [
+              "--evidence"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "promptfoo",
+            "names": [
+              "--promptfoo"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "jsonl",
+            "names": [
+              "--jsonl"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "suite",
+            "names": [
+              "--suite"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "default": 0.05,
+            "dest": "epsilon",
+            "names": [
+              "--epsilon"
+            ],
+            "required": false,
+            "type": "builtins.float"
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "decision_path",
+            "names": [
+              "--decision-path"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "input_path",
+            "names": [
+              "--input-path"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "text",
+              "tools",
+              "verdict"
+            ],
+            "dest": "layer",
+            "names": [
+              "--layer"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "provider",
+            "names": [
+              "--provider"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "prompt_id",
+            "names": [
+              "--prompt-id"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "fresh-instance",
+              "fresh-session",
+              "shared-session",
+              "unknown"
+            ],
+            "dest": "isolation",
+            "names": [
+              "--isolation"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "json_path",
+            "names": [
+              "--json"
+            ],
+            "required": false
+          }
+        ],
+        "check": [
+          {
+            "action": "_HelpAction",
+            "dest": "help",
+            "names": [
+              "-h",
+              "--help"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "agent",
+            "names": [
+              "--agent"
+            ],
+            "required": true
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "inputs",
+            "names": [
+              "--inputs"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "suite",
+            "names": [
+              "--suite"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "default": 1,
+            "dest": "max_workers",
+            "names": [
+              "--max-workers"
+            ],
+            "required": false,
+            "type": "builtins.int"
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "raise",
+              "record"
+            ],
+            "default": "record",
+            "dest": "error_policy",
+            "names": [
+              "--error-policy"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "progress",
+            "names": [
+              "--progress"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "snapshot",
+            "names": [
+              "--snapshot"
+            ],
+            "required": true
+          }
+        ],
+        "compare-evidence": [
+          {
+            "action": "_HelpAction",
+            "dest": "help",
+            "names": [
+              "-h",
+              "--help"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "before",
+            "names": [
+              "before"
+            ],
+            "required": true
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "after",
+            "names": [
+              "after"
+            ],
+            "required": true
+          },
+          {
+            "action": "_StoreAction",
+            "default": 0.05,
+            "dest": "epsilon",
+            "names": [
+              "--epsilon"
+            ],
+            "required": false,
+            "type": "builtins.float"
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "json_path",
+            "names": [
+              "--json"
+            ],
+            "required": false
+          }
+        ],
+        "plan": [
+          {
+            "action": "_HelpAction",
+            "dest": "help",
+            "names": [
+              "-h",
+              "--help"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "suite",
+            "names": [
+              "--suite"
+            ],
+            "required": true
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "balanced",
+              "cheap",
+              "strict"
+            ],
+            "default": "balanced",
+            "dest": "precision",
+            "names": [
+              "--precision"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "epsilon",
+            "names": [
+              "--epsilon"
+            ],
+            "required": false,
+            "type": "builtins.float"
+          }
+        ],
+        "run": [
+          {
+            "action": "_HelpAction",
+            "dest": "help",
+            "names": [
+              "-h",
+              "--help"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "agent",
+            "names": [
+              "--agent"
+            ],
+            "required": true
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "inputs",
+            "names": [
+              "--inputs"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "suite",
+            "names": [
+              "--suite"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "balanced",
+              "cheap",
+              "strict"
+            ],
+            "default": "balanced",
+            "dest": "precision",
+            "names": [
+              "--precision"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "budget",
+            "names": [
+              "--budget"
+            ],
+            "required": false,
+            "type": "builtins.int"
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "k",
+            "names": [
+              "--k"
+            ],
+            "required": false,
+            "type": "builtins.int"
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "epsilon",
+            "names": [
+              "--epsilon"
+            ],
+            "required": false,
+            "type": "builtins.float"
+          },
+          {
+            "action": "_StoreAction",
+            "default": 0.9,
+            "dest": "blindness_threshold",
+            "names": [
+              "--blindness-threshold"
+            ],
+            "required": false,
+            "type": "builtins.float"
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "text",
+              "tools",
+              "verdict"
+            ],
+            "default": "verdict",
+            "dest": "layer",
+            "names": [
+              "--layer"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "sequential",
+            "names": [
+              "--sequential"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "default": 1,
+            "dest": "max_workers",
+            "names": [
+              "--max-workers"
+            ],
+            "required": false,
+            "type": "builtins.int"
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "raise",
+              "record"
+            ],
+            "default": "raise",
+            "dest": "error_policy",
+            "names": [
+              "--error-policy"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "progress",
+            "names": [
+              "--progress"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "no_meter",
+            "names": [
+              "--no-meter"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "no_blindness",
+            "names": [
+              "--no-blindness"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "no_relations",
+            "names": [
+              "--no-relations"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "relations",
+            "names": [
+              "--relations"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "json",
+              "junit",
+              "text"
+            ],
+            "default": "text",
+            "dest": "format",
+            "names": [
+              "--format"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "output",
+            "names": [
+              "--output"
+            ],
+            "required": false
+          }
+        ],
+        "snapshot": [
+          {
+            "action": "_HelpAction",
+            "dest": "help",
+            "names": [
+              "-h",
+              "--help"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "agent",
+            "names": [
+              "--agent"
+            ],
+            "required": true
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "inputs",
+            "names": [
+              "--inputs"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "suite",
+            "names": [
+              "--suite"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "balanced",
+              "cheap",
+              "strict"
+            ],
+            "default": "balanced",
+            "dest": "precision",
+            "names": [
+              "--precision"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "budget",
+            "names": [
+              "--budget"
+            ],
+            "required": false,
+            "type": "builtins.int"
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "k",
+            "names": [
+              "--k"
+            ],
+            "required": false,
+            "type": "builtins.int"
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "epsilon",
+            "names": [
+              "--epsilon"
+            ],
+            "required": false,
+            "type": "builtins.float"
+          },
+          {
+            "action": "_StoreAction",
+            "default": 0.9,
+            "dest": "blindness_threshold",
+            "names": [
+              "--blindness-threshold"
+            ],
+            "required": false,
+            "type": "builtins.float"
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "text",
+              "tools",
+              "verdict"
+            ],
+            "default": "verdict",
+            "dest": "layer",
+            "names": [
+              "--layer"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "sequential",
+            "names": [
+              "--sequential"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "default": 1,
+            "dest": "max_workers",
+            "names": [
+              "--max-workers"
+            ],
+            "required": false,
+            "type": "builtins.int"
+          },
+          {
+            "action": "_StoreAction",
+            "choices": [
+              "raise",
+              "record"
+            ],
+            "default": "record",
+            "dest": "error_policy",
+            "names": [
+              "--error-policy"
+            ],
+            "required": false
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "progress",
+            "names": [
+              "--progress"
+            ],
+            "nargs": 0,
+            "required": false
+          },
+          {
+            "action": "_StoreAction",
+            "dest": "output",
+            "names": [
+              "--output"
+            ],
+            "required": true
+          },
+          {
+            "action": "_StoreTrueAction",
+            "default": false,
+            "dest": "accept_reference",
+            "names": [
+              "--accept-reference"
+            ],
+            "nargs": 0,
+            "required": false
+          }
+        ]
+      },
+      "global_arguments": [
+        {
+          "action": "_HelpAction",
+          "dest": "help",
+          "names": [
+            "-h",
+            "--help"
+          ],
+          "nargs": 0,
+          "required": false
+        },
+        {
+          "action": "_VersionAction",
+          "dest": "version",
+          "names": [
+            "--version"
+          ],
+          "nargs": 0,
+          "required": false
+        }
+      ]
+    },
+    "python": [
+      {
+        "kind": "class",
+        "module": "agentverity.blindness",
+        "name": "BlindnessResult",
+        "qualified_name": "BlindnessResult",
+        "signature": "(inputs: 'int', layer: 'str', majority_verdict: 'Any', skew: 'float', distinct: 'int', threshold: 'float') -> None"
+      },
+      {
+        "kind": "constant",
+        "name": "DECISION_SUITE_SCHEMA",
+        "value": "agentverity.decision-suite/v1"
+      },
+      {
+        "kind": "constant",
+        "name": "DECLARABLE_REASONS",
+        "value": [
+          "no_tool_selected",
+          "refused"
+        ]
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.decision",
+        "name": "Decision",
+        "qualified_name": "Decision",
+        "signature": "(label: 'str') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.decision_contract",
+        "name": "DecisionCase",
+        "qualified_name": "DecisionCase",
+        "signature": "(input: 'str', expected: 'str') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.decision_contract",
+        "name": "DecisionContract",
+        "qualified_name": "DecisionContract",
+        "signature": "(allowed: 'frozenset[str]', required: 'frozenset[str] | None' = None, critical: 'frozenset[str]' = <factory>, stability_targets: 'Mapping[str, float]' = <factory>, minimum_cases: 'Mapping[str, int]' = <factory>, allowed_no_decisions: 'frozenset[str]' = <factory>) -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.decision_contract",
+        "name": "DecisionCount",
+        "qualified_name": "DecisionCount",
+        "signature": "(decision: 'str', count: 'int') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.decision_contract",
+        "name": "DecisionCoverageResult",
+        "qualified_name": "DecisionCoverageResult",
+        "signature": "(contract: 'DecisionContract', intended_counts: 'tuple[DecisionCount, ...]', observed_counts: 'tuple[DecisionCount, ...]', missing_intended: 'tuple[str, ...]', missing_observed: 'tuple[str, ...]', unknown_observed: 'tuple[str, ...]', under_cased: 'tuple[tuple[str, int, int], ...]' = (), observed_case_counts: 'tuple[DecisionCount, ...]' = ()) -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.decision_contract",
+        "name": "DecisionSuite",
+        "qualified_name": "DecisionSuite",
+        "signature": "(contract: 'DecisionContract', cases: 'tuple[DecisionCase, ...]') -> None"
+      },
+      {
+        "kind": "constant",
+        "name": "EVIDENCE_SCHEMA",
+        "value": "agentverity.evidence/v2"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.evidence",
+        "name": "EvidenceCase",
+        "qualified_name": "EvidenceCase",
+        "signature": "(input: 'str', observations: 'tuple[str | tuple[str, ...] | Decision | NoDecision, ...]', expected: 'str | None' = None, errors: 'int' = 0) -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.drift",
+        "name": "EvidenceDrift",
+        "qualified_name": "EvidenceDrift",
+        "signature": "(routes: 'tuple[RouteDrift, ...]', gained_decisions: 'tuple[str, ...]', lost_decisions: 'tuple[str, ...]', gained_flip_pairs: 'tuple[str, ...]', lost_flip_pairs: 'tuple[str, ...]', provenance_changes: 'tuple[tuple[str, Any, Any], ...]', informational_changes: 'tuple[tuple[str, Any, Any], ...]', isolation_before: 'str', isolation_after: 'str') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.evidence",
+        "name": "EvidenceError",
+        "qualified_name": "EvidenceError",
+        "signature": null
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.evidence",
+        "name": "EvidenceSet",
+        "qualified_name": "EvidenceSet",
+        "signature": "(cases: 'tuple[EvidenceCase, ...]', layer: 'str' = 'verdict', isolation: 'str' = 'unknown', provenance: 'dict[str, Any]' = <factory>) -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.stratified",
+        "name": "FlipPair",
+        "qualified_name": "FlipPair",
+        "signature": "(decisions: 'tuple[str, str]', count: 'int') -> None"
+      },
+      {
+        "kind": "constant",
+        "name": "INCOMPLETE_REASONS",
+        "value": [
+          "extraction_failed",
+          "malformed_response",
+          "runtime_error"
+        ]
+      },
+      {
+        "kind": "constant",
+        "name": "JUNIT_SUITE_NAME",
+        "value": "agentverity"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.meter",
+        "name": "MeterResult",
+        "qualified_name": "MeterResult",
+        "signature": "(layer: 'str', epsilon: 'float', inputs: 'int', repeats: 'int', pair_trials: 'int', pair_flips: 'int', inputs_with_flip: 'int', ci_low: 'float', ci_high: 'float', max_repeats: 'int | None' = None, sequential_call: 'str | None' = None, sequential_pairs: 'int | None' = None) -> None"
+      },
+      {
+        "kind": "constant",
+        "name": "NO_DECISION_REASONS",
+        "value": [
+          "extraction_failed",
+          "malformed_response",
+          "no_tool_selected",
+          "open_ended",
+          "refused",
+          "runtime_error"
+        ]
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.decision",
+        "name": "NoDecision",
+        "qualified_name": "NoDecision",
+        "signature": "(reason: 'str') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.observation",
+        "name": "Observation",
+        "qualified_name": "Observation",
+        "signature": "(text: 'str' = '', verdict: 'str | Outcome | None' = None, tools: 'tuple[str, ...]' = (), raw: 'Any' = None) -> None"
+      },
+      {
+        "kind": "constant",
+        "name": "Outcome",
+        "value": "agentverity.decision.Decision | agentverity.decision.NoDecision"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.decision",
+        "name": "OutcomeNotScorable",
+        "qualified_name": "OutcomeNotScorable",
+        "signature": null
+      },
+      {
+        "kind": "constant",
+        "name": "PRECISION_LEVELS",
+        "value": {
+          "balanced": 0.05,
+          "cheap": 0.1,
+          "strict": 0.01
+        }
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.execution",
+        "name": "ProgressEvent",
+        "qualified_name": "ProgressEvent",
+        "signature": "(phase: 'str', completed: 'int', total: 'int', input_index: 'int', input_fingerprint: 'str', status: \"Literal['ok', 'error']\") -> None"
+      },
+      {
+        "kind": "constant",
+        "name": "RUN_SCHEMA",
+        "value": "agentverity.run/v2"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.relations",
+        "name": "Relation",
+        "qualified_name": "Relation",
+        "signature": "(name: 'str', rtype: 'str', transform: 'Callable[[str], str]', check: 'Callable[[Observation, Observation], bool]', description: 'str' = '') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.stratified",
+        "name": "RelationCoverage",
+        "qualified_name": "RelationCoverage",
+        "signature": "(routes: 'tuple[RouteRelationCoverage, ...]') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.runner",
+        "name": "RelationResult",
+        "qualified_name": "RelationResult",
+        "signature": "(relation: 'Relation', total: 'int', held: 'int', violated: 'int', skipped: 'int' = 0, errors: 'int' = 0) -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.drift",
+        "name": "RouteDrift",
+        "qualified_name": "RouteDrift",
+        "signature": "(decision: 'str', before_flips: 'int', before_trials: 'int', after_flips: 'int', after_trials: 'int', before_call: 'str', after_call: 'str', epsilon: 'float') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.stratified",
+        "name": "RoutePlan",
+        "qualified_name": "RoutePlan",
+        "signature": "(decision: 'str', cases: 'int', target: 'float', pairs_needed: 'int', repeats_each: 'int', calls: 'int') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.stratified",
+        "name": "RouteRelationCoverage",
+        "qualified_name": "RouteRelationCoverage",
+        "signature": "(decision: 'str', cases: 'int', exercised: 'int', skipped: 'int', held: 'int', violated: 'int', errors: 'int' = 0) -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.stratified",
+        "name": "RouteStability",
+        "qualified_name": "RouteStability",
+        "signature": "(decision: 'str', cases: 'int', pair_trials: 'int', pair_flips: 'int', ci_low: 'float', ci_high: 'float', epsilon: 'float') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.runner",
+        "name": "RunConfig",
+        "qualified_name": "RunConfig",
+        "signature": "(budget: 'int | None' = None, precision: 'str' = 'balanced', k: 'int | None' = None, epsilon: 'float | None' = None, blindness_threshold: 'float' = 0.9, layer: 'str' = 'verdict', run_meter: 'bool' = True, run_blindness: 'bool' = True, reuse_unchanged_calls: 'bool' = True, sequential: 'bool' = False, max_workers: 'int' = 1, error_policy: 'ErrorPolicy' = 'raise') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.execution",
+        "name": "RunError",
+        "qualified_name": "RunError",
+        "signature": "(phase: 'str', input_index: 'int', input_fingerprint: 'str', exception_type: 'str', message: 'str', relation: 'str | None' = None) -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.runner",
+        "name": "RunResult",
+        "qualified_name": "RunResult",
+        "signature": "(meter: 'MeterResult | None', blindness: 'BlindnessResult | None', relation_results: 'list[RelationResult]', config: 'RunConfig', decision_coverage: 'DecisionCoverageResult | None' = None, route_stability: 'StratifiedStability | None' = None, route_plans: 'tuple[RoutePlan, ...]' = (), relation_coverage: 'RelationCoverage | None' = None, errors: 'tuple[RunError, ...]' = (), caveats: 'tuple[str, ...]' = (), input_fingerprints: 'tuple[str, ...]' = (), observed_keys: 'tuple[Any | None, ...]' = (), intended_decisions: 'tuple[str, ...]' = (), requested_inputs: 'int' = 0, duration_seconds: 'float' = 0.0, isolation: 'str' = 'unknown') -> None"
+      },
+      {
+        "kind": "constant",
+        "name": "SNAPSHOT_SCHEMA",
+        "value": "agentverity.snapshot/v4"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.sequential",
+        "name": "SequentialPlan",
+        "qualified_name": "SequentialPlan",
+        "signature": "(epsilon: 'float', alpha: 'float', checkpoints: 'tuple[int, ...]', certify_at_most: 'int', stochastic_at_least: 'dict[int, int]') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.snapshot",
+        "name": "Snapshot",
+        "qualified_name": "Snapshot",
+        "signature": "(schema: 'str', created_at: 'str', agentverity_version: 'str', layer: 'str', epsilon: 'float', k: 'int', blindness_threshold: 'float', meter_pair_trials: 'int', meter_ci_high: 'float', blindness_skew: 'float', blindness_distinct: 'int', decision_contract: 'DecisionContract | None', probes: 'tuple[SnapshotProbe, ...]', isolation: 'str' = 'unknown') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.snapshot",
+        "name": "SnapshotChange",
+        "qualified_name": "SnapshotChange",
+        "signature": "(input_fingerprint: 'str', expected: 'Any', actual: 'Any') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.snapshot",
+        "name": "SnapshotCompatibilityError",
+        "qualified_name": "SnapshotCompatibilityError",
+        "signature": null
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.snapshot",
+        "name": "SnapshotDiff",
+        "qualified_name": "SnapshotDiff",
+        "signature": "(changes: 'tuple[SnapshotChange, ...]', checked: 'int', isolation_before: 'str' = 'unknown', isolation_after: 'str' = 'unknown') -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.snapshot",
+        "name": "SnapshotProbe",
+        "qualified_name": "SnapshotProbe",
+        "signature": "(input_fingerprint: 'str', expected: 'Any', intended: 'str | None' = None) -> None"
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.snapshot",
+        "name": "SnapshotRefused",
+        "qualified_name": "SnapshotRefused",
+        "signature": null
+      },
+      {
+        "kind": "class",
+        "module": "agentverity.stratified",
+        "name": "StratifiedStability",
+        "qualified_name": "StratifiedStability",
+        "signature": "(layer: 'str', epsilon: 'float', routes: 'tuple[RouteStability, ...]', flip_pairs: 'tuple[FlipPair, ...]') -> None"
+      },
+      {
+        "kind": "constant",
+        "name": "TELEMETRY_SCHEMA",
+        "value": "agentverity.telemetry/v2"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.decision",
+        "name": "as_outcome",
+        "qualified_name": "as_outcome",
+        "signature": "(value: 'object') -> 'Outcome'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.evidence",
+        "name": "assess_evidence",
+        "qualified_name": "assess_evidence",
+        "signature": "(evidence: 'EvidenceSet', suite: 'Any | None' = None, *, epsilon: 'float' = 0.05) -> 'Any'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.relations",
+        "name": "builtin_relations",
+        "qualified_name": "builtin_relations",
+        "signature": "() -> 'list[Relation]'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.drift",
+        "name": "compare_evidence",
+        "qualified_name": "compare_evidence",
+        "signature": "(before: 'EvidenceSet', after: 'EvidenceSet', *, epsilon: 'float' = 0.05) -> 'EvidenceDrift'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.snapshot",
+        "name": "compare_snapshot",
+        "qualified_name": "compare_snapshot",
+        "signature": "(snapshot: 'Snapshot', result: 'RunResult') -> 'SnapshotDiff'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.snapshot",
+        "name": "create_snapshot",
+        "qualified_name": "create_snapshot",
+        "signature": "(result: 'RunResult', *, approved: 'bool') -> 'Snapshot'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.sequential",
+        "name": "decide_sequentially",
+        "qualified_name": "decide_sequentially",
+        "signature": "(plan: 'SequentialPlan', outcomes: 'Iterable[bool]') -> 'tuple[str, int]'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.isolation",
+        "name": "declare_isolation",
+        "qualified_name": "declare_isolation",
+        "signature": "(agent: 'F', level: 'str') -> 'F'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.blindness",
+        "name": "detect",
+        "qualified_name": "detect",
+        "signature": "(agent: 'AgentFn', inputs: 'Iterable[str]', *, layer: 'str' = 'verdict', threshold: 'float' = 0.9) -> 'BlindnessResult'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.integrations.deepeval",
+        "name": "evidence_from_deepeval",
+        "qualified_name": "evidence_from_deepeval",
+        "signature": "(test_cases: 'Iterable[Any]', *, decision: 'Callable[[Any], str] | None' = None, expected: 'Callable[[Any], str | None] | None' = None, isolation: 'str' = 'unknown', provenance: 'dict[str, Any] | None' = None) -> 'EvidenceSet'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.integrations.jsonl",
+        "name": "evidence_from_jsonl",
+        "qualified_name": "evidence_from_jsonl",
+        "signature": "(lines: 'Iterable[str]', *, suite: 'DecisionSuite | None' = None, input_path: 'str' = 'input', decision_path: 'str' = 'decision', layer: 'str' = 'verdict', isolation: 'str' = 'unknown', provenance: 'Mapping[str, Any] | None' = None) -> 'EvidenceSet'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.integrations.promptfoo",
+        "name": "evidence_from_promptfoo",
+        "qualified_name": "evidence_from_promptfoo",
+        "signature": "(payload: 'Any', suite: 'DecisionSuite', *, decision_path: 'str | None' = None, input_path: 'str' = 'prompt.raw', provider: 'str | None' = None, prompt_id: 'str | None' = None, isolation: 'str' = 'unknown') -> 'EvidenceSet'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.adapters.callable_adapter",
+        "name": "from_callable",
+        "qualified_name": "from_callable",
+        "signature": "(fn: 'Callable[[str], Any]', *, verdict_key: 'str | None' = None, tools_key: 'str | None' = None)"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.execution",
+        "name": "input_fingerprint",
+        "qualified_name": "input_fingerprint",
+        "signature": "(text: 'str') -> 'str'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.isolation",
+        "name": "isolation_of",
+        "qualified_name": "isolation_of",
+        "signature": "(agent: 'Any') -> 'str'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.decision_contract",
+        "name": "load_decision_suite",
+        "qualified_name": "load_decision_suite",
+        "signature": "(path: 'str | Path') -> 'DecisionSuite'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.evidence",
+        "name": "load_evidence",
+        "qualified_name": "load_evidence",
+        "signature": "(path: 'str | Path') -> 'EvidenceSet'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.integrations.jsonl",
+        "name": "load_jsonl",
+        "qualified_name": "load_jsonl",
+        "signature": "(path: 'str | Path', **kwargs: 'Any') -> 'EvidenceSet'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.integrations.promptfoo",
+        "name": "load_promptfoo",
+        "qualified_name": "load_promptfoo",
+        "signature": "(path: 'str | Path', suite: 'DecisionSuite', **kwargs: 'Any') -> 'EvidenceSet'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.snapshot",
+        "name": "load_snapshot",
+        "qualified_name": "load_snapshot",
+        "signature": "(path: 'str | Path') -> 'Snapshot'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.meter",
+        "name": "measure",
+        "qualified_name": "measure",
+        "signature": "(agent: 'AgentFn', inputs: 'Iterable[str]', *, k: 'int' = 5, layer: 'str' = 'verdict', epsilon: 'float' = 0.01) -> 'MeterResult'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.meter",
+        "name": "pairs_for_deterministic_call",
+        "qualified_name": "pairs_for_deterministic_call",
+        "signature": "(epsilon: 'float', z: 'float' = 1.96, *, flip_rate: 'float' = 0.0) -> 'int | None'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.meter",
+        "name": "plan_repeats",
+        "qualified_name": "plan_repeats",
+        "signature": "(inputs: 'int', epsilon: 'float', budget: 'int | None' = None) -> 'int'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.stratified",
+        "name": "plan_route_repeats",
+        "qualified_name": "plan_route_repeats",
+        "signature": "(intended: 'Sequence[str]', *, epsilon: 'float', targets: 'Mapping[str, float] | None' = None, minimum_repeats: 'int' = 2) -> 'tuple[RoutePlan, ...]'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.sequential",
+        "name": "plan_sequential",
+        "qualified_name": "plan_sequential",
+        "signature": "(epsilon: 'float', *, alpha: 'float' = 0.05, looks: 'int' = 4, budget: 'int | None' = None) -> 'SequentialPlan'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.telemetry",
+        "name": "record_otel_run",
+        "qualified_name": "record_otel_run",
+        "signature": "(result: 'RunResult', *, tracer: 'Any | None' = None, span_name: 'str' = 'agentverity.run') -> 'None'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.runner",
+        "name": "run",
+        "qualified_name": "run",
+        "signature": "(agent: 'AgentFn', inputs: 'Iterable[str] | None' = None, *, suite: 'DecisionSuite | None' = None, relations: 'list[Relation] | None' = None, config: 'RunConfig | None' = None, on_progress: 'ProgressCallback | None' = None) -> 'RunResult'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.reporting",
+        "name": "run_result_to_dict",
+        "qualified_name": "run_result_to_dict",
+        "signature": "(result: 'RunResult') -> 'dict[str, Any]'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.reporting",
+        "name": "run_result_to_junit_xml",
+        "qualified_name": "run_result_to_junit_xml",
+        "signature": "(result: 'RunResult', *, suite_name: 'str' = 'agentverity') -> 'str'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.telemetry",
+        "name": "run_result_to_otel_attributes",
+        "qualified_name": "run_result_to_otel_attributes",
+        "signature": "(result: 'RunResult') -> 'dict[str, Any]'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.decision_contract",
+        "name": "save_decision_suite",
+        "qualified_name": "save_decision_suite",
+        "signature": "(suite: 'DecisionSuite', path: 'str | Path') -> 'None'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.evidence",
+        "name": "save_evidence",
+        "qualified_name": "save_evidence",
+        "signature": "(evidence: 'EvidenceSet', path: 'str | Path') -> 'None'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.snapshot",
+        "name": "save_snapshot",
+        "qualified_name": "save_snapshot",
+        "signature": "(snapshot: 'Snapshot', path: 'str | Path') -> 'None'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.stratified",
+        "name": "stratify_relations",
+        "qualified_name": "stratify_relations",
+        "signature": "(intended: 'Sequence[str]', outcomes: 'Sequence[Sequence[str] | None]') -> 'RelationCoverage'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.stratified",
+        "name": "stratify_runs",
+        "qualified_name": "stratify_runs",
+        "signature": "(series: 'Sequence[tuple[str, Sequence[Observation] | None]]', *, k: 'int', layer: 'str' = 'verdict', epsilon: 'float' = 0.01, targets: 'Mapping[str, float] | None' = None) -> 'StratifiedStability'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.reporting",
+        "name": "write_junit_xml",
+        "qualified_name": "write_junit_xml",
+        "signature": "(result: 'RunResult', path: 'str | Path', *, suite_name: 'str' = 'agentverity') -> 'None'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.reporting",
+        "name": "write_run_json",
+        "qualified_name": "write_run_json",
+        "signature": "(result: 'RunResult', path: 'str | Path') -> 'None'"
+      }
+    ],
+    "schema": "agentverity.public-surface-audit/v1"
+  }
+}
