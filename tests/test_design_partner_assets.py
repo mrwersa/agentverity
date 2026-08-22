@@ -9,6 +9,7 @@ FUNNEL = ROOT / "docs" / "templates" / "design-partner-funnel.csv"
 
 
 def test_the_design_partner_pilot_is_discoverable() -> None:
+    """The public brief should be reachable from both entry-point documents."""
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     roadmap = (ROOT / "ROADMAP.md").read_text(encoding="utf-8")
 
@@ -19,6 +20,7 @@ def test_the_design_partner_pilot_is_discoverable() -> None:
 
 
 def test_the_public_form_warns_against_sensitive_data() -> None:
+    """A public enquiry must warn before it asks for system context."""
     issue_form = ISSUE_FORM.read_text(encoding="utf-8")
 
     for sensitive in ("prompts", "outputs", "credentials", "trace identifiers"):
@@ -27,6 +29,7 @@ def test_the_public_form_warns_against_sensitive_data() -> None:
 
 
 def test_the_funnel_schema_contains_no_direct_identifiers() -> None:
+    """The committed tracker template must not normalize personal data."""
     with FUNNEL.open(encoding="utf-8", newline="") as handle:
         fields = next(csv.reader(handle))
 
@@ -36,6 +39,7 @@ def test_the_funnel_schema_contains_no_direct_identifiers() -> None:
 
 
 def test_the_acquisition_gate_is_consistent_with_the_roadmap() -> None:
+    """The operational playbook and strategic gate must use one funnel."""
     roadmap = (ROOT / "ROADMAP.md").read_text(encoding="utf-8")
     playbook = PLAYBOOK.read_text(encoding="utf-8")
 

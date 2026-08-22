@@ -12,8 +12,9 @@ analysis.
 
 Use these definitions consistently:
 
-- **Contacted:** one personalized message reached a named maintainer or team
-  through an appropriate public or existing relationship channel.
+- **Contacted:** a team passed the target-mix relevance screen and one
+  personalized message reached a named maintainer or team through an
+  appropriate public or existing relationship channel.
 - **Discovery:** a synchronous or substantive asynchronous exchange answered
   the qualification questions below.
 - **Qualified pilot:** both sides agreed on a bounded decision, evidence path,
@@ -21,9 +22,9 @@ Use these definitions consistently:
 - **Completed pilot:** the participant received and discussed an AgentVerity
   report; a green result is not required.
 
-After 20 qualified approaches, fewer than three serious discovery
-conversations triggers a positioning/channel review. Do not lower the fit bar
-or begin speculative integrations to improve the count.
+After 20 relevant teams have been contacted, fewer than three serious
+discovery conversations triggers a positioning/channel review. Do not lower
+the fit bar or begin speculative integrations to improve the count.
 
 ## Target mix
 
