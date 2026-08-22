@@ -88,12 +88,12 @@ set; the final API/CLI audit, security review, and independent integration keep
 
 A machine-checked 0.19.0 inventory now makes top-level Python signatures and
 parser-enforced CLI drift reviewable. This is a preliminary surface audit; the
-remaining class, behavior, documentation, security, and adopter checks keep the
-1.0 gate open.
+remaining help/documentation parity, security, and adopter checks keep the 1.0
+gate open.
 
 All six commands now execute against a reviewed 0/1/2 behavior matrix in CI.
-This closes process-classification drift, not public class members,
-help/documentation parity, security review, or adopter validation.
+This closes process-classification drift, not help/documentation parity,
+security review, or adopter validation.
 
 Every current data surface now executes against a reviewed 0.19.0 retention
 matrix covering inputs, observations, fingerprints, errors, decisions, and
@@ -104,8 +104,14 @@ model remain open before 1.0.
 Representative public Python boundaries now execute against a published-wheel
 return-semantics fixture, including all ten canonical run statuses and the
 planning, assessment, drift, snapshot, and reporting families. Public class
-members, exact help/documentation parity, independent adoption, and release
-security review keep the final 1.0 audit open.
+members now have a separate structural inventory; exact help/documentation
+parity, independent adoption, and release security review keep the final 1.0
+audit open.
+
+All 35 exported classes now have a published-wheel inventory of fields,
+default policy, methods, class methods, static methods, and properties. This
+closes structural member drift, while focused tests continue to own behavioral
+meaning.
 
 ## Delivery and release strategy
 

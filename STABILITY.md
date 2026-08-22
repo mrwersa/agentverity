@@ -81,8 +81,9 @@ The preliminary [public surface audit](docs/public-surface-audit.md) also pins
 top-level exports, signatures, public constants, commands, flags, and parser
 defaults from 0.19.0. It does not yet cover class internals, help prose,
 return-object semantics, or exit behavior. Separate executable contracts now
-cover the latter two; class members and help/documentation parity keep the
-final compatibility audit open.
+cover those surfaces, including a structural
+[class-member audit](docs/class-member-audit.md). Help/documentation parity and
+the final release review keep the compatibility audit open.
 
 The [CLI exit contract](docs/cli-exit-contract.md) exercises representative
 offline paths for every command and each process class it supports. Exact help
@@ -91,8 +92,13 @@ and report prose remain outside that contract.
 The [return-semantics audit](docs/return-semantics-audit.md) executes all ten
 canonical `RunResult.status` paths and representative planning, assessment,
 drift, snapshot, JSON, JUnit, and OpenTelemetry returns from the published
-0.19.0 wheel. It does not yet freeze exact prose, every class member, or every
-report scenario.
+0.19.0 wheel. It does not freeze exact prose or every report scenario; class
+structure is covered separately below.
+
+The [class-member audit](docs/class-member-audit.md) inventories declared
+fields, defaults, methods, class methods, static methods, and properties for
+all 35 top-level exported classes. It establishes structural compatibility,
+not every method's behavioral meaning.
 
 ## What remains open
 

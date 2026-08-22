@@ -23,9 +23,11 @@ Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit
 classification has a separate [executable contract](cli-exit-contract.md), and
 the main Python boundaries now have a preliminary
-[return-semantics audit](return-semantics-audit.md). Exact prose, public class
-members, and exhaustive report semantics still require a final audit before
-1.0.
+[return-semantics audit](return-semantics-audit.md). Exact prose and exhaustive
+report semantics still require a final audit before 1.0. The exported classes
+now also have a structural
+[class-member audit](class-member-audit.md); method behavior remains governed
+by focused tests and the return audit rather than this signature inventory.
 
 ## Provenance and reproduction
 
