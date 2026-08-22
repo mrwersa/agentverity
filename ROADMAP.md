@@ -47,6 +47,11 @@ and compatibility audit validate the public surface.
 | Integration demand discovery | LangSmith and telemetry exports vary, so guessed importers would be brittle. Collect real raw-run shapes and rank demand. | At least three samples from two organizations and two source systems; each can identify input, decision, trial order, and isolation or expose the missing field | Data-sharing/privacy constraints and changing exports | No vendor importer without three independent requests plus testable fixtures; publish a mapping recipe instead |
 | Method validation | Unit tests do not independently validate coverage, optional-stopping behavior, or dependence sensitivity. Make the statistical claim reproducible and reviewable. | Public simulation notebook/script reproduces boundary behavior; review by one independent statistician or evaluation researcher; discrepancies become tracked decisions | Reviewer availability; simulations can reveal redesign needs | Fix correctness findings before integrations; defer new methods that lack a precise guarantee |
 
+Acquisition starts with the public [design-partner pilot](docs/design-partners.md)
+and the maintainer [acquisition playbook](docs/design-partner-playbook.md). These
+make the funnel executable; the roadmap outcome remains open until the contact,
+conversation, and pilot metrics are actually met.
+
 ## Phase 2: 3–6 months — interoperate where demand is proven
 
 | Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |

@@ -1,0 +1,51 @@
+name: Design-partner pilot enquiry
+description: Explore whether AgentVerity can qualify a real repeated categorical decision.
+title: "Design partner: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Do not include prompts, outputs, customer data, credentials, trace identifiers, or confidential system details. Decision labels and non-sensitive metadata are enough to assess fit.
+  - type: dropdown
+    id: decision_shape
+    attributes:
+      label: Decision shape
+      description: What bounded behavior do you want to qualify?
+      options:
+        - Tool or route choice
+        - Policy or workflow outcome
+        - Finite trajectory
+        - Categorical LLM judge
+    validations:
+      required: true
+  - type: textarea
+    id: release_question
+    attributes:
+      label: Release or baseline question
+      description: Describe the decision you need to make without including sensitive inputs or outputs.
+      placeholder: We need to know whether...
+    validations:
+      required: true
+  - type: dropdown
+    id: evidence
+    attributes:
+      label: Available evidence
+      options:
+        - Ordered repeated raw runs
+        - Able to collect independent repeated runs
+        - Aggregate scores only
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: runner
+    attributes:
+      label: Current runner or evaluator
+      description: For example, Promptfoo, DeepEval, LangSmith, a custom harness, or none.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Public issue acknowledgement
+      options:
+        - label: I have not included confidential data, prompts, outputs, credentials, or trace identifiers.
+          required: true
