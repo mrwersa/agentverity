@@ -26,6 +26,8 @@
     "alpha": 0.05,
     "correlations": [
       0.0,
+      0.02,
+      0.05,
       0.1
     ],
     "epsilon": 0.05,
@@ -217,6 +219,306 @@
         "stochastic": 0.0,
         "undecided": 0.0
       },
+      "correlation": 0.02,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.0,
+      "wrong_direction_mc95_half_width": 0.0,
+      "wrong_direction_rate": 0.0
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 1.0,
+        "stochastic": 0.0,
+        "undecided": 0.0
+      },
+      "correlation": 0.02,
+      "mean_pairs": 72.0,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.0,
+      "wrong_direction_mc95_half_width": 0.0,
+      "wrong_direction_rate": 0.0
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.32211,
+        "stochastic": 0.0227,
+        "undecided": 0.65519
+      },
+      "correlation": 0.02,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.025,
+      "wrong_direction_mc95_half_width": 0.0009231726920571254,
+      "wrong_direction_rate": 0.0227
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.32519,
+        "stochastic": 0.0104,
+        "undecided": 0.66441
+      },
+      "correlation": 0.02,
+      "mean_pairs": 71.76906,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.025,
+      "wrong_direction_mc95_half_width": 0.0006287855957637707,
+      "wrong_direction_rate": 0.0104
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.10174,
+        "stochastic": 0.10381,
+        "undecided": 0.79445
+      },
+      "correlation": 0.02,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.05,
+      "wrong_direction_mc95_half_width": 0.0025046560584559307,
+      "wrong_direction_rate": 0.20555
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.10384,
+        "stochastic": 0.05418,
+        "undecided": 0.84198
+      },
+      "correlation": 0.02,
+      "mean_pairs": 70.73766,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.05,
+      "wrong_direction_mc95_half_width": 0.0022608043903694103,
+      "wrong_direction_rate": 0.15802
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.00947,
+        "stochastic": 0.42642,
+        "undecided": 0.56411
+      },
+      "correlation": 0.02,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.1,
+      "wrong_direction_mc95_half_width": 0.0006002952094974604,
+      "wrong_direction_rate": 0.00947
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.00994,
+        "stochastic": 0.28658,
+        "undecided": 0.70348
+      },
+      "correlation": 0.02,
+      "mean_pairs": 64.56744,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.1,
+      "wrong_direction_mc95_half_width": 0.0006148653518473781,
+      "wrong_direction_rate": 0.00994
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.0,
+        "stochastic": 0.99629,
+        "undecided": 0.00371
+      },
+      "correlation": 0.02,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.3,
+      "wrong_direction_mc95_half_width": 0.0,
+      "wrong_direction_rate": 0.0
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.0,
+        "stochastic": 0.98765,
+        "undecided": 0.01235
+      },
+      "correlation": 0.02,
+      "mean_pairs": 26.93106,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.3,
+      "wrong_direction_mc95_half_width": 0.0,
+      "wrong_direction_rate": 0.0
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 1.0,
+        "stochastic": 0.0,
+        "undecided": 0.0
+      },
+      "correlation": 0.05,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.0,
+      "wrong_direction_mc95_half_width": 0.0,
+      "wrong_direction_rate": 0.0
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 1.0,
+        "stochastic": 0.0,
+        "undecided": 0.0
+      },
+      "correlation": 0.05,
+      "mean_pairs": 72.0,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.0,
+      "wrong_direction_mc95_half_width": 0.0,
+      "wrong_direction_rate": 0.0
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.46512,
+        "stochastic": 0.05255,
+        "undecided": 0.48233
+      },
+      "correlation": 0.05,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.025,
+      "wrong_direction_mc95_half_width": 0.001382994909592946,
+      "wrong_direction_rate": 0.05255
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.46738,
+        "stochastic": 0.03291,
+        "undecided": 0.49971
+      },
+      "correlation": 0.05,
+      "mean_pairs": 71.12592,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.025,
+      "wrong_direction_mc95_half_width": 0.0011057411161164263,
+      "wrong_direction_rate": 0.03291
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.21597,
+        "stochastic": 0.14467,
+        "undecided": 0.63936
+      },
+      "correlation": 0.05,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.05,
+      "wrong_direction_mc95_half_width": 0.002976224926312929,
+      "wrong_direction_rate": 0.36064
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.21799,
+        "stochastic": 0.09612,
+        "undecided": 0.68589
+      },
+      "correlation": 0.05,
+      "mean_pairs": 69.35724,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.05,
+      "wrong_direction_mc95_half_width": 0.002876896171551278,
+      "wrong_direction_rate": 0.31411
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.04421,
+        "stochastic": 0.4044,
+        "undecided": 0.55139
+      },
+      "correlation": 0.05,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.1,
+      "wrong_direction_mc95_half_width": 0.0012740825570481686,
+      "wrong_direction_rate": 0.04421
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 0.04528,
+        "stochastic": 0.3039,
+        "undecided": 0.65082
+      },
+      "correlation": 0.05,
+      "mean_pairs": 62.81676,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.1,
+      "wrong_direction_mc95_half_width": 0.001288686534804178,
+      "wrong_direction_rate": 0.04528
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 6e-05,
+        "stochastic": 0.97321,
+        "undecided": 0.02673
+      },
+      "correlation": 0.05,
+      "mean_pairs": 73.0,
+      "rule": "fixed-wilson",
+      "trials": 100000,
+      "true_flip_rate": 0.3,
+      "wrong_direction_mc95_half_width": 4.800855863697639e-05,
+      "wrong_direction_rate": 6e-05
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 6e-05,
+        "stochastic": 0.94698,
+        "undecided": 0.05296
+      },
+      "correlation": 0.05,
+      "mean_pairs": 29.7486,
+      "rule": "predeclared-sequential",
+      "trials": 100000,
+      "true_flip_rate": 0.3,
+      "wrong_direction_mc95_half_width": 4.800855863697639e-05,
+      "wrong_direction_rate": 6e-05
+    },
+    {
+      "assumption": "beta-binomial",
+      "calls": {
+        "deterministic": 1.0,
+        "stochastic": 0.0,
+        "undecided": 0.0
+      },
       "correlation": 0.1,
       "mean_pairs": 73.0,
       "rule": "fixed-wilson",
@@ -243,122 +545,122 @@
     {
       "assumption": "beta-binomial",
       "calls": {
-        "deterministic": 0.59944,
-        "stochastic": 0.07405,
-        "undecided": 0.32651
+        "deterministic": 0.59997,
+        "stochastic": 0.0742,
+        "undecided": 0.32583
       },
       "correlation": 0.1,
       "mean_pairs": 73.0,
       "rule": "fixed-wilson",
       "trials": 100000,
       "true_flip_rate": 0.025,
-      "wrong_direction_mc95_half_width": 0.0016229770206506314,
-      "wrong_direction_rate": 0.07405
+      "wrong_direction_mc95_half_width": 0.0016244883913897321,
+      "wrong_direction_rate": 0.0742
     },
     {
       "assumption": "beta-binomial",
       "calls": {
-        "deterministic": 0.6011,
-        "stochastic": 0.05504,
-        "undecided": 0.34386
+        "deterministic": 0.6016,
+        "stochastic": 0.05559,
+        "undecided": 0.34281
       },
       "correlation": 0.1,
-      "mean_pairs": 70.29864,
+      "mean_pairs": 70.27326,
       "rule": "predeclared-sequential",
       "trials": 100000,
       "true_flip_rate": 0.025,
-      "wrong_direction_mc95_half_width": 0.0014135201265402626,
-      "wrong_direction_rate": 0.05504
+      "wrong_direction_mc95_half_width": 0.0014201515654994011,
+      "wrong_direction_rate": 0.05559
     },
     {
       "assumption": "beta-binomial",
       "calls": {
-        "deterministic": 0.35714,
-        "stochastic": 0.16355,
-        "undecided": 0.47931
+        "deterministic": 0.35816,
+        "stochastic": 0.16615,
+        "undecided": 0.47569
       },
       "correlation": 0.1,
       "mean_pairs": 73.0,
       "rule": "fixed-wilson",
       "trials": 100000,
       "true_flip_rate": 0.05,
-      "wrong_direction_mc95_half_width": 0.0030963777270453297,
-      "wrong_direction_rate": 0.52069
+      "wrong_direction_mc95_half_width": 0.00309536703189499,
+      "wrong_direction_rate": 0.52431
     },
     {
       "assumption": "beta-binomial",
       "calls": {
-        "deterministic": 0.35924,
-        "stochastic": 0.12538,
-        "undecided": 0.51538
+        "deterministic": 0.36005,
+        "stochastic": 0.12721,
+        "undecided": 0.51274
       },
       "correlation": 0.1,
-      "mean_pairs": 67.98258,
+      "mean_pairs": 67.92102,
       "rule": "predeclared-sequential",
       "trials": 100000,
       "true_flip_rate": 0.05,
-      "wrong_direction_mc95_half_width": 0.0030975656426183444,
-      "wrong_direction_rate": 0.48462
+      "wrong_direction_mc95_half_width": 0.0030980259507044803,
+      "wrong_direction_rate": 0.48726
     },
     {
       "assumption": "beta-binomial",
       "calls": {
-        "deterministic": 0.12495,
-        "stochastic": 0.37009,
-        "undecided": 0.50496
+        "deterministic": 0.12474,
+        "stochastic": 0.37502,
+        "undecided": 0.50024
       },
       "correlation": 0.1,
       "mean_pairs": 73.0,
       "rule": "fixed-wilson",
       "trials": 100000,
       "true_flip_rate": 0.1,
-      "wrong_direction_mc95_half_width": 0.0020494656142419176,
-      "wrong_direction_rate": 0.12495
+      "wrong_direction_mc95_half_width": 0.0020479883503278042,
+      "wrong_direction_rate": 0.12474
     },
     {
       "assumption": "beta-binomial",
       "calls": {
-        "deterministic": 0.12626,
-        "stochastic": 0.30268,
-        "undecided": 0.57106
+        "deterministic": 0.12629,
+        "stochastic": 0.30405,
+        "undecided": 0.56966
       },
       "correlation": 0.1,
-      "mean_pairs": 61.56396,
+      "mean_pairs": 61.53876,
       "rule": "predeclared-sequential",
       "trials": 100000,
       "true_flip_rate": 0.1,
-      "wrong_direction_mc95_half_width": 0.0020586384167110066,
-      "wrong_direction_rate": 0.12626
+      "wrong_direction_mc95_half_width": 0.0020588476271774943,
+      "wrong_direction_rate": 0.12629
     },
     {
       "assumption": "beta-binomial",
       "calls": {
-        "deterministic": 0.00136,
-        "stochastic": 0.91141,
-        "undecided": 0.08723
+        "deterministic": 0.00132,
+        "stochastic": 0.91472,
+        "undecided": 0.08396
       },
       "correlation": 0.1,
       "mean_pairs": 73.0,
       "rule": "fixed-wilson",
       "trials": 100000,
       "true_flip_rate": 0.3,
-      "wrong_direction_mc95_half_width": 0.00022841783154211058,
-      "wrong_direction_rate": 0.00136
+      "wrong_direction_mc95_half_width": 0.00022503818334140542,
+      "wrong_direction_rate": 0.00132
     },
     {
       "assumption": "beta-binomial",
       "calls": {
-        "deterministic": 0.0014,
-        "stochastic": 0.86895,
-        "undecided": 0.12965
+        "deterministic": 0.00134,
+        "stochastic": 0.87334,
+        "undecided": 0.12532
       },
       "correlation": 0.1,
-      "mean_pairs": 33.38568,
+      "mean_pairs": 33.21936,
       "rule": "predeclared-sequential",
       "trials": 100000,
       "true_flip_rate": 0.3,
-      "wrong_direction_mc95_half_width": 0.000231747933410419,
-      "wrong_direction_rate": 0.0014
+      "wrong_direction_mc95_half_width": 0.00022673433844567966,
+      "wrong_direction_rate": 0.00134
     }
   ],
   "schema": "agentverity.method-validation/v1"
