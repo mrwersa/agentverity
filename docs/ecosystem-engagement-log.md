@@ -53,6 +53,13 @@ in the private funnel.
 - Status: RFC open, nothing merged. This is engagement, not a spec change, and
   it does not yet meet the Phase 1 pilot definition in the playbook.
 
+### 2026-08-23 | ICC reliability team outreach
+
+- Channel: [youdotcom-oss/stochastic-agent-evals#13](https://github.com/youdotcom-oss/stochastic-agent-evals/issues/13)
+- Segment: repeated-reliability researchers
+- Contributed: the distinction between convergence budgets for measuring instability and certification budgets for admitting a baseline, two questions for their Evaluation Cards proposal, and a request to calibrate the sensitivity axis against their GAIA and FRAMES variance data
+- Relevance: their ICC reporting and our admission rule are adjacent layers of the same reliability question, making this team both a methodological reviewer candidate and a calibration source
+
 ## Rules for updating this log
 
 - Append entries; never delete or edit history except to add an outcome note dated after the fact.
