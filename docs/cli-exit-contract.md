@@ -15,7 +15,7 @@ an answer. Not every command can produce every class.
 
 `tests/test_cli_exit_contract.py` executes every populated cell using synthetic,
 offline inputs. The versioned test contract lives at
-`tests/fixtures/compatibility/v0.19.0/cli-exit-contract.json`. This pins process
+`tests/fixtures/compatibility/v0.20.0/cli-exit-contract.json`. This pins process
 classification, not exact output prose.
 
 Argument-parser errors also exit `2` through `argparse`. Exceptions raised by a

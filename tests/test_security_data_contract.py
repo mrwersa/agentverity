@@ -23,7 +23,7 @@ from agentverity.telemetry import run_result_to_otel_attributes
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = json.loads(
     (
-        ROOT / "tests/fixtures/compatibility/v0.19.0/data-retention-contract.json"
+        ROOT / "tests/fixtures/compatibility/v0.20.0/data-retention-contract.json"
     ).read_text(encoding="utf-8")
 )
 
@@ -111,7 +111,7 @@ def test_the_retention_matrix_is_complete_and_uses_defined_classifications():
     allowed = set(CONTRACT["classifications"])
 
     assert CONTRACT["schema"] == "agentverity.data-retention-contract/v1"
-    assert CONTRACT["baseline"] == "agentverity==0.19.0"
+    assert CONTRACT["baseline"] == "agentverity==0.20.0"
     assert set(CONTRACT["surfaces"]) == {
         "decision-suite",
         "imported-evidence",

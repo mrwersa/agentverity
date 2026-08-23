@@ -1,6 +1,6 @@
 # Security and Data-Retention Audit
 
-This maintainer audit records what AgentVerity 0.19.0 retains on each data
+This maintainer audit records what AgentVerity 0.20.0 retains on each data
 surface. It is an implementation baseline, not an independent security review
 or a claim that an artifact is anonymous.
 
@@ -10,7 +10,7 @@ The executable contract uses unique synthetic sentinels for a probe input,
 model output, provider error, decision label, and relation name. It runs the
 real library paths and checks the resulting objects or serializations. The
 reviewed matrix lives in
-`tests/fixtures/compatibility/v0.19.0/data-retention-contract.json`; CI executes
+`tests/fixtures/compatibility/v0.20.0/data-retention-contract.json`; CI executes
 it through `tests/test_security_data_contract.py`.
 
 “Excluded” means AgentVerity does not populate that category on the tested

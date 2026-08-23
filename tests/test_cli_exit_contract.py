@@ -13,7 +13,7 @@ from agentverity.decision_contract import save_decision_suite
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = json.loads(
-    (ROOT / "tests/fixtures/compatibility/v0.19.0/cli-exit-contract.json").read_text(
+    (ROOT / "tests/fixtures/compatibility/v0.20.0/cli-exit-contract.json").read_text(
         encoding="utf-8"
     )
 )
@@ -218,7 +218,7 @@ def test_check_exit_contract(scenario, expected, monkeypatch, tmp_path, capsys):
 
 
 def test_exit_contract_names_every_cli_command():
-    assert CONTRACT["baseline"] == "agentverity==0.19.0"
+    assert CONTRACT["baseline"] == "agentverity==0.20.0"
     assert CONTRACT["schema"] == "agentverity.cli-exit-contract/v1"
     assert set(CONTRACT["commands"]) == {
         "run",

@@ -1,5 +1,5 @@
 {
-  "baseline": "agentverity==0.19.0",
+  "baseline": "agentverity==0.20.0",
   "classifications": [
     "retained",
     "conditionally-retained",

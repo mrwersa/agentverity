@@ -17,7 +17,7 @@ FIXTURE = (
     Path(__file__).parent
     / "fixtures"
     / "compatibility"
-    / "v0.19.0"
+    / "v0.20.0"
     / "return-semantics.json"
 )
 
@@ -26,7 +26,7 @@ def test_current_return_semantics_match_the_published_release():
     """Main Python boundaries retain their reviewed types and relationships."""
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
-    assert fixture["producer"] == "agentverity==0.19.0"
+    assert fixture["producer"] == "agentverity==0.20.0"
     assert fixture["semantics"]["schema"] == AUDIT_SCHEMA
     assert collect_return_semantics() == fixture["semantics"]
 

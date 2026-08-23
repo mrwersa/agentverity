@@ -9,7 +9,7 @@ import pytest
 
 from scripts.audit_class_members import AUDIT_SCHEMA, collect_class_members, main
 
-FIXTURES = Path(__file__).parent / "fixtures" / "compatibility" / "v0.19.0"
+FIXTURES = Path(__file__).parent / "fixtures" / "compatibility" / "v0.20.0"
 CLASS_FIXTURE = FIXTURES / "class-members.json"
 SURFACE_FIXTURE = FIXTURES / "public-surface.json"
 
@@ -18,7 +18,7 @@ def test_current_class_members_match_the_published_release():
     """Fields, properties, and callable member signatures remain reviewable."""
     fixture = json.loads(CLASS_FIXTURE.read_text(encoding="utf-8"))
 
-    assert fixture["producer"] == "agentverity==0.19.0"
+    assert fixture["producer"] == "agentverity==0.20.0"
     assert fixture["surface"]["schema"] == AUDIT_SCHEMA
     assert collect_class_members() == fixture["surface"]
 
