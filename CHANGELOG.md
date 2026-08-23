@@ -8,6 +8,39 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-08-23
+
+### Added
+
+- `best_case_admission_pairs` computes the earliest Wilson admission total for
+  observed flip and pair counts under an all-agree continuation. An optional
+  predeclared `max_pairs` makes an unreachable endpoint explicit without
+  permitting adaptive admission.
+
+### Fixed
+
+- Snapshot refusals no longer say that more evidence can never help whenever
+  the observed flip rate meets or exceeds epsilon. They report the exact
+  fixed-count best case and state that it is an optimistic endpoint bound, not
+  a stopping rule.
+- Nonzero `flip_rate` projections in `pairs_for_deterministic_call` no longer
+  round candidate flip counts and bisect a non-monotone sequence. The argument
+  is now documented as a fixed-rate scenario rather than observed evidence;
+  representative totals change from 142 to 139 pairs for 1/73, 389 to 358 for
+  2/73, and 2,311 to 2,302 for 3/73 at epsilon 0.05. Zero-flip planning and
+  existing admission decisions are unchanged.
+- The documented method-validation command again reproduces the complete
+  committed dependence sweep; its default had omitted the existing 0.02 and
+  0.05 intraclass-correlation scenarios.
+
+### Compatibility
+
+- This minor release adds one top-level function and corrects planning advice.
+  It does not change Wilson classification, CLI arguments or exit classes,
+  runtime evidence/snapshot schemas, or previously stored baselines. Code that
+  used a nonzero `flip_rate` as if it were an observed count should migrate to
+  `best_case_admission_pairs`.
+
 ## [0.19.0] - 2026-08-22
 
 ### Added
@@ -1133,7 +1166,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/mrwersa/agentverity/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/mrwersa/agentverity/compare/v0.18.3...v0.19.0
 [0.18.3]: https://github.com/mrwersa/agentverity/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/mrwersa/agentverity/compare/v0.18.1...v0.18.2

@@ -5,7 +5,13 @@ from __future__ import annotations
 import pytest
 
 from agentverity.adapters import from_callable
-from agentverity.meter import measure, score_runs, wilson_ci
+from agentverity.meter import (
+    best_case_admission_pairs,
+    measure,
+    pairs_for_deterministic_call,
+    score_runs,
+    wilson_ci,
+)
 from agentverity.observation import Observation
 
 
@@ -33,6 +39,61 @@ class TestWilsonCI:
         for s in range(11):
             lo, hi = wilson_ci(s, 10)
             assert 0.0 <= lo <= hi <= 1.0
+
+
+class TestAdmissionPlanning:
+    def test_fixed_rate_projection_does_not_round_candidate_flip_counts(self):
+        """The advertised minimum must not rely on a saw-toothed rounded rate."""
+        assert pairs_for_deterministic_call(0.05, flip_rate=2 / 73) == 358
+
+    @pytest.mark.parametrize(
+        ("flips", "expected"),
+        [(0, 73), (1, 110), (3, 173), (4, 202), (8, 311)],
+    )
+    def test_best_case_planning_holds_the_observed_flip_count_fixed(
+        self, flips, expected
+    ):
+        """The paper's canonical continuation examples use the library rule."""
+        assert best_case_admission_pairs(0.05, flips=flips, pairs=73) == expected
+
+    def test_best_case_planning_respects_a_predeclared_pair_budget(self):
+        """A caller can reject early only when the endpoint cannot admit."""
+        assert best_case_admission_pairs(0.05, flips=4, pairs=73, max_pairs=201) is None
+        assert best_case_admission_pairs(0.05, flips=4, pairs=73, max_pairs=202) == 202
+
+    def test_best_case_minima_match_the_wilson_interval(self):
+        """The score inversion and the interval implementation share a boundary."""
+        for epsilon in (0.01, 0.05, 0.1):
+            for z in (1.64, 1.96, 2.58):
+                for flips in range(11):
+                    observed = max(11, flips)
+                    needed = best_case_admission_pairs(
+                        epsilon, flips=flips, pairs=observed, z=z
+                    )
+                    assert needed is not None
+                    assert wilson_ci(flips, needed, z)[1] < epsilon
+                    if needed > observed:
+                        assert wilson_ci(flips, needed - 1, z)[1] >= epsilon
+
+    @pytest.mark.parametrize(
+        ("kwargs", "error", "message"),
+        [
+            ({"epsilon": 0.0, "flips": 0, "pairs": 1}, ValueError, "epsilon"),
+            ({"epsilon": 0.05, "flips": -1, "pairs": 1}, ValueError, "flips"),
+            ({"epsilon": 0.05, "flips": 2, "pairs": 1}, ValueError, "flips"),
+            ({"epsilon": 0.05, "flips": 0, "pairs": 0}, ValueError, "pairs"),
+            (
+                {"epsilon": 0.05, "flips": 0, "pairs": 2, "max_pairs": 1},
+                ValueError,
+                "max_pairs",
+            ),
+            ({"epsilon": 0.05, "flips": 0.5, "pairs": 1}, TypeError, "flips"),
+        ],
+    )
+    def test_best_case_planning_refuses_invalid_counts(self, kwargs, error, message):
+        """Counts and budgets describe real observed pairs, not approximations."""
+        with pytest.raises(error, match=message):
+            best_case_admission_pairs(**kwargs)
 
 
 class TestMeasure:

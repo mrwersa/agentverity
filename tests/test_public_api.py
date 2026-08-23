@@ -18,6 +18,7 @@ class TestPublicAPI:
         """Every name listed in the README's "API surface" section must be
         importable from the top-level agentverity package."""
         from agentverity import (  # noqa: F401, I001
+            best_case_admission_pairs,
             run,
             from_callable,
             measure,

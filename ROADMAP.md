@@ -9,7 +9,7 @@ evidence-led 12-month plan. It is direction, not a release promise;
 
 ## Current state
 
-As of 0.19.0, the released 0.19.0 picture is a complete local qualification
+As of 0.20.0, the released 0.20.0 picture is a complete local qualification
 loop for bounded categorical decisions.
 
 | Need | Interface | Established behaviour |
@@ -56,7 +56,10 @@ Method validation now has a reproducible [simulation and exact-boundary
 cross-check](docs/method-validation.md), including an independence sensitivity
 model. It confirms conservative baseline admission under independent pairs,
 documents Wilson's nominal rather than exact two-sided calibration, and shows
-why declared isolation is load-bearing. Independent expert review remains open.
+why declared isolation is load-bearing. Its exact continuation table also
+separates fixed-count best-case admission from fixed-rate projection without
+weakening the no-optional-stopping rule. Independent expert review remains
+open.
 
 ## Phase 2: 3–6 months — interoperate where demand is proven
 

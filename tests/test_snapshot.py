@@ -73,7 +73,8 @@ def test_snapshot_refuses_undecided_meter():
     message = str(excinfo.value)
     # "undecided" alone reads like a bug on an obviously deterministic agent,
     # so the refusal has to say how far short the run fell and what to change.
-    assert "about 381 pairs are needed" in message
+    assert "endpoint of at least 381 pairs" in message
+    assert "optimistic bound" in message
     assert "--k" in message
     assert "--epsilon" in message
 
@@ -85,6 +86,30 @@ def test_underpowered_refusal_scales_its_advice_to_the_probe_set():
     few = run(from_callable(_gate), INPUTS, relations=[], config=RunConfig(k=2))
     message = _underpowered_message(few.meter)
     assert f"across {few.meter.inputs} inputs" in message
+
+
+def test_underpowered_refusal_uses_counts_without_inviting_optional_stopping():
+    """Observed flips can remain admissible, but only at a declared endpoint."""
+    from agentverity.meter import MeterResult
+    from agentverity.snapshot import _underpowered_message
+
+    meter = MeterResult(
+        layer="verdict",
+        epsilon=0.05,
+        inputs=1,
+        repeats=146,
+        pair_trials=73,
+        pair_flips=4,
+        inputs_with_flip=1,
+        ci_low=0.0,
+        ci_high=0.1,
+    )
+
+    message = _underpowered_message(meter)
+
+    assert "at least 202 pairs" in message
+    assert "no more than 4 flips" in message
+    assert "not permission to keep sampling" in message
 
 
 def test_stochastic_refusal_differs_from_underpowered_refusal():
@@ -281,7 +306,11 @@ class TestBaseliningADeclaredRefusal:
             save_snapshot,
         )
 
-        result = run(self._agent(), suite=self._suite(), config=RunConfig(budget=200, epsilon=0.2))
+        result = run(
+            self._agent(),
+            suite=self._suite(),
+            config=RunConfig(budget=200, epsilon=0.2),
+        )
         snapshot = create_snapshot(result, approved=True)
         path = tmp_path / "baseline.json"
         save_snapshot(snapshot, path)

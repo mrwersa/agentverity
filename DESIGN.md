@@ -773,6 +773,69 @@ evidence needed to justify the complexity.
 
 *Spending alpha evenly.* Rejected on the numbers above rather than on taste.
 
+## ADR 8: continuation planning holds observed counts fixed and cannot admit early
+
+**Status.** Accepted 2026-08-23. Statistical planning correction for 0.20.0.
+
+**Context.** `pairs_for_deterministic_call(..., flip_rate=...)` described its
+rate as “seen so far”, projected that rate onto every candidate total by
+rounding, and then bisected as though the resulting Wilson upper bounds were
+monotone. They are not: rounded flip counts create upward jumps. More
+importantly, that calculation answers a different question from the one a
+caller with `f` observed flips in `n` pairs asks. Holding the rate fixed says
+that 4/73 can never admit at `epsilon=0.05`; holding the observed count fixed
+shows that an all-agree continuation first admits at 202 pairs.
+
+**Decision.** Keep the existing helper as an explicitly named-in-prose
+fixed-rate scenario projection and compute its minimum by directly inverting
+the Wilson score statistic, without rounded candidate counts.
+`best_case_admission_pairs(epsilon, flips=f, pairs=n, max_pairs=B)` answers the
+count-aware question. It holds `f` fixed, assumes all later pairs agree, and
+returns the earliest possible admission total, or `None` when even that
+continuation cannot admit within the predeclared pair budget `B`.
+
+For fixed `f`, Wilson admission is equivalent to
+
+```text
+(N * epsilon - f) / sqrt(N * epsilon * (1 - epsilon)) > z
+```
+
+with `f / N < epsilon`. The statistic increases with `N`, so endpoint refusal
+and integer bisection are valid. The implementation uses exact rational
+comparisons for the supplied floating-point parameters so a strict boundary
+cannot be rounded into admission.
+
+**This helper cannot create an early admission.** A caller may use it to stop
+spending when the predeclared endpoint is already unreachable, because later
+data cannot reverse that impossibility under the best-case continuation. A
+caller may not repeatedly recompute a fixed-sample Wilson interval and stop at
+the first favourable value. Admission remains at a fixed endpoint or under
+ADR 7's predeclared sequential rule.
+
+**Consequences.** Snapshot refusals no longer claim that more pairs can never
+help merely because the current point estimate meets or exceeds `epsilon`.
+They report an optimistic total and state the stopping boundary. The
+classifier, Wilson interval, runtime evidence and snapshot schemas, and
+existing baseline decisions do not change. The public helper addition and
+corrected nonzero projection ship as a minor release; the 0.19.0 surface
+fixture records the compatibility delta.
+
+**Alternatives rejected.**
+
+*Replace the existing helper's `flip_rate` argument with counts.* That would
+silently reinterpret valid calls and erase a useful scenario-planning
+question. The two questions receive two APIs.
+
+*Use the current empirical rate as the future truth.* It may be a planning
+scenario, but it is not knowledge about a stochastic process and it cannot
+justify saying that continuation is impossible.
+
+*Expose a counterfactual scoring report in the same release.* Existing
+evidence can support case-study comparisons with a one-run baseline, but that
+is a separate product claim and report design. Correct the statistical
+boundary first; add a report only when an adopter demonstrates the decision it
+needs to change.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.

@@ -147,7 +147,11 @@ unless the caller explicitly supplies `k`.
   decision-stability check.
 - `detect` runs only the constant-gate-blindness scan, the underlying
   decision-coverage check.
-- `pairs_for_deterministic_call` budgets the minimum pair count.
+- `pairs_for_deterministic_call` budgets the minimum pair count under a
+  projected fixed flip rate.
+- `best_case_admission_pairs` asks when observed flip counts could first admit
+  if every additional pair agrees. Supply `max_pairs` to test a predeclared
+  endpoint; do not use the result as an adaptive stopping rule.
 - `plan_repeats` converts the input count and precision into `k`.
 - `plan_route_repeats` produces a zero-change budget for a declared suite.
 - `stratify_relations` groups already-collected relation outcomes by intended
