@@ -1,0 +1,329 @@
+{
+  "call_changed_by_reduction": [
+    "multiple_6"
+  ],
+  "confidence": 0.95,
+  "epsilon": 0.05,
+  "per_case": [
+    {
+      "call_changed": false,
+      "input": "multiple_0",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": false,
+      "input": "multiple_1",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": false,
+      "input": "multiple_2",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": false,
+      "input": "multiple_3",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": false,
+      "input": "multiple_4",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": false,
+      "input": "multiple_5",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": true,
+      "input": "multiple_6",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "reject",
+          "distinct_values": 2,
+          "flips": 29,
+          "interval": [
+            0.292867,
+            0.511926
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": false,
+      "input": "multiple_7",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "reject",
+          "distinct_values": 3,
+          "flips": 24,
+          "interval": [
+            0.231945,
+            0.44271
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "reject",
+          "distinct_values": 3,
+          "flips": 24,
+          "interval": [
+            0.231945,
+            0.44271
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": false,
+      "input": "multiple_8",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    },
+    {
+      "call_changed": false,
+      "input": "multiple_9",
+      "observations": 146,
+      "pairs": 73,
+      "reductions": {
+        "exact": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        },
+        "numeric": {
+          "call": "admit",
+          "distinct_values": 1,
+          "flips": 0,
+          "interval": [
+            0.0,
+            0.049992
+          ],
+          "pairs": 73
+        }
+      }
+    }
+  ],
+  "pooled_not_a_call": {
+    "exact": {
+      "call": "reject",
+      "flips": 53,
+      "interval": [
+        0.055933,
+        0.093747
+      ],
+      "pairs": 730
+    },
+    "numeric": {
+      "call": "admit",
+      "flips": 24,
+      "interval": [
+        0.022191,
+        0.048453
+      ],
+      "pairs": 730
+    }
+  },
+  "provenance": {
+    "categories": "cases-multiple.jsonl",
+    "collected_at": "2026-08-23",
+    "gateway": "openrouter",
+    "model": "openai/gpt-4o-mini",
+    "observed_cost_usd": 0.0,
+    "repeats_per_case": 146,
+    "source": "berkeley-function-call-leaderboard v4",
+    "upstream_revision": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8",
+    "wall_seconds": 228.8
+  },
+  "reductions_declared": {
+    "exact": "collected decision string, unchanged",
+    "numeric": "integer-valued floats collapsed onto integer form"
+  },
+  "rejects_under_both_reductions": [
+    "multiple_7"
+  ],
+  "schema": "agentverity.reduction-report/v1",
+  "source_evidence": "evidence-bfcl-multiple-gpt4o_mini.json"
+}
