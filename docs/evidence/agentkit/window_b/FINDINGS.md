@@ -11,7 +11,15 @@ criterion was prespecified in
 ## Primary outcome: zero call-class changes
 
 No request changed its admit / reject / undecided class between windows, on
-any of the three models.
+any of the three models. `changed_routes` is empty in all three drift reports.
+
+**The stored reports still say `drifted: true` for all three models, and that
+is not a contradiction.** The flag fires when anything moved between windows,
+including flip counts, wall time, worker count and observed cost. The
+prespecified primary outcome is the call class, which did not move. Read
+`changed_routes` for the outcome and `drifted` as a change detector. The
+distinction matters enough to state twice, because quoting the flag alone would
+reverse the finding.
 
 - `gpt4o_mini`: 8 admit, 2 reject — identical to Window A.
 - `mistral_small`: 10 admit — identical to Window A.
@@ -45,7 +53,12 @@ three-week gap.
 The admitted requests stayed admissible and the rejected requests stayed
 rejected across a three-week gap on hosted models whose versions can change
 without notice. For the tool-selection layer studied here, frozen baselines
-survived their first exposure to operational time. The caveats stand as
+survived their first exposure to operational time.
+
+That is a statement about thirty fixed cells and nothing wider. It is not a
+stationarity proof and not an absence of drift: flip counts moved inside their
+windows on two models, and nova gained and lost a flip pair. What held is the
+class each request was admitted or rejected under. The caveats stand as
 stated in [PRESPECIFICATION.md](PRESPECIFICATION.md): two correlated runs
 agreeing does not prove independence inside either run, one three-week gap is
 one observation, and ten requests bound how far any of this generalises.
