@@ -43,13 +43,13 @@ in the private funnel.
 - Outcome: the EvalPort maintainer confirmed the gap against the enforcement
   code rather than the spec prose, noting that `validate_result_set()` carries
   no duplicate `test_case_id` check while `validate_suite()` does, so repeated
-  results are currently unaddressed rather than supported or rejected. He opened
-  an RFC titled for the requirement and credited this project in the title, is
-  leaning toward the additive `attempt` and `isolation` fields on `Result` over
-  fragmenting into separate ResultSets, and took up the conformance-fixture
-  offer. On the LangSmith thread he stated that the adapter's `evaluate()`
-  conversion will adopt whatever repetition semantics land so `num_repetitions`
-  round-trips rather than being flattened.
+  results are currently unaddressed rather than supported or rejected. They
+  opened an RFC titled for the requirement and credited this project in the
+  title, are leaning toward the additive `attempt` and `isolation` fields on
+  `Result` over fragmenting into separate ResultSets, and took up the
+  conformance-fixture offer. On the LangSmith thread they stated that the
+  adapter's `evaluate()` conversion will adopt whatever repetition semantics
+  land so `num_repetitions` round-trips rather than being flattened.
 - Status: RFC open, nothing merged. This is engagement, not a spec change, and
   it does not yet meet the Phase 1 pilot definition in the playbook.
 
