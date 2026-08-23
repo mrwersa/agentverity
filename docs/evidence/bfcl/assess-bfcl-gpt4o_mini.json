@@ -1,0 +1,260 @@
+{
+  "blindness": {
+    "blind": false,
+    "distinct": 9,
+    "inputs": 10,
+    "layer": "verdict",
+    "majority_verdict": {
+      "kind": "decision",
+      "label": "solve_quadratic"
+    },
+    "skew": 0.2,
+    "threshold": 0.9,
+    "warning": null
+  },
+  "caveats": [
+    "the file does not record how trials were isolated, so independence is assumed rather than established"
+  ],
+  "complete": true,
+  "config": {
+    "blindness_threshold": 0.9,
+    "epsilon": 0.05,
+    "error_policy": "record",
+    "k": 146,
+    "layer": "verdict",
+    "max_workers": 1,
+    "reuse_unchanged_calls": true,
+    "run_blindness": true,
+    "run_meter": true
+  },
+  "decision_contract": {
+    "advice": "all required decisions were represented and observed",
+    "allowed": [
+      "algebra_quadratic_roots",
+      "calculate_circumference",
+      "calculate_triangle_area",
+      "geometry_area_circle",
+      "geometry_calculate_area_circle",
+      "math_factorial",
+      "math_hypot",
+      "solve_quadratic",
+      "solve_quadratic_equation"
+    ],
+    "critical": [],
+    "intended_counts": {
+      "algebra_quadratic_roots": 1,
+      "calculate_circumference": 1,
+      "calculate_triangle_area": 1,
+      "geometry_area_circle": 1,
+      "geometry_calculate_area_circle": 1,
+      "math_factorial": 1,
+      "math_hypot": 1,
+      "solve_quadratic": 2,
+      "solve_quadratic_equation": 1
+    },
+    "intended_coverage": 1.0,
+    "missing_critical": [],
+    "missing_intended": [],
+    "missing_observed": [],
+    "observed_case_counts": {
+      "algebra_quadratic_roots": 1,
+      "calculate_circumference": 1,
+      "calculate_triangle_area": 1,
+      "geometry_area_circle": 1,
+      "geometry_calculate_area_circle": 1,
+      "math_factorial": 1,
+      "math_hypot": 1,
+      "solve_quadratic": 2,
+      "solve_quadratic_equation": 1
+    },
+    "observed_counts": {
+      "algebra_quadratic_roots": 1,
+      "calculate_circumference": 1,
+      "calculate_triangle_area": 1,
+      "geometry_area_circle": 1,
+      "geometry_calculate_area_circle": 1,
+      "math_factorial": 1,
+      "math_hypot": 1,
+      "solve_quadratic": 2,
+      "solve_quadratic_equation": 1
+    },
+    "observed_coverage": 1.0,
+    "required": [
+      "algebra_quadratic_roots",
+      "calculate_circumference",
+      "calculate_triangle_area",
+      "geometry_area_circle",
+      "geometry_calculate_area_circle",
+      "math_factorial",
+      "math_hypot",
+      "solve_quadratic",
+      "solve_quadratic_equation"
+    ],
+    "satisfied": true,
+    "under_cased": [],
+    "unknown_observed": []
+  },
+  "errors": [],
+  "guidance": {
+    "decision_contract_satisfied": true,
+    "is_blind": false,
+    "is_stochastic": false,
+    "stochastic_routes": 0,
+    "suite_is_meaningful": true,
+    "targeted_stochastic_routes": 0,
+    "targeted_undecided_routes": 0,
+    "undecided_routes": 0
+  },
+  "input_fingerprints": [
+    "28428427ab7ff83e94f5391e052f2024d68ac95b1fa680dab88b81ec8718f0e3",
+    "1e26047a241fd472fcf1bbc6cc8521543710caea0bba7abfb5652ab8f0771fa8",
+    "257a11561ff7e4cd4ebabbb9322afed4913890386372f336b300ee5cf7ccd108",
+    "62bae29f1e0385b927d52bf7cb74fd4a9f83a660d12b1b40cc5b9e6b6dcfe6bf",
+    "37a3a0d82040751b4e4a2b2589f70ef44a128e648ce6f19813a2cf9111d19f67",
+    "7f53a0041c56cb7bce9ce17da91d12411ba78f28841d95ba457b29c04db5de1d",
+    "adf0ae5ac4d35044a138c68d9d8ac0eb7c37f0d44ebca74186b2c9753712afa9",
+    "6893ea79bf58bd82b7ae9f1c2fc88614e933493e17b10fbf10ba15781e77d367",
+    "b626c4713617815742ab8dcc109c5e7e3b1871d4c4c7646ece748cc98a160a97",
+    "f7d0855e589edccf4819926e3a607759a05731e9b00491db7daeb3c1a1ecb565"
+  ],
+  "meter": {
+    "advice": "verdict is stable: prefer frozen-baseline diffing when a trusted reference is available.",
+    "call": "verdict-deterministic",
+    "ci_high": 0.005234917181037434,
+    "ci_low": 0.0,
+    "epsilon": 0.05,
+    "flip_rate": 0.0,
+    "inputs": 10,
+    "inputs_with_flip": 0,
+    "layer": "verdict",
+    "max_repeats": 146,
+    "pair_flips": 0,
+    "pair_trials": 730,
+    "repeats": 146
+  },
+  "relation_coverage": null,
+  "relations": [],
+  "requested_inputs": 10,
+  "route_plans": [],
+  "route_stability": {
+    "deterministic": [
+      "algebra_quadratic_roots",
+      "calculate_circumference",
+      "calculate_triangle_area",
+      "geometry_area_circle",
+      "geometry_calculate_area_circle",
+      "math_factorial",
+      "math_hypot",
+      "solve_quadratic",
+      "solve_quadratic_equation"
+    ],
+    "epsilon": 0.05,
+    "flip_pairs": [],
+    "layer": "verdict",
+    "routes": [
+      {
+        "call": "verdict-deterministic",
+        "cases": 1,
+        "ci_high": 0.04999375338358388,
+        "ci_low": 0.0,
+        "decision": "algebra_quadratic_roots",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 73,
+        "pairs_needed": 73
+      },
+      {
+        "call": "verdict-deterministic",
+        "cases": 1,
+        "ci_high": 0.04999375338358388,
+        "ci_low": 0.0,
+        "decision": "calculate_circumference",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 73,
+        "pairs_needed": 73
+      },
+      {
+        "call": "verdict-deterministic",
+        "cases": 1,
+        "ci_high": 0.04999375338358388,
+        "ci_low": 0.0,
+        "decision": "calculate_triangle_area",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 73,
+        "pairs_needed": 73
+      },
+      {
+        "call": "verdict-deterministic",
+        "cases": 1,
+        "ci_high": 0.04999375338358388,
+        "ci_low": 0.0,
+        "decision": "geometry_area_circle",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 73,
+        "pairs_needed": 73
+      },
+      {
+        "call": "verdict-deterministic",
+        "cases": 1,
+        "ci_high": 0.04999375338358388,
+        "ci_low": 0.0,
+        "decision": "geometry_calculate_area_circle",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 73,
+        "pairs_needed": 73
+      },
+      {
+        "call": "verdict-deterministic",
+        "cases": 1,
+        "ci_high": 0.04999375338358388,
+        "ci_low": 0.0,
+        "decision": "math_factorial",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 73,
+        "pairs_needed": 73
+      },
+      {
+        "call": "verdict-deterministic",
+        "cases": 1,
+        "ci_high": 0.04999375338358388,
+        "ci_low": 0.0,
+        "decision": "math_hypot",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 73,
+        "pairs_needed": 73
+      },
+      {
+        "call": "verdict-deterministic",
+        "cases": 2,
+        "ci_high": 0.02563774012023363,
+        "ci_low": 0.0,
+        "decision": "solve_quadratic",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 146,
+        "pairs_needed": 73
+      },
+      {
+        "call": "verdict-deterministic",
+        "cases": 1,
+        "ci_high": 0.04999375338358388,
+        "ci_low": 0.0,
+        "decision": "solve_quadratic_equation",
+        "flip_rate": 0.0,
+        "pair_flips": 0,
+        "pair_trials": 73,
+        "pairs_needed": 73
+      }
+    ],
+    "stochastic": [],
+    "undecided": []
+  },
+  "schema": "agentverity.run/v2",
+  "status": "deterministic"
+}
