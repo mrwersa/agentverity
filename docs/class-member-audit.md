@@ -1,13 +1,13 @@
 # Public Class-Member Audit
 
 This preliminary compatibility audit records the caller-visible structure of
-all 35 classes exported by AgentVerity 0.19.0. It closes the gap between a
+all 35 classes exported by AgentVerity 0.20.0. It closes the gap between a
 stable constructor signature and the methods, properties, or fields callers
 use after construction.
 
 ## What CI Pins
 
-`tests/fixtures/compatibility/v0.19.0/class-members.json` records:
+`tests/fixtures/compatibility/v0.20.0/class-members.json` records:
 
 - all 176 fields across the 31 exported dataclasses, in declaration order;
 - field annotations, constructor participation, keyword-only status, and
@@ -24,17 +24,17 @@ are deliberately excluded.
 
 ## Provenance and Reproduction
 
-The committed fixture was produced by the published 0.19.0 wheel. Run outside
+The committed fixture was produced by the published 0.20.0 wheel. Run outside
 the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v019-members
-/tmp/agentverity-v019-members/bin/pip install agentverity==0.19.0
+python -m venv /tmp/agentverity-v020-members-members
+/tmp/agentverity-v020-members-members/bin/pip install agentverity==0.20.0
 cd /tmp
-/tmp/agentverity-v019-members/bin/python \
+/tmp/agentverity-v020-members-members/bin/python \
   /path/to/agentverity/scripts/audit_class_members.py \
-  /path/to/agentverity/tests/fixtures/compatibility/v0.19.0/class-members.json \
-  --expected-version 0.19.0
+  /path/to/agentverity/tests/fixtures/compatibility/v0.20.0/class-members.json \
+  --expected-version 0.20.0
 ```
 
 The auditor refuses to write if the imported version differs from the named

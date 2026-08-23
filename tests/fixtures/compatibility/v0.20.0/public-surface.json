@@ -1,5 +1,5 @@
 {
-  "producer": "agentverity==0.19.0",
+  "producer": "agentverity==0.20.0",
   "surface": {
     "cli": {
       "commands": {
@@ -1011,6 +1011,13 @@
         "name": "assess_evidence",
         "qualified_name": "assess_evidence",
         "signature": "(evidence: 'EvidenceSet', suite: 'Any | None' = None, *, epsilon: 'float' = 0.05) -> 'Any'"
+      },
+      {
+        "kind": "function",
+        "module": "agentverity.meter",
+        "name": "best_case_admission_pairs",
+        "qualified_name": "best_case_admission_pairs",
+        "signature": "(epsilon: 'float', *, flips: 'int', pairs: 'int', max_pairs: 'int | None' = None, z: 'float' = 1.96) -> 'int | None'"
       },
       {
         "kind": "function",

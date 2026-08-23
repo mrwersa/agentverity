@@ -1,6 +1,6 @@
 # Cross-version compatibility audit
 
-This audit records what AgentVerity 0.19.0 can safely read from an earlier
+This audit records what AgentVerity 0.20.0 can safely read from an earlier
 minor release. It covers durable files with public loaders, not every JSON
 object the package can emit.
 
@@ -9,7 +9,7 @@ object the package can emit.
 AgentVerity 0.16.0 is the earliest minor that wrote all three schema versions
 the current package reads:
 
-| Durable file | Current schema | 0.19.0 result |
+| Durable file | Current schema | 0.20.0 result |
 |---|---|---|
 | Decision suite | `agentverity.decision-suite/v1` | Loads and rewrites without semantic change |
 | Imported evidence | `agentverity.evidence/v2` | Loads ordered decisions, typed refusals, isolation, and provenance |

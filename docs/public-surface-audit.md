@@ -1,12 +1,12 @@
 # Public surface compatibility audit
 
 This preliminary audit records the top-level Python and command-line surface
-published in AgentVerity 0.19.0. It makes accidental drift visible without
+published in AgentVerity 0.20.0. It makes accidental drift visible without
 claiming the API is frozen before 1.0.
 
 ## What CI pins
 
-`tests/fixtures/compatibility/v0.19.0/public-surface.json` records:
+`tests/fixtures/compatibility/v0.20.0/public-surface.json` records:
 
 - every name in `agentverity.__all__`, classified as a function, class, or
   constant;
@@ -34,17 +34,17 @@ by focused tests and the return audit rather than this signature inventory.
 
 ## Provenance and reproduction
 
-The committed inventory is generated from the published 0.19.0 wheel. Run
+The committed inventory is generated from the published 0.20.0 wheel. Run
 outside the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v019
-/tmp/agentverity-v019/bin/pip install agentverity==0.19.0
+python -m venv /tmp/agentverity-v020-members
+/tmp/agentverity-v020-members/bin/pip install agentverity==0.20.0
 cd /tmp
-/tmp/agentverity-v019/bin/python \
+/tmp/agentverity-v020-members/bin/python \
   /path/to/agentverity/scripts/audit_public_surface.py \
-  /path/to/agentverity/tests/fixtures/compatibility/v0.19.0/public-surface.json \
-  --expected-version 0.19.0
+  /path/to/agentverity/tests/fixtures/compatibility/v0.20.0/public-surface.json \
+  --expected-version 0.20.0
 ```
 
 The auditor refuses to write when the imported version differs from the named

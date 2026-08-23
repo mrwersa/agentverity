@@ -80,7 +80,7 @@ minor that produced every currently supported schema. There are no migration
 paths to test: older evidence and snapshot schemas are deliberately refused.
 
 The preliminary compatibility suite now covers four complementary surfaces
-from the published 0.19.0 wheel:
+from the published 0.20.0 wheel:
 
 - the [public surface audit](docs/public-surface-audit.md) pins top-level
   exports, signatures, constants, commands, flags, and parser defaults;
