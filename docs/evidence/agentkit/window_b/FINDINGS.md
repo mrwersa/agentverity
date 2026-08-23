@@ -33,8 +33,12 @@ three-week gap.
   That is a change from out-of-contract to in-contract, and it moved toward
   correct.
 - **Isolation**: both windows ran fresh-instance; no isolation change.
-- **Errors**: nova recorded 7 collection errors in Window B (none elsewhere),
-  all recorded as observations rather than dropped.
+- **Errors**: nova recorded 7 collection errors in Window B (none elsewhere).
+  Those attempts were dropped rather than recorded, which is why that request
+  carries 139 observations and 69 usable pairs. The primary outcome does not
+  depend on them: the affected request rejects at 36/69 flips with interval
+  [0.406, 0.635], far above the tolerance, so it would reject on any of the
+  four missing pairs.
 
 ## What this supports
 
