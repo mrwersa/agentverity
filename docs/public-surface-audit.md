@@ -38,10 +38,10 @@ The committed inventory is generated from the published 0.20.0 wheel. Run
 outside the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v020-members
-/tmp/agentverity-v020-members/bin/pip install agentverity==0.20.0
+python -m venv /tmp/agentverity-v020
+/tmp/agentverity-v020/bin/pip install agentverity==0.20.0
 cd /tmp
-/tmp/agentverity-v020-members/bin/python \
+/tmp/agentverity-v020/bin/python \
   /path/to/agentverity/scripts/audit_public_surface.py \
   /path/to/agentverity/tests/fixtures/compatibility/v0.20.0/public-surface.json \
   --expected-version 0.20.0

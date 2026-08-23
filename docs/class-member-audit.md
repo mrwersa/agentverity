@@ -28,10 +28,10 @@ The committed fixture was produced by the published 0.20.0 wheel. Run outside
 the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v020-members-members
-/tmp/agentverity-v020-members-members/bin/pip install agentverity==0.20.0
+python -m venv /tmp/agentverity-v020-members
+/tmp/agentverity-v020-members/bin/pip install agentverity==0.20.0
 cd /tmp
-/tmp/agentverity-v020-members-members/bin/python \
+/tmp/agentverity-v020-members/bin/python \
   /path/to/agentverity/scripts/audit_class_members.py \
   /path/to/agentverity/tests/fixtures/compatibility/v0.20.0/class-members.json \
   --expected-version 0.20.0
