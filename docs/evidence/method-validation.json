@@ -1,4 +1,30 @@
 {
+  "continuation_planning": [
+    {
+      "fixed_count_best_case_pairs": 110,
+      "fixed_rate_projection_pairs": 139,
+      "observed_flips": 1,
+      "observed_pairs": 73
+    },
+    {
+      "fixed_count_best_case_pairs": 173,
+      "fixed_rate_projection_pairs": 2302,
+      "observed_flips": 3,
+      "observed_pairs": 73
+    },
+    {
+      "fixed_count_best_case_pairs": 202,
+      "fixed_rate_projection_pairs": null,
+      "observed_flips": 4,
+      "observed_pairs": 73
+    },
+    {
+      "fixed_count_best_case_pairs": 311,
+      "fixed_rate_projection_pairs": null,
+      "observed_flips": 8,
+      "observed_pairs": 73
+    }
+  ],
   "exact_boundary": {
     "fixed-wilson": {
       "calls": {
@@ -18,6 +44,7 @@
     }
   },
   "interpretation": {
+    "best_case_is_not_an_adaptive_stopping_rule": true,
     "iid_is_the_claimed_model": true,
     "positive_correlation_is_sensitivity_only": true,
     "simulation_is_not_a_proof": true
@@ -663,5 +690,5 @@
       "wrong_direction_rate": 0.00134
     }
   ],
-  "schema": "agentverity.method-validation/v1"
+  "schema": "agentverity.method-validation/v2"
 }

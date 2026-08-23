@@ -23,7 +23,7 @@ not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.19.0
+agentverity~=0.20.0
 ```
 
 That accepts compatible `0.19.x` fixes without moving to a later pre-1.0 minor

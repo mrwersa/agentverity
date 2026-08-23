@@ -30,6 +30,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from fractions import Fraction
 from typing import Any
 
 from agentverity.observation import Observation
@@ -157,27 +158,26 @@ def plan_repeats(inputs: int, epsilon: float, budget: int | None = None) -> int:
 def pairs_for_deterministic_call(
     epsilon: float, z: float = 1.96, *, flip_rate: float = 0.0
 ) -> int | None:
-    """Pairs needed to certify determinism, given the flip rate seen so far.
+    """Pairs needed to certify determinism under a projected fixed flip rate.
 
     A ``verdict-deterministic`` call needs the Wilson upper bound below
     ``epsilon``. With no flips observed the bound depends only on the pair
     count: 381 pairs at the default epsilon of 0.01.
 
-    Flips change the answer completely. As the pair count grows at a fixed
-    observed rate the bound converges down onto that rate, so a probe already
-    flipping at or above ``epsilon`` can never be certified no matter how many
-    calls it buys. Advising "collect more pairs" there is wrong, and advising a
-    *smaller* count than the caller already has is worse.
+    A nonzero ``flip_rate`` is a scenario assumption: it projects the same
+    empirical rate at every candidate pair count. It does not describe the
+    best possible continuation of already-observed counts; use
+    :func:`best_case_admission_pairs` for that question.
 
     Args:
         epsilon: The flip-rate threshold being tested against.
         z: Z-value for the interval, matching :func:`wilson_ci`.
-        flip_rate: Flip rate observed so far. Zero is the best case and the
-            cheapest.
+        flip_rate: Projected fixed flip rate. Zero is the best case and the
+            cheapest scenario.
 
     Returns:
-        The minimum pair count, or ``None`` when no pair count can get there
-        because the observed rate is already at or above ``epsilon``.
+        The minimum pair count, or ``None`` when the projected rate is already
+        at or above ``epsilon``.
 
     Raises:
         ValueError: If ``epsilon`` is outside ``(0, 1)``, ``z`` is not finite
@@ -190,28 +190,96 @@ def pairs_for_deterministic_call(
     if not 0 <= flip_rate <= 1:
         raise ValueError("flip_rate must be between 0 and 1")
     if flip_rate >= epsilon:
-        # The bound converges onto the observed rate from above, so it never
-        # crosses below an epsilon the rate already meets or exceeds.
+        # The bound converges onto the projected rate from above.
         return None
 
-    def upper_at(pairs: int) -> float:
-        return wilson_ci(round(flip_rate * pairs), pairs, z)[1]
+    # Inverting the Wilson score test at epsilon gives the strict condition
+    # n > z^2 * epsilon * (1 - epsilon) / (epsilon - p_hat)^2. Fractions avoid
+    # rounding a mathematical integer boundary down into a false admission.
+    epsilon_q = Fraction(epsilon)
+    rate_q = Fraction(flip_rate)
+    z_q = Fraction(z)
+    threshold = z_q * z_q * epsilon_q * (1 - epsilon_q) / (epsilon_q - rate_q) ** 2
+    return threshold.numerator // threshold.denominator + 1
 
-    # The bound falls monotonically in the pair count, so double then bisect.
-    # The cap stops a pathological rate just under epsilon from looping forever.
-    cap = 10_000_000
-    high = 1
-    while upper_at(high) >= epsilon:
-        high *= 2
-        if high > cap:
+
+def best_case_admission_pairs(
+    epsilon: float,
+    *,
+    flips: int,
+    pairs: int,
+    max_pairs: int | None = None,
+    z: float = 1.96,
+) -> int | None:
+    """Return the earliest best-case Wilson admission total for observed counts.
+
+    The calculation holds ``flips`` fixed and assumes every additional pair
+    agrees. It answers whether admission remains possible within a predeclared
+    ``max_pairs``; it is not permission to inspect the interval repeatedly and
+    stop when it passes. Admission still belongs at a fixed endpoint or to an
+    anytime-valid/predeclared sequential procedure.
+
+    Args:
+        epsilon: The flip-rate threshold being tested against.
+        flips: Flips already observed.
+        pairs: Disjoint pairs already observed.
+        max_pairs: Optional predeclared total pair budget. When supplied,
+            return ``None`` if even an all-agree continuation cannot admit by
+            that endpoint.
+        z: Z-value for the interval, matching :func:`wilson_ci`.
+
+    Returns:
+        The earliest total pair count that could admit if no further flips
+        occur, or ``None`` when that is impossible within ``max_pairs``.
+
+    Raises:
+        ValueError: If a probability or count is outside its valid range.
+        TypeError: If a count is not an integer.
+    """
+    if not 0 < epsilon < 1:
+        raise ValueError("epsilon must be between 0 and 1")
+    if not math.isfinite(z) or z <= 0:
+        raise ValueError("z must be a finite positive number")
+    for name, value in (("flips", flips), ("pairs", pairs)):
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise TypeError(f"{name} must be an integer")
+    if pairs < 1:
+        raise ValueError("pairs must be at least 1")
+    if not 0 <= flips <= pairs:
+        raise ValueError("flips must be between 0 and pairs")
+    if max_pairs is not None:
+        if not isinstance(max_pairs, int) or isinstance(max_pairs, bool):
+            raise TypeError("max_pairs must be an integer")
+        if max_pairs < pairs:
+            raise ValueError("max_pairs must be at least pairs")
+
+    epsilon_q = Fraction(epsilon)
+    z_squared = Fraction(z) ** 2
+
+    def could_admit(total: int) -> bool:
+        # Wilson's upper endpoint is below epsilon exactly when the one-sided
+        # score statistic exceeds z in the admission direction.
+        gap = total * epsilon_q - flips
+        return gap > 0 and gap * gap > (z_squared * total * epsilon_q * (1 - epsilon_q))
+
+    if could_admit(pairs):
+        return pairs
+    if max_pairs is not None:
+        if not could_admit(max_pairs):
             return None
-    low = high // 2
+        high = max_pairs
+    else:
+        high = pairs * 2
+        while not could_admit(high):
+            high *= 2
+
+    low = pairs
     while low + 1 < high:
-        mid = (low + high) // 2
-        if upper_at(mid) < epsilon:
-            high = mid
+        middle = (low + high) // 2
+        if could_admit(middle):
+            high = middle
         else:
-            low = mid
+            low = middle
     return high
 
 

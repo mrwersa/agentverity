@@ -74,8 +74,10 @@ Plain Python callables need no extra dependency:
 ```python
 from agentverity import from_callable, run
 
+
 def route(text):
     return "billing" if "charge" in text.lower() else "cash_withdrawal"
+
 
 agent = from_callable(lambda text: {"verdict": route(text)})
 result = run(agent, inputs=["duplicate charge", "cash withdrawal"])
@@ -137,6 +139,10 @@ AgentVerity sizes calls from the tolerance, uses non-overlapping pairs, and
 places a Wilson interval around the flip rate. Optional sequential collection
 uses checkpoints declared before collection; it does not repeatedly inspect a
 fixed-sample interval and stop when the result looks favourable.
+
+For evidence already collected, `best_case_admission_pairs` tests whether an
+all-agree continuation could admit within a predeclared pair budget. It may
+justify stopping an impossible run early; it never creates an early admission.
 
 Use `agentverity plan --suite examples/route_stability_plan.json` before
 spending remote calls. The [method guide](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
@@ -214,6 +220,6 @@ coverage. See the contributing guide above before opening a pull request.
 ## Status and licence
 
 Alpha. Pin the current minor series for production use:
-`agentverity~=0.19.0`. Patch releases preserve the public API.
+`agentverity~=0.20.0`. Patch releases preserve the public API.
 
 Apache-2.0.

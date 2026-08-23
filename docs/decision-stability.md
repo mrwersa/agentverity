@@ -41,6 +41,13 @@ With no observed changes, a 5% threshold needs 73 independent pairs.
 `pairs_for_deterministic_call(0.05)` returns that number, while `plan_repeats`
 translates it into repeats per input before calls begin.
 
+After collection, counts and rates answer different questions. For example,
+four flips in 73 pairs cannot admit under a projection that keeps the 4/73
+rate fixed, but it could first admit at 202 total pairs if every later pair
+agreed. `best_case_admission_pairs(0.05, flips=4, pairs=73)` returns `202`;
+with `max_pairs=201` it returns `None`. This is an optimistic endpoint check,
+not permission to inspect the interval repeatedly and stop when it passes.
+
 The built-in precision levels therefore imply these minimum evidence budgets
 when no changes are observed:
 

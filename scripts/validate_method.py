@@ -16,10 +16,15 @@ from pathlib import Path
 from statistics import NormalDist
 from typing import Any
 
-from agentverity.meter import classify_call, pairs_for_deterministic_call, wilson_ci
+from agentverity.meter import (
+    best_case_admission_pairs,
+    classify_call,
+    pairs_for_deterministic_call,
+    wilson_ci,
+)
 from agentverity.sequential import decide_sequentially, plan_sequential
 
-SCHEMA = "agentverity.method-validation/v1"
+SCHEMA = "agentverity.method-validation/v2"
 DETERMINISTIC = "deterministic"
 STOCHASTIC = "stochastic"
 UNDECIDED = "undecided"
@@ -101,6 +106,26 @@ def _exact_sequential_calls(plan, *, rate: float) -> dict[str, float]:
     return calls
 
 
+def _continuation_planning(epsilon: float, z: float) -> list[dict[str, Any]]:
+    """Cross-check the two distinct planning questions on canonical counts."""
+    rows = []
+    for flips in (1, 3, 4, 8):
+        pairs = 73
+        rows.append(
+            {
+                "observed_flips": flips,
+                "observed_pairs": pairs,
+                "fixed_rate_projection_pairs": pairs_for_deterministic_call(
+                    epsilon, z, flip_rate=flips / pairs
+                ),
+                "fixed_count_best_case_pairs": best_case_admission_pairs(
+                    epsilon, flips=flips, pairs=pairs, z=z
+                ),
+            }
+        )
+    return rows
+
+
 def _row(
     *,
     rule: str,
@@ -137,7 +162,7 @@ def simulate(
     epsilon: float = 0.05,
     alpha: float = 0.05,
     rates: tuple[float, ...] | None = None,
-    correlations: tuple[float, ...] = (0.0, 0.1),
+    correlations: tuple[float, ...] = (0.0, 0.02, 0.05, 0.1),
 ) -> dict[str, Any]:
     """Return deterministic Monte Carlo results for both admission rules.
 
@@ -262,7 +287,9 @@ def simulate(
                 + sequential_boundary[STOCHASTIC],
             },
         },
+        "continuation_planning": _continuation_planning(epsilon, z),
         "interpretation": {
+            "best_case_is_not_an_adaptive_stopping_rule": True,
             "iid_is_the_claimed_model": True,
             "positive_correlation_is_sensitivity_only": True,
             "simulation_is_not_a_proof": True,
@@ -302,7 +329,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--epsilon", type=float, default=0.05)
     parser.add_argument("--alpha", type=float, default=0.05)
     parser.add_argument("--rates", type=_comma_floats)
-    parser.add_argument("--correlations", type=_comma_floats, default=(0.0, 0.1))
+    parser.add_argument(
+        "--correlations", type=_comma_floats, default=(0.0, 0.02, 0.05, 0.1)
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
 

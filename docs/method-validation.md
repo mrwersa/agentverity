@@ -17,10 +17,11 @@ python scripts/validate_method.py \
 ```
 
 The committed result uses seed `20260822`, `epsilon=0.05`, `alpha=0.05`, five
-true flip rates, and 100,000 qualification runs per scenario. It records exact
-boundary probabilities, every simulated call share, Monte Carlo uncertainty,
-and mean pairs spent in the versioned
-[`agentverity.method-validation/v1`](evidence/method-validation.json) artifact.
+true flip rates, four dependence settings (`rho=0, 0.02, 0.05, 0.10`), and
+100,000 qualification runs per scenario. It records exact boundary
+probabilities, every simulated call share, Monte Carlo uncertainty, and mean
+pairs spent in the versioned
+[`agentverity.method-validation/v2`](evidence/method-validation.json) artifact.
 The script has no dependencies outside Python and AgentVerity.
 
 ## Experiment
@@ -33,8 +34,9 @@ thresholds and directional alpha spending.
 The sensitivity model holds the marginal flip rate constant but draws one
 latent rate per qualification run from a beta distribution. Conditional pair
 outcomes are Bernoulli, producing beta-binomial clustering with intraclass
-correlation `rho=0.10`. This is a deliberate assumption violation, not an
-estimate of production dependence.
+correlations `rho=0.02`, `0.05`, and `0.10`. These are deliberate assumption
+violations, not estimates of production dependence. The compact table below
+shows the strongest setting; the JSON artifact carries the full sweep.
 
 “Wrong direction” means stochastic below the 5% boundary, deterministic above
 it, and either directional claim exactly at the boundary.
@@ -51,8 +53,8 @@ it, and either directional claim exactly at the boundary.
 | iid | 0.100 | sequential | 0.042% | 23.210% | 76.748% | 0.042% | 66.9 |
 | iid | 0.300 | fixed | 0.000% | 99.997% | 0.003% | 0.000% | 73.0 |
 | iid | 0.300 | sequential | 0.000% | 99.963% | 0.037% | 0.000% | **25.0** |
-| clustered, rho=0.10 | 0.050 | fixed | 35.714% | 16.355% | 47.931% | **52.069%** | 73.0 |
-| clustered, rho=0.10 | 0.050 | sequential | 35.924% | 12.538% | 51.538% | **48.462%** | 68.0 |
+| clustered, rho=0.10 | 0.050 | fixed | 35.816% | 16.615% | 47.569% | **52.431%** | 73.0 |
+| clustered, rho=0.10 | 0.050 | sequential | 36.005% | 12.721% | 51.274% | **48.726%** | 67.9 |
 
 ## Findings
 
@@ -75,14 +77,32 @@ it, and either directional claim exactly at the boundary.
 5. **Declared isolation is load-bearing.** With the same 5% marginal rate and
    `rho=0.10` clustering, boundary directional calls rise to roughly half of
    runs. Neither rule's interval or alpha interpretation survives that model.
+6. **Observed counts and a projected rate answer different planning
+   questions.** The exact score-test inversion gives the following totals at
+   `epsilon=0.05`. “Fixed count” assumes every future pair agrees; “fixed
+   rate” projects the observed rate indefinitely.
+
+   | Observed | Fixed-count best case | Fixed-rate projection |
+   |---:|---:|---:|
+   | 1/73 | 110 | 139 |
+   | 3/73 | 173 | 2,302 |
+   | 4/73 | 202 | impossible |
+   | 8/73 | 311 | impossible |
+
+   The best-case column supports early **refusal** against a predeclared
+   maximum: if the endpoint cannot admit even with no further flips, stop
+   spending. It does not support inspecting a fixed-sample interval after
+   every pair and stopping at its first favourable value.
 
 ## Consequences and limits
 
-No public API, default, or evidence schema changes from this experiment. The
-fixed rule remains conservative in the baseline-admission direction, while
-its nominal two-sided calibration is now explicit. A future change to an exact
-fixed-sample rule requires an ADR, compatibility analysis, and measured call
-budget before implementation.
+The fixed admission rule and runtime evidence schemas remain unchanged. The
+validation artifact itself moves to v2 because it now checks the planning
+layer that surrounds that rule; the public `best_case_admission_pairs` helper
+exposes its count-aware result. The fixed rule remains conservative in the
+baseline-admission direction, while its nominal two-sided calibration is
+explicit. A future change to an exact fixed-sample rule requires an ADR,
+compatibility analysis, and measured call budget before implementation.
 
 The sensitivity model covers one exchangeable dependence pattern, not stateful
 agents generally. It does not establish that `rho=0.10` is realistic, detect

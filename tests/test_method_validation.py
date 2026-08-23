@@ -95,11 +95,29 @@ def test_the_committed_asset_and_document_record_the_boundary_finding() -> None:
 
     assert payload["schema"] == SCHEMA
     assert payload["method"]["trials_per_scenario"] == 100_000
+    assert payload["method"]["correlations"] == [0.0, 0.02, 0.05, 0.1]
     assert payload["exact_boundary"]["fixed-wilson"][
         "wrong_direction_rate"
     ] == pytest.approx(0.052860564251125106)
     assert "nominal, not an exact finite-sample error" in documentation
+    assert "35.816%" in documentation
+    assert "52.431%" in documentation
     assert "docs/method-validation.md" in readme
+
+
+def test_the_committed_asset_separates_rate_projection_from_best_case_continuation():
+    """Evidence must preserve the distinction that exposed the planning defect."""
+    payload = json.loads(ASSET.read_text(encoding="utf-8"))
+
+    assert [
+        row["fixed_count_best_case_pairs"] for row in payload["continuation_planning"]
+    ] == [110, 173, 202, 311]
+    assert [
+        row["fixed_rate_projection_pairs"] for row in payload["continuation_planning"]
+    ] == [139, 2302, None, None]
+    assert (
+        payload["interpretation"]["best_case_is_not_an_adaptive_stopping_rule"] is True
+    )
 
 
 @pytest.mark.parametrize(

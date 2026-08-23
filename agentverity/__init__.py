@@ -69,6 +69,7 @@ from agentverity.isolation import declare_isolation, isolation_of
 from agentverity.meter import (
     PRECISION_LEVELS,
     MeterResult,
+    best_case_admission_pairs,
     measure,
     pairs_for_deterministic_call,
     plan_repeats,
@@ -168,6 +169,7 @@ __all__ = [
     "StratifiedStability",
     "as_outcome",
     "assess_evidence",
+    "best_case_admission_pairs",
     "builtin_relations",
     "compare_evidence",
     "compare_snapshot",

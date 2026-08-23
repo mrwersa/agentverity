@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from agentverity.decision_contract import DecisionContract
-from agentverity.meter import MeterResult, pairs_for_deterministic_call
+from agentverity.meter import MeterResult, best_case_admission_pairs
 from agentverity.reporting import json_value
 from agentverity.runner import RunResult
 
@@ -277,9 +277,8 @@ def _underpowered_message(meter: MeterResult) -> str:
     """Explain how far the evidence fell short, not just that it did.
 
     "undecided" on its own reads like a bug when the agent is plainly
-    deterministic. The gap is often an order of magnitude, so quantify it, and
-    quantify it against the flip rate actually observed. Assuming zero flips
-    can advise a caller who already has 1,200 pairs to drop to 128.
+    deterministic. Quantify the optimistic evidence gap from the counts that
+    actually occurred, without turning that bound into an adaptive stop rule.
     """
     if meter.call == "verdict-stochastic":
         return (
@@ -289,36 +288,33 @@ def _underpowered_message(meter: MeterResult) -> str:
             "changes on rerun. Fix the agent, or snapshot a layer that is stable."
         )
 
-    rate = meter.flip_rate
-    needed = pairs_for_deterministic_call(meter.epsilon, flip_rate=rate)
+    needed = best_case_admission_pairs(
+        meter.epsilon,
+        flips=meter.pair_flips,
+        pairs=meter.pair_trials,
+    )
+    assert needed is not None
     seen = (
         f"{meter.pair_trials} disjoint pairs with {meter.pair_flips} flips"
         if meter.pair_flips
         else f"{meter.pair_trials} disjoint pairs and no flips"
     )
 
-    if needed is None:
-        cheaper = pairs_for_deterministic_call(meter.epsilon * 5, flip_rate=rate)
-        route = (
-            f"about {cheaper} pairs at epsilon={meter.epsilon * 5:g}"
-            if cheaper is not None
-            else f"an epsilon above the observed rate of {rate:.2%}"
-        )
-        return (
-            f"cannot certify determinism at epsilon={meter.epsilon}: {seen}, "
-            f"a rate of {rate:.2%}. More pairs will not help, because the "
-            "interval converges onto the observed rate rather than below it. "
-            f"Either accept a deployment-relevant epsilon ({route}) or treat "
-            "this layer as non-deterministic."
-        )
-
     per_input = -(-needed // meter.inputs)
+    admissible_flips = (
+        "no flips"
+        if meter.pair_flips == 0
+        else f"no more than {meter.pair_flips} flips"
+    )
     return (
         f"not enough evidence to certify determinism at epsilon={meter.epsilon}: "
-        f"{seen}, and about {needed} pairs are needed at that rate. Options: "
+        f"{seen}. A predeclared endpoint of at least {needed} pairs could admit "
+        f"only with {admissible_flips}; this is an optimistic bound, not "
+        "permission to keep sampling until the interval passes. Options: "
         f"raise --k to at least {per_input * 2} across {meter.inputs} inputs "
         f"(about {meter.inputs * per_input * 2} agent calls), add inputs, or set "
-        "a deployment-relevant --epsilon."
+        "a deployment-relevant --epsilon. For valid early stopping, use a "
+        "predeclared sequential plan."
     )
 
 
