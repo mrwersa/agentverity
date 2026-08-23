@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Apply a declared equivalence relation to collected BFCL decisions.
 
 The stability rule classifies a flip rate over categorical decisions and takes
@@ -29,10 +28,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import pathlib
-import re
 import sys
+
+from agentverity.meter import classify_call, wilson_ci
 
 ROOT = pathlib.Path(__file__).resolve().parent
 EVIDENCE = ROOT / "evidence-bfcl-multiple-gpt4o_mini.json"
@@ -40,12 +39,6 @@ REPORT = ROOT / "reduction-report.json"
 
 SCHEMA = "agentverity.reduction-report/v1"
 EPSILON = 0.05
-Z = 1.959963984540054  # two-sided 95%
-
-# An integer-valued float, not preceded by a word character or a dot so that
-# version-like and dotted-name tokens are left alone. `10.0` and `10.000`
-# collapse to `10`. `10.5` does not match. `v1.0` does not match.
-_INT_FLOAT = re.compile(r"(?<![\w.])(\d+)\.0+(?![\d])")
 
 
 def reduce_exact(decision: str) -> str:
@@ -54,30 +47,74 @@ def reduce_exact(decision: str) -> str:
 
 
 def reduce_numeric(decision: str) -> str:
-    """Collapse integer-valued floats onto their integer form."""
-    return _INT_FLOAT.sub(r"\1", decision)
+    """Collapse JSON numbers with integral value onto their integer form."""
+    calls = _split_calls(decision)
+    reduced = []
+    for item in calls:
+        name, separator, encoded = item.partition("(")
+        if not separator or not encoded.endswith(")"):
+            reduced.append(item)
+            continue
+        arguments = json.loads(encoded[:-1])
+        canonical = json.dumps(_normalise_numbers(arguments), sort_keys=True)
+        reduced.append(f"{name}({canonical})")
+    return "|".join(reduced)
+
+
+def _normalise_numbers(value):
+    """Normalise numeric JSON values without touching numeric-looking strings."""
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, list):
+        return [_normalise_numbers(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _normalise_numbers(item) for key, item in value.items()}
+    return value
+
+
+def _split_calls(decision: str) -> list[str]:
+    """Split pipe-joined calls without splitting pipes inside JSON strings."""
+    calls = []
+    start = 0
+    depth = 0
+    quoted = False
+    escaped = False
+    for index, character in enumerate(decision):
+        if quoted:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                quoted = False
+            continue
+        if character == '"':
+            quoted = True
+        elif character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+            if depth < 0:
+                raise ValueError("unbalanced decision label")
+        elif character == "|" and depth == 0:
+            calls.append(decision[start:index])
+            start = index + 1
+    if quoted or depth != 0:
+        raise ValueError("unbalanced decision label")
+    calls.append(decision[start:])
+    return calls
 
 
 REDUCTIONS = {"exact": reduce_exact, "numeric": reduce_numeric}
 
 
-def wilson(flips: int, pairs: int, z: float = Z) -> tuple[float, float]:
-    if pairs == 0:
-        return 0.0, 1.0
-    p = flips / pairs
-    denom = 1.0 + z * z / pairs
-    centre = (p + z * z / (2 * pairs)) / denom
-    half = z * math.sqrt(p * (1 - p) / pairs + z * z / (4 * pairs * pairs)) / denom
-    return centre - half, centre + half
-
-
 def call(flips: int, pairs: int, epsilon: float = EPSILON) -> str:
-    low, high = wilson(flips, pairs)
-    if high < epsilon:
-        return "admit"
-    if low > epsilon:
-        return "reject"
-    return "undecided"
+    low, high = wilson_ci(flips, pairs)
+    return {
+        "verdict-deterministic": "admit",
+        "verdict-stochastic": "reject",
+        "undecided (add repeats or inputs)": "undecided",
+    }[classify_call(low, high, epsilon)]
 
 
 def disjoint_pairs(observations: list[str]) -> list[tuple[str, str]]:
@@ -87,9 +124,7 @@ def disjoint_pairs(observations: list[str]) -> list[tuple[str, str]]:
     invalidate the Bernoulli interval, so the pairing is fixed here.
     """
     usable = len(observations) // 2 * 2
-    return [
-        (observations[i], observations[i + 1]) for i in range(0, usable, 2)
-    ]
+    return [(observations[i], observations[i + 1]) for i in range(0, usable, 2)]
 
 
 def count_flips(observations: list[str]) -> int:
@@ -117,7 +152,7 @@ def analyse(evidence: dict) -> dict:
             assert len(mapped) == len(observed), "reduction changed the count"
             flips = count_flips(mapped)
             pairs = len(mapped) // 2
-            low, high = wilson(flips, pairs)
+            low, high = wilson_ci(flips, pairs)
             entry["reductions"][name] = {
                 "flips": flips,
                 "pairs": pairs,
@@ -135,7 +170,7 @@ def analyse(evidence: dict) -> dict:
 
     pooled_out = {}
     for name, agg in pooled.items():
-        low, high = wilson(agg["flips"], agg["pairs"])
+        low, high = wilson_ci(agg["flips"], agg["pairs"])
         pooled_out[name] = {
             **agg,
             "interval": [round(low, 6), round(high, 6)],
@@ -172,8 +207,9 @@ def analyse(evidence: dict) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--check", action="store_true",
-                    help="fail if the committed report differs")
+    ap.add_argument(
+        "--check", action="store_true", help="fail if the committed report differs"
+    )
     args = ap.parse_args()
 
     evidence = json.loads(EVIDENCE.read_text(encoding="utf-8"))
@@ -196,8 +232,10 @@ def main() -> int:
         e = case["reductions"]["exact"]
         n = case["reductions"]["numeric"]
         mark = "  <-- call changed" if case["call_changed"] else ""
-        print(f"  {case['input']:<12} {e['flips']:>3} {e['call']:<9}"
-              f" -> {n['flips']:>3} {n['call']:<9}{mark}")
+        print(
+            f"  {case['input']:<12} {e['flips']:>3} {e['call']:<9}"
+            f" -> {n['flips']:>3} {n['call']:<9}{mark}"
+        )
     return 0
 
 
