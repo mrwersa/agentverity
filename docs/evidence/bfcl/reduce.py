@@ -41,6 +41,12 @@ import json
 import pathlib
 import sys
 
+# Keep the documented command reproducible from a clean clone. Python normally
+# puts this script's directory, rather than the repository root, on sys.path.
+REPOSITORY_ROOT = pathlib.Path(__file__).resolve().parents[3]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+
 from agentverity.meter import classify_call, wilson_ci
 
 ROOT = pathlib.Path(__file__).resolve().parent
