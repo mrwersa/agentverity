@@ -195,6 +195,7 @@ answers.
   [integration placement](https://github.com/mrwersa/agentverity/blob/main/docs/integrations.md),
   and the [importer conformance contract](https://github.com/mrwersa/agentverity/blob/main/docs/integration-contract.md)
 - **Framework recipes:** [qualifying Inspect AI epoch runs](https://github.com/mrwersa/agentverity/blob/main/docs/recipes/inspect-ai-epochs.md)
+  and [qualifying repeated BFCL function-call runs](https://github.com/mrwersa/agentverity/blob/main/docs/recipes/bfcl-function-calls.md)
 - **Understand the method:** [decision stability](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md),
   [per-route evidence](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md),
   and [categorical evaluator stability](https://github.com/mrwersa/agentverity/blob/main/docs/evaluator-stability.md)
