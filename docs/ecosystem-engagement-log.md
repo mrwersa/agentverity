@@ -59,6 +59,9 @@ in the private funnel.
 - Segment: repeated-reliability researchers
 - Contributed: the distinction between convergence budgets for measuring instability and certification budgets for admitting a baseline, two questions for their Evaluation Cards proposal, and a request to calibrate the sensitivity axis against their GAIA and FRAMES variance data
 - Relevance: their ICC reporting and our admission rule are adjacent layers of the same reliability question, making this team both a methodological reviewer candidate and a calibration source
+- Clarification (2026-08-23): their ICC analysis provides an external comparison for
+  AgentVerity's dependence-sensitivity model, and the open question is whether it can
+  calibrate the within-run flip correlation directly. No reply yet.
 
 ## Rules for updating this log
 
