@@ -48,15 +48,21 @@ Write one JSON object per epoch solve:
 {"task_id":"capital_question","decision":"fail"}
 {"task_id":"second_task","decision":"pass"}
 {"task_id":"second_task","decision":"pass"}
+{"task_id":"third_task","decision":"fail"}
+{"task_id":"third_task","decision":"fail"}
 ```
 
-Then assess:
+Then assess, declaring the isolation the epochs actually ran under:
 
 ```bash
 agentverity assess --jsonl inspect-run.jsonl \
   --input-path task_id --decision-path decision \
-  --epsilon 0.05
+  --epsilon 0.05 --isolation fresh-instance
 ```
+
+Omit `--isolation` and the report adds a caveat saying the file does not
+record how trials were isolated, so independence is assumed rather than
+established. The declaration is the point of the mapping above, so pass it.
 
 File order is pairing order. Export the epochs of each task together and in
 epoch order, or the pairs will not mean what you think. See
