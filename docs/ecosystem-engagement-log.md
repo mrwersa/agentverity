@@ -30,6 +30,13 @@ in the private funnel.
 - Contributed: downstream-consumer requirement that repetition structure survive any LangSmith-to-EvalPort bridge, with a link to the spec proposal above
 - Relevance: records a concrete downstream need for repetition-preserving export while leaving the interchange shape to EvalPort and LangSmith maintainers
 
+### 2026-08-23 | EvalPort repetition RFC refinements
+
+- Channel: [adhabnr-ux/evalport#22](https://github.com/adhabnr-ux/evalport/discussions/22#discussioncomment-18122995)
+- Segment: evaluation-interchange standards community
+- Contributed: technical review of the proposed attempt/isolation fields, three refinements (open isolation string, per-group consistency, ascending-attempt observation order), and confirmation of the conformance-fixture offer
+- Relevance: shapes the interchange format so repeated categorical evidence survives export with pairing order and isolation provenance intact
+
 ## Rules for updating this log
 
 - Append entries; never delete or edit history except to add an outcome note dated after the fact.
