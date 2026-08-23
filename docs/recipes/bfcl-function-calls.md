@@ -51,8 +51,13 @@ How you run the repeats determines the declaration:
 - Only declare `fresh-instance` when you have verified each trial starts a new
   conversation context with no carried state.
 
-AgentVerity admits `unknown` evidence with an explicit caveat rather than
-assuming independence, and refuses `shared-session` evidence outright.
+What each declaration does, checked against the tool rather than assumed.
+`assess` reports on every level and never exits non-zero on isolation alone:
+`unknown` and `shared-session` each add an evidence caveat, the second saying
+the interval is narrower than the evidence supports. **The refusal happens at
+baseline admission, not at assessment.** A declared `shared-session` is refused
+a baseline, so an `assess` run that looks acceptable can still be inadmissible.
+Read the caveat, do not read the exit code.
 
 ## Assessing an exported run
 
@@ -72,6 +77,11 @@ agentverity assess --jsonl bfcl-run.jsonl \
   --input-path entry_id --decision-path decision \
   --epsilon 0.05 --isolation unknown
 ```
+
+`unknown` is the default, so that flag changes nothing here. It is written out
+because the declaration is the part of this recipe most likely to be wrong, and
+an explicit `unknown` is a claim you have not verified isolation rather than an
+oversight.
 
 For contract checking against the dataset's ground truth, build a decision
 suite whose allowed and required decisions come from the BFCL expected calls,
