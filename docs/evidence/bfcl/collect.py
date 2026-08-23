@@ -23,6 +23,7 @@ from collections import Counter
 from concurrent import futures
 
 ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
+# Data fetched from gorilla main at commit 6ea57973c7a6097fd7c5915698c54c17c5b1b6c8 (2026-08-23).
 ROOT = pathlib.Path(__file__).resolve().parent
 
 
@@ -39,14 +40,44 @@ def load_jsonl(path: pathlib.Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
+TYPE_ALIASES = {"dict": "object", "float": "number", "double": "number", "int": "integer"}
+TYPE_ALIASES = {
+    "dict": "object",
+    "float": "number",
+    "double": "number",
+    "int": "integer",
+    # BFCL emits python tuples; JSON Schema has none, and an array of the
+    # declared item type carries the same constraint for our purposes.
+    "tuple": "array",
+}
+
+
+def normalise_schema(node):
+    """BFCL schemas use python-flavoured types (dict, float, tuple) that
+    OpenAI-style tool APIs reject. Map them onto JSON Schema equivalents,
+    recursively, before the request leaves."""
+    if isinstance(node, dict):
+        out = {}
+        for key, value in node.items():
+            if key == "type" and isinstance(value, str):
+                out["type"] = TYPE_ALIASES.get(value, value)
+            else:
+                out[key] = normalise_schema(value)
+        return out
+    if isinstance(node, list):
+        return [normalise_schema(item) for item in node]
+    return node
+
+
 def to_openai_tool(fn: dict) -> dict:
     params = fn.get("parameters", {"type": "object", "properties": {}})
-    if isinstance(params, dict) and params.get("type") == "dict":
-        params = dict(params)
-        params["type"] = "object"
     return {
         "type": "function",
-        "function": {"name": safe_name(fn["name"]), "description": fn.get("description", ""), "parameters": params},
+        "function": {
+            "name": safe_name(fn["name"]),
+            "description": fn.get("description", ""),
+            "parameters": normalise_schema(params),
+        },
     }
 
 
@@ -123,18 +154,22 @@ def main() -> int:
                 raise RuntimeError("unreachable")
             usage = body.get("usage") or {}
             spent = (usage.get("cost") or 0.0)
-            name = next(
-                (c["function"]["name"] for c in body["choices"][0]["message"].get("tool_calls") or []
-                 if c.get("function")),
-                "no_call",
-            )
-            return name, spent
+            calls = [
+                {
+                    "name": c["function"]["name"],
+                    "arguments": json.dumps(json.loads(c["function"].get("arguments") or "{}"), sort_keys=True),
+                }
+                for c in body["choices"][0]["message"].get("tool_calls") or []
+                if c.get("function")
+            ]
+            label = "|".join(f"{c['name']}({c['arguments']})" for c in calls) if calls else "no_call"
+            return label, spent
 
         observations = []
         errors = []
         with futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
             pending = [pool.submit(once, i) for i in range(args.repeats)]
-            for future in futures.as_completed(pending):
+            for future in pending:
                 try:
                     name, _ = future.result()
                 except Exception as exc:  # noqa: BLE001 - recorded, not hidden
@@ -164,6 +199,7 @@ def main() -> int:
             "model": args.model,
             "repeats_per_case": args.repeats,
             "source": "berkeley-function-call-leaderboard v4",
+            "upstream_revision": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8",
             "categories": args.cases.name,
             "wall_seconds": round(time.time() - started, 1),
             "observed_cost_usd": round(cost, 4),
