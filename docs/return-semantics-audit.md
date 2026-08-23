@@ -34,10 +34,10 @@ The committed fixture was written by the published 0.20.0 wheel. Run the
 repository script from outside the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v020-members-returns
-/tmp/agentverity-v020-members-returns/bin/pip install agentverity==0.20.0
+python -m venv /tmp/agentverity-v020-returns
+/tmp/agentverity-v020-returns/bin/pip install agentverity==0.20.0
 cd /tmp
-/tmp/agentverity-v020-members-returns/bin/python \
+/tmp/agentverity-v020-returns/bin/python \
   /path/to/agentverity/scripts/audit_return_semantics.py \
   /path/to/agentverity/tests/fixtures/compatibility/v0.20.0/return-semantics.json \
   --expected-version 0.20.0
