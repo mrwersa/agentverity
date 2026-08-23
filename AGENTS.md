@@ -28,7 +28,7 @@ This is the easiest way to break CI without touching library code:
 
 So: change an example or public export → update README/docs and regenerate assets in the same commit.
 
-Run every documented command or example before merging a doc that quotes it. Reading is not verification: two of the last three doc defects were invisible on read and obvious on execution (a missing flag, and sample data that triggered an unrelated warning). Paste the real output into the doc if the example prints something.
+Run every documented command or example before merging a doc that quotes it. Reading is not verification: two of the last three doc defects were invisible on read and obvious on execution (a missing flag, and sample data that triggered an unrelated warning). Paste the real output into the doc if the example prints something. Run every level the prose makes a claim about, not just the happy path: the BFCL recipe shipped claiming isolation refusal at assessment when the refusal lives at baseline admission, and only the unhappy path exposed it.
 
 ## Separate public engagement from private outreach
 
