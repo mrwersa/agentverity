@@ -1,0 +1,70 @@
+{
+  "cases": [
+    {
+      "expected": "calculate_triangle_area",
+      "input": "simple_python_0"
+    },
+    {
+      "expected": "math_factorial",
+      "input": "simple_python_1"
+    },
+    {
+      "expected": "math_hypot",
+      "input": "simple_python_2"
+    },
+    {
+      "expected": "algebra_quadratic_roots",
+      "input": "simple_python_3"
+    },
+    {
+      "expected": "solve_quadratic_equation",
+      "input": "simple_python_4"
+    },
+    {
+      "expected": "solve_quadratic",
+      "input": "simple_python_5"
+    },
+    {
+      "expected": "solve_quadratic",
+      "input": "simple_python_6"
+    },
+    {
+      "expected": "calculate_circumference",
+      "input": "simple_python_7"
+    },
+    {
+      "expected": "geometry_area_circle",
+      "input": "simple_python_8"
+    },
+    {
+      "expected": "geometry_calculate_area_circle",
+      "input": "simple_python_9"
+    }
+  ],
+  "contract": {
+    "allowed": [
+      "algebra_quadratic_roots",
+      "calculate_circumference",
+      "calculate_triangle_area",
+      "geometry_area_circle",
+      "geometry_calculate_area_circle",
+      "math_factorial",
+      "math_hypot",
+      "solve_quadratic",
+      "solve_quadratic_equation"
+    ],
+    "critical": [],
+    "required": [
+      "algebra_quadratic_roots",
+      "calculate_circumference",
+      "calculate_triangle_area",
+      "geometry_area_circle",
+      "geometry_calculate_area_circle",
+      "math_factorial",
+      "math_hypot",
+      "solve_quadratic",
+      "solve_quadratic_equation"
+    ]
+  },
+  "schema": "agentverity.decision-suite/v1"
+}
