@@ -37,6 +37,7 @@ def test_committed_report_matches_the_evidence():
         capture_output=True,
         text=True,
         cwd=BFCL,
+        check=False,
     )
     assert done.returncode == 0, done.stdout + done.stderr
 
@@ -84,7 +85,7 @@ def test_pooled_figures_are_labelled_as_not_a_call():
 def test_reduction_preserves_count_and_order(case):
     """No observation is added, dropped or reordered by the relabelling."""
     sys.path.insert(0, str(BFCL))
-    import reduce as reducer  # noqa: PLC0415
+    import reduce as reducer
 
     observed = case["observations"]
     for fn in (reducer.reduce_exact, reducer.reduce_numeric):
@@ -97,15 +98,33 @@ def test_reduction_preserves_count_and_order(case):
 
 def test_numeric_reduction_touches_only_integer_valued_floats():
     sys.path.insert(0, str(BFCL))
-    import reduce as reducer  # noqa: PLC0415
+    import reduce as reducer
 
-    assert reducer.reduce_numeric('{"a": 10.0}') == '{"a": 10}'
-    assert reducer.reduce_numeric('{"a": 10.000}') == '{"a": 10}'
-    # Non-integral floats, casing and dotted names are left alone.
-    assert reducer.reduce_numeric('{"a": 10.5}') == '{"a": 10.5}'
-    assert reducer.reduce_numeric('{"a": "Washington"}') == '{"a": "Washington"}'
-    assert reducer.reduce_numeric('{"a": "Washington State"}') == '{"a": "Washington State"}'
+    assert reducer.reduce_numeric('f({"a": 10.0})') == 'f({"a": 10})'
+    assert reducer.reduce_numeric('f({"a": 10.000})') == 'f({"a": 10})'
+    assert reducer.reduce_numeric('f({"a": [-2.0, {"b": 3.0}]})') == (
+        'f({"a": [-2, {"b": 3}]})'
+    )
+    # Non-integral floats, strings, casing and dotted names are left alone.
+    assert reducer.reduce_numeric('f({"a": 10.5})') == 'f({"a": 10.5})'
+    assert reducer.reduce_numeric('f({"a": "10.0"})') == 'f({"a": "10.0"})'
+    assert reducer.reduce_numeric('f({"a": "Washington"})') == (
+        'f({"a": "Washington"})'
+    )
+    assert reducer.reduce_numeric('f({"a": "Washington State"})') == (
+        'f({"a": "Washington State"})'
+    )
     assert reducer.reduce_numeric("v1.0.0") == "v1.0.0"
+
+
+def test_numeric_reduction_handles_multiple_calls_and_embedded_pipes():
+    sys.path.insert(0, str(BFCL))
+    import reduce as reducer
+
+    decision = 'first({"value": 1.0})|second({"text": "a|b", "value": 2.0})'
+    assert reducer.reduce_numeric(decision) == (
+        'first({"value": 1})|second({"text": "a|b", "value": 2})'
+    )
 
 
 def test_findings_note_states_the_flip_counts_it_computed():
