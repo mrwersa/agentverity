@@ -37,6 +37,22 @@ in the private funnel.
 - Contributed: technical review of the proposed attempt/isolation fields, three refinements (open isolation string, per-group consistency, ascending-attempt observation order), and confirmation of the conformance-fixture offer
 - Relevance: shapes the interchange format so repeated categorical evidence survives export with pairing order and isolation provenance intact
 
+### 2026-08-23 | Outcome note on both entries above
+
+- Channel: [adhabnr-ux/evalport#22](https://github.com/adhabnr-ux/evalport/discussions/22)
+- Outcome: the EvalPort maintainer confirmed the gap against the enforcement
+  code rather than the spec prose, noting that `validate_result_set()` carries
+  no duplicate `test_case_id` check while `validate_suite()` does, so repeated
+  results are currently unaddressed rather than supported or rejected. They
+  opened an RFC titled for the requirement and credited this project in the
+  title, are leaning toward the additive `attempt` and `isolation` fields on
+  `Result` over fragmenting into separate ResultSets, and took up the
+  conformance-fixture offer. On the LangSmith thread they stated that the
+  adapter's `evaluate()` conversion will adopt whatever repetition semantics
+  land so `num_repetitions` round-trips rather than being flattened.
+- Status: RFC open, nothing merged. This is engagement, not a spec change, and
+  it does not yet meet the Phase 1 pilot definition in the playbook.
+
 ## Rules for updating this log
 
 - Append entries; never delete or edit history except to add an outcome note dated after the fact.
