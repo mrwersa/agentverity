@@ -33,7 +33,7 @@ BY_CASE = {c["input"]: c for c in REPORT["per_case"]}
 def test_committed_report_matches_the_evidence():
     """The artifact is regenerable. A stale report is a silent wrong claim."""
     done = subprocess.run(
-        [sys.executable, str(REDUCE), "--check"],
+        [sys.executable, "-I", str(REDUCE), "--check"],
         capture_output=True,
         text=True,
         cwd=BFCL,
