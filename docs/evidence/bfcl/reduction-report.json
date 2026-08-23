@@ -319,7 +319,7 @@
   },
   "reductions_declared": {
     "exact": "collected decision string, unchanged",
-    "numeric": "integer-valued floats collapsed onto integer form"
+    "numeric": "JSON numbers with integral value collapsed onto integer form, re-serialised with sorted keys"
   },
   "rejects_under_both_reductions": [
     "multiple_7"

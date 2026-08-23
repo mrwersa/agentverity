@@ -150,3 +150,32 @@ def test_findings_names_the_entry_ids_it_is_talking_about():
     run2 = FINDINGS.split("## Run 2")[1]
     assert "multiple_6" in run2
     assert "multiple_7" in run2
+
+
+def test_reserialisation_alone_changes_nothing_on_this_evidence():
+    """The numeric collapse accounts for the whole effect.
+
+    ``reduce_numeric`` re-serialises with sorted keys, which normalises key
+    order and whitespace as well as numeric rendering. Both notes and the
+    workshop appendix say the change of *numeric labelling alone* moves
+    multiple_6 from reject to admit. That sentence is only true while the
+    re-serialisation contributes nothing, so it is pinned rather than assumed.
+    """
+    sys.path.insert(0, str(BFCL))
+    import reduce as reducer
+
+    def reserialise_only(decision: str) -> str:
+        parts = []
+        for item in reducer._split_calls(decision):
+            name, separator, encoded = item.partition("(")
+            if not separator or not encoded.endswith(")"):
+                parts.append(item)
+                continue
+            parts.append(f"{name}({json.dumps(json.loads(encoded[:-1]), sort_keys=True)})")
+        return "|".join(parts)
+
+    for case in EVIDENCE["cases"]:
+        observed = case["observations"]
+        assert reducer.count_flips(
+            [reserialise_only(o) for o in observed]
+        ) == reducer.count_flips(observed), case["input"]
