@@ -1,9 +1,11 @@
 # Window B findings
 
 Collected 2026-08-23 against the same ten reviewed requests, three models,
-146 repeats per request, using the committed collector. Total cost about
-$0.67 across 4,373 observations (nova recorded 7 collection errors, which
-count as observations). The drift criterion was prespecified in
+146 repeats per request, using the committed collector. Total cost $0.6656
+across 4,380 collection attempts over about 14.8 wall-clock minutes. 4,373
+attempts became observations; nova dropped seven failed attempts, leaving one
+request with 139 observations and 69 usable pairs instead of 73. The drift
+criterion was prespecified in
 [PRESPECIFICATION.md](PRESPECIFICATION.md) before this window ran.
 
 ## Primary outcome: zero call-class changes
@@ -22,8 +24,9 @@ three-week gap.
 
 - **Flip counts moved inside their windows**: `approve` went 34/73 to 36/73
   for one model and 26/73 to 24/73 for another; nova moved on seven routes.
-  Every move stays within its own admission class, consistent with sampling
-  variation around an unchanged route rate rather than with provider drift.
+  Every move stays within its own admission class, consistent with sampling variation around an unchanged route rate. That does
+  not exclude provider drift: within-class movement is also what undetected
+  drift would look like.
 - **Modal actions**: one change in thirty comparisons. Nova's
   "I need some testnet funds" request produced `no_tool_selected` (out of
   contract) in Window A and the correct `request_faucet_funds` in Window B.

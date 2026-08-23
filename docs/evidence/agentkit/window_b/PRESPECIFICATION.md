@@ -34,9 +34,9 @@ Requires `OPENROUTER_API_KEY` in the environment. From this directory:
 python3 ./collect.py --factory gpt4o_mini \
   --model "openai/gpt-4o-mini" --out window_b/window-b-gpt4o_mini.json
 python3 ./collect.py --factory mistral_small \
-  --model "mistralai/mistral-small-3.2-24b-instruct" --out window-b-mistral_small.json
+  --model "mistralai/mistral-small-3.2-24b-instruct" --out window_b/window-b-mistral_small.json
 python3 ./collect.py --factory nova \
-  --model "amazon/nova-micro-v1" --out window-b-nova.json
+  --model "amazon/nova-micro-v1" --out window_b/window-b-nova.json
 ```
 
 Then compare each window pair. The Window A evidence files sit in this same

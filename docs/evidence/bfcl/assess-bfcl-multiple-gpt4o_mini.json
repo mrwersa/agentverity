@@ -1,0 +1,76 @@
+{
+  "blindness": {
+    "blind": false,
+    "distinct": 10,
+    "inputs": 10,
+    "layer": "verdict",
+    "majority_verdict": {
+      "kind": "decision",
+      "label": "triangle_properties_get({\"side1\": 5, \"side2\": 4, \"side3\": 3})"
+    },
+    "skew": 0.1,
+    "threshold": 0.9,
+    "warning": null
+  },
+  "caveats": [
+    "the file does not record how trials were isolated, so independence is assumed rather than established"
+  ],
+  "complete": true,
+  "config": {
+    "blindness_threshold": 0.9,
+    "epsilon": 0.05,
+    "error_policy": "record",
+    "k": 146,
+    "layer": "verdict",
+    "max_workers": 1,
+    "reuse_unchanged_calls": true,
+    "run_blindness": true,
+    "run_meter": true
+  },
+  "decision_contract": null,
+  "errors": [],
+  "guidance": {
+    "decision_contract_satisfied": null,
+    "is_blind": false,
+    "is_stochastic": true,
+    "stochastic_routes": null,
+    "suite_is_meaningful": true,
+    "targeted_stochastic_routes": 0,
+    "targeted_undecided_routes": 0,
+    "undecided_routes": null
+  },
+  "input_fingerprints": [
+    "9a4db4ce30a3136b3c78df194aa698620c761970fe136942cac3c4d821a3e05f",
+    "591acd1ea6887c913567c13c07dda5f6d11112178ad5a66556cf6245f42f7641",
+    "ca47ec31bf576f5ccf5a5dbc56e47a7a881abf96896aeb3d5681ab5cb0f14e88",
+    "55ea0dc34451ae2d1b23c2f90c917433076faca17856ddb2186483e88dc4f90d",
+    "84583ecafc63c120adc4375587579c53183b47fd4c71cdda1808484213a73619",
+    "5aa61e30ff8711f2ef0bce601fe02cfa3e8f1f9ecde418ae2e126a81daa68138",
+    "e9a3555dc37fab933bb107de77855e2ddc484a80a8ff51d1e322863339f690be",
+    "775d3aafa6c7b45867cce44adc63d3a4ff91aaaeba9f659f18271fa6918ac2a9",
+    "0a5eaa27488d8073dfa6a6e005f152c4b2eac3b1b8ab1f296837320fd9feab7a",
+    "639510246b94095c22bd5559c843d83aca6e33c7a0f160f001307c9fa70b0ab8"
+  ],
+  "meter": {
+    "advice": "verdict varies across identical runs: use noise-robust relations and compare violations to a measured baseline, not zero.",
+    "call": "verdict-stochastic",
+    "ci_high": 0.0937473013211239,
+    "ci_low": 0.05593295665280397,
+    "epsilon": 0.05,
+    "flip_rate": 0.07260273972602739,
+    "inputs": 10,
+    "inputs_with_flip": 2,
+    "layer": "verdict",
+    "max_repeats": 146,
+    "pair_flips": 53,
+    "pair_trials": 730,
+    "repeats": 146
+  },
+  "relation_coverage": null,
+  "relations": [],
+  "requested_inputs": 10,
+  "route_plans": [],
+  "route_stability": null,
+  "schema": "agentverity.run/v2",
+  "status": "stochastic"
+}

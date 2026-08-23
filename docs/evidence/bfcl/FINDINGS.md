@@ -1,35 +1,47 @@
-# BFCL first-pass findings
+# BFCL findings
 
-First qualification run over Berkeley Function Calling Leaderboard v4 cases,
-stored here. Model: `openai/gpt-4o-mini` via OpenRouter at default sampling.
-Ten consecutive cases from `BFCL_v4_simple_python`, 146 trials per case,
-1,460 observations, zero collection errors, collected 2026-08-23.
+## Run 1 — invocation-consistency smoke test (2026-08-23)
 
-## Result
+Ten consecutive simple-python cases, gpt-4o-mini via OpenRouter at default
+sampling, 146 trials per case, 1,460 observations, zero recorded errors.
 
-**verdict-deterministic, contract satisfied.**
+Result: every trial of every case emitted the case's single available
+function name. Flip rate 0/730 pairs; Wilson upper bound 0.0052; all nine
+distinct ground-truth functions observed under contract check.
 
-- Flip rate 0/730 pairs; Wilson upper bound [0.000, 0.005] at epsilon 0.05.
-- All nine distinct ground-truth functions across the ten cases were observed;
-  the declared decision contract reports 100% intended and 100% observed.
-- Isolation declared `unknown` (OpenRouter routes across providers and
-  instances), so the report carries an independence caveat rather than an
-  assumption.
+**Scope, stated plainly after audit.** Each of these cases exposes exactly one
+function, the collector forces `tool_choice: required`, and arguments were not
+retained in this run. So this measures consistent *emission* of one available
+function name, not tool-selection stability, argument stability, or
+correctness. It also predates the collector fixes that preserve submission
+order, retain arguments, and accumulate cost. Kept as a smoke test only; the
+selection-stability run is the load-bearing artifact.
 
-## What was measured, precisely
+## Run 2 — selection stability over multi-function cases (2026-08-23)
 
-The categorical label per trial is the called **function name**, canonicalised
-to provider-safe characters (BFCL uses namespaced names such as
-`math.factorial`). Parameter values were recorded in raw output but are not
-part of this stability claim. See the recipe's reduction cautions.
+Ten consecutive multiple-category cases (two to several candidate functions
+per case), gpt-4o-mini via OpenRouter at default sampling, 146 trials per
+case, 1,460 observations with schema normalisation (dict to object,
+float to number, tuple to array), submission order preserved, canonicalised
+arguments retained per trial.
 
-## Reproduce
+Result: **verdict-stochastic.** Flip rate 7.3% (53/730 pairs), Wilson interval
+[0.056, 0.094], which exceeds the 5 per cent tolerance, so the rule rejects
+the baseline. Eight of ten cases were perfectly stable; the instability is
+concentrated in two cases:
 
-```bash
-agentverity assess --evidence evidence-bfcl-gpt4o_mini.json \
-  --suite suite-bfcl-simple-python.json --epsilon 0.05
-```
+- one flipped between integer and float renderings of the same numeric value
+  (`"A": 10` versus `"A": 10.0`, 107 versus 39), which is lexical variation
+  that a canonicalising label would collapse;
+- one genuinely varied a location string (`Washington` versus
+  `Washington State`, 122 versus 13).
 
-Collection command and parameters are in `collect.py`. Ground truth comes
-from the BFCL `possible_answer` file, so no label here was written by this
-project.
+So of the 53 observed flips, roughly 39 are canonicalisation artefacts and 13
+are real output variation. The honest reading: the true flip rate is near but
+not obviously below the tolerance on this case set, and argument-level
+stability is measurably worse than function-name stability. This is exactly
+why the reduction granularity must be declared before collection, as the
+recipe says.
+
+Isolation declared `unknown`; the report carries the independence caveat.
+Correctness scoring against BFCL's own evaluator remains future work.
