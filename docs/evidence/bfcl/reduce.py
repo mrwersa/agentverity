@@ -11,9 +11,19 @@ Two reductions are reported side by side:
 ``exact``
     The collected decision string, unchanged.
 ``numeric``
-    Integer-valued floats collapsed onto their integer form, so ``10.0``
-    and ``10`` are the same value. Nothing else is touched. In particular
-    case, spacing, key order and non-integral floats are left alone.
+    The argument object is parsed as JSON, numbers with integral value are
+    collapsed onto their integer form so ``10.0`` and ``10`` are the same
+    value, and the result is re-serialised with sorted keys. Parsing is what
+    keeps a numeric-looking *string* such as ``"10.0"`` untouched.
+
+    Re-serialising also normalises key order and whitespace, which is more
+    than the name suggests, so it is declared here rather than left implicit.
+    On the committed evidence that part is a no-op and the numeric collapse
+    accounts for the whole effect, which is what licenses describing the
+    result as a change of numeric labelling alone. ``test_bfcl_reduction``
+    pins that, because on other evidence it would not be true.
+
+    Case, non-integral floats and string contents are left alone.
 
 Both reductions read the same observations in the same order. The script
 asserts that, rather than trusting it: the reduction is applied pointwise to a
@@ -193,7 +203,10 @@ def analyse(evidence: dict) -> dict:
         "confidence": 0.95,
         "reductions_declared": {
             "exact": "collected decision string, unchanged",
-            "numeric": "integer-valued floats collapsed onto integer form",
+            "numeric": (
+                "JSON numbers with integral value collapsed onto integer "
+                "form, re-serialised with sorted keys"
+            ),
         },
         "per_case": per_case,
         # Pooled figures are reported for completeness and are NOT a call the
