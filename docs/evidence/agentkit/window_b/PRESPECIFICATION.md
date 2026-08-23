@@ -31,16 +31,16 @@ Declared 2026-08-23, before Window B collection started.
 Requires `OPENROUTER_API_KEY` in the environment. From this directory:
 
 ```bash
-python3 ../collect.py --factory gpt4o_mini \
-  --model "openai/gpt-4o-mini" --out window-b-gpt4o_mini.json
-python3 ../collect.py --factory mistral_small \
+python3 ./collect.py --factory gpt4o_mini \
+  --model "openai/gpt-4o-mini" --out window_b/window-b-gpt4o_mini.json
+python3 ./collect.py --factory mistral_small \
   --model "mistralai/mistral-small-3.2-24b-instruct" --out window-b-mistral_small.json
-python3 ../collect.py --factory nova \
+python3 ./collect.py --factory nova \
   --model "amazon/nova-micro-v1" --out window-b-nova.json
 ```
 
-Then compare each window pair. The Window A evidence files sit one directory
-up (`evidence-<model>.json`), so:
+Then compare each window pair. The Window A evidence files sit in this same
+directory (`evidence-<model>.json`), so:
 
 ```bash
 for m in gpt4o_mini mistral_small nova; do

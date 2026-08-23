@@ -1,0 +1,190 @@
+{
+  "changed_routes": [],
+  "drifted": true,
+  "gained_decisions": [],
+  "gained_flip_pairs": [],
+  "independence_note": "agreement between two windows does not establish that trials were independent within either one. Two correlated runs agree comfortably. Isolation was 'fresh-instance' then 'fresh-instance'.",
+  "informational_changes": [
+    {
+      "after": "2026-08-23",
+      "before": "2026-08-01",
+      "key": "collected_at"
+    }
+  ],
+  "isolation": {
+    "after": "fresh-instance",
+    "before": "fresh-instance"
+  },
+  "isolation_changed": false,
+  "lost_decisions": [],
+  "lost_flip_pairs": [],
+  "provenance_changes": [
+    {
+      "after": 0.2409,
+      "before": 0.24,
+      "key": "observed_cost_usd"
+    },
+    {
+      "after": 229,
+      "before": 426,
+      "key": "wall_seconds"
+    },
+    {
+      "after": 6,
+      "before": null,
+      "key": "workers"
+    }
+  ],
+  "routes": [
+    {
+      "after": {
+        "call": "verdict-stochastic",
+        "flips": 36,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-stochastic",
+        "flips": 34,
+        "trials": 73
+      },
+      "decision": "approve",
+      "direction": "higher",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "decision": "fetch_price",
+      "direction": "unchanged",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "decision": "get_balance",
+      "direction": "unchanged",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "decision": "get_portfolio",
+      "direction": "unchanged",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "decision": "get_wallet_details",
+      "direction": "unchanged",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "decision": "native_transfer",
+      "direction": "unchanged",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "decision": "request_faucet_funds",
+      "direction": "unchanged",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-stochastic",
+        "flips": 26,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-stochastic",
+        "flips": 28,
+        "trials": 73
+      },
+      "decision": "transfer",
+      "direction": "lower",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "decision": "unwrap_eth",
+      "direction": "unchanged",
+      "verdict_changed": false
+    },
+    {
+      "after": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "before": {
+        "call": "verdict-deterministic",
+        "flips": 0,
+        "trials": 73
+      },
+      "decision": "wrap_eth",
+      "direction": "unchanged",
+      "verdict_changed": false
+    }
+  ]
+}
