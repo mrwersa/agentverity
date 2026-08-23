@@ -1,0 +1,44 @@
+# Window B findings
+
+Collected 2026-08-23 against the same ten reviewed requests, three models,
+146 repeats per request, using the committed collector. Total cost about
+$0.67 across 4,373 observations (nova recorded 7 collection errors, which
+count as observations). The drift criterion was prespecified in
+[PRESPECIFICATION.md](PRESPECIFICATION.md) before this window ran.
+
+## Primary outcome: zero call-class changes
+
+No request changed its admit / reject / undecided class between windows, on
+any of the three models.
+
+- `gpt4o_mini`: 8 admit, 2 reject — identical to Window A.
+- `mistral_small`: 10 admit — identical to Window A.
+- `nova`: 1 admit, 6 reject, 3 undecided — identical to Window A.
+
+Per the prespecified interpretation: the frozen baselines held across the
+three-week gap.
+
+## Secondary outcomes
+
+- **Flip counts moved inside their windows**: `approve` went 34/73 to 36/73
+  for one model and 26/73 to 24/73 for another; nova moved on seven routes.
+  Every move stays within its own admission class, consistent with sampling
+  variation around an unchanged route rate rather than with provider drift.
+- **Modal actions**: one change in thirty comparisons. Nova's
+  "I need some testnet funds" request produced `no_tool_selected` (out of
+  contract) in Window A and the correct `request_faucet_funds` in Window B.
+  That is a change from out-of-contract to in-contract, and it moved toward
+  correct.
+- **Isolation**: both windows ran fresh-instance; no isolation change.
+- **Errors**: nova recorded 7 collection errors in Window B (none elsewhere),
+  all recorded as observations rather than dropped.
+
+## What this supports
+
+The admitted requests stayed admissible and the rejected requests stayed
+rejected across a three-week gap on hosted models whose versions can change
+without notice. For the tool-selection layer studied here, frozen baselines
+survived their first exposure to operational time. The caveats stand as
+stated in [PRESPECIFICATION.md](PRESPECIFICATION.md): two correlated runs
+agreeing does not prove independence inside either run, one three-week gap is
+one observation, and ten requests bound how far any of this generalises.
