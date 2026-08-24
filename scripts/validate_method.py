@@ -140,19 +140,20 @@ def _curtailed_pairs(
     return endpoint_pairs
 
 
-def _maximum_admissible_flips(
-    *, epsilon: float, endpoint_pairs: int, z: float
-) -> int:
+def _maximum_admissible_flips(*, epsilon: float, endpoint_pairs: int, z: float) -> int:
     """Invert the production continuation helper once for one fixed endpoint."""
     maximum = -1
     for flips in range(endpoint_pairs + 1):
-        if best_case_admission_pairs(
-            epsilon,
-            flips=flips,
-            pairs=endpoint_pairs,
-            max_pairs=endpoint_pairs,
-            z=z,
-        ) is None:
+        if (
+            best_case_admission_pairs(
+                epsilon,
+                flips=flips,
+                pairs=endpoint_pairs,
+                max_pairs=endpoint_pairs,
+                z=z,
+            )
+            is None
+        ):
             break
         maximum = flips
     return maximum

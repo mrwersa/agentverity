@@ -63,9 +63,7 @@ def test_versioned_replays_match_exact_fixed_endpoint_boundaries():
     assert fixture["schema"] == "agentverity.curtailment-replay/v1"
 
     for scenario in fixture["scenarios"]:
-        result, calls = _replay(
-            scenario["prefix_outcomes"], scenario["endpoint_pairs"]
-        )
+        result, calls = _replay(scenario["prefix_outcomes"], scenario["endpoint_pairs"])
         stop = result.curtailment
         expected = scenario["expected_stopping_pair"]
         if expected is None:
@@ -183,9 +181,7 @@ def test_snapshot_admission_refuses_a_curtailed_run_explicitly():
         create_snapshot(result, approved=True)
 
 
-def test_run_cli_reports_curtailment_as_a_finding(
-    monkeypatch, tmp_path, capsys
-):
+def test_run_cli_reports_curtailment_as_a_finding(monkeypatch, tmp_path, capsys):
     """The live option reaches the runner and retains an interpretable exit."""
     inputs = tmp_path / "inputs.txt"
     inputs.write_text("case\n", encoding="utf-8")
