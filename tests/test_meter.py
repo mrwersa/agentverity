@@ -110,6 +110,8 @@ class TestMeasure:
         assert result.pair_flips == 0
         assert result.call == "verdict-deterministic"
         assert result.flip_rate == 0.0
+        assert "repeatability is qualified" in result.advice
+        assert "regression reference" in result.advice
 
     def test_stochastic_agent(self):
         """A stochastic agent should meter as stochastic."""
@@ -126,6 +128,7 @@ class TestMeasure:
         result = measure(agent, ["hello", "world", "foo"], k=5)
         assert result.pair_flips > 0
         assert result.call == "verdict-stochastic"
+        assert "measured regression reference" in result.advice
 
     def test_k_must_be_at_least_2(self):
         def fn(x: str) -> str:

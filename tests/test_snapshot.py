@@ -36,7 +36,7 @@ def _result(agent=_gate, inputs=INPUTS):
 
 
 def test_snapshot_requires_explicit_reference_approval():
-    with pytest.raises(SnapshotRefused, match="explicit approval"):
+    with pytest.raises(SnapshotRefused, match="repeatability is not correctness"):
         create_snapshot(_result(), approved=False)
 
 
