@@ -202,6 +202,32 @@ def test_the_docs_pin_names_the_current_minor_series() -> None:
     ]
     assert not stale, f"docs pin {', '.join(stale)}; this release is {version}"
 
+    stability = (root / "STABILITY.md").read_text(encoding="utf-8")
+    assert f"accepts compatible `{major}.{minor}.x` fixes" in stability
+
+
+def test_public_positioning_and_machine_terms_are_kept_separate() -> None:
+    """Entry points should explain the method without renaming API values."""
+    root = pathlib.Path(__file__).resolve().parents[1]
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    roadmap = (root / "ROADMAP.md").read_text(encoding="utf-8")
+    pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
+
+    positioning = (
+        "Qualify repeated categorical AI-agent evidence before it becomes a "
+        "regression reference"
+    )
+    assert positioning in pyproject
+    assert "regression reference" in readme
+    assert "regression reference" in roadmap
+    for current, explanatory in (
+        ("`deterministic`", "repeatability qualified"),
+        ("`stochastic`", "repeatability rejected"),
+        ("`undecided`", "inconclusive"),
+    ):
+        assert current in roadmap
+        assert explanatory in roadmap
+
 
 def test_the_roadmap_opener_tracks_the_current_release_series() -> None:
     """The roadmap's release framing should not lag the package version.

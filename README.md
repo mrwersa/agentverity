@@ -9,10 +9,10 @@
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
 AgentVerity is an offline Python library and CLI that qualifies repeated,
-categorical AI-agent decisions before you save them as a **regression
-baseline**—a reviewed reference for future releases. It finds unstable routes,
-weak decision coverage, and runs too small to support a conclusion. It does
-not judge whether an answer is correct.
+categorical AI-agent evidence before it becomes a **regression reference** for
+future releases. It finds routes whose repeatability is rejected, weak decision
+coverage, and runs too small to support a conclusion. It does not judge whether
+an answer is correct.
 
 ## The 60-second problem
 
@@ -36,7 +36,7 @@ The quality policy accepts both answers, but a reference that switches queues
 will make later regression checks noisy. The changing route is `stochastic`;
 the five quiet routes are `undecided` because 13 pairs are too few to certify
 them separately. A **flip** means the two observations in a paired rerun
-differed. AgentVerity therefore refuses this run as a baseline.
+differed. AgentVerity therefore refuses this evidence as a regression reference.
 
 ## Try it without model calls
 
@@ -86,11 +86,15 @@ print(result.summary())
 
 ## What it decides
 
-AgentVerity keeps three statistical outcomes separate:
+AgentVerity keeps three API outcomes separate and explains them in
+repeatability terms:
 
-- `deterministic`: enough evidence supports the declared tolerance
-- `stochastic`: decision changes exceed that tolerance
-- `undecided`: the run supports neither conclusion
+- `deterministic`: repeatability qualified; evidence supports the tolerance
+- `stochastic`: repeatability rejected; changes exceed the tolerance
+- `undecided`: inconclusive; the evidence supports neither direction
+
+These strings remain the public machine contract. `deterministic` does not
+claim that the underlying agent has zero randomness.
 
 It then checks whether the probe set collapsed onto one decision and, when a
 decision contract is supplied, whether every required route was intended and
@@ -107,7 +111,7 @@ changed flip pairs, isolation, and provenance.
 | Layer | Question |
 |---|---|
 | Promptfoo, DeepEval, Ragas, or labelled assertions | Was the answer acceptable? |
-| **AgentVerity** | **Is the repeated categorical evidence strong enough to freeze?** |
+| **AgentVerity** | **Is the repeated categorical evidence strong enough to preserve as a regression reference?** |
 | LangSmith, Phoenix, AgentCore, or another trace system | What happened during the run and in production? |
 | Security and authority tests | Was the agent allowed to take that action? |
 
@@ -122,7 +126,7 @@ a bounded route or approval, AgentVerity can qualify that decision layer.
 | `agentverity plan` | Price the best-case evidence budget without calling an agent |
 | `agentverity run` | Collect and assess isolated repeated decisions |
 | `agentverity assess` | Assess Promptfoo, DeepEval, JSONL, or native evidence |
-| `agentverity snapshot` | Admit a human-reviewed reference when evidence permits |
+| `agentverity snapshot` | Admit a human-reviewed regression reference when evidence permits |
 | `agentverity check` | Re-run the admission policy and compare with a snapshot |
 | `agentverity compare-evidence` | Compare two independently collected evidence windows |
 
@@ -133,7 +137,7 @@ out. With no observed changes:
 
 - 36 independent pairs bound the change rate below about 9.6%
 - a claim below 5% needs 73 pairs
-- a short quiet run is therefore `undecided`, not proven stable
+- a short quiet run is therefore `undecided`, not repeatability qualified
 
 AgentVerity sizes calls from the tolerance, uses non-overlapping pairs, and
 places a Wilson interval around the flip rate. Optional sequential collection
@@ -145,21 +149,22 @@ all-agree continuation could admit within a predeclared pair budget. It may
 justify stopping an impossible run early; it never creates an early admission.
 
 Use `agentverity plan --suite examples/route_stability_plan.json` before
-spending remote calls. The [method guide](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
+spending remote calls. The [decision repeatability method guide](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
 explains the arithmetic, and the [validation artifact](https://github.com/mrwersa/agentverity/blob/main/docs/method-validation.md)
 records exact-boundary checks and dependence stress tests.
 
 ## The evidence gate
 
-`snapshot` refuses a baseline until calls complete, the evidence supports the
-declared stability and coverage policy, and a person approves the reference as
-correct. The bundled offline example shows why correctness alone is not enough:
+`snapshot` refuses a regression reference until calls complete, the evidence
+supports the declared repeatability and coverage policy, and a person approves
+the reference as acceptable. The bundled offline example shows why correctness
+alone is not enough:
 
 ```bash
 python examples/payment_dispute_gate.py
 ```
 
-| Probe set | Exact-match | Verdict stability | Declared coverage | Baseline |
+| Probe set | Exact-match | Verdict repeatability | Declared coverage | Reference |
 |---|---|---|---|---|
 | Narrow, 6 duplicate-charge cases | ✅ 6/6 | ✅ verdict-deterministic | ❌ 1/6 required routes | ❌ REFUSED |
 | Repaired, 6 dispute categories | ✅ 6/6 | ✅ verdict-deterministic | ✅ 6/6 required routes | ✅ ADMITTED |
@@ -172,14 +177,14 @@ Real-system evidence is also committed and reproducible without new calls:
   production-shaped integration while explicitly stopping short of per-route
   certification.
 - The [AgentKit study](https://github.com/mrwersa/agentverity/tree/main/docs/evidence/agentkit) records 4,380 calls across
-  three models and shows that the most stable model can be less correct.
+  three models and shows that the most repeatable model can be less correct.
 
 Never repeat live customer requests. Use reviewed synthetic cases in CI,
 before release, or on a schedule.
 
 ## What it does not prove
 
-`TRUSTWORTHY` means the supplied cases produced stable, non-collapsed evidence
+`TRUSTWORTHY` means the supplied cases produced repeatable, non-collapsed evidence
 at the declared tolerance and satisfied any declared decision contract. It
 does not prove correctness, safety, semantic diversity, complete behavioural
 coverage, provider independence, or production reliability. AgentVerity also
@@ -188,7 +193,7 @@ answers.
 
 ## Documentation
 
-- **Start:** [applicability and limits](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md),
+- **Start:** [concepts, applicability, and limits](https://github.com/mrwersa/agentverity/blob/main/docs/applicability.md),
   [runnable examples](https://github.com/mrwersa/agentverity/tree/main/examples),
   and the [API guide](https://github.com/mrwersa/agentverity/blob/main/docs/api.md)
 - **Use existing tools:** [imported evidence](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md),
@@ -196,9 +201,9 @@ answers.
   and the [importer conformance contract](https://github.com/mrwersa/agentverity/blob/main/docs/integration-contract.md)
 - **Framework recipes:** [qualifying Inspect AI epoch runs](https://github.com/mrwersa/agentverity/blob/main/docs/recipes/inspect-ai-epochs.md)
   and [qualifying repeated BFCL function-call runs](https://github.com/mrwersa/agentverity/blob/main/docs/recipes/bfcl-function-calls.md)
-- **Understand the method:** [decision stability](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md),
+- **Understand the method:** [decision repeatability](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md),
   [per-route evidence](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md),
-  and [categorical evaluator stability](https://github.com/mrwersa/agentverity/blob/main/docs/evaluator-stability.md)
+  and [categorical evaluator repeatability](https://github.com/mrwersa/agentverity/blob/main/docs/evaluator-stability.md)
 - **Operate safely:** [security](https://github.com/mrwersa/agentverity/blob/main/SECURITY.md),
   [data-retention audit](https://github.com/mrwersa/agentverity/blob/main/docs/security-data-audit.md),
   and [API stability](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)

@@ -1,11 +1,11 @@
 # Roadmap
 
-AgentVerity answers one question: **is this repeated categorical evidence
-strong enough to save as a regression baseline?** It does not decide whether
-an answer is correct, safe, or useful. This roadmap turns the
+AgentVerity qualifies repeated categorical AI-agent evidence before it becomes
+a **regression reference**. It does not decide whether behaviour is correct,
+safe, or useful. This roadmap turns the
 [agentic AI landscape review](docs/agentic-ai-landscape.md) into an OSS-first,
-evidence-led 12-month plan. It is direction, not a release promise;
-`DESIGN.md` retains milestone and architectural-decision history.
+outcome-gated plan. Horizons guide sequencing rather than promise dates;
+`DESIGN.md` retains shipped milestones and architectural decisions.
 
 ## Current state
 
@@ -17,122 +17,147 @@ loop for bounded categorical decisions.
 | Price and collect | `plan`, `run` | Fixed or predeclared sequential budgets; callable, Strands, and LangGraph adapters |
 | Reuse evidence | `assess` | Promptfoo, DeepEval test cases, and generic JSONL raw runs; aggregates refused |
 | Qualify | report | Wilson-bound tri-state calls, per-route evidence, blindness, relations, and declared contracts |
-| Admit and revisit | `snapshot`, `check`, `compare-evidence` | Versioned baselines, drift checks, isolation policy, and independent evidence-window comparison |
+| Admit and revisit | `snapshot`, `check`, `compare-evidence` | Versioned regression references, drift checks, isolation policy, and independent evidence-window comparison |
 | Automate | terminal, JSON, JUnit, OTEL | CI-friendly outputs and privacy-minimised telemetry |
 
-CI covers Python 3.10–3.14, enforces Ruff and at least 90% statement coverage,
-and builds and smoke-tests the wheel. AgentKit and AgentCore assets exercise
-real integration paths. Preliminary compatibility audits cover the current
-public structure and representative behaviour, but independent adoption,
-documentation parity, and final security and release review remain open.
+Method validation, compatibility inventories, durable reader fixtures, CLI
+exit contracts, return-semantics checks, and a data-retention matrix make the
+current claims reviewable. The integration conformance kit covers all in-tree
+importers. Independent adoption, an independently maintained integration,
+expert statistical review, and the final security and 1.0 reviews remain open.
+
+## Product model
+
+AgentVerity evaluates a declared categorical projection of a trace, not the
+complete trace:
+
+```text
+trace
+  -> declared categorical projection
+  -> ordered repeated decisions
+  -> disjoint-pair flips
+  -> repeatability qualification
+```
+
+Acceptability review and repeatability qualification are independent
+prerequisites. When both hold, a snapshot may preserve the reviewed behaviour
+as a regression reference. A later release can then be checked against that
+reference or compared as a separate evidence window.
+
+The product develops through four connected pillars:
+
+- **Evidence semantics:** projection, decision identity, ordering, pairing,
+  isolation, and provenance must be explicit.
+- **Regression-reference lifecycle:** collect or import, qualify, review,
+  snapshot, check, and compare without conflating repeatability with quality.
+- **Interoperability:** consume evidence from evaluators and trace systems
+  without recreating their scoring or observability features.
+- **Statistical trust:** state the independence, optional-stopping, per-case,
+  dependence, and multiple-comparison limits of every guarantee.
+
+### Terminology
+
+Existing API values and schema literals remain stable while explanatory prose
+uses the narrower research terms.
+
+| Current API term | Preferred explanatory term | Meaning |
+|---|---|---|
+| `deterministic` | repeatability qualified or admitted | Evidence supports a flip rate below the declared tolerance; it does not prove zero randomness |
+| `stochastic` | repeatability rejected | Evidence supports a flip rate above the declared tolerance |
+| `undecided` | inconclusive | Neither directional conclusion is supported |
+| snapshot | regression-reference snapshot | Reviewed behaviour preserved for a later comparison |
+| baseline | regression reference in new prose | The expected reviewed behaviour, not a competing model or experiment |
+
+Any API alias or schema migration requires a separate pre-1.0 decision. The
+current strings remain the machine contract until then.
 
 ## Decision rules
 
-- Build from observed adopter evidence, not a competitor checklist.
-- Import raw ordered trials with provenance; never infer stability from
+- Build terminology and the proven curtailment method from current evidence;
+  gate new schemas, statistical guarantees, and vendor importers on external
+  cases.
+- Import raw ordered trials with provenance; never infer repeatability from
   aggregates.
-- Require simulation and a written guarantee for statistical changes.
-- Preserve backward compatibility unless a versioned schema migration has a
+- Require simulation, a written guarantee, and an ADR for statistical changes.
+- Preserve backward compatibility unless a versioned migration has a
   demonstrated auditability benefit.
-- A gate marked “defer” means document the unmet condition and stop; it does
-  not mean ship an approximation.
+- Prefer an existing snapshot, report, or provenance field over a duplicate
+  manifest or explanation surface.
+- A “defer” gate means record the unmet condition and stop. It does not mean
+  ship an approximation.
 
-## Phase 1: 0–3 months — validate the problem
-
-| Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |
-|---|---|---|---|---|
-| Design-partner acquisition | With little external adoption, validation will not arrive by itself. Build a qualified pipeline through direct maintainer outreach, evaluation communities, integration partners, and one concise call for evidence. | 20 relevant teams contacted; six discovery conversations; three qualified pilot commitments; source and rejection reasons recorded | Clear fit/no-fit copy and ethical, targeted outreach; low response rates and unrepresentative networks | Run this before feature discovery; if 20 relevant teams have been contacted and fewer than three serious conversations result, revisit positioning and channels rather than lowering the pilot bar |
-| Independent design partners | Maintainer-controlled examples do not prove usefulness. Observe real qualification decisions and publish credible case studies. | Three independent teams complete a trial; two redistributable evidence fixtures or case studies; findings logged, including failures | Acquisition pipeline, hands-on support, and permission to publish; selection bias and support burden | Continue feature work only where at least two teams share the problem; otherwise narrow the claim |
-| Onboarding and category clarity | Users confuse stability with correctness or do not know whether their agent fits. Make fit, non-fit, and first result understandable in one session. | Five fresh-user walkthroughs; four reach an interpretable report in 15 minutes; no participant mistakes `TRUSTWORTHY` for correctness after reading the result | Stable quickstart and representative sample; risk of optimizing only for experts | Build copy/examples from observed confusion; defer UI work unless the CLI is the measured blocker |
-| Integration demand discovery | LangSmith and telemetry exports vary, so guessed importers would be brittle. Collect real raw-run shapes and rank demand. | At least three samples from two organizations and two source systems; each can identify input, decision, trial order, and isolation or expose the missing field | Data-sharing/privacy constraints and changing exports | No vendor importer without three independent requests plus testable fixtures; publish a mapping recipe instead |
-| Method validation | Unit tests do not independently validate coverage, optional-stopping behaviour, or dependence sensitivity. Make the statistical claim reproducible and reviewable. | Public simulation notebook/script reproduces boundary behaviour; review by one independent statistician or evaluation researcher; discrepancies become tracked decisions | Reviewer availability; simulations can reveal redesign needs | Fix correctness findings before integrations; defer new methods that lack a precise guarantee |
-
-Acquisition starts with the public [design-partner pilot](docs/design-partners.md)
-and the maintainer [acquisition playbook](docs/design-partner-playbook.md). These
-make the funnel executable; the roadmap outcome remains open until the contact,
-conversation, and pilot metrics are actually met.
-
-Method validation now has a reproducible [simulation and exact-boundary
-cross-check](docs/method-validation.md), including an independence sensitivity
-model. It confirms conservative baseline admission under independent pairs,
-documents Wilson's nominal rather than exact two-sided calibration, and shows
-why declared isolation is load-bearing. Its exact continuation table also
-separates fixed-count best-case admission from fixed-rate projection without
-weakening the no-optional-stopping rule. Independent expert review remains
-open.
-
-## Phase 2: 3–6 months — interoperate where demand is proven
+## Now–6 weeks: clarify and productise the proven method
 
 | Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |
 |---|---|---|---|---|
-| LangSmith evidence import | Teams should qualify existing trials without duplicate model calls. Map raw repetitions and trajectories into AgentVerity evidence with explicit ordering and provenance. | Two external projects use it; golden fixtures cover export changes and rejection paths; no mandatory LangSmith runtime dependency | Phase 1 samples and a stable export/API contract; vendor drift and ambiguous sessions | Build only after the demand threshold above; defer when isolation or trial order cannot be recovered |
-| OpenTelemetry/OpenInference ingestion | Traces should be reusable across backends without one adapter per vendor. Define a strict mapping for categorical trials. | Fixtures from at least two backends produce identical evidence; ambiguous/missing attributes fail with actionable diagnostics | OpenTelemetry/OpenInference conventions and real span samples; telemetry rarely carries reviewed contracts | Build an importer only if the mapping is unambiguous; otherwise ship a producer recipe or sidecar contract |
-| Integration contract and fixture kit | Contributors need a stable way to add sources without weakening evidence. Make raw-run requirements and conformance tests reusable. | One independently contributed integration; all importers pass ordering, aggregate-refusal, provenance, and round-trip fixtures | Documented minimal protocol and review capacity; surface-area growth | Accept an integration only with a maintainer, fixtures, and a real adopter; otherwise keep it external |
-| Cross-tool release-gate examples | Users need to see evaluator, trace system, and qualifier working together. Demonstrate complementarity rather than replacement. | Two reproducible examples use an external grader/runner plus AgentVerity; costs and non-guarantees are explicit | Partner fixtures and stable integrations; examples can become marketing without evidence | Publish only reproducible, version-pinned cases; defer unsupported logos and claims |
+| Terminology and concepts | “Baseline” is overloaded, while “deterministic” can sound absolute. Give readers one path from trace projection to regression reference without breaking machine contracts. | Active entry-point prose uses regression reference and within-condition repeatability; the terminology map is linked; five fresh-user walkthroughs find the fit boundary | Existing links and literal API values; a broad mechanical rename could corrupt history or compatibility artefacts | Change explanatory prose now; defer public aliases and file/schema renames to a separate reviewed migration |
+| Live fixed-budget curtailment | A run can keep spending after admission is mathematically unreachable. Stop futile collection without creating early admission. | An opt-in fixed-budget run stops at the first unreachable pair; reports stop pair, avoided work, and reason; exact-boundary and replay fixtures agree; snapshot admission and existing defaults are unchanged | A predeclared endpoint and ordered pairs; partial evidence must not be labelled with an unobserved final reject/undecided class | Ship only after ADR, simulation, compatibility review, and proof that no path admits early; otherwise retain the read-only planning helper |
+| Design-partner acquisition | Maintainer-controlled studies do not establish external usefulness. Keep validation running alongside no-regret product work. | 20 relevant teams contacted; six discovery conversations; three qualified pilot commitments; source and rejection reasons recorded privately | Clear fit/no-fit copy, ethical outreach, and support capacity; public ecosystem participation can be mistaken for adoption | If 20 relevant teams yield fewer than three serious conversations, revisit positioning and channels rather than lowering the pilot bar |
+| Independent cases | Users need evidence that the qualification decision changes real release work. | Three teams complete a pilot; two redistributable fixtures or case studies include costs, refusals, and negative findings | Permission to publish and representative systems; selection bias | Do not generalise a feature or claim from one maintainer-owned workload |
 
-The integration contract now has shared ordered-run and aggregate fixtures,
-and Promptfoo, DeepEval, and generic JSONL pass the same provenance, isolation,
-ordering, refusal, and round-trip checks. The item remains open until an
-independently contributed integration meets its adopter and maintenance gate.
+Acquisition uses the public [design-partner pilot](docs/design-partners.md) and
+the private-process [acquisition playbook](docs/design-partner-playbook.md).
+Entries in the public ecosystem log do not count as contacts, discovery, or
+pilots unless a separate interaction satisfies the playbook definition.
 
-## Phase 3: 6–12 months — harden provenance and prepare 1.0
+## 1–3 months: make evidence understandable and auditable
 
 | Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |
 |---|---|---|---|---|
-| Verifiable provenance | Declared isolation does not prove distinct executions, and snapshots cannot fully identify the tested target. Preserve enough identity for audits without collecting secrets. | External cases validate optional trial/execution IDs and target revision identities; privacy review completed; old evidence remains readable | Schema design and real audit requirements; identifiers can leak or imply guarantees they do not provide | Version the schema only after two external cases require the same fields; otherwise retain declarations and caveats |
-| Statistical hardening | Individual route intervals may be mistaken for a suite-wide guarantee, and correlated trials can be overconfident. Quantify or explicitly bound those limitations. | Simulation suite covers dependence and multiple routes; docs distinguish individual and family-wise claims; one reviewed decision on optional suite-wide control | Phase 1 method review; added conservatism may make call budgets impractical | Build an opt-in method only with a named guarantee and acceptable measured cost; otherwise document and defer |
-| Ecosystem partnerships | A qualifier is useful only when it fits existing evaluation stacks. Establish maintained, reciprocal interoperability. | Three active ecosystem relationships; two partner-maintained fixtures or references; three independent public cases in total | Partner priorities and maintenance ownership; concentration risk | Count a partnership only when users can run an artifact, not when a logo or announcement exists |
-| 1.0 readiness | Adopters need durable APIs, schemas, and migration behaviour. Complete the alpha exit criteria in `STABILITY.md`. | Public API/CLI/schema audit; cross-version fixtures; clean security review; independent integration; documentation parity; supported-version policy | All prior evidence and maintainer capacity; premature stability can freeze mistakes | Release 1.0 only when every criterion is evidenced; otherwise continue 0.x without deadline pressure |
+| Onboarding and result explanation | Users can mistake qualification for correctness or fail to understand an inconclusive result. Improve existing reports before adding another command. | Four of five fresh users reach an interpretable result within 15 minutes; none mistakes qualification for correctness; recurring questions become tested guidance | Representative walkthroughs; report prose is a compatibility-sensitive surface | Add `explain` only if users need a post-hoc workflow that existing summaries and refusals cannot serve |
+| Decision-projection identity | A change to trace-to-decision projection can silently change the measured object. Define how name, version, and bounded domain belong in provenance. | ADR covers identity, privacy, comparison, and migration; two external audit cases agree on the required fields | Existing arbitrary provenance and expected decisions may already suffice; identifiers can leak details or imply validation | Use existing provenance first; change evidence or snapshot schemas only after two external cases require the same structured contract |
+| Regression-reference view | Snapshot evidence is machine-readable but not always easy to audit. Make the existing snapshot legible rather than inventing a second manifest. | One human-readable view exposes projection, tolerance, confidence, pairing, budget, observed evidence, isolation, approval, and limits from the snapshot/report source of truth | Some fields are not yet structured; duplicated artefacts can drift | Render existing data when possible; defer new fields to the projection/provenance gate |
 
-The current loaders now read and canonically rewrite durable fixtures produced
-by 0.16.0. This closes the earlier-minor fixture check for the supported schema
-set; the final API/CLI audit, security review, and independent integration keep
-1.0 readiness open.
+## 3–6 months: interoperate through evidence-preserving standards
 
-The 0.19.0 compatibility baseline is now machine checked across top-level
-signatures and CLI options, all six commands' 0/1/2 exit classes,
-representative Python return semantics, all exported class members, and every
-in-tree data-retention surface. These artefacts make drift reviewable; they do
-not replace help/documentation parity, independent adoption, security review,
-or final release review.
+| Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |
+|---|---|---|---|---|
+| EvalPort repetition contract | A vendor-neutral interchange can preserve attempts, ordering, and isolation for several producers at once. Contribute conformance evidence rather than create a private dialect. | A merged repetition/isolation contract passes shared ordered-run and aggregate-refusal fixtures; one external producer and consumer round-trip it | The public RFC may change or stall; a specification can promise more than implementations enforce | Supply fixtures if the RFC lands; keep the bridge external while semantics remain unsettled |
+| LangSmith evidence path | Teams should reuse repeated experiments without duplicate model calls. Prefer the EvalPort bridge, with a direct importer only when it cannot preserve required evidence. | Two external projects qualify exported repetitions; case identity, attempt order, decision, provenance, and isolation survive; no mandatory LangSmith dependency | Stable export/API samples and EvalPort support; CSV or aggregate views may flatten repetitions | Build direct support only when two adopters demonstrate a gap and provide testable raw fixtures |
+| OpenTelemetry/OpenInference mapping | Trace standards identify agents, tools, and evaluators but do not by themselves establish AgentVerity’s evidence contract. Publish the missing requirements clearly. | A recipe maps fixtures from two backends to identical evidence or produces actionable refusals for ambiguous order/isolation | Real span samples and a declared categorical projection; sensitive trace attributes | Build ingestion only when the mapping is unambiguous across two backends; otherwise keep a producer recipe |
+| Maintained integration contract | In-tree adapters must not weaken ordering, provenance, isolation, or aggregate refusal. | Two external adopters, versioned success and rejection fixtures, optional dependencies, a named maintainer, and one independently contributed integration | Contributor and maintenance capacity; vendor drift | Keep integrations external when ownership or a real adopter is missing |
+
+## 6–12 months: extend the method and prepare 1.0
+
+| Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |
+|---|---|---|---|---|
+| Identity-aware qualification | Pairwise disagreement can be low while decisions consistently disagree with an accepted category. Research reference fidelity separately from repeatability. | ADR and simulation distinguish pairwise disagreement `q` from mismatch `r = P(D != d*)`; a precise guarantee and independent review precede any API | Expected decisions already exist, but a second rate changes statistical meaning and call budgets | Do not implement from intuition or reuse `q` as a proxy for `r`; defer if the guarantee or cost is not acceptable |
+| Suite-wide statistical decision | Per-case intervals can be mistaken for a family-wise guarantee. Determine whether control across routes/cases is useful at an affordable budget. | Simulation quantifies cost; docs distinguish individual and suite-wide claims; one reviewed build/defer decision is recorded | Design-partner risk priorities and method review; conservatism may make evidence unaffordable | Ship only an opt-in method with a named guarantee and measured cost; otherwise document and defer |
+| Structured provenance | Auditors may need projection and target revision identity beyond declarations. Preserve only fields justified by real cases. | Two external audits require the same fields; privacy review passes; old evidence remains readable or has an explicit migration | Schema design and data minimisation; identifiers are not anonymisation | No schema change for speculative completeness |
+| 1.0 readiness | Adopters need durable APIs, schemas, and migration behaviour. Complete every criterion in `STABILITY.md`. | Final API/CLI/schema and documentation review; compatibility fixtures; independent integration; independent security and statistical review; supported-version policy | Evidence from prior phases and maintainer capacity; premature stability can freeze confusing terms | Release 1.0 only when every criterion is evidenced; continue 0.x without deadline pressure otherwise |
 
 ## Delivery and release strategy
 
 Each roadmap item is one reviewable branch and pull request. Finish its stated
-artifact and checks, request independent review, apply accepted feedback, and
-merge before starting the next item. Do not combine unrelated roadmap items to
-manufacture a larger release. A PR is the unit of review; a package release is
-triggered only by user-visible package behaviour, following `RELEASING.md`.
+artefact and checks, request independent review, apply accepted feedback, and
+merge before starting the next implementation item. A PR is the unit of review;
+a package release is triggered only by user-visible package behaviour under
+`RELEASING.md`.
 
 | Change delivered | Release treatment |
 |---|---|
-| Strategy, research, outreach records, evidence, or internal documentation only | Merge without a PyPI release; GitHub is the delivery surface |
-| Backward-compatible importer, CLI option, or public API capability | Normally the next 0.x minor release, with a dated changelog and migration notes where relevant |
+| Roadmap, research, terminology prose, outreach records, or internal documentation | Merge without a PyPI release; GitHub is the delivery surface |
+| Backward-compatible importer, CLI option, or public Python capability | Normally the next 0.x minor release with a dated changelog |
 | User-facing defect fixed without changing accepted inputs or contracts | Patch release |
-| Evidence-schema, admission-policy, or statistical guarantee change | 0.x minor release only after ADR, simulation, cross-version fixtures, and explicit compatibility notes |
-| 1.0 | Release only when every `STABILITY.md` criterion and the Phase 3 gate is evidenced; never release it to satisfy a calendar target |
-
-Batch multiple changes that land on the same day when they belong to one
-coherent release, but do not let a completed user-visible change sit
-unreleased. After publication, verify the GitHub Release, PyPI version, clean
-installation, and CLI smoke test as required by `RELEASING.md`.
+| Evidence schema, admission policy, terminology alias, or statistical guarantee | 0.x minor only after ADR, simulation where applicable, cross-version fixtures, and compatibility notes |
+| 1.0 | Release only when every `STABILITY.md` criterion and the final phase gate is evidenced; never release to satisfy a calendar target |
 
 ## Ongoing scorecard
 
-Review quarterly: independent active users; completed qualification runs;
+Review quarterly: active independent users; completed qualification runs;
 public and private case studies; time to first interpretable result; evidence
-reused without new model calls; external integration requests and contributors;
-schema rejection reasons; false-green or misleading-report incidents; and
-maintenance cost per integration. Stars and downloads are distribution signals,
-not proof that the admission policy works.
+reused without new model calls; curtailment savings; integration requests and
+external contributors; schema rejection reasons; misleading-report incidents;
+and maintenance cost per integration. Stars and downloads are distribution
+signals, not proof that the qualification policy works.
 
 ## Permanent boundaries
 
 AgentVerity will not become a correctness or safety judge, production agent
 server, trace database, dashboard suite, red-team scanner, general benchmark,
 or open-ended response scorer. It may qualify a bounded categorical judge or
-trajectory equivalence relation, but it does not validate that judge's rubric.
+trajectory projection, but it does not validate the rubric or projection.
 Traffic weighting may be reported beside risk-weighted route evidence, never
-used as a substitute for semantic coverage. Multi-turn and partial-order
-trajectories remain deferred until independent cases establish a bounded
-decision representation that the current model cannot express.
+used instead of semantic coverage. Multi-turn and partial-order trajectories
+remain deferred until independent cases establish a bounded decision
+representation that the current model cannot express.

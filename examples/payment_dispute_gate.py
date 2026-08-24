@@ -2,8 +2,8 @@
 
 Both probe sets score 6/6 against their expected routes. The narrow set only
 exercises one verdict, so AgentVerity refuses to freeze it as a system-wide
-baseline. The repaired set crosses the router's decision boundary and is
-admitted.
+regression reference. The repaired set crosses the router's decision boundary
+and is admitted.
 
 Run from the repository root:
 
@@ -144,14 +144,14 @@ def _print_suite(
     print(f"Exact-match evaluator: {correct}/{total} correct")
     print(f"Verdict mix: {mix}")
     print(f"AgentVerity: {result.headline}")
-    print(f"Baseline: {snapshot_state}")
+    print(f"Reference: {snapshot_state}")
     print()
 
 
 def _markdown_row(label: str, result: RunResult, cases: tuple[Case, ...]) -> str:
     """One probe set as a single comparison row."""
     correct, total = _evaluate(cases)
-    stability = result.meter.call if result.meter else "not measured"
+    repeatability = result.meter.call if result.meter else "not measured"
     assert result.decision_coverage is not None
     observed = len(DECISION_CONTRACT.required or ()) - len(
         result.decision_coverage.missing_observed
@@ -162,14 +162,14 @@ def _markdown_row(label: str, result: RunResult, cases: tuple[Case, ...]) -> str
         if result.decision_coverage.satisfied
         else f"❌ {observed}/{required} required routes"
     )
-    baseline = (
+    reference = (
         "✅ ADMITTED"
         if result.decision_coverage.satisfied and not result.is_blind
         else "❌ REFUSED"
     )
     return (
-        f"| {label} | ✅ {correct}/{total} | ✅ {stability} | {coverage} "
-        f"| {baseline} |"
+        f"| {label} | ✅ {correct}/{total} | ✅ {repeatability} | {coverage} "
+        f"| {reference} |"
     )
 
 
@@ -184,12 +184,14 @@ def _markdown_report(narrow: RunResult, repaired: RunResult) -> str:
     whose detailed reports carry their own numbered titles, and duplicating
     that numbering reads as four sections rather than two.
     """
-    return "\n".join([
-        "| Probe set | Exact-match | Verdict stability | Declared coverage | Baseline |",
-        "|---|---|---|---|---|",
-        _markdown_row("Narrow, 6 duplicate-charge cases", narrow, NARROW_CASES),
-        _markdown_row("Repaired, 6 dispute categories", repaired, DIVERSE_CASES),
-    ])
+    return "\n".join(
+        [
+            "| Probe set | Exact-match | Verdict repeatability | Declared coverage | Reference |",
+            "|---|---|---|---|---|",
+            _markdown_row("Narrow, 6 duplicate-charge cases", narrow, NARROW_CASES),
+            _markdown_row("Repaired, 6 dispute categories", repaired, DIVERSE_CASES),
+        ]
+    )
 
 
 def main() -> None:

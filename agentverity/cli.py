@@ -403,7 +403,7 @@ def _snapshot_command(args: argparse.Namespace) -> int:
     if not args.accept_reference:
         print(
             "snapshot refused: reference outputs require explicit approval; "
-            "stability is not correctness",
+            "repeatability is not correctness",
             file=sys.stderr,
         )
         return 2
@@ -518,8 +518,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agentverity",
         description=(
-            "Evidence checks for regression baselines on AI agents with "
-            "bounded decisions."
+            "Qualify repeated categorical AI-agent evidence before it becomes "
+            "a regression reference."
         ),
     )
     parser.add_argument(
@@ -666,7 +666,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help=(
             "--promptfoo or --jsonl only: how repeated trials were separated. "
             "Defaults to 'unknown'. An evidence file records its own, and it "
-            "decides whether the evidence may certify a baseline"
+            "decides whether the evidence may certify a regression reference"
         ),
     )
     assess_parser.add_argument(
@@ -686,7 +686,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     snapshot_parser = sub.add_parser(
         "snapshot",
-        help="Create an approved baseline when the evidence supports one.",
+        help="Create an approved regression reference when evidence supports one.",
     )
     _add_agent_inputs(snapshot_parser)
     _add_meter_options(snapshot_parser)
@@ -701,7 +701,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--accept-reference",
         action="store_true",
         help=(
-            "Confirm that a human reviewed the outputs as correct. Stability "
+            "Confirm that a human reviewed the outputs as acceptable. Repeatability "
             "alone cannot approve a reference."
         ),
     )
