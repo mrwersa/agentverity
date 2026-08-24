@@ -94,6 +94,21 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
                 "pairs": result.meter.sequential_pairs,
             }
 
+    curtailment = None
+    if result.curtailment is not None:
+        stop = result.curtailment
+        curtailment = {
+            "outcome": "admission-unreachable",
+            "stopping_pair": stop.stopping_pair,
+            "endpoint_pairs": stop.endpoint_pairs,
+            "observed_flips": stop.observed_flips,
+            "avoided_pairs": stop.avoided_pairs,
+            "meter_calls_spent": stop.meter_calls_spent,
+            "meter_calls_avoided": stop.meter_calls_avoided,
+            "reason": stop.reason,
+            "final_classification": None,
+        }
+
     blindness = None
     if result.blindness is not None:
         blindness = {
@@ -166,10 +181,12 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
             "run_meter": result.config.run_meter,
             "run_blindness": result.config.run_blindness,
             "reuse_unchanged_calls": result.config.reuse_unchanged_calls,
+            "curtail": result.config.curtail,
             "max_workers": result.config.max_workers,
             "error_policy": result.config.error_policy,
         },
         "meter": meter,
+        "curtailment": curtailment,
         "blindness": blindness,
         "decision_contract": decision_contract,
         "route_stability": route_stability,
@@ -280,7 +297,11 @@ def run_result_to_junit_xml(
         "preflight.verdict_stability",
         classname=suite_name,
     )
-    if result.meter is None:
+    if result.curtailment is not None:
+        failures += 1
+        detail = result.headline
+        ET.SubElement(meter_case, "failure", {"message": detail}).text = detail
+    elif result.meter is None:
         skipped += 1
         ET.SubElement(meter_case, "skipped", {"message": "meter disabled"})
     elif result.meter.call.startswith("undecided"):

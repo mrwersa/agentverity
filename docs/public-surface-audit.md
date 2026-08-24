@@ -18,9 +18,11 @@ claiming the API is frozen before 1.0.
 CI recollects the surface and compares it with the reviewed fixture. An
 intentional pre-1.0 break is still permitted, but it must now update one
 readable artifact alongside the required minor version and migration notes.
-The 0.20.0 release candidate is checked as that published surface plus the one
-additive `best_case_admission_pairs` function and its exact signature. The
-historical fixture is not relabelled as 0.20.0 before that wheel exists.
+The 0.21.0 release candidate is checked against that published 0.20.0 surface
+with an explicit additive delta: `CurtailmentResult`, the `RunConfig.curtail`
+and `RunResult.curtailment` fields, the `curtailed` status path, and the
+`--curtail` options on `run` and `snapshot`. The historical fixture remains an
+unaltered record of the published wheel.
 
 Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit

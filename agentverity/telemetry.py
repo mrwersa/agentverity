@@ -59,6 +59,20 @@ def run_result_to_otel_attributes(result: RunResult) -> dict[str, Any]:
                 or result.meter.repeats,
             }
         )
+    if result.curtailment is not None:
+        stop = result.curtailment
+        attributes.update(
+            {
+                "agentverity.curtailment.outcome": "admission-unreachable",
+                "agentverity.curtailment.stopping_pair": stop.stopping_pair,
+                "agentverity.curtailment.endpoint_pairs": stop.endpoint_pairs,
+                "agentverity.curtailment.observed_flips": stop.observed_flips,
+                "agentverity.curtailment.avoided_pairs": stop.avoided_pairs,
+                "agentverity.curtailment.meter_calls_avoided": (
+                    stop.meter_calls_avoided
+                ),
+            }
+        )
     if result.blindness is not None:
         attributes.update(
             {

@@ -23,13 +23,13 @@ not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.20.0
+agentverity~=0.21.0
 ```
 
-That accepts compatible `0.20.x` fixes without moving to a later pre-1.0 minor
+That accepts compatible `0.21.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.20 reads and writes one version of each schema:
+Version 0.21 reads and writes one version of each schema:
 `agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v4`,
 `agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
 differ because each records its own format history, not a release. Evidence is
@@ -86,7 +86,7 @@ from the published 0.20.0 wheel:
   exports, signatures, constants, commands, flags, and parser defaults;
 - the [CLI exit contract](docs/cli-exit-contract.md) executes representative
   offline paths for every command and supported process class;
-- the [return-semantics audit](docs/return-semantics-audit.md) executes all ten
+- the [return-semantics audit](docs/return-semantics-audit.md) executes all eleven
   canonical `RunResult.status` paths and representative planning, assessment,
   drift, snapshot, and reporting returns; and
 - the [class-member audit](docs/class-member-audit.md) inventories declared

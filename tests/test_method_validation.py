@@ -33,6 +33,27 @@ def test_a_seed_reproduces_the_same_experiment() -> None:
     assert simulate(**kwargs) == simulate(**kwargs)
 
 
+def test_curtailment_preserves_every_fixed_endpoint_call_and_only_reduces_spend():
+    """Early impossibility removes paths but never changes endpoint decisions."""
+    result = simulate(
+        trials=2_000,
+        seed=7,
+        rates=(0.025, 0.05, 0.3),
+        correlations=(0.0, 0.1),
+    )
+
+    for correlation in (0.0, 0.1):
+        fixed = _rows(result, rule="fixed-wilson", correlation=correlation)
+        curtailed = _rows(
+            result, rule="fixed-wilson-curtailed", correlation=correlation
+        )
+        assert len(fixed) == len(curtailed)
+        for ordinary, early in zip(fixed, curtailed, strict=True):
+            assert early["calls"] == ordinary["calls"]
+            assert early["wrong_direction_rate"] == ordinary["wrong_direction_rate"]
+            assert early["mean_pairs"] <= ordinary["mean_pairs"]
+
+
 def test_iid_boundary_behavior_is_inside_the_nominal_budget() -> None:
     """At p=epsilon, either directional claim is a false boundary call."""
     result = simulate(
@@ -85,6 +106,7 @@ def test_the_cli_writes_versioned_machine_readable_evidence(tmp_path) -> None:
     assert payload["schema"] == SCHEMA
     assert payload["method"]["seed"] == 20_260_822
     assert payload["interpretation"]["simulation_is_not_a_proof"] is True
+    assert payload["interpretation"]["curtailment_never_admits_early"] is True
 
 
 def test_the_committed_asset_and_document_record_the_boundary_finding() -> None:
@@ -102,7 +124,22 @@ def test_the_committed_asset_and_document_record_the_boundary_finding() -> None:
     assert "nominal, not an exact finite-sample error" in documentation
     assert "35.816%" in documentation
     assert "52.431%" in documentation
+    assert "19.5" in documentation
     assert "docs/method-validation.md" in readme
+
+    fixed = {
+        (row["correlation"], row["true_flip_rate"]): row
+        for row in payload["results"]
+        if row["rule"] == "fixed-wilson"
+    }
+    curtailed = {
+        (row["correlation"], row["true_flip_rate"]): row
+        for row in payload["results"]
+        if row["rule"] == "fixed-wilson-curtailed"
+    }
+    assert set(curtailed) == set(fixed)
+    assert all(curtailed[key]["calls"] == fixed[key]["calls"] for key in fixed)
+    assert curtailed[(0.0, 0.05)]["mean_pairs"] == pytest.approx(19.52772)
 
 
 def test_the_committed_asset_separates_rate_projection_from_best_case_continuation():

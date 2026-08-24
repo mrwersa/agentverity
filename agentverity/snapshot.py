@@ -322,6 +322,14 @@ def _require_snapshot_evidence(result: RunResult) -> None:
     """Reject incomplete, underpowered, stochastic, or blind evidence."""
     if not result.complete:
         raise SnapshotRefused("run is incomplete; failed calls cannot enter a baseline")
+    if result.curtailment is not None:
+        stop = result.curtailment
+        raise SnapshotRefused(
+            "repeatability admission became unreachable at the predeclared "
+            f"{stop.endpoint_pairs}-pair endpoint after {stop.stopping_pair} "
+            "pairs; collection stopped without assigning a final "
+            "repeatability class"
+        )
     if result.meter is None:
         raise SnapshotRefused("the verdict-stochasticity meter must be enabled")
     if result.route_stability is not None and result.route_stability.stochastic:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -23,21 +24,34 @@ FIXTURE = (
 
 
 def test_current_return_semantics_match_the_published_release():
-    """Main Python boundaries retain their reviewed types and relationships."""
+    """The candidate adds only reviewed curtailment return semantics."""
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
     assert fixture["producer"] == "agentverity==0.20.0"
     assert fixture["semantics"]["schema"] == AUDIT_SCHEMA
-    assert collect_return_semantics() == fixture["semantics"]
+    baseline = fixture["semantics"]
+    current = deepcopy(collect_return_semantics())
+    curtailed = current["statuses"].pop("curtailed")
+    assert curtailed == {
+        "type": "RunResult",
+        "status": "curtailed",
+        "complete": True,
+        "is_stochastic": False,
+        "is_blind": False,
+        "error_count": 0,
+    }
+    current["reports"]["json"]["top_level_keys"].remove("curtailment")
+
+    assert current == baseline
 
 
 def test_every_canonical_run_status_has_an_executed_scenario():
     """Status precedence is covered without reconstructing it from internals."""
-    fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
-
-    assert set(fixture["semantics"]["statuses"]) == {
+    statuses = collect_return_semantics()["statuses"]
+    assert set(statuses) == {
         "blind",
         "contract",
+        "curtailed",
         "deterministic",
         "incomplete",
         "stochastic",
@@ -47,10 +61,7 @@ def test_every_canonical_run_status_has_an_executed_scenario():
         "vacuous",
         "violations",
     }
-    assert all(
-        scenario["status"] == name
-        for name, scenario in fixture["semantics"]["statuses"].items()
-    )
+    assert all(scenario["status"] == name for name, scenario in statuses.items())
 
 
 def test_the_auditor_refuses_to_mislabel_the_current_checkout(monkeypatch, tmp_path):

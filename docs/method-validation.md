@@ -1,10 +1,10 @@
 # Statistical Method Validation
 
-This asset cross-checks the operating behaviour of AgentVerity's fixed Wilson
-and predeclared sequential rules. It also measures how quickly their
-conclusions degrade when pair independence is false. The exact arguments in
-`DESIGN.md` remain the basis of the method; Monte Carlo is a reproducible
-diagnostic, not a proof.
+This asset cross-checks the operating behaviour of AgentVerity's fixed Wilson,
+live fixed-endpoint curtailment, and predeclared sequential rules. It also
+measures how quickly their conclusions degrade when pair independence is
+false. The exact arguments in `DESIGN.md` remain the basis of the method;
+Monte Carlo is a reproducible diagnostic, not a proof.
 
 ## Reproduce it
 
@@ -21,15 +21,17 @@ true flip rates, four dependence settings (`rho=0, 0.02, 0.05, 0.10`), and
 100,000 qualification runs per scenario. It records exact boundary
 probabilities, every simulated call share, Monte Carlo uncertainty, and mean
 pairs spent in the versioned
-[`agentverity.method-validation/v2`](evidence/method-validation.json) artifact.
+[`agentverity.method-validation/v3`](evidence/method-validation.json) artifact.
 The script has no dependencies outside Python and AgentVerity.
 
 ## Experiment
 
 The independent model draws disjoint pair flips as Bernoulli trials. The fixed
-rule reads 73 pairs and classifies their 95% Wilson interval. The sequential
-rule reads at predeclared checkpoints 18, 36, 54, and 72, using exact-binomial
-thresholds and directional alpha spending.
+rule reads 73 pairs and classifies their 95% Wilson interval. Its curtailed
+form keeps that endpoint and counterfactual classification but stops live work
+as soon as an all-agree continuation cannot admit. The sequential rule reads
+at predeclared checkpoints 18, 36, 54, and 72, using exact-binomial thresholds
+and directional alpha spending.
 
 The sensitivity model holds the marginal flip rate constant but draws one
 latent rate per qualification run from a beta distribution. Conditional pair
@@ -94,15 +96,24 @@ it, and either directional claim exactly at the boundary.
    spending. It does not support inspecting a fixed-sample interval after
    every pair and stopping at its first favourable value.
 
+7. **Fixed-endpoint curtailment preserves decisions path by path while
+   concentrating savings on variable runs.** Across the two million simulated
+   paths, its counterfactual endpoint call matched the ordinary fixed rule in
+   every case. Under independence, mean spend was 73.0 pairs when the true
+   flip rate was zero, 33.6 at 2.5%, 19.5 at the 5% boundary, 10.0 at 10%, and
+   3.3 at 30%. It never admits early: a stopped path carries an impossibility
+   result and no final repeatability class.
+
 ## Consequences and limits
 
-The fixed admission rule and runtime evidence schemas remain unchanged. The
-validation artifact itself moves to v2 because it now checks the planning
-layer that surrounds that rule; the public `best_case_admission_pairs` helper
-exposes its count-aware result. The fixed rule remains conservative in the
-baseline-admission direction, while its nominal two-sided calibration is
-explicit. A future change to an exact fixed-sample rule requires an ADR,
-compatibility analysis, and measured call budget before implementation.
+The fixed admission rule and durable evidence schemas remain unchanged. The
+validation artifact moves to v3 because it now checks live curtailment as well
+as the planning layer. The public `best_case_admission_pairs` helper supplies
+the count-aware boundary used by the runner. The fixed rule remains
+conservative in the regression-reference admission direction, while its
+nominal two-sided calibration is explicit. A future change to an exact
+fixed-sample rule requires an ADR, compatibility analysis, and measured call
+budget before implementation.
 
 The sensitivity model covers one exchangeable dependence pattern, not stateful
 agents generally. It does not establish that `rho=0.10` is realistic, detect

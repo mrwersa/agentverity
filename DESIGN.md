@@ -836,6 +836,68 @@ is a separate product claim and report design. Correct the statistical
 boundary first; add a report only when an adopter demonstrates the decision it
 needs to change.
 
+## ADR 9: live curtailment reports impossibility, not a partial classification
+
+**Status.** Accepted 2026-08-24. Additive runtime capability for 0.21.0.
+
+**Context.** ADR 8 proves that observed flip counts can make admission at a
+fixed endpoint unreachable. The planning helper exposed that fact after
+collection, but a live fixed run still spent every planned call. Repeatedly
+checking the Wilson interval would be invalid optional stopping if it admitted
+on a favourable prefix. Labelling an impossible prefix `stochastic` or
+`undecided` would also invent the classification of an endpoint never observed.
+
+**Decision.** `RunConfig(curtail=True)` and `--curtail` retain the ordinary
+fixed endpoint `B`. Pairs arrive in a declared round-robin order: input index
+within a round, then successive rounds. After each pair with cumulative flips
+`f`, collection stops when
+`best_case_admission_pairs(epsilon, flips=f, pairs=n, max_pairs=B)` returns
+`None`. One pair is in flight at a time, so the reported stopping pair is the
+first such boundary and every reported avoided call was never started.
+
+For any continuation, its endpoint flip count `F_B` satisfies `F_B >= f`.
+The Wilson score statistic at fixed `B` decreases as flips increase. Therefore,
+if the all-agree endpoint with `f` flips cannot admit, no continuation can
+admit. Conversely, any path that would admit at `B` cannot have crossed this
+boundary at a prefix. Curtailment consequently removes work but preserves
+every fixed-endpoint admission decision; it has no early-admission path.
+
+A stopped run returns a structured `CurtailmentResult` containing stopping and
+endpoint pairs, observed flips, calls spent and avoided, and the reason. It has
+status `curtailed` and no `MeterResult`: curtailment is an execution outcome,
+not a fourth statistical class. Terminal, JSON, JUnit, and OpenTelemetry
+reports retain the boundary. Snapshot admission refuses it explicitly.
+
+The option is off by default. It is refused with predeclared sequential looks,
+parallel collection, or route-specific repeatability targets: those features
+either own the stopping rule, allow later pairs to start before the boundary is
+known, or create several endpoints instead of one. A recorded call failure
+disables statistical curtailment because incomplete execution is a different
+conclusion.
+
+**Evidence.** Exact boundary replays cover 1/73, 4/200, and 4/202. The method
+validation simulation applies curtailment to the same generated paths as the
+ordinary fixed rule. Across every simulated path the endpoint classifications
+are identical, while mean spend falls from 73 pairs to 19.5 at the 5% boundary
+under independence and to 3.3 pairs at a 30% flip rate. Simulation checks the
+implementation; the monotonic argument above supplies the guarantee.
+
+**Alternatives rejected.**
+
+*Return the partial Wilson call.* Rejected because it gives an unobserved
+endpoint a final label and invites downstream consumers to treat optional
+inspection as classification.
+
+*Reuse ADR 7's sequential plan.* That plan can make valid interim directional
+decisions by spending alpha across declared looks. Curtailment makes only the
+weaker pathwise claim that admission has become impossible and therefore does
+not tax the fixed endpoint.
+
+*Allow parallel in-flight pairs and report the first boundary afterwards.*
+That would overstate avoided work and make the operational stop depend on
+scheduler timing. A later parallel design needs an explicit in-flight-work
+contract rather than approximate accounting.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.

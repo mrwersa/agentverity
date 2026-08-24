@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentverity"
-version = "0.20.0"
+version = "0.21.0"
 description = "Qualify repeated categorical AI-agent evidence before it becomes a regression reference"
 readme = "README.md"
 license = "Apache-2.0"

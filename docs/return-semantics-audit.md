@@ -14,8 +14,8 @@ offline agents and evidence. Its reviewed fixture pins:
 - the `RunResult`, `MeterResult`, `BlindnessResult`, and
   `DecisionCoverageResult` types and their core values on an admitted run;
 - one real execution path for every canonical `RunResult.status` value:
-  `deterministic`, `stochastic`, `undecided`, `blind`, `contract`, `vacuous`,
-  `target-failed`, `violations`, `incomplete`, and `unmeasured`;
+  `deterministic`, `stochastic`, `undecided`, `curtailed`, `blind`, `contract`,
+  `vacuous`, `target-failed`, `violations`, `incomplete`, and `unmeasured`;
 - `assess_evidence` returning the same `RunResult` family without inventing
   relation results;
 - evidence drift types, material-change fields, provenance changes, and
@@ -27,6 +27,9 @@ offline agents and evidence. Its reviewed fixture pins:
 CI recollects those semantics and compares them with
 `tests/fixtures/compatibility/v0.20.0/return-semantics.json`. A behaviour change
 therefore requires a readable fixture diff rather than passing unnoticed.
+The 0.21.0 candidate adds one executed `curtailed` path and the optional JSON
+`curtailment` member; CI names and removes exactly those additions before
+comparing the remainder with the published fixture.
 
 ## Provenance and Reproduction
 

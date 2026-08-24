@@ -136,7 +136,7 @@ An importer must therefore reject ambiguous mappings rather than infer them.
 
 ### Verified implementation
 
-The 0.20.0 package is a zero-mandatory-dependency Python 3.10–3.14 library and
+The 0.21.0 package is a zero-mandatory-dependency Python 3.10–3.14 library and
 CLI. Its public workflow is:
 
 - `plan` prices a suite before calls are made;
@@ -154,7 +154,10 @@ upper bound is below the declared tolerance, stochastic only when the lower
 bound exceeds it, and otherwise returns `undecided`. At the default 5%
 tolerance, qualifying repeatability with zero flips requires 73 independent pairs.
 Optional sequential collection uses predeclared checkpoints and alpha
-spending rather than repeatedly peeking at a fixed-sample interval.
+spending rather than repeatedly peeking at a fixed-sample interval. Optional
+fixed-endpoint curtailment makes only an early-impossibility decision: it
+stops when admission is unreachable, reports avoided work, and assigns no
+final repeatability class.
 
 The evidence model carries decision contracts, intended/observed/admissible
 route reach, critical-route requirements, blindness/skew diagnostics,

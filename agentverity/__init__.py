@@ -84,7 +84,13 @@ from agentverity.reporting import (
     write_junit_xml,
     write_run_json,
 )
-from agentverity.runner import RelationResult, RunConfig, RunResult, run
+from agentverity.runner import (
+    CurtailmentResult,
+    RelationResult,
+    RunConfig,
+    RunResult,
+    run,
+)
 from agentverity.sequential import (
     SequentialPlan,
     decide_sequentially,
@@ -132,6 +138,7 @@ __all__ = [
     "SNAPSHOT_SCHEMA",
     "TELEMETRY_SCHEMA",
     "BlindnessResult",
+    "CurtailmentResult",
     "Decision",
     "DecisionCase",
     "DecisionContract",
