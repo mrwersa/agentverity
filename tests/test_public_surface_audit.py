@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -14,61 +13,18 @@ FIXTURE = (
     Path(__file__).parent
     / "fixtures"
     / "compatibility"
-    / "v0.20.0"
+    / "v0.21.0"
     / "public-surface.json"
 )
 
 
 def test_current_top_level_and_cli_surface_matches_the_reviewed_release():
-    """The candidate differs from 0.20.0 only by the reviewed additive API."""
+    """The checkout matches the surface published in 0.21.0."""
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
-    assert fixture["producer"] == "agentverity==0.20.0"
+    assert fixture["producer"] == "agentverity==0.21.0"
     assert fixture["surface"]["schema"] == AUDIT_SCHEMA
-    baseline = fixture["surface"]
-    current = deepcopy(collect_surface())
-    python = {entry["name"]: entry for entry in current["python"]}
-
-    assert python.pop("CurtailmentResult") == {
-        "name": "CurtailmentResult",
-        "kind": "class",
-        "module": "agentverity.runner",
-        "qualified_name": "CurtailmentResult",
-        "signature": (
-            "(stopping_pair: 'int', endpoint_pairs: 'int', observed_flips: 'int', "
-            "meter_calls_spent: 'int', meter_calls_avoided: 'int', reason: 'str') "
-            "-> None"
-        ),
-    }
-    current["python"] = sorted(python.values(), key=lambda entry: entry["name"])
-    baseline_python = {entry["name"]: entry for entry in baseline["python"]}
-    additions = {
-        "RunConfig": ", curtail: 'bool' = False",
-        "RunResult": ", curtailment: 'CurtailmentResult | None' = None",
-    }
-    for name, addition in additions.items():
-        published = baseline_python[name]["signature"]
-        expected = published.removesuffix(") -> None") + addition + ") -> None"
-        assert python[name]["signature"] == expected
-        python[name]["signature"] = published
-
-    expected_flag = {
-        "action": "_StoreTrueAction",
-        "dest": "curtail",
-        "names": ["--curtail"],
-        "required": False,
-        "nargs": 0,
-        "default": False,
-    }
-    for command in ("run", "snapshot"):
-        arguments = current["cli"]["commands"][command]
-        added = [argument for argument in arguments if argument["dest"] == "curtail"]
-        assert added == [expected_flag]
-        current["cli"]["commands"][command] = [
-            argument for argument in arguments if argument["dest"] != "curtail"
-        ]
-
-    assert current == baseline
+    assert collect_surface() == fixture["surface"]
 
 
 def test_the_auditor_refuses_to_mislabel_the_current_checkout(monkeypatch, tmp_path):

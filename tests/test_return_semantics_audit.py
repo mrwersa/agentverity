@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -18,31 +17,18 @@ FIXTURE = (
     Path(__file__).parent
     / "fixtures"
     / "compatibility"
-    / "v0.20.0"
+    / "v0.21.0"
     / "return-semantics.json"
 )
 
 
 def test_current_return_semantics_match_the_published_release():
-    """The candidate adds only reviewed curtailment return semantics."""
+    """The checkout matches the return semantics published in 0.21.0."""
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
-    assert fixture["producer"] == "agentverity==0.20.0"
+    assert fixture["producer"] == "agentverity==0.21.0"
     assert fixture["semantics"]["schema"] == AUDIT_SCHEMA
-    baseline = fixture["semantics"]
-    current = deepcopy(collect_return_semantics())
-    curtailed = current["statuses"].pop("curtailed")
-    assert curtailed == {
-        "type": "RunResult",
-        "status": "curtailed",
-        "complete": True,
-        "is_stochastic": False,
-        "is_blind": False,
-        "error_count": 0,
-    }
-    current["reports"]["json"]["top_level_keys"].remove("curtailment")
-
-    assert current == baseline
+    assert collect_return_semantics() == fixture["semantics"]
 
 
 def test_every_canonical_run_status_has_an_executed_scenario():

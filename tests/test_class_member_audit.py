@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -11,50 +10,25 @@ import pytest
 from scripts.audit_class_members import AUDIT_SCHEMA, collect_class_members, main
 from scripts.audit_public_surface import collect_surface
 
-FIXTURES = Path(__file__).parent / "fixtures" / "compatibility" / "v0.20.0"
+FIXTURES = Path(__file__).parent / "fixtures" / "compatibility" / "v0.21.0"
 CLASS_FIXTURE = FIXTURES / "class-members.json"
 SURFACE_FIXTURE = FIXTURES / "public-surface.json"
 
 
 def test_current_class_members_match_the_published_release():
-    """The candidate differs only by its reviewed curtailment structures."""
+    """The checkout matches the class structure published in 0.21.0."""
     fixture = json.loads(CLASS_FIXTURE.read_text(encoding="utf-8"))
 
-    assert fixture["producer"] == "agentverity==0.20.0"
+    assert fixture["producer"] == "agentverity==0.21.0"
     assert fixture["surface"]["schema"] == AUDIT_SCHEMA
-    baseline = fixture["surface"]
-    current = deepcopy(collect_class_members())
-    classes = current["classes"]
-    curtailment = classes.pop("CurtailmentResult")
-    assert [field["name"] for field in curtailment["fields"]] == [
-        "stopping_pair",
-        "endpoint_pairs",
-        "observed_flips",
-        "meter_calls_spent",
-        "meter_calls_avoided",
-        "reason",
-    ]
-    assert [member["name"] for member in curtailment["members"]] == [
-        "avoided_pairs"
-    ]
-
-    additions = {"RunConfig": "curtail", "RunResult": "curtailment"}
-    for class_name, field_name in additions.items():
-        fields = classes[class_name]["fields"]
-        added = [field for field in fields if field["name"] == field_name]
-        assert len(added) == 1
-        classes[class_name]["fields"] = [
-            field for field in fields if field["name"] != field_name
-        ]
-
-    assert current == baseline
+    assert collect_class_members() == fixture["surface"]
 
 
 def test_every_exported_class_is_in_the_member_inventory():
     """The narrower audit cannot silently omit a class in the top-level surface."""
     members = json.loads(CLASS_FIXTURE.read_text(encoding="utf-8"))["surface"]
     public = json.loads(SURFACE_FIXTURE.read_text(encoding="utf-8"))["surface"]
-    baseline_exported = {
+    published_exported = {
         entry["name"] for entry in public["python"] if entry["kind"] == "class"
     }
     current = collect_class_members()["classes"]
@@ -63,8 +37,8 @@ def test_every_exported_class_is_in_the_member_inventory():
         for entry in collect_surface()["python"]
         if entry["kind"] == "class"
     }
-    assert set(members["classes"]) == baseline_exported
-    assert baseline_exported | {"CurtailmentResult"} == current_exported
+    assert set(members["classes"]) == published_exported
+    assert published_exported == current_exported
     assert set(current) == current_exported
     assert len(current_exported) == 36
     for contract in members["classes"].values():
