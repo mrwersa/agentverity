@@ -206,6 +206,20 @@ def _add_sequential_option(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_curtailment_option(parser: argparse.ArgumentParser) -> None:
+    """Offer fixed-endpoint impossibility stopping on live collection commands."""
+    parser.add_argument(
+        "--curtail",
+        action="store_true",
+        help=(
+            "Keep the fixed endpoint but stop when repeatability admission is "
+            "unreachable even if every remaining pair agrees. Reports no final "
+            "repeatability class. Cannot be combined with --sequential, "
+            "--max-workers above 1, or declared route stability targets."
+        ),
+    )
+
+
 def _add_meter_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--precision",
@@ -286,6 +300,8 @@ def _exit_code(result: RunResult) -> int:
         return 2
     if result.status == "undecided":
         return 2
+    if result.status == "curtailed":
+        return 1
     if result.status in {
         "blind",
         "contract",
@@ -337,6 +353,7 @@ def _run_command(args: argparse.Namespace) -> int:
         run_meter=not args.no_meter,
         run_blindness=not args.no_blindness,
         sequential=args.sequential,
+        curtail=args.curtail,
         max_workers=args.max_workers,
         error_policy=args.error_policy,
     )
@@ -438,6 +455,7 @@ def _snapshot_command(args: argparse.Namespace) -> int:
                 blindness_threshold=args.blindness_threshold,
                 layer=args.layer,
                 sequential=args.sequential,
+                curtail=args.curtail,
                 max_workers=args.max_workers,
                 error_policy=args.error_policy,
             ),
@@ -537,6 +555,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_agent_inputs(run_parser)
     _add_meter_options(run_parser)
     _add_sequential_option(run_parser)
+    _add_curtailment_option(run_parser)
     _add_execution_options(run_parser)
     run_parser.add_argument(
         "--no-meter",
@@ -691,6 +710,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_agent_inputs(snapshot_parser)
     _add_meter_options(snapshot_parser)
     _add_sequential_option(snapshot_parser)
+    _add_curtailment_option(snapshot_parser)
     _add_execution_options(snapshot_parser, default_error_policy="record")
     snapshot_parser.add_argument(
         "--output",

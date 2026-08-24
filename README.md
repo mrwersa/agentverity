@@ -147,6 +147,10 @@ fixed-sample interval and stop when the result looks favourable.
 For evidence already collected, `best_case_admission_pairs` tests whether an
 all-agree continuation could admit within a predeclared pair budget. It may
 justify stopping an impossible run early; it never creates an early admission.
+For live fixed-endpoint collection, opt into the same bound with `--curtail`.
+It reports the stopping pair and avoided calls but no final repeatability class;
+a path that could admit still pays the full fixed budget and is classified only
+there.
 
 Use `agentverity plan --suite examples/route_stability_plan.json` before
 spending remote calls. The [decision repeatability method guide](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
@@ -227,6 +231,6 @@ coverage. See the contributing guide above before opening a pull request.
 ## Status and licence
 
 Alpha. Pin the current minor series for production use:
-`agentverity~=0.20.0`. Patch releases preserve the public API.
+`agentverity~=0.21.0`. Patch releases preserve the public API.
 
 Apache-2.0.

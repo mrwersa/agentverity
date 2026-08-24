@@ -8,6 +8,32 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-08-24
+
+### Added
+
+- `RunConfig(curtail=True)` and `agentverity run|snapshot --curtail` retain the
+  ordinary fixed endpoint but stop live meter collection once admission is
+  unreachable even if every remaining pair agrees. The structured
+  `CurtailmentResult` records the stopping pair, endpoint, observed flips, and
+  meter calls spent and avoided in terminal, JSON, JUnit, and OpenTelemetry
+  reports.
+- Versioned replay fixtures pin the strict 1/73, 4/200, and 4/202 boundaries.
+  The method-validation artifact now checks that fixed-endpoint curtailment
+  preserves every counterfactual endpoint call while reducing work on variable
+  paths.
+
+### Compatibility
+
+- This minor release adds one top-level class, one `RunConfig` option, one
+  `RunResult` field and status, and one CLI flag on `run` and `snapshot`.
+  Existing defaults, fixed and sequential classifications, snapshot and
+  evidence schemas, and stored regression references are unchanged.
+- A curtailed run deliberately has no `MeterResult` and uses status
+  `curtailed`; it is an execution outcome proving fixed-endpoint admission is
+  unreachable, not a new repeatability class. The `run` command returns exit 1
+  for that finding, while `snapshot` refuses admission with exit 2.
+
 ## [0.20.0] - 2026-08-23
 
 ### Added
@@ -1166,7 +1192,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.21.0...HEAD
+[0.21.0]: https://github.com/mrwersa/agentverity/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/mrwersa/agentverity/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/mrwersa/agentverity/compare/v0.18.3...v0.19.0
 [0.18.3]: https://github.com/mrwersa/agentverity/compare/v0.18.2...v0.18.3

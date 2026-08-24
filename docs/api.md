@@ -7,10 +7,11 @@ from agentverity import Observation, RunConfig, from_callable, run
 ```
 
 - `from_callable` adapts a Python function.
-- `run` performs the decision-stability check, decision-coverage check, and
+- `run` performs the decision-repeatability check, decision-coverage check, and
   optional relations.
 - `Observation` separates text, verdict, and tool-path layers.
-- `RunConfig` controls precision, call budget, concurrency, and failures.
+- `RunConfig` controls precision, call budget, optional fixed-endpoint
+  curtailment, concurrency, and failures.
 
 ## Declared decision coverage
 
@@ -98,6 +99,9 @@ The CLI accepts the same versioned structure with `--suite suite.json`.
 
 - `RunResult.headline` gives the plain-language interpretation.
 - `RunResult.status` gives the canonical machine interpretation.
+- `RunResult.curtailment` is a `CurtailmentResult` when fixed-endpoint
+  admission became unreachable. It records the stopping pair and avoided work;
+  `RunResult.meter` is `None` because the endpoint was not classified.
 - `RunResult.summary()` returns the terminal report.
 - `run_result_to_dict` and `write_run_json` produce versioned JSON.
 - `run_result_to_junit_xml` and `write_junit_xml` produce CI test reports.
@@ -151,7 +155,8 @@ unless the caller explicitly supplies `k`.
   projected fixed flip rate.
 - `best_case_admission_pairs` asks when observed flip counts could first admit
   if every additional pair agrees. Supply `max_pairs` to test a predeclared
-  endpoint; do not use the result as an adaptive stopping rule.
+  endpoint. `RunConfig(curtail=True)` applies only its early-impossibility
+  direction during live fixed collection; it never admits early.
 - `plan_repeats` converts the input count and precision into `k`.
 - `plan_route_repeats` produces a zero-change budget for a declared suite.
 - `stratify_relations` groups already-collected relation outcomes by intended

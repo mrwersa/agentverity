@@ -103,6 +103,24 @@ def _status_contract() -> dict[str, dict[str, Any]]:
         relations=[],
         config=RunConfig(k=20, epsilon=0.05, run_blindness=False),
     )
+    curtailed_calls = 0
+
+    def curtailed_agent(_text: str) -> dict[str, str]:
+        nonlocal curtailed_calls
+        curtailed_calls += 1
+        return {"verdict": "allow" if curtailed_calls % 2 else "review"}
+
+    curtailed = run(
+        from_callable(curtailed_agent),
+        ["alpha"],
+        relations=[],
+        config=RunConfig(
+            k=146,
+            epsilon=0.05,
+            curtail=True,
+            run_blindness=False,
+        ),
+    )
     contract = run(
         from_callable(lambda _text: {"verdict": "allow"}),
         suite=_suite(),
@@ -170,6 +188,7 @@ def _status_contract() -> dict[str, dict[str, Any]]:
         "incomplete": incomplete,
         "undecided": undecided,
         "stochastic": stochastic,
+        "curtailed": curtailed,
         "contract": contract,
         "violations": violations,
         "vacuous": vacuous,

@@ -49,6 +49,11 @@ rates, and AgentVerity status values are emitted. Exporter configuration,
 resource attributes, surrounding spans, and backend retention are outside this
 contract.
 
+The 0.21.0 curtailment extension adds only generated status text and aggregate
+pair, flip, endpoint, and avoided-call counts to terminal, JSON, JUnit, and
+OpenTelemetry output. It does not add partial observations or raw inputs to
+those surfaces; the published 0.20.0 retention fixture remains the baseline.
+
 ## Operator Controls and Failure Modes
 
 - Treat suites, imported evidence, snapshots, JSON reports, and terminal logs

@@ -194,6 +194,13 @@ execution and use a tolerance tied to the consequences of a changed decision.
 The `cheap`, `balanced`, and `strict` presets are sampling choices, not
 universal safety grades.
 
+For a pooled fixed-endpoint run, `--curtail` can stop after admission becomes
+mathematically unreachable even under an all-agree continuation. It never
+admits early and assigns no final repeatability class to the partial run. It is
+therefore incompatible with sequential looks, parallel in-flight pairs, and
+route-specific endpoints; use the ordinary fixed or declared sequential path
+when those constraints matter more than avoided work.
+
 See [decision repeatability](decision-stability.md) for the arithmetic and
 [integrations](integrations.md) for placement in CI, release, and canary
 workflows.

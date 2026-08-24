@@ -48,6 +48,14 @@ agreed. `best_case_admission_pairs(0.05, flips=4, pairs=73)` returns `202`;
 with `max_pairs=201` it returns `None`. This is an optimistic endpoint check,
 not permission to inspect the interval repeatedly and stop when it passes.
 
+For live collection, `RunConfig(curtail=True)` or `--curtail` predeclares the
+ordinary fixed endpoint and applies only that impossibility direction. If the
+endpoint becomes unreachable, the run records status `curtailed`, the stopping
+pair, and avoided calls. It assigns no `deterministic`, `stochastic`, or
+`undecided` result because the endpoint was never observed. An admissible path
+always reaches the full endpoint. See [ADR 9](../DESIGN.md#adr-9-live-curtailment-reports-impossibility-not-a-partial-classification)
+and the [method validation](method-validation.md).
+
 The built-in precision levels therefore imply these minimum evidence budgets
 when no changes are observed:
 

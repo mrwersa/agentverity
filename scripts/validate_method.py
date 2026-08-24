@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce AgentVerity's fixed and sequential operating characteristics.
+"""Reproduce fixed, curtailed, and sequential operating characteristics.
 
 The exact guarantees live in the implementation and DESIGN.md. This simulation
 is an empirical cross-check and a dependence sensitivity analysis, not a proof.
@@ -24,7 +24,7 @@ from agentverity.meter import (
 )
 from agentverity.sequential import decide_sequentially, plan_sequential
 
-SCHEMA = "agentverity.method-validation/v2"
+SCHEMA = "agentverity.method-validation/v3"
 DETERMINISTIC = "deterministic"
 STOCHASTIC = "stochastic"
 UNDECIDED = "undecided"
@@ -126,6 +126,38 @@ def _continuation_planning(epsilon: float, z: float) -> list[dict[str, Any]]:
     return rows
 
 
+def _curtailed_pairs(
+    outcomes: list[bool], *, endpoint_pairs: int, maximum_admissible_flips: int
+) -> int:
+    """Return live spend under fixed-endpoint impossibility curtailment."""
+    flips = 0
+    for pair, flipped in enumerate(outcomes[:endpoint_pairs], start=1):
+        if not flipped:
+            continue
+        flips += 1
+        if flips > maximum_admissible_flips:
+            return pair
+    return endpoint_pairs
+
+
+def _maximum_admissible_flips(
+    *, epsilon: float, endpoint_pairs: int, z: float
+) -> int:
+    """Invert the production continuation helper once for one fixed endpoint."""
+    maximum = -1
+    for flips in range(endpoint_pairs + 1):
+        if best_case_admission_pairs(
+            epsilon,
+            flips=flips,
+            pairs=endpoint_pairs,
+            max_pairs=endpoint_pairs,
+            z=z,
+        ) is None:
+            break
+        maximum = flips
+    return maximum
+
+
 def _row(
     *,
     rule: str,
@@ -200,6 +232,11 @@ def simulate(
     z = NormalDist().inv_cdf(1 - alpha / 2)
     fixed_pairs = pairs_for_deterministic_call(epsilon, z)
     assert fixed_pairs is not None
+    maximum_admissible_flips = _maximum_admissible_flips(
+        epsilon=epsilon,
+        endpoint_pairs=fixed_pairs,
+        z=z,
+    )
     sequential = plan_sequential(epsilon, alpha=alpha)
     maximum_pairs = max(fixed_pairs, sequential.budget)
     rng = random.Random(seed)
@@ -208,6 +245,7 @@ def simulate(
     for correlation in correlations:
         for rate in rates:
             fixed_calls: Counter[str] = Counter()
+            curtailed_spent = 0
             sequential_calls: Counter[str] = Counter()
             sequential_spent = 0
             for _ in range(trials):
@@ -220,6 +258,11 @@ def simulate(
                 flips = sum(outcomes[:fixed_pairs])
                 low, high = wilson_ci(flips, fixed_pairs, z)
                 fixed_calls[_call_name(classify_call(low, high, epsilon))] += 1
+                curtailed_spent += _curtailed_pairs(
+                    outcomes,
+                    endpoint_pairs=fixed_pairs,
+                    maximum_admissible_flips=maximum_admissible_flips,
+                )
 
                 call, spent = decide_sequentially(
                     sequential, outcomes[: sequential.budget]
@@ -227,6 +270,17 @@ def simulate(
                 sequential_calls[_call_name(call)] += 1
                 sequential_spent += spent
 
+            rows.append(
+                _row(
+                    rule="fixed-wilson-curtailed",
+                    rate=rate,
+                    correlation=correlation,
+                    calls=fixed_calls,
+                    pairs_spent=curtailed_spent,
+                    trials=trials,
+                    epsilon=epsilon,
+                )
+            )
             rows.append(
                 _row(
                     rule="fixed-wilson",
@@ -267,7 +321,11 @@ def simulate(
             "alpha": alpha,
             "rates": list(rates),
             "correlations": list(correlations),
-            "fixed": {"pairs": fixed_pairs, "z": z},
+            "fixed": {
+                "pairs": fixed_pairs,
+                "z": z,
+                "maximum_admissible_flips": maximum_admissible_flips,
+            },
             "sequential": {
                 "pairs": sequential.budget,
                 "checkpoints": list(sequential.checkpoints),
@@ -290,6 +348,8 @@ def simulate(
         "continuation_planning": _continuation_planning(epsilon, z),
         "interpretation": {
             "best_case_is_not_an_adaptive_stopping_rule": True,
+            "curtailment_never_admits_early": True,
+            "curtailment_preserves_fixed_endpoint_calls": True,
             "iid_is_the_claimed_model": True,
             "positive_correlation_is_sensitivity_only": True,
             "simulation_is_not_a_proof": True,

@@ -6,17 +6,22 @@ an answer. Not every command can produce every class.
 
 | Command | 0 | 1 | 2 |
 |---|---|---|---|
-| `run` | Interpretable diagnostics | Coverage, relation, or target finding | Incomplete, undecided, invalid, or infeasible run |
+| `run` | Interpretable diagnostics | Coverage, relation, target, or curtailment finding | Incomplete, undecided, invalid, or infeasible run |
 | `plan` | Plan printed | — | CLI usage error |
 | `assess` | Interpretable imported evidence | Coverage or target finding | Malformed, incomplete, or undecided evidence |
 | `compare-evidence` | No drift | Drift detected | Malformed or incompatible evidence |
-| `snapshot` | Baseline admitted | — | Approval absent or evidence refused |
+| `snapshot` | Regression reference admitted | — | Approval absent or evidence refused |
 | `check` | Snapshot clean | Snapshot drift | Invalid snapshot or current evidence refused |
 
 `tests/test_cli_exit_contract.py` executes every populated cell using synthetic,
 offline inputs. The versioned test contract lives at
 `tests/fixtures/compatibility/v0.20.0/cli-exit-contract.json`. This pins process
 classification, not exact output prose.
+
+AgentVerity 0.21.0 extends that published baseline through focused execution
+tests rather than relabelling the fixture: `run --curtail` exits `1` when
+fixed-endpoint admission becomes unreachable, while `snapshot --curtail`
+exits `2` because partial evidence has no final repeatability class to admit.
 
 Argument-parser errors also exit `2` through `argparse`. Exceptions raised by a
 user-supplied Python factory remain programming errors with tracebacks; they

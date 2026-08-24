@@ -9,12 +9,12 @@ outcome-gated plan. Horizons guide sequencing rather than promise dates;
 
 ## Current state
 
-As of 0.20.0, the released 0.20.0 picture is a complete local qualification
+As of 0.21.0, the released 0.21.0 picture is a complete local qualification
 loop for bounded categorical decisions.
 
 | Need | Interface | Established behaviour |
 |---|---|---|
-| Price and collect | `plan`, `run` | Fixed or predeclared sequential budgets; callable, Strands, and LangGraph adapters |
+| Price and collect | `plan`, `run` | Fixed, live-curtailed fixed, or predeclared sequential budgets; callable, Strands, and LangGraph adapters |
 | Reuse evidence | `assess` | Promptfoo, DeepEval test cases, and generic JSONL raw runs; aggregates refused |
 | Qualify | report | Wilson-bound tri-state calls, per-route evidence, blindness, relations, and declared contracts |
 | Admit and revisit | `snapshot`, `check`, `compare-evidence` | Versioned regression references, drift checks, isolation policy, and independent evidence-window comparison |
@@ -91,7 +91,7 @@ current strings remain the machine contract until then.
 | Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |
 |---|---|---|---|---|
 | Terminology and concepts | “Baseline” is overloaded, while “deterministic” can sound absolute. Give readers one path from trace projection to regression reference without breaking machine contracts. | Active entry-point prose uses regression reference and within-condition repeatability; the terminology map is linked; five fresh-user walkthroughs find the fit boundary | Existing links and literal API values; a broad mechanical rename could corrupt history or compatibility artefacts | Change explanatory prose now; defer public aliases and file/schema renames to a separate reviewed migration |
-| Live fixed-budget curtailment | A run can keep spending after admission is mathematically unreachable. Stop futile collection without creating early admission. | An opt-in fixed-budget run stops at the first unreachable pair; reports stop pair, avoided work, and reason; exact-boundary and replay fixtures agree; snapshot admission and existing defaults are unchanged | A predeclared endpoint and ordered pairs; partial evidence must not be labelled with an unobserved final reject/undecided class | Ship only after ADR, simulation, compatibility review, and proof that no path admits early; otherwise retain the read-only planning helper |
+| Live fixed-budget curtailment — delivered in 0.21.0 | A run can keep spending after admission is mathematically unreachable. Stop futile collection without creating early admission. | `--curtail` stops at the first unreachable pair; terminal and machine reports retain stop pair, avoided work, and reason; exact-boundary replays and two million simulated paths preserve every fixed-endpoint call | One ordered, predeclared endpoint; partial evidence receives status `curtailed` and no final repeatability class | Keep the default fixed path unchanged; extend only with evidence for parallel or route-specific endpoint semantics |
 | Design-partner acquisition | Maintainer-controlled studies do not establish external usefulness. Keep validation running alongside no-regret product work. | 20 relevant teams contacted; six discovery conversations; three qualified pilot commitments; source and rejection reasons recorded privately | Clear fit/no-fit copy, ethical outreach, and support capacity; public ecosystem participation can be mistaken for adoption | If 20 relevant teams yield fewer than three serious conversations, revisit positioning and channels rather than lowering the pilot bar |
 | Independent cases | Users need evidence that the qualification decision changes real release work. | Three teams complete a pilot; two redistributable fixtures or case studies include costs, refusals, and negative findings | Permission to publish and representative systems; selection bias | Do not generalise a feature or claim from one maintainer-owned workload |
 

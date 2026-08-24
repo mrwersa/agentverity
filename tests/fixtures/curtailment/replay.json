@@ -1,0 +1,38 @@
+{
+  "schema": "agentverity.curtailment-replay/v1",
+  "epsilon": 0.05,
+  "scenarios": [
+    {
+      "name": "zero-flip-underfunded-endpoint-is-already-unreachable",
+      "endpoint_pairs": 25,
+      "prefix_outcomes": [false],
+      "expected_stopping_pair": 1,
+      "expected_observed_flips": 0,
+      "expected_avoided_pairs": 24
+    },
+    {
+      "name": "one-flip-cannot-admit-at-73",
+      "endpoint_pairs": 73,
+      "prefix_outcomes": [true],
+      "expected_stopping_pair": 1,
+      "expected_observed_flips": 1,
+      "expected_avoided_pairs": 72
+    },
+    {
+      "name": "fourth-flip-crosses-the-200-pair-boundary",
+      "endpoint_pairs": 200,
+      "prefix_outcomes": [false, false, true, false, false, false, true, false, true, true],
+      "expected_stopping_pair": 10,
+      "expected_observed_flips": 4,
+      "expected_avoided_pairs": 190
+    },
+    {
+      "name": "four-flips-remain-admissible-at-202",
+      "endpoint_pairs": 202,
+      "prefix_outcomes": [false, false, true, false, false, false, true, false, true, true],
+      "expected_stopping_pair": null,
+      "expected_observed_flips": 4,
+      "expected_avoided_pairs": 0
+    }
+  ]
+}

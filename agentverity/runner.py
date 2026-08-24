@@ -48,6 +48,7 @@ from agentverity.isolation import isolation_of
 from agentverity.meter import (
     PRECISION_LEVELS,
     MeterResult,
+    best_case_admission_pairs,
     pair_flipped,
     plan_repeats,
     resolve_epsilon,
@@ -73,6 +74,7 @@ from agentverity.stratified import (
 AgentFn = Callable[[str], Observation]
 RunStatus = Literal[
     "incomplete",
+    "curtailed",
     "contract",
     "blind",
     "vacuous",
@@ -152,6 +154,12 @@ class RunConfig:
             fixed-sample path is simpler and a caller who wants the simplest
             thing should keep getting it. See DESIGN.md ADR 7 for what the
             checkpoints buy and cost.
+        curtail: If True, keep the ordinary fixed endpoint but stop meter
+            collection once admission is unreachable even if every remaining
+            pair agrees. This is an early impossibility result, not an early
+            stochastic or undecided classification. Refused with sequential
+            collection, route-specific sizing, or parallel collection so the
+            endpoint and pair order remain unambiguous. See DESIGN.md ADR 9.
         max_workers: Maximum number of distinct inputs to process concurrently.
             Repeated calls for one input remain sequential. Defaults to one
             because stateful agents may not be thread-safe.
@@ -171,6 +179,7 @@ class RunConfig:
     sequential: bool = False
     max_workers: int = 1
     error_policy: ErrorPolicy = "raise"
+    curtail: bool = False
 
     def __post_init__(self) -> None:
         """Validate configuration before any agent call is made."""
@@ -197,6 +206,18 @@ class RunConfig:
             raise ValueError("max_workers must be >= 1")
         if self.error_policy not in {"raise", "record"}:
             raise ValueError("error_policy must be 'raise' or 'record'")
+        if self.curtail and not self.run_meter:
+            raise ValueError("curtailment requires the meter")
+        if self.curtail and self.sequential:
+            raise ValueError(
+                "curtailment preserves a fixed endpoint while sequential "
+                "collection uses declared interim decisions; choose one"
+            )
+        if self.curtail and self.max_workers != 1:
+            raise ValueError(
+                "curtailment requires max_workers=1 so no later pair starts "
+                "before the stopping boundary is known"
+            )
 
 
 @dataclass(frozen=True)
@@ -254,6 +275,23 @@ class RelationResult:
 
 
 @dataclass(frozen=True)
+class CurtailmentResult:
+    """A valid early stop because fixed-endpoint admission is unreachable."""
+
+    stopping_pair: int
+    endpoint_pairs: int
+    observed_flips: int
+    meter_calls_spent: int
+    meter_calls_avoided: int
+    reason: str
+
+    @property
+    def avoided_pairs(self) -> int:
+        """Number of predeclared meter pairs not collected."""
+        return self.endpoint_pairs - self.stopping_pair
+
+
+@dataclass(frozen=True)
 class RunResult:
     """The complete outcome of a runner pass.
 
@@ -280,6 +318,9 @@ class RunResult:
         isolation: How repeated trials were separated. `unknown` unless the
             evidence states it, because the library cannot observe it. See
             DESIGN.md ADR 5 for what each level admits.
+        curtailment: The fixed-endpoint impossibility result when meter
+            collection stopped early, otherwise None. A curtailed run has no
+            final meter classification.
     """
 
     meter: MeterResult | None
@@ -298,6 +339,7 @@ class RunResult:
     requested_inputs: int = 0
     duration_seconds: float = 0.0
     isolation: str = "unknown"
+    curtailment: CurtailmentResult | None = None
 
     @property
     def complete(self) -> bool:
@@ -353,6 +395,8 @@ class RunResult:
         """
         if not self.complete:
             return "incomplete"
+        if self.curtailment is not None:
+            return "curtailed"
         if (
             self.decision_coverage is not None
             and not self.decision_coverage.satisfied
@@ -430,6 +474,16 @@ class RunResult:
             return (
                 f"INCOMPLETE - {failed} call{'s' if failed != 1 else ''} failed, "
                 "so this run is not evidence of anything."
+            )
+        if self.curtailment is not None:
+            stop = self.curtailment
+            flips = f"{stop.observed_flips} flip"
+            if stop.observed_flips != 1:
+                flips += "s"
+            return (
+                "STOPPED EARLY - repeatability admission was unreachable at "
+                f"the predeclared {stop.endpoint_pairs}-pair endpoint after "
+                f"{flips} in {stop.stopping_pair} pairs."
             )
         if (
             self.decision_coverage is not None
@@ -574,7 +628,24 @@ class RunResult:
                 )
             lines.append("")
 
-        if self.meter is not None:
+        if self.curtailment is not None:
+            stop = self.curtailment
+            lines.append("1. LIVE FIXED-BUDGET CURTAILMENT")
+            lines.append("   outcome:     admission-unreachable")
+            lines.append(
+                f"   stopped at:  {stop.stopping_pair}/{stop.endpoint_pairs} pairs"
+            )
+            lines.append(f"   flips:       {stop.observed_flips}")
+            lines.append(
+                f"   avoided:     {stop.avoided_pairs} pairs "
+                f"({stop.meter_calls_avoided} meter calls)"
+            )
+            lines.append(f"   reason:      {stop.reason}")
+            lines.append(
+                "   classification: none; the fixed endpoint was not observed"
+            )
+            lines.append("")
+        elif self.meter is not None:
             m = self.meter
             lines.append("1. VERDICT-STOCHASTICITY METER")
             lines.append(f"   call:        {m.call}")
@@ -761,6 +832,11 @@ class RunResult:
             )
         elif self.is_blind:
             lines.append("   BLIND — green relation results may be vacuous.")
+        elif self.curtailment is not None:
+            lines.append(
+                "   CURTAILED — fixed-endpoint admission became unreachable; "
+                "no final repeatability class was assigned."
+            )
         elif self.meter is not None and self.meter.call == "verdict-deterministic":
             lines.append("   STABLE — prefer frozen-baseline diffing when a reference is available.")
         elif self.meter is not None and self.meter.call.startswith("undecided"):
@@ -920,6 +996,110 @@ def _collect_sequentially(
     return series, errors, UNDECIDED_CALL, len(outcomes)
 
 
+def _collect_with_curtailment(
+    agent: AgentFn,
+    inputs: list[str],
+    repeats_per_input: list[int],
+    config: RunConfig,
+    on_progress: ProgressCallback | None,
+) -> tuple[
+    list[list[Observation]],
+    list[RunError],
+    CurtailmentResult | None,
+]:
+    """Collect a fixed plan until its admission endpoint is unreachable.
+
+    Pair order is declared by construction: input index within each round,
+    then successive rounds. Only one pair is in flight, so the reported stop
+    is the first unreachable pair and avoided work was never started. If a
+    call fails under ``error_policy="record"``, statistical curtailment is
+    disabled for that run; incomplete execution is a different conclusion.
+    """
+    endpoint_pairs = sum(repeats // 2 for repeats in repeats_per_input)
+    planned_calls = sum(repeats_per_input)
+    series: list[list[Observation]] = [[] for _ in inputs]
+    errors: list[RunError] = []
+    outcomes: list[bool] = []
+    flips = 0
+    spent_calls = 0
+    pair_rounds = [repeats // 2 for repeats in repeats_per_input]
+
+    for round_index in range(max(pair_rounds, default=0)):
+        for index, text in enumerate(inputs):
+            if round_index >= pair_rounds[index]:
+                continue
+            spent_calls += 2
+            work = map_indexed_inputs(
+                [(index, text)],
+                lambda _index, value: [agent(value), agent(value)],
+                phase="meter",
+                max_workers=1,
+                error_policy=config.error_policy,
+                on_progress=on_progress,
+            )
+            errors.extend(work.errors)
+            pair = work.values[0]
+            if pair is None:
+                continue
+            series[index].extend(pair)
+            flipped = pair_flipped(pair[0], pair[1], config.layer)
+            outcomes.append(flipped)
+            flips += int(flipped)
+            if (
+                len(outcomes) < endpoint_pairs
+                and not errors
+                and best_case_admission_pairs(
+                    config.epsilon,
+                    flips=flips,
+                    pairs=len(outcomes),
+                    max_pairs=endpoint_pairs,
+                )
+                is None
+            ):
+                return (
+                    series,
+                    errors,
+                    CurtailmentResult(
+                        stopping_pair=len(outcomes),
+                        endpoint_pairs=endpoint_pairs,
+                        observed_flips=flips,
+                        meter_calls_spent=spent_calls,
+                        meter_calls_avoided=planned_calls - spent_calls,
+                        reason=(
+                            "admission is unreachable at the predeclared fixed "
+                            "endpoint even if every remaining pair agrees"
+                        ),
+                    ),
+                )
+
+    # An explicit odd k carries one unpaired observation per input. Preserve
+    # that fixed-plan behaviour when the endpoint remains reachable.
+    odd = [
+        (index, text)
+        for index, (text, repeats) in enumerate(
+            zip(inputs, repeats_per_input, strict=True)
+        )
+        if repeats % 2
+    ]
+    if odd:
+        spent_calls += len(odd)
+        work = map_indexed_inputs(
+            odd,
+            lambda _index, text: agent(text),
+            phase="meter",
+            max_workers=1,
+            error_policy=config.error_policy,
+            on_progress=on_progress,
+        )
+        errors.extend(work.errors)
+        for (index, _text), observation in zip(odd, work.values, strict=True):
+            if observation is not None:
+                series[index].append(observation)
+
+    assert spent_calls == planned_calls
+    return series, errors, None
+
+
 def run(
     agent: AgentFn,
     inputs: Iterable[str] | None = None,
@@ -1034,8 +1214,15 @@ def run(
                 "budget, or choose deployment-relevant targets."
             )
 
+    if config.curtail and suite is not None and suite.contract.stability_targets:
+        raise ValueError(
+            "curtailment uses one pooled fixed endpoint while declared route "
+            "stability targets size separate endpoints; choose one"
+        )
+
     sequential_call: str | None = None
     sequential_pairs: int | None = None
+    curtailment: CurtailmentResult | None = None
     if config.run_meter and config.sequential:
         if suite is not None and suite.contract.stability_targets:
             raise ValueError(
@@ -1091,6 +1278,41 @@ def run(
                 epsilon=config.epsilon,
                 targets=suite.contract.stability_targets,
             )
+        if config.reuse_unchanged_calls:
+            for index, run_series in enumerate(series):
+                if run_series:
+                    source_observations[index] = run_series[0]
+    elif config.run_meter and config.curtail:
+        series, meter_errors, curtailment = _collect_with_curtailment(
+            agent,
+            list(inputs),
+            repeats_per_input,
+            config,
+            on_progress,
+        )
+        errors.extend(meter_errors)
+        complete_series = [run_series for run_series in series if len(run_series) >= 2]
+        for index, run_series in enumerate(series):
+            if run_series:
+                case_series[index] = tuple(run_series)
+        repeated_observations = [
+            observation for run_series in complete_series for observation in run_series
+        ]
+        if curtailment is None and complete_series:
+            meter_result = score_runs(
+                complete_series,
+                k=config.k,
+                layer=config.layer,
+                epsilon=config.epsilon,
+            )
+            if suite is not None:
+                route_stability = stratify_runs(
+                    list(zip(intended_decisions, series, strict=True)),
+                    k=config.k,
+                    layer=config.layer,
+                    epsilon=config.epsilon,
+                    targets=suite.contract.stability_targets,
+                )
         if config.reuse_unchanged_calls:
             for index, run_series in enumerate(series):
                 if run_series:
@@ -1315,4 +1537,5 @@ def run(
         requested_inputs=len(inputs),
         duration_seconds=time.perf_counter() - started,
         isolation=declared,
+        curtailment=curtailment,
     )
