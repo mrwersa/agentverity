@@ -79,8 +79,10 @@ the three durable reader paths against files written by 0.16.0, the earliest
 minor that produced every currently supported schema. There are no migration
 paths to test: older evidence and snapshot schemas are deliberately refused.
 
-The preliminary compatibility suite now covers four complementary surfaces
-from the published 0.20.0 wheel:
+The preliminary compatibility suite now covers four complementary surfaces.
+The generated structural and return inventories come from the published
+0.21.0 wheel, while the executable CLI contract retains its reviewed 0.20.0
+baseline and adds focused 0.21.0 curtailment scenarios:
 
 - the [public surface audit](docs/public-surface-audit.md) pins top-level
   exports, signatures, constants, commands, flags, and parser defaults;
@@ -91,7 +93,7 @@ from the published 0.20.0 wheel:
   drift, snapshot, and reporting returns; and
 - the [class-member audit](docs/class-member-audit.md) inventories declared
   fields, defaults, methods, class methods, static methods, and properties for
-  all 35 top-level exported classes.
+  all 36 top-level exported classes.
 
 These audits establish reviewable structure and representative behaviour.
 They do not freeze exact help or report prose, exhaustively specify every

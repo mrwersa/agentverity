@@ -1,12 +1,12 @@
 # Public surface compatibility audit
 
 This preliminary audit records the top-level Python and command-line surface
-published in AgentVerity 0.20.0. It makes accidental drift visible without
+published in AgentVerity 0.21.0. It makes accidental drift visible without
 claiming the API is frozen before 1.0.
 
 ## What CI pins
 
-`tests/fixtures/compatibility/v0.20.0/public-surface.json` records:
+`tests/fixtures/compatibility/v0.21.0/public-surface.json` records:
 
 - every name in `agentverity.__all__`, classified as a function, class, or
   constant;
@@ -18,11 +18,11 @@ claiming the API is frozen before 1.0.
 CI recollects the surface and compares it with the reviewed fixture. An
 intentional pre-1.0 break is still permitted, but it must now update one
 readable artifact alongside the required minor version and migration notes.
-The 0.21.0 release candidate is checked against that published 0.20.0 surface
-with an explicit additive delta: `CurtailmentResult`, the `RunConfig.curtail`
-and `RunResult.curtailment` fields, the `curtailed` status path, and the
-`--curtail` options on `run` and `snapshot`. The historical fixture remains an
-unaltered record of the published wheel.
+The reviewed 0.21.0 fixture includes `CurtailmentResult`, the
+`RunConfig.curtail` and `RunResult.curtailment` fields, and the `--curtail`
+options on `run` and `snapshot`. CI now compares the checkout directly with
+that published surface; the 0.20.0 fixture remains as an unaltered historical
+record.
 
 Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit
@@ -36,17 +36,17 @@ by focused tests and the return audit rather than this signature inventory.
 
 ## Provenance and reproduction
 
-The committed inventory is generated from the published 0.20.0 wheel. Run
+The committed inventory is generated from the published 0.21.0 wheel. Run
 outside the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v020
-/tmp/agentverity-v020/bin/pip install agentverity==0.20.0
+python -m venv /tmp/agentverity-v021
+/tmp/agentverity-v021/bin/pip install agentverity==0.21.0
 cd /tmp
-/tmp/agentverity-v020/bin/python \
+/tmp/agentverity-v021/bin/python \
   /path/to/agentverity/scripts/audit_public_surface.py \
-  /path/to/agentverity/tests/fixtures/compatibility/v0.20.0/public-surface.json \
-  --expected-version 0.20.0
+  /path/to/agentverity/tests/fixtures/compatibility/v0.21.0/public-surface.json \
+  --expected-version 0.21.0
 ```
 
 The auditor refuses to write when the imported version differs from the named

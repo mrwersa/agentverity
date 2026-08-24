@@ -1,7 +1,7 @@
 # Return Semantics Compatibility Audit
 
 This preliminary audit records observable Python return behaviour published by
-AgentVerity 0.20.0. It complements the signature inventory and CLI exit
+AgentVerity 0.21.0. It complements the signature inventory and CLI exit
 contract: a callable can keep the same signature and still break callers by
 changing the type, status, or field relationship it returns.
 
@@ -25,25 +25,25 @@ offline agents and evidence. Its reviewed fixture pins:
   field/attribute sets for a successful declared-contract run.
 
 CI recollects those semantics and compares them with
-`tests/fixtures/compatibility/v0.20.0/return-semantics.json`. A behaviour change
+`tests/fixtures/compatibility/v0.21.0/return-semantics.json`. A behaviour change
 therefore requires a readable fixture diff rather than passing unnoticed.
-The 0.21.0 candidate adds one executed `curtailed` path and the optional JSON
-`curtailment` member; CI names and removes exactly those additions before
-comparing the remainder with the published fixture.
+The fixture includes the executed `curtailed` path and optional JSON
+`curtailment` member. CI compares the checkout directly with the published
+semantics; the 0.20.0 fixture remains as an unaltered historical record.
 
 ## Provenance and Reproduction
 
-The committed fixture was written by the published 0.20.0 wheel. Run the
+The committed fixture was written by the published 0.21.0 wheel. Run the
 repository script from outside the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v020-returns
-/tmp/agentverity-v020-returns/bin/pip install agentverity==0.20.0
+python -m venv /tmp/agentverity-v021-returns
+/tmp/agentverity-v021-returns/bin/pip install agentverity==0.21.0
 cd /tmp
-/tmp/agentverity-v020-returns/bin/python \
+/tmp/agentverity-v021-returns/bin/python \
   /path/to/agentverity/scripts/audit_return_semantics.py \
-  /path/to/agentverity/tests/fixtures/compatibility/v0.20.0/return-semantics.json \
-  --expected-version 0.20.0
+  /path/to/agentverity/tests/fixtures/compatibility/v0.21.0/return-semantics.json \
+  --expected-version 0.21.0
 ```
 
 The auditor refuses to write when the imported version differs from the named
