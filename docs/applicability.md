@@ -1,12 +1,38 @@
 # Applicability and limits
 
-AgentVerity is a conservative admission policy for regression baselines
+AgentVerity is a conservative admission policy for regression references
 involving named decisions. It is useful when a model-backed component behaves
 like a classifier, router, gate, supervisor, or bounded controller even if it
 also generates explanatory text.
 
 It qualifies evidence produced beside correctness and trajectory evaluators.
 It does not qualify the whole agent.
+
+## The conceptual model
+
+AgentVerity evaluates a declared categorical projection of a trace, not the
+complete trace:
+
+```text
+trace T
+  -> predeclared projection g
+  -> categorical decision D
+  -> ordered repeated decisions
+  -> disjoint-pair flips
+  -> repeatability qualification
+```
+
+The projection may extract a route, approval, selected tool, supervisor
+handoff, or bounded tool-path class. It must preserve every distinction that
+matters to the regression contract. A projection that maps meaningfully
+different traces onto one label can appear repeatable while hiding the change
+a release check was meant to catch.
+
+Acceptability and repeatability answer separate questions. A grader or human
+reviews whether behaviour is acceptable; AgentVerity asks whether the repeated
+categorical evidence is adequate and repeatable at the declared tolerance.
+Only after both hold should `snapshot` preserve a regression reference for a
+later `check` or evidence-window comparison.
 
 ## The fit checklist
 
@@ -30,8 +56,8 @@ extracted.
 
 | Target | Fit | What AgentVerity checks |
 |---|---|---|
-| Support, payment, fraud, or incident router | Strong | Stability and spread of named routes |
-| Approval or policy gate | Strong | Stability and spread of `approve`, `review`, and `deny` decisions |
+| Support, payment, fraud, or incident router | Strong | Repeatability and spread of named routes |
+| Approval or policy gate | Strong | Repeatability and spread of `approve`, `review`, and `deny` decisions |
 | Multi-agent supervisor | Strong at a decision point | Final route, next-agent handoff, or a contracted tool path |
 | Tool-using workflow | Conditional | A bounded, reviewed tool sequence, not arbitrary reasoning |
 | Chat or RAG assistant | Usually poor | Only a separate route, citation policy, escalation, or other named decision |
@@ -52,11 +78,11 @@ Choose the layer that owns the contract:
 - **Tool-path level:** compare an ordered tool or agent sequence only when that
   sequence is itself reviewed behaviour.
 
-Run step and system checks separately for critical paths. A stable step can be
-blind while the surrounding pipeline is unstable. One aggregate end-to-end
+Run step and system checks separately for critical paths. A repeatable step can
+be blind while the surrounding pipeline changes. One aggregate end-to-end
 score can hide both facts.
 
-If many trajectories are equally valid, do not use exact tool-path stability
+If many trajectories are equally valid, do not use exact tool-path repeatability
 as a quality claim. Prefer the final named decision or define a coarser,
 reviewed path contract.
 
@@ -65,7 +91,7 @@ reviewed path contract.
 A trustworthy result supports this bounded statement:
 
 > For these test inputs, observation layer, isolated trial method, and
-> tolerance, the run produced enough stability evidence and did not collapse
+> tolerance, the run produced enough repeatability evidence and did not collapse
 > onto one highly dominant observed decision. When a decision contract was
 > supplied, every required decision was intended and observed.
 
@@ -158,8 +184,8 @@ conversation history from contaminating a repeat, but it cannot remove
 provider-side caching, model rollouts, routing changes, or shared external
 state.
 
-The global stability interval can also conceal a small unstable subgroup.
-Per-route stability names that subgroup when a decision suite is supplied.
+The global repeatability interval can also conceal a small changing subgroup.
+Per-route evidence names that subgroup when a decision suite is supplied.
 Use `agentverity plan --suite` before assigning a tighter target to a
 high-consequence route.
 
@@ -168,7 +194,7 @@ execution and use a tolerance tied to the consequences of a changed decision.
 The `cheap`, `balanced`, and `strict` presets are sampling choices, not
 universal safety grades.
 
-See [decision stability](decision-stability.md) for the arithmetic and
+See [decision repeatability](decision-stability.md) for the arithmetic and
 [integrations](integrations.md) for placement in CI, release, and canary
 workflows.
 
@@ -191,14 +217,15 @@ Treat the intervals as a practical diagnostic, not as laboratory evidence.
 
 ## Per-route intervals are not a joint guarantee
 
-When a decision suite is declared, stability is also reported per route. Each
+When a decision suite is declared, repeatability is also reported per route. Each
 route's interval is its own 95% statement. Six of them together are not a 95%
 statement about the suite, and the report does not claim otherwise. Read the
 table as six separate findings.
 
-A route proven stochastic blocks snapshot admission because pooling cannot
-erase a conclusive subgroup finding. An untargeted undecided route remains an
-explicit limit on a pooled baseline rather than a clean route. A route named
+A route whose repeatability is rejected (`stochastic`) blocks snapshot admission
+because pooling cannot erase a conclusive subgroup finding. An untargeted
+undecided route remains an explicit limit on a pooled regression reference
+rather than a clean route. A route named
 in `stability_targets` is different: the run budgets for its declared
 tolerance. An undecided result blocks release and snapshot admission, while a
 result proven above the target fails the declared policy.

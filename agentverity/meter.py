@@ -4,11 +4,11 @@ Agents are non-deterministic, so before trusting any test you must know whether
 the agent's *decision* actually varies across identical reruns, and at which
 layer. Token-level variation (the final text wording) is common and mostly
 harmless; what matters for testing is whether the **verdict** (the categorical
-decision, or the tool trajectory) flips. If the verdict is stable and a
-trusted reference is available, frozen-baseline diffing is the more sensitive
-change detector.
-If it is stochastic, you need noise-robust relations and a measured baseline,
-not zero-tolerance assertions.
+decision, or the tool trajectory) flips. If verdict repeatability is qualified
+and a trusted reference is available, comparison with that regression reference
+is the more sensitive change detector. If repeatability is rejected, you need
+noise-robust relations and comparison with a measured reference rather than
+zero-tolerance assertions.
 
 The meter runs the agent ``k`` times on each unchanged input and reports a
 tri-state call with a Wilson confidence interval, so an underfunded probe is
@@ -355,12 +355,16 @@ class MeterResult:
         """A human-readable recommendation based on the tri-state call."""
         c = self.call
         if c == "verdict-stochastic":
-            return ("verdict varies across identical runs: use noise-robust "
-                    "relations and compare violations to a measured baseline, "
-                    "not zero.")
+            return (
+                "verdict varies across identical runs: use noise-robust "
+                "relations and compare violations to a measured regression "
+                "reference, not zero."
+            )
         if c == "verdict-deterministic":
-            return ("verdict is stable: prefer frozen-baseline diffing when "
-                    "a trusted reference is available.")
+            return (
+                "verdict repeatability is qualified: prefer comparison with a "
+                "frozen regression reference when one is available."
+            )
         return (
             "not enough evidence to choose a test strategy; "
             "raise K or input count."

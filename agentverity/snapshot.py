@@ -372,7 +372,8 @@ def create_snapshot(result: RunResult, *, approved: bool) -> Snapshot:
     _require_snapshot_evidence(result)
     if not approved:
         raise SnapshotRefused(
-            "reference outputs require explicit approval; stability is not correctness"
+            "reference outputs require explicit approval; repeatability is not "
+            "correctness"
         )
     assert result.meter is not None
     assert result.blindness is not None

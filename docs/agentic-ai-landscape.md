@@ -10,8 +10,8 @@ AgentVerity should define a narrow category: an **evidence-qualification layer
 for repeated categorical agent decisions**. Evaluators decide whether an
 answer or trajectory is acceptable; observability systems record what
 happened; AgentVerity decides whether repeated evidence is sufficiently
-stable, covered, independent, and non-vacuous to admit as a regression
-baseline.
+repeatable, covered, independent, and non-vacuous to admit as a regression
+reference.
 
 That distinction is the opportunity. Repetition itself is no longer unusual:
 LangSmith, Promptfoo, and Phoenix all expose repeated experiment runs. The
@@ -52,7 +52,7 @@ Agent evaluation is a lifecycle, not one score:
 4. Inspect tool choices, intermediate steps, and complete trajectories.
 5. Repeat trials to expose stochasticity; simulate users and tool failures;
    red-team security boundaries.
-6. Gate releases against reviewed baselines, then trace and evaluate production
+6. Gate releases against reviewed references, then trace and evaluate production
    traffic online.
 7. Feed incidents, human review, and drift discoveries back into datasets,
    contracts, and governance.
@@ -89,21 +89,21 @@ a claim that a platform cannot calculate statistics.
 
 | Product | Evaluation center | Repetition and statistical treatment | Agent path, lifecycle, and deployment | Relationship to AgentVerity |
 |---|---|---|---|---|
-| **DeepEval** | Pytest-oriented metrics, datasets, component and end-to-end evaluation | Repeated testing is possible; no documented conservative baseline-admission rule | Trace-based agent and component evaluation, CI, integrations, and managed production evaluation ([docs](https://deepeval.com/docs/getting-started-agents)) | Complementary grader and test harness; current AgentVerity test-case bridge reduces duplicate authoring |
+| **DeepEval** | Pytest-oriented metrics, datasets, component and end-to-end evaluation | Repeated testing is possible; no documented conservative reference-admission rule | Trace-based agent and component evaluation, CI, integrations, and managed production evaluation ([docs](https://deepeval.com/docs/getting-started-agents)) | Complementary grader and test harness; current AgentVerity test-case bridge reduces duplicate authoring |
 | **LangSmith** | Offline experiments and online evaluators | `num_repetitions` retains individual runs and aggregate views; no documented confidence-bound admission policy ([docs](https://docs.langchain.com/langsmith/experiment-configuration)) | Output, single-step, and trajectory evaluation; tracing and production feedback ([concepts](https://docs.langchain.com/langsmith/evaluation-concepts), [agent guide](https://docs.langchain.com/langsmith/evaluate-complex-agent)) | High-priority evidence source if adopters supply stable export examples |
 | **Promptfoo** | Configurable assertions, model judges, red teaming, and CI | CLI and test-level repeats measure variance; no documented route-specific statistical admission ([tests](https://www.promptfoo.dev/docs/configuration/test-cases/)) | Tool/trajectory assertions and coding-agent evaluation ([assertions](https://www.promptfoo.dev/docs/configuration/expected-outputs/), [agent guide](https://www.promptfoo.dev/docs/guides/evaluate-coding-agents/)) | Complementary evaluator; raw-run import already supported. OpenAI announced an agreement to acquire Promptfoo in March 2026, subject to closing conditions ([OpenAI announcement](https://openai.com/index/openai-to-acquire-promptfoo/)) |
 | **OpenAI Evals and Agents** | Datasets, evaluation runs, and graders around vendor-native agents | Evaluation runs operate over declared data; reviewed docs do not establish AgentVerity-style admission | Agent orchestration, tools, tracing, and evaluation workflows ([Evals](https://developers.openai.com/api/docs/guides/evals), [Agents](https://developers.openai.com/api/docs/guides/agents)) | Potential upstream runner; AgentVerity remains provider-neutral and offline |
 | **Braintrust** | Code/LLM scorers, datasets, and experiments | Experiments compare scores; no reviewed bounded admission rule | Playground-to-CI workflow, online scoring, and production feedback ([docs](https://www.braintrust.dev/docs/evaluate)) | Complementary experiment and feedback platform |
 | **Phoenix** | Open-source tracing, datasets, experiments, and evaluators | Repetitions show individual results and averages; no documented conservative admission rule ([docs](https://arize.com/docs/phoenix/datasets-and-experiments/how-to-experiments/repetitions)) | OpenTelemetry/OpenInference traces, experiments, and self-hosted observability ([docs](https://arize.com/docs/phoenix/)) | Natural interoperability target and complementary trace store |
-| **Langfuse** | Datasets, experiments, traces, and evaluators | Supports item- and run-level evaluators; reviewed docs do not establish bounded baseline admission | SDK/HTTP experiments, CI, OpenTelemetry ingestion, managed or self-hosted deployment ([SDK](https://langfuse.com/docs/evaluation/experiments/experiments-via-sdk), [API](https://langfuse.com/docs/api-and-data-platform/features/experiments-api)) | Complementary observability/evaluation system and possible evidence source |
+| **Langfuse** | Datasets, experiments, traces, and evaluators | Supports item- and run-level evaluators; reviewed docs do not establish bounded reference admission | SDK/HTTP experiments, CI, OpenTelemetry ingestion, managed or self-hosted deployment ([SDK](https://langfuse.com/docs/evaluation/experiments/experiments-via-sdk), [API](https://langfuse.com/docs/api-and-data-platform/features/experiments-api)) | Complementary observability/evaluation system and possible evidence source |
 | **MLflow** | Broad GenAI lifecycle, datasets, scorers, judges, and tracking | Experiment comparison; no reviewed route-specific admission rule | Trace-derived/manual datasets, conversation simulation, tracking server ([datasets](https://mlflow.org/docs/latest/genai/datasets/), [scorers](https://mlflow.org/docs/latest/genai/eval-monitor/scorers/index.html)) | Broader engineering platform; integration is more credible than feature competition |
 | **TruLens** | Trace-based feedback functions and runtime evaluation | Metric feedback; no reviewed repeated-run confidence gate | Agent trace, tool-selection, and tool-quality feedback ([docs](https://www.trulens.org/docs/), [feedback reference](https://www.trulens.org/reference/trulens/feedback/)) | Complementary evaluator and instrumentation layer |
-| **Ragas** | RAG and agent-quality metrics | Metric evaluation, not documented baseline qualification | Tool-call and agent-goal metrics, especially for retrieval systems ([docs](https://docs.ragas.io/en/stable/), [paper](https://arxiv.org/abs/2309.15217)) | Complementary domain scorer, not a direct substitute |
+| **Ragas** | RAG and agent-quality metrics | Metric evaluation, not documented reference qualification | Tool-call and agent-goal metrics, especially for retrieval systems ([docs](https://docs.ragas.io/en/stable/), [paper](https://arxiv.org/abs/2309.15217)) | Complementary domain scorer, not a direct substitute |
 | **AWS AgentCore Evaluations** | Managed on-demand, batch, and online evaluation | Evaluates sessions/traces with LLM or code evaluators; no reviewed confidence-bound admission | Session-, trace-, and tool-call evaluation, reference trajectories, OpenTelemetry/OpenInference-shaped telemetry ([types](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluations-types.html), [overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/how-it-works-evaluations.html)) | Hosted lifecycle platform; AgentVerity can qualify exported categorical decisions |
 
 Operationally, the products make different tradeoffs. “Baseline” below means
 an experiment or regression comparison, not necessarily a statistically
-qualified baseline.
+qualified regression reference.
 
 | Product | Baseline and CI | Provenance and observability | Hosting, licence, and interoperability |
 |---|---|---|---|
@@ -132,7 +132,7 @@ They describe telemetry, not automatically the trial ordering, categorical
 decision identity, isolation, or reviewed contract that AgentVerity needs.
 An importer must therefore reject ambiguous mappings rather than infer them.
 
-## AgentVerity baseline
+## AgentVerity current state
 
 ### Verified implementation
 
@@ -144,7 +144,7 @@ CLI. Its public workflow is:
   LangGraph adapters;
 - `assess` imports Promptfoo, DeepEval test cases, or generic JSONL evidence;
 - `snapshot` admits reviewed evidence, `check` compares a later run with that
-  baseline, and `compare-evidence` compares two collection windows;
+  regression reference, and `compare-evidence` compares two collection windows;
 - terminal, versioned JSON, JUnit XML, and privacy-minimised OpenTelemetry
   reporting serve people, CI, and telemetry backends.
 
@@ -152,7 +152,7 @@ The statistical core forms disjoint observation pairs and places a Wilson
 interval around the flip rate. It calls a route deterministic only when the
 upper bound is below the declared tolerance, stochastic only when the lower
 bound exceeds it, and otherwise returns `undecided`. At the default 5%
-tolerance, proving stability with zero flips requires 73 independent pairs.
+tolerance, qualifying repeatability with zero flips requires 73 independent pairs.
 Optional sequential collection uses predeclared checkpoints and alpha
 spending rather than repeatedly peeking at a fixed-sample interval.
 
@@ -160,7 +160,7 @@ The evidence model carries decision contracts, intended/observed/admissible
 route reach, critical-route requirements, blindness/skew diagnostics,
 metamorphic relations and vacuity checks, per-route budgets, typed
 no-decision outcomes, and isolation provenance. `shared-session` evidence is
-refused for baseline admission; unknown isolation retains a caveat. Evidence,
+refused for regression-reference admission; unknown isolation retains a caveat. Evidence,
 telemetry, snapshots, and decision suites are versioned as
 `agentverity.evidence/v2`, `agentverity.telemetry/v2`,
 `agentverity.snapshot/v4`, and `agentverity.decision-suite/v1`; collected runs
@@ -206,18 +206,18 @@ independent adoption.
 
 ## Positioning
 
-**Category.** Evidence qualification and baseline admission for stochastic,
-bounded agent decisions.
+**Category.** Regression-reference qualification for repeated categorical
+agent decisions.
 
 **Ideal users.** Teams shipping routers, tool selectors, policy decisions,
 finite workflow transitions, or categorical LLM judges where a false-green
-regression baseline is costly. They already have cases and a runner or can use
+regression reference is costly. They already have cases and a runner or can use
 the small built-in harness; they need an auditable release decision more than
 another score dashboard.
 
 **Jobs to be done.** Determine the call budget before testing; distinguish
 `deterministic`, `stochastic`, and `undecided` evidence; find which route is
-weak; prevent blind or shared-session evidence from becoming a baseline;
+weak; prevent blind or shared-session evidence from becoming a regression reference;
 preserve the contract and provenance behind a release gate; and compare later
 evidence without rerunning the original platform.
 

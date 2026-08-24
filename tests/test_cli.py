@@ -31,10 +31,10 @@ class TestCLI:
             main(["--help"])
 
         assert raised.value.code == 0
+        help_text = " ".join(capsys.readouterr().out.split())
         assert (
-            "Evidence checks for regression baselines on AI agents with "
-            "bounded decisions."
-            in capsys.readouterr().out
+            "Qualify repeated categorical AI-agent evidence before it becomes "
+            "a regression reference." in help_text
         )
 
     def test_run_deterministic_agent(self, capsys, tmp_path):

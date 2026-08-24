@@ -1,11 +1,11 @@
-"""Evidence checks for regression baselines on AI agents with bounded decisions.
+"""Qualify repeated categorical AI-agent evidence for a regression reference.
 
 Before trusting a green run, AgentVerity checks whether the agent's named
-decision is stable across reruns and whether the test inputs reach more than
+decision is repeatable across reruns and whether the test inputs reach more than
 one decision. Two headline diagnostics:
 
   1. **Verdict-stochasticity meter** — does the agent's decision flip across
-     identical reruns? A stable decision can support a reviewed baseline.
+     identical reruns? A repeatable decision can support a reviewed reference.
   2. **Constant-gate-blindness detector** — does the agent return a near-constant
      verdict across a diverse input set? If so, a green result supports that
      path rather than the wider decision contract.
