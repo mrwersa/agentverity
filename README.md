@@ -8,7 +8,7 @@
 [![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25%2B-brightgreen.svg)](#development)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
-AgentVerity is an offline Python library and CLI that qualifies repeated,
+AgentVerity is a local Python library and CLI that qualifies repeated,
 categorical AI-agent evidence before it becomes a **regression reference** for
 future releases. It finds routes whose repeatability is rejected, weak decision
 coverage, and runs too small to support a conclusion. It does not judge whether
@@ -34,9 +34,10 @@ flip pairs:
 
 The quality policy accepts both answers, but a reference that switches queues
 will make later regression checks noisy. The changing route is `stochastic`;
-the five quiet routes are `undecided` because 13 pairs are too few to certify
-them separately. A **flip** means the two observations in a paired rerun
-differed. AgentVerity therefore refuses this evidence as a regression reference.
+the five quiet routes are `undecided` because 13 pairs are too few to qualify
+their repeatability separately. A **flip** is a pairwise disagreement: the two
+observations in a paired rerun differed. AgentVerity therefore refuses this
+evidence as a regression reference.
 
 ## Try it without model calls
 
@@ -84,13 +85,26 @@ result = run(agent, inputs=["duplicate charge", "cash withdrawal"])
 print(result.summary())
 ```
 
-## What it decides
+## Two gates, not one
+
+A regression reference needs two separate yeses. AgentVerity assesses
+repeatability; a human or evaluator decides whether the expected behaviour is
+acceptable.
+
+```text
+repeated named decisions -> flips -> repeatability qualified
+expected behaviour -> human or evaluator review -> acceptable
+
+repeatability qualified + acceptable -> regression reference
+```
 
 AgentVerity keeps three API outcomes separate and explains them in
 repeatability terms:
 
-- `deterministic`: repeatability qualified; evidence supports the tolerance
-- `stochastic`: repeatability rejected; changes exceed the tolerance
+- `deterministic`: repeatability qualified; evidence supports a pairwise
+  disagreement rate below the tolerance
+- `stochastic`: repeatability rejected; evidence supports a pairwise
+  disagreement rate above the tolerance
 - `undecided`: inconclusive; the evidence supports neither direction
 
 These strings remain the public machine contract. `deterministic` does not
@@ -130,27 +144,30 @@ a bounded route or approval, AgentVerity can qualify that decision layer.
 | `agentverity check` | Re-run the admission policy and compare with a snapshot |
 | `agentverity compare-evidence` | Compare two independently collected evidence windows |
 
-## Why rerun counts are harder than they look
+## Stop when more runs cannot help
 
 Three or five reruns by convention do not state what variation they can rule
 out. With no observed changes:
 
-- 36 independent pairs bound the change rate below about 9.6%
+- 36 independent pairs give a 95% upper bound of about 9.6% on the pairwise
+  disagreement rate
 - a claim below 5% needs 73 pairs
 - a short quiet run is therefore `undecided`, not repeatability qualified
 
 AgentVerity sizes calls from the tolerance, uses non-overlapping pairs, and
-places a Wilson interval around the flip rate. Optional sequential collection
+places a Wilson interval around the pairwise disagreement rate. Reports call a
+pairwise disagreement a flip. Optional sequential collection
 uses checkpoints declared before collection; it does not repeatedly inspect a
 fixed-sample interval and stop when the result looks favourable.
 
 For evidence already collected, `best_case_admission_pairs` tests whether an
 all-agree continuation could admit within a predeclared pair budget. It may
 justify stopping an impossible run early; it never creates an early admission.
-For live fixed-endpoint collection, opt into the same bound with `--curtail`.
-It reports the stopping pair and avoided calls but no final repeatability class;
-a path that could admit still pays the full fixed budget and is classified only
-there.
+For live fixed-endpoint collection, `--curtail` stops as soon as even an
+all-agree continuation cannot qualify by the endpoint. It reports the stopping
+pair and avoided calls but no final repeatability class. It never admits early:
+a path that could qualify still pays the full fixed budget and is classified
+only there.
 
 Use `agentverity plan --suite examples/route_stability_plan.json` before
 spending remote calls. The [decision repeatability method guide](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)

@@ -21,9 +21,21 @@ def test_readme_onboards_before_the_statistical_explanation():
     readme = (ROOT / "README.md").read_text()
 
     assert readme.index("## Try it") < readme.index(
-        "## Why rerun counts are harder than they look"
+        "## Stop when more runs cannot help"
     )
     assert "Use another evaluator for open-ended chat" in readme
+
+
+def test_readme_explains_the_two_separate_reference_gates() -> None:
+    """The front page must not turn repeatability into correctness."""
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    prose = " ".join(readme.split())
+
+    assert "AgentVerity is a local Python library" in readme
+    assert "A regression reference needs two separate yeses" in prose
+    assert "repeatability qualified" in readme
+    assert "expected behaviour is acceptable" in prose
+    assert "A **flip** is a pairwise disagreement" in readme
 
 
 def test_readme_shows_the_finding_before_positioning_itself():

@@ -189,8 +189,9 @@ Per-route evidence names that subgroup when a decision suite is supplied.
 Use `agentverity plan --suite` before assigning a tighter target to a
 high-consequence route.
 
-Lower tolerated change rates require more calls. Budget the run before
-execution and use a tolerance tied to the consequences of a changed decision.
+Lower tolerated pairwise disagreement rates need more calls. Budget the run
+before execution and tie the tolerance to the consequences of a changed
+decision.
 The `cheap`, `balanced`, and `strict` presets are sampling choices, not
 universal safety grades.
 

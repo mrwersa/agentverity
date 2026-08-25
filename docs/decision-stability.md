@@ -33,9 +33,9 @@ flip rate 0.0    upper bound 0.096    tolerance 0.05    ->  NOT STABLE
 ```
 
 The interval arithmetic is correct. The Boolean interface is not. An upper
-bound of 9.6% fails to certify a change rate below 5%, but it does not show that
-the router is unstable. The sample is underpowered, so the honest result is
-**undecided**.
+bound of 9.6% fails to qualify a pairwise disagreement rate below 5%, but it
+does not show that the router is unstable. The sample is underpowered, so the
+honest result is **undecided**.
 
 With no observed changes, a 5% threshold needs 73 independent pairs.
 `pairs_for_deterministic_call(0.05)` returns that number, while `plan_repeats`
@@ -76,7 +76,7 @@ end-to-end latency of one real deployment path.
 AgentVerity keeps three outcomes:
 
 - `deterministic`: enough evidence supports the requested tolerance
-- `stochastic`: observed changes rule out that tolerance
+- `stochastic`: observed pairwise disagreements rule out that tolerance
 - `undecided`: the sample supports neither claim
 
 Use `precision="cheap"`, `"balanced"`, or `"strict"` for the common operating
