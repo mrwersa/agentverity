@@ -367,6 +367,11 @@ applies.
 
 ## Comparing two windows over time
 
+Here, an **evidence window** means one stored collection artefact. It is not
+automatically an independent **evaluation period**, the statistical sampling
+unit needed for an across-period marginal claim. Splitting observations across
+two files does not establish independent period sampling.
+
 A run says whether a decision is repeatable now. It cannot say whether last
 month's answer was the same, which is the question after a model version
 changes, a prompt is edited, or a provider reroutes traffic.

@@ -240,6 +240,8 @@ class TestSummary:
         assert "CONSTANT-GATE-BLINDNESS DETECTOR" in s
         assert "WHAT TO DO NEXT" in s
         assert "RELATION RESULTS" in s
+        assert "within-period disagreement probability" in s
+        assert "across-period marginal disagreement probability" in s
 
     def test_summary_blind_warning(self):
         def fn(x: str) -> dict:
