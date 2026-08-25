@@ -1,0 +1,297 @@
+{
+  "producer": "agentverity==0.23.0",
+  "semantics": {
+    "assessment": {
+      "complete": true,
+      "isolation": "fresh-session",
+      "relation_results": [],
+      "requested_inputs": 3,
+      "status": "deterministic",
+      "type": "RunResult"
+    },
+    "drift": {
+      "changed_routes": [
+        "allow"
+      ],
+      "drifted": true,
+      "gained_flip_pairs": [
+        "allow <-> review"
+      ],
+      "isolation_changed": true,
+      "provenance_changes": [
+        [
+          "model",
+          "v1",
+          "v2"
+        ]
+      ],
+      "route_types": [
+        "RouteDrift",
+        "RouteDrift"
+      ],
+      "serialized_keys": [
+        "changed_routes",
+        "drifted",
+        "gained_decisions",
+        "gained_flip_pairs",
+        "independence_note",
+        "informational_changes",
+        "isolation",
+        "isolation_changed",
+        "lost_decisions",
+        "lost_flip_pairs",
+        "provenance_changes",
+        "routes"
+      ],
+      "type": "EvidenceDrift"
+    },
+    "planning": {
+      "repeats": 74,
+      "return_type": "int"
+    },
+    "reports": {
+      "json": {
+        "complete": true,
+        "schema": "agentverity.run/v2",
+        "status": "deterministic",
+        "top_level_keys": [
+          "blindness",
+          "caveats",
+          "complete",
+          "config",
+          "curtailment",
+          "curtailment_replay",
+          "decision_contract",
+          "errors",
+          "guidance",
+          "input_fingerprints",
+          "meter",
+          "relation_coverage",
+          "relations",
+          "requested_inputs",
+          "route_plans",
+          "route_stability",
+          "schema",
+          "status"
+        ],
+        "type": "dict"
+      },
+      "junit": {
+        "errors": 0,
+        "failures": 0,
+        "root": "testsuite",
+        "skipped": 0,
+        "tests": 5,
+        "type": "str"
+      },
+      "opentelemetry": {
+        "attribute_keys": [
+          "agentverity.blindness.blind",
+          "agentverity.blindness.distinct",
+          "agentverity.blindness.skew",
+          "agentverity.blindness.threshold",
+          "agentverity.caveats",
+          "agentverity.complete",
+          "agentverity.contract.allowed",
+          "agentverity.contract.critical",
+          "agentverity.contract.intended_coverage",
+          "agentverity.contract.missing_intended",
+          "agentverity.contract.missing_observed",
+          "agentverity.contract.observed_coverage",
+          "agentverity.contract.required",
+          "agentverity.contract.satisfied",
+          "agentverity.contract.under_cased",
+          "agentverity.contract.unknown_observed",
+          "agentverity.errors",
+          "agentverity.inputs",
+          "agentverity.layer",
+          "agentverity.meter.call",
+          "agentverity.meter.ci_high",
+          "agentverity.meter.ci_low",
+          "agentverity.meter.epsilon",
+          "agentverity.meter.flip_rate",
+          "agentverity.meter.max_repeats",
+          "agentverity.meter.pairs",
+          "agentverity.meter.repeats",
+          "agentverity.relations.exercised",
+          "agentverity.relations.total",
+          "agentverity.relations.vacuous",
+          "agentverity.relations.violated",
+          "agentverity.route_stability.deterministic",
+          "agentverity.route_stability.flips",
+          "agentverity.route_stability.routes",
+          "agentverity.route_stability.stochastic",
+          "agentverity.route_stability.targeted_stochastic",
+          "agentverity.route_stability.targeted_undecided",
+          "agentverity.route_stability.undecided",
+          "agentverity.schema",
+          "agentverity.status",
+          "agentverity.version"
+        ],
+        "complete": true,
+        "schema": "agentverity.telemetry/v2",
+        "status": "deterministic",
+        "type": "dict"
+      }
+    },
+    "run": {
+      "blindness": {
+        "blind": false,
+        "distinct": 2,
+        "inputs": 3,
+        "skew": 0.6666666666666666,
+        "type": "BlindnessResult"
+      },
+      "collection_types": {
+        "errors": "tuple",
+        "input_fingerprints": "tuple",
+        "observed_keys": "tuple",
+        "relation_results": "list"
+      },
+      "complete": true,
+      "decision_coverage": {
+        "intended_coverage": 1.0,
+        "observed_coverage": 1.0,
+        "satisfied": true,
+        "type": "DecisionCoverageResult"
+      },
+      "meter": {
+        "call": "verdict-deterministic",
+        "flip_rate": 0.0,
+        "inputs": 3,
+        "pair_flips": 0,
+        "pair_trials": 6,
+        "repeats": 4,
+        "type": "MeterResult"
+      },
+      "status": "deterministic",
+      "type": "RunResult"
+    },
+    "schema": "agentverity.return-semantics-audit/v1",
+    "snapshot": {
+      "changed_diff": {
+        "actual": "review",
+        "change_type": "SnapshotChange",
+        "changes": 1,
+        "checked": 3,
+        "clean": false,
+        "expected": "allow",
+        "type": "SnapshotDiff"
+      },
+      "clean_diff": {
+        "changes": 0,
+        "checked": 3,
+        "clean": true,
+        "type": "SnapshotDiff"
+      },
+      "probe_count": 3,
+      "probe_type": "SnapshotProbe",
+      "schema": "agentverity.snapshot/v4",
+      "serialized_sections": [
+        "admission_evidence",
+        "agentverity_version",
+        "config",
+        "created_at",
+        "decision_contract",
+        "probes",
+        "schema"
+      ],
+      "stored_expected": [
+        "allow",
+        "allow",
+        "review"
+      ],
+      "type": "Snapshot"
+    },
+    "statuses": {
+      "blind": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": true,
+        "is_stochastic": false,
+        "status": "blind",
+        "type": "RunResult"
+      },
+      "contract": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": true,
+        "is_stochastic": false,
+        "status": "contract",
+        "type": "RunResult"
+      },
+      "curtailed": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": false,
+        "is_stochastic": false,
+        "status": "curtailed",
+        "type": "RunResult"
+      },
+      "deterministic": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": false,
+        "is_stochastic": false,
+        "status": "deterministic",
+        "type": "RunResult"
+      },
+      "incomplete": {
+        "complete": false,
+        "error_count": 2,
+        "is_blind": true,
+        "is_stochastic": false,
+        "status": "incomplete",
+        "type": "RunResult"
+      },
+      "stochastic": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": false,
+        "is_stochastic": true,
+        "status": "stochastic",
+        "type": "RunResult"
+      },
+      "target-failed": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": false,
+        "is_stochastic": true,
+        "status": "target-failed",
+        "type": "RunResult"
+      },
+      "undecided": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": false,
+        "is_stochastic": false,
+        "status": "undecided",
+        "type": "RunResult"
+      },
+      "unmeasured": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": false,
+        "is_stochastic": false,
+        "status": "unmeasured",
+        "type": "RunResult"
+      },
+      "vacuous": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": false,
+        "is_stochastic": false,
+        "status": "vacuous",
+        "type": "RunResult"
+      },
+      "violations": {
+        "complete": true,
+        "error_count": 0,
+        "is_blind": false,
+        "is_stochastic": false,
+        "status": "violations",
+        "type": "RunResult"
+      }
+    }
+  }
+}
