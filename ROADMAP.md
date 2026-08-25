@@ -116,6 +116,11 @@ pilots unless a separate interaction satisfies the playbook definition.
 | Decision-projection identity | A change to trace-to-decision projection can silently change the measured object. Define how name, version, and bounded domain belong in provenance. | ADR covers identity, privacy, comparison, and migration; two external audit cases agree on the required fields | Existing arbitrary provenance and expected decisions may already suffice; identifiers can leak details or imply validation | Use existing provenance first; change evidence or snapshot schemas only after two external cases require the same structured contract |
 | Regression-reference view | Snapshot evidence is machine-readable but not always easy to audit. Make the existing snapshot legible rather than inventing a second manifest. | One human-readable view exposes projection, tolerance, confidence, pairing, budget, observed evidence, isolation, approval, and limits from the snapshot/report source of truth | Some fields are not yet structured; duplicated artefacts can drift | Render existing data when possible; defer new fields to the projection/provenance gate |
 
+The versioned method-validation v4 artefact preserves its original
+`within_window` machine key and “collection window” assumption. Rename those
+with the matching prose only in a reviewed v5 artefact revision; do not update
+either side piecemeal.
+
 ## 3–6 months: interoperate through evidence-preserving standards
 
 | Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |
