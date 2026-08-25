@@ -63,6 +63,13 @@ in the private funnel.
   AgentVerity's dependence-sensitivity model, and the open question is whether it can
   calibrate the within-run flip correlation directly. No reply yet.
 
+### 2026-08-25 | EvalPort isolation placement answer
+
+- Channel: [adhabnr-ux/evalport#20](https://github.com/adhabnr-ux/evalport/issues/20#issuecomment-5408799911)
+- Segment: evaluation-interchange standards community
+- Contributed: answered the maintainer's open design question with our evidence-model reasoning (isolation declared once per collection set, mixed modes belong in separate ResultSets), flagged the enum-versus-open-string divergence between the issue sketch and the converged RFC, and endorsed validator-enforced uniqueness plus the additive bump
+- Relevance: closes the last open question the RFC asked of this project before the SPEC.md write-up
+
 ## Rules for updating this log
 
 - Append entries; never delete or edit history except to add an outcome note dated after the fact.
