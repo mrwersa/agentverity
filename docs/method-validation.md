@@ -2,9 +2,10 @@
 
 This asset cross-checks the operating behaviour of AgentVerity's fixed Wilson,
 live fixed-endpoint curtailment, and predeclared sequential rules. It also
-measures how quickly their conclusions degrade when pair independence is
-false. The exact arguments in `DESIGN.md` remain the basis of the method;
-Monte Carlo is a reproducible diagnostic, not a proof.
+compares predeclared 73- and 146-pair fixed endpoints and measures how quickly
+the operating rule's conclusions degrade when pair independence is false. The
+exact arguments in `DESIGN.md` remain the basis of the method; Monte Carlo is
+a reproducible diagnostic, not a proof.
 
 ## Reproduce it
 
@@ -21,7 +22,7 @@ true flip rates, four dependence settings (`rho=0, 0.02, 0.05, 0.10`), and
 100,000 qualification runs per scenario. It records exact boundary
 probabilities, every simulated call share, Monte Carlo uncertainty, and mean
 pairs spent in the versioned
-[`agentverity.method-validation/v3`](evidence/method-validation.json) artifact.
+[`agentverity.method-validation/v4`](evidence/method-validation.json) artifact.
 The script has no dependencies outside Python and AgentVerity.
 
 ## Experiment
@@ -40,6 +41,13 @@ correlations `rho=0.02`, `0.05`, and `0.10`. These are deliberate assumption
 violations, not estimates of production dependence. The compact table below
 shows the strongest setting; the JSON artifact carries the full sweep.
 
+A separate paired IID replay uses the same 100,000 paths per true rate at
+predeclared endpoints of 73 and 146 pairs. The larger endpoint can admit at
+most two flips rather than none. Exact binomial enumeration checks the call
+probabilities at the 5% boundary. The replay also checks every feasible
+prefix-count state against the production inverse, then compares ordered-path
+stopping and admission against the ordinary endpoint result.
+
 “Wrong direction” means stochastic below the 5% boundary, deterministic above
 it, and either directional claim exactly at the boundary.
 
@@ -57,6 +65,18 @@ it, and either directional claim exactly at the boundary.
 | iid | 0.300 | sequential | 0.000% | 99.963% | 0.037% | 0.000% | **25.0** |
 | clustered, rho=0.10 | 0.050 | fixed | 35.816% | 16.615% | 47.569% | **52.431%** | 73.0 |
 | clustered, rho=0.10 | 0.050 | sequential | 36.005% | 12.721% | 51.274% | **48.726%** | 67.9 |
+
+### Two fixed endpoints
+
+| Endpoint | Most flips that can admit | Exact deterministic at p=5% | Exact stochastic | Exact undecided | Exact directional total |
+|---:|---:|---:|---:|---:|---:|
+| 73 pairs | 0 | 2.365% | 2.921% | 94.714% | 5.286% |
+| 146 pairs | 2 | 2.126% | 3.197% | 94.677% | 5.323% |
+
+| Endpoint | Mean pairs at p=2.5% | Mean pairs at p=5% | Mean pairs at p=30% | Prefix-state mismatches | Replay mismatches |
+|---:|---:|---:|---:|---:|---:|
+| 73 pairs | 33.6 | 19.5 | 3.3 | 0 / 2,700 | 0 |
+| 146 pairs | 102.6 | 59.6 | 10.0 | 0 / 10,730 | 0 |
 
 ## Findings
 
@@ -87,6 +107,7 @@ it, and either directional claim exactly at the boundary.
    | Observed | Fixed-count best case | Fixed-rate projection |
    |---:|---:|---:|
    | 1/73 | 110 | 139 |
+   | 2/73 | 142 | 358 |
    | 3/73 | 173 | 2,302 |
    | 4/73 | 202 | impossible |
    | 8/73 | 311 | impossible |
@@ -103,20 +124,30 @@ it, and either directional claim exactly at the boundary.
    flip rate was zero, 33.6 at 2.5%, 19.5 at the 5% boundary, 10.0 at 10%, and
    3.3 at 30%. It never admits early: a stopped path carries an impossibility
    result and no final repeatability class.
+8. **A larger predeclared endpoint changes power and curtailment timing, not
+   the claim.** The 146-pair endpoint can admit up to two flips and increases
+   admission probability below the boundary, but it waits for a third flip
+   before admission becomes impossible. Exact enumeration remains nominal
+   rather than an exact 5% directional budget. Across 13,430 feasible prefix
+   states and 500,000 paired IID replay paths, the threshold and production
+   inverse disagree zero times and curtailment loses zero endpoint admissions.
 
 ## Consequences and limits
 
-The fixed admission rule and durable evidence schemas remain unchanged. The
-validation artifact moves to v3 because it now checks live curtailment as well
-as the planning layer. The public `best_case_admission_pairs` helper supplies
-the count-aware boundary used by the runner. The fixed rule remains
-conservative in the regression-reference admission direction, while its
-nominal two-sided calibration is explicit. A future change to an exact
-fixed-sample rule requires an ADR, compatibility analysis, and measured call
-budget before implementation.
+The fixed admission rule and durable product evidence schemas remain
+unchanged. The validation artifact moves to v4 because it now records two
+fixed endpoints and their replay checks; this is a validation-artefact change,
+not a product schema migration. The public `best_case_admission_pairs` helper
+supplies the count-aware boundary used by the runner. The fixed rule remains
+conservative in the regression-reference admission direction, while its nominal
+two-sided calibration is explicit. A future change to an exact fixed-sample
+rule requires an ADR, compatibility analysis, and measured call budget before
+implementation.
 
 The sensitivity model covers one exchangeable dependence pattern, not stateful
 agents generally. It does not establish that `rho=0.10` is realistic, detect
 contamination from observations, validate case representativeness, or test the
 correctness of any decision. Independent expert review of the method remains
-an open Phase 1 outcome.
+an open Phase 1 outcome. A 146-pair budget is still one within-window claim:
+it neither repairs dependent trials nor supports a cross-time claim. Repeated
+collection windows require a separately specified estimand and guarantee.

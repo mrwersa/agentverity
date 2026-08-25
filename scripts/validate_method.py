@@ -24,7 +24,7 @@ from agentverity.meter import (
 )
 from agentverity.sequential import decide_sequentially, plan_sequential
 
-SCHEMA = "agentverity.method-validation/v3"
+SCHEMA = "agentverity.method-validation/v4"
 DETERMINISTIC = "deterministic"
 STOCHASTIC = "stochastic"
 UNDECIDED = "undecided"
@@ -109,7 +109,7 @@ def _exact_sequential_calls(plan, *, rate: float) -> dict[str, float]:
 def _continuation_planning(epsilon: float, z: float) -> list[dict[str, Any]]:
     """Cross-check the two distinct planning questions on canonical counts."""
     rows = []
-    for flips in (1, 3, 4, 8):
+    for flips in (1, 2, 3, 4, 8):
         pairs = 73
         rows.append(
             {
@@ -157,6 +157,166 @@ def _maximum_admissible_flips(*, epsilon: float, endpoint_pairs: int, z: float) 
             break
         maximum = flips
     return maximum
+
+
+def _replay_curtailment(
+    outcomes: list[bool],
+    *,
+    endpoint_pairs: int,
+    maximum_admissible_flips: int,
+    epsilon: float,
+    z: float,
+) -> tuple[int, str | None]:
+    """Replay the verified fixed-endpoint threshold over ordered outcomes.
+
+    A curtailed path returns no repeatability class. A path that reaches the
+    endpoint returns the ordinary fixed-Wilson class computed there.
+    """
+    flips = 0
+    for pair, flipped in enumerate(outcomes[:endpoint_pairs], start=1):
+        flips += int(flipped)
+        if pair < endpoint_pairs and flips > maximum_admissible_flips:
+            return pair, None
+    low, high = wilson_ci(flips, endpoint_pairs, z)
+    return endpoint_pairs, _call_name(classify_call(low, high, epsilon))
+
+
+def _reachability_state_mismatches(
+    *, endpoint_pairs: int, maximum_admissible_flips: int, epsilon: float, z: float
+) -> tuple[int, int]:
+    """Compare the threshold replay with the production inverse at every prefix."""
+    checked = 0
+    mismatches = 0
+    for pairs in range(1, endpoint_pairs):
+        for flips in range(pairs + 1):
+            checked += 1
+            production_stops = (
+                best_case_admission_pairs(
+                    epsilon,
+                    flips=flips,
+                    pairs=pairs,
+                    max_pairs=endpoint_pairs,
+                    z=z,
+                )
+                is None
+            )
+            threshold_stops = flips > maximum_admissible_flips
+            mismatches += production_stops != threshold_stops
+    return checked, mismatches
+
+
+def _fixed_endpoint_validation(
+    *,
+    trials: int,
+    seed: int,
+    rates: tuple[float, ...],
+    epsilon: float,
+    z: float,
+    endpoints: tuple[int, ...],
+) -> dict[str, Any]:
+    """Cross-check exact calls and live-rule replay at two fixed budgets."""
+    replay_seed = seed + 1
+    rng = random.Random(replay_seed)
+    statistics: dict[tuple[int, float], dict[str, Any]] = {}
+    maximum_flips = {
+        endpoint: _maximum_admissible_flips(
+            epsilon=epsilon,
+            endpoint_pairs=endpoint,
+            z=z,
+        )
+        for endpoint in endpoints
+    }
+    for endpoint in endpoints:
+        for rate in rates:
+            statistics[(endpoint, rate)] = {
+                "calls": Counter(),
+                "pairs_spent": 0,
+                "stopping_pair_mismatches": 0,
+                "admission_mismatches": 0,
+            }
+
+    largest = max(endpoints)
+    for rate in rates:
+        for _ in range(trials):
+            outcomes = _outcomes(
+                rng,
+                rate=rate,
+                pairs=largest,
+                correlation=0.0,
+            )
+            for endpoint in endpoints:
+                sample = outcomes[:endpoint]
+                flips = sum(sample)
+                low, high = wilson_ci(flips, endpoint, z)
+                endpoint_call = _call_name(classify_call(low, high, epsilon))
+                spent, replay_call = _replay_curtailment(
+                    sample,
+                    endpoint_pairs=endpoint,
+                    maximum_admissible_flips=maximum_flips[endpoint],
+                    epsilon=epsilon,
+                    z=z,
+                )
+                threshold_spent = _curtailed_pairs(
+                    sample,
+                    endpoint_pairs=endpoint,
+                    maximum_admissible_flips=maximum_flips[endpoint],
+                )
+                stats = statistics[(endpoint, rate)]
+                stats["calls"][endpoint_call] += 1
+                stats["pairs_spent"] += spent
+                stats["stopping_pair_mismatches"] += spent != threshold_spent
+                stats["admission_mismatches"] += (endpoint_call == DETERMINISTIC) != (
+                    replay_call == DETERMINISTIC
+                )
+
+    endpoint_rows = []
+    for endpoint in endpoints:
+        scenarios = []
+        for rate in rates:
+            stats = statistics[(endpoint, rate)]
+            row = _row(
+                rule="fixed-wilson-curtailed",
+                rate=rate,
+                correlation=0.0,
+                calls=stats["calls"],
+                pairs_spent=stats["pairs_spent"],
+                trials=trials,
+                epsilon=epsilon,
+            )
+            row["stopping_pair_mismatches"] = stats["stopping_pair_mismatches"]
+            row["admission_mismatches"] = stats["admission_mismatches"]
+            scenarios.append(row)
+        exact = _exact_fixed_calls(
+            pairs=endpoint,
+            rate=epsilon,
+            epsilon=epsilon,
+            z=z,
+        )
+        states_checked, state_mismatches = _reachability_state_mismatches(
+            endpoint_pairs=endpoint,
+            maximum_admissible_flips=maximum_flips[endpoint],
+            epsilon=epsilon,
+            z=z,
+        )
+        endpoint_rows.append(
+            {
+                "pairs": endpoint,
+                "maximum_admissible_flips": maximum_flips[endpoint],
+                "reachability_states_checked": states_checked,
+                "reachability_state_mismatches": state_mismatches,
+                "exact_boundary": {
+                    "calls": exact,
+                    "wrong_direction_rate": exact[DETERMINISTIC] + exact[STOCHASTIC],
+                },
+                "scenarios": scenarios,
+            }
+        )
+    return {
+        "assumption": "iid Bernoulli disjoint pairs within one collection window",
+        "trials_per_scenario": trials,
+        "seed": replay_seed,
+        "endpoints": endpoint_rows,
+    }
 
 
 def _row(
@@ -312,6 +472,14 @@ def simulate(
         z=z,
     )
     sequential_boundary = _exact_sequential_calls(sequential, rate=epsilon)
+    fixed_endpoint_validation = _fixed_endpoint_validation(
+        trials=trials,
+        seed=seed,
+        rates=rates,
+        epsilon=epsilon,
+        z=z,
+        endpoints=(fixed_pairs, fixed_pairs * 2),
+    )
 
     return {
         "schema": SCHEMA,
@@ -346,6 +514,7 @@ def simulate(
                 + sequential_boundary[STOCHASTIC],
             },
         },
+        "fixed_endpoint_validation": fixed_endpoint_validation,
         "continuation_planning": _continuation_planning(epsilon, z),
         "interpretation": {
             "best_case_is_not_an_adaptive_stopping_rule": True,
@@ -353,6 +522,7 @@ def simulate(
             "curtailment_preserves_fixed_endpoint_calls": True,
             "iid_is_the_claimed_model": True,
             "positive_correlation_is_sensitivity_only": True,
+            "larger_within_window_budget_is_not_cross_time_evidence": True,
             "simulation_is_not_a_proof": True,
         },
         "results": rows,
