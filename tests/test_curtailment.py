@@ -12,7 +12,11 @@ from agentverity import (
     DecisionCase,
     DecisionContract,
     DecisionSuite,
+    EvidenceCase,
+    EvidenceError,
+    EvidenceSet,
     RunConfig,
+    assess_evidence,
     create_snapshot,
     from_callable,
     run,
@@ -57,6 +61,16 @@ def _replay(prefix: list[bool], endpoint_pairs: int):
     return result, calls()
 
 
+def _evidence_from_pairs(outcomes: list[bool]) -> EvidenceSet:
+    observations = []
+    for flipped in outcomes:
+        observations.extend(("approve", "review" if flipped else "approve"))
+    return EvidenceSet(
+        cases=(EvidenceCase(input="case", observations=tuple(observations)),),
+        isolation="fresh-session",
+    )
+
+
 def test_versioned_replays_match_exact_fixed_endpoint_boundaries():
     """Committed ordered prefixes exercise both sides of the strict boundary."""
     fixture = json.loads(REPLAY.read_text(encoding="utf-8"))
@@ -77,6 +91,111 @@ def test_versioned_replays_match_exact_fixed_endpoint_boundaries():
             assert stop.observed_flips == scenario["expected_observed_flips"]
             assert stop.avoided_pairs == scenario["expected_avoided_pairs"]
             assert calls == stop.meter_calls_spent
+
+
+def test_retrospective_replay_matches_live_curtailment_path_by_path():
+    """The offline counterfactual uses the audited live rule and pair order."""
+    fixture = json.loads(REPLAY.read_text(encoding="utf-8"))
+
+    for scenario in fixture["scenarios"]:
+        endpoint = scenario["endpoint_pairs"]
+        outcomes = [
+            *scenario["prefix_outcomes"],
+            *([False] * (endpoint - len(scenario["prefix_outcomes"]))),
+        ]
+        live, _calls = _replay(scenario["prefix_outcomes"], endpoint)
+        assessed = assess_evidence(
+            _evidence_from_pairs(outcomes),
+            epsilon=0.05,
+            replay_curtailment=True,
+        )
+        replay = assessed.curtailment_replay
+
+        assert replay is not None
+        assert assessed.meter is not None
+        assert assessed.status != "curtailed"
+        assert replay.endpoint_pairs == endpoint
+        assert replay.stopping_pair == (
+            live.curtailment.stopping_pair if live.curtailment is not None else None
+        )
+        assert replay.observed_flips == (
+            live.curtailment.observed_flips
+            if live.curtailment is not None
+            else sum(outcomes)
+        )
+        assert replay.avoided_pairs == scenario["expected_avoided_pairs"]
+
+
+def test_retrospective_replay_is_supplementary_and_labelled_counterfactual():
+    """A replay never replaces the observed endpoint classification."""
+    outcomes = [True, *([False] * 72)]
+    result = assess_evidence(
+        _evidence_from_pairs(outcomes),
+        epsilon=0.05,
+        replay_curtailment=True,
+    )
+    payload = run_result_to_dict(result)
+
+    assert result.meter is not None
+    assert result.meter.call.startswith("undecided")
+    assert result.status != "curtailed"
+    assert payload["meter"]["call"].startswith("undecided")
+    assert payload["curtailment"] is None
+    assert payload["curtailment_replay"] == {
+        "analysis": "post-hoc-counterfactual",
+        "schedule": "round-robin-case-order",
+        "outcome": "admission-unreachable",
+        "stopping_pair": 1,
+        "endpoint_pairs": 73,
+        "observed_flips": 1,
+        "avoided_pairs": 72,
+        "meter_calls_avoided": 144,
+        "reason": (
+            "admission became unreachable at the recorded fixed endpoint even "
+            "if every remaining pair agreed"
+        ),
+        "changes_endpoint_classification": False,
+    }
+    summary = result.summary()
+    assert "post-hoc; not an admissible stopping procedure" in summary
+    assert "endpoint classification above is unchanged" in summary
+
+
+def test_retrospective_replay_refuses_missing_ordered_work():
+    """A recorded error cannot be assigned a favourable position post hoc."""
+    evidence = EvidenceSet(
+        cases=(
+            EvidenceCase(
+                input="case",
+                observations=("approve", "approve"),
+                errors=1,
+            ),
+        )
+    )
+
+    with pytest.raises(EvidenceError, match="missing pair position unknown"):
+        assess_evidence(evidence, replay_curtailment=True)
+
+
+def test_retrospective_replay_retains_only_aggregate_counts():
+    """The optional JSON member does not widen report retention."""
+    result = assess_evidence(
+        EvidenceSet(
+            cases=(
+                EvidenceCase(
+                    input="PRIVATE-PROBE-INPUT",
+                    observations=("PRIVATE-A", "PRIVATE-B")
+                    + ("PRIVATE-A",) * 144,
+                ),
+            )
+        ),
+        replay_curtailment=True,
+    )
+
+    encoded = json.dumps(run_result_to_dict(result)["curtailment_replay"])
+    assert "PRIVATE-PROBE-INPUT" not in encoded
+    assert "PRIVATE-A" not in encoded
+    assert "PRIVATE-B" not in encoded
 
 
 def test_an_all_agree_path_reaches_the_unchanged_fixed_endpoint():

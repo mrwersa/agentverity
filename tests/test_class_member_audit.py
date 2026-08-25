@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -16,12 +17,30 @@ SURFACE_FIXTURE = FIXTURES / "public-surface.json"
 
 
 def test_current_class_members_match_the_published_release():
-    """The checkout matches the class structure published in 0.21.0."""
+    """The candidate adds only reviewed replay structure."""
     fixture = json.loads(CLASS_FIXTURE.read_text(encoding="utf-8"))
 
     assert fixture["producer"] == "agentverity==0.21.0"
     assert fixture["surface"]["schema"] == AUDIT_SCHEMA
-    assert collect_class_members() == fixture["surface"]
+    current = deepcopy(collect_class_members())
+    replay = current["classes"].pop("CurtailmentReplayResult")
+    assert [field["name"] for field in replay["fields"]] == [
+        "endpoint_pairs",
+        "stopping_pair",
+        "observed_flips",
+        "meter_calls_avoided",
+        "reason",
+    ]
+    assert [member["name"] for member in replay["members"]] == [
+        "avoided_pairs",
+        "stopped_early",
+    ]
+    fields = current["classes"]["RunResult"]["fields"]
+    assert [field["name"] for field in fields].count("curtailment_replay") == 1
+    current["classes"]["RunResult"]["fields"] = [
+        field for field in fields if field["name"] != "curtailment_replay"
+    ]
+    assert current == fixture["surface"]
 
 
 def test_every_exported_class_is_in_the_member_inventory():
@@ -38,9 +57,9 @@ def test_every_exported_class_is_in_the_member_inventory():
         if entry["kind"] == "class"
     }
     assert set(members["classes"]) == published_exported
-    assert published_exported == current_exported
+    assert published_exported | {"CurtailmentReplayResult"} == current_exported
     assert set(current) == current_exported
-    assert len(current_exported) == 36
+    assert len(current_exported) == 37
     for contract in members["classes"].values():
         field_names = [field["name"] for field in contract["fields"]]
         member_names = [member["name"] for member in contract["members"]]

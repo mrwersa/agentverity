@@ -898,6 +898,53 @@ That would overstate avoided work and make the operational stop depend on
 scheduler timing. A later parallel design needs an explicit in-flight-work
 contract rather than approximate accounting.
 
+## ADR 10: retrospective curtailment is a counterfactual, not a decision
+
+**Status.** Accepted 2026-08-25. Additive assessment capability for 0.23.0.
+
+**Context.** Imported evidence already contains the ordered observations
+needed to ask how much ADR 9's live rule could have avoided. Replaying it is
+useful for pricing future collection, but the historical run did not actually
+stop and may not have declared curtailment before collection. Letting a caller
+choose an endpoint after seeing the outcomes would add another researcher
+degree of freedom and could manufacture attractive savings.
+
+**Decision.** `assess --replay-curtailment` derives one fixed endpoint from all
+usable recorded pairs and exposes no endpoint override. It traverses each
+case's disjoint pairs in the live runner's declared order: case index within a
+round, then successive rounds. At each pre-endpoint prefix it applies ADR 9's
+unchanged `best_case_admission_pairs` boundary. Recorded execution errors
+refuse replay because their missing pair position is unknown.
+
+The result is always labelled `post-hoc-counterfactual`. It reports the first
+unreachable pair and avoided work, or that the endpoint was required. The
+ordinary full-evidence `MeterResult`, `RunResult.status`, headline, and process
+exit class remain authoritative. Replay never creates an early admission,
+rejection, or inconclusive class and is not evidence that the historical
+collection followed an admissible stopping procedure.
+
+**Consequences.** A team can estimate savings from existing ordered evidence
+without making calls or rewriting the observed qualification. The result does
+not claim the replay order was the historical wall-clock order: evidence/v2
+preserves case order and within-case observation order, from which the live
+round-robin counterfactual is reconstructed. A future predeclaration claim
+needs a reviewed provenance contract; arbitrary provenance is not treated as
+proof and no schema field is added here.
+
+**Alternatives rejected.**
+
+*Accept `--max-pairs` on `assess`.* Rejected because a post-hoc endpoint can be
+selected for the most favourable saving. The evidence endpoint is the only
+one replayed.
+
+*Replace the endpoint classification with the early prefix.* Rejected because
+the prefix proves only that admission became unreachable. The observed
+endpoint already has a legitimate fixed-sample classification.
+
+*Infer predeclaration from free-form provenance.* Rejected because a caller-
+supplied label does not prove which rule, endpoint, order, or timing was fixed
+before collection.
+
 ## 7. Candidate direction after independent use
 
 The collection, import, admission, and temporal-comparison loop is complete.

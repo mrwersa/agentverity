@@ -25,6 +25,11 @@ mutually exclusive `--observed` source and its optional `--max-pairs`
 endpoint. CI compares the checkout directly with that published surface; the
 0.21.0 fixture remains an unaltered historical record.
 
+The 0.23.0 candidate is checked as an explicit additive delta: one
+`CurtailmentReplayResult` export, optional `assess_evidence` and `RunResult`
+members, and `assess --replay-curtailment`. The published fixture remains
+unchanged until the release exists.
+
 Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit
 classification has a separate [executable contract](cli-exit-contract.md), and

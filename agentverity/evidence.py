@@ -347,6 +347,7 @@ def assess_evidence(
     suite: Any | None = None,
     *,
     epsilon: float = 0.05,
+    replay_curtailment: bool = False,
 ) -> Any:
     """Apply the admission checks to observations collected elsewhere.
 
@@ -363,6 +364,9 @@ def assess_evidence(
         suite: Optional declared decision suite. Its case inputs must match the
             evidence, so a contract is never checked against a different run.
         epsilon: Default flip-rate tolerance.
+        replay_curtailment: Replay live fixed-endpoint impossibility over the
+            recorded series in round-robin case order. This is always labelled
+            post-hoc counterfactual and never changes the endpoint call.
 
     Raises:
         EvidenceError: If a declared suite does not describe this evidence.
@@ -370,13 +374,19 @@ def assess_evidence(
     from .blindness import score as blindness_score
     from .decision_contract import assess_decision_coverage
     from .execution import RunError, input_fingerprint
-    from .meter import score_runs
-    from .runner import RunConfig, RunResult
+    from .meter import best_case_admission_pairs, pair_flipped, score_runs
+    from .runner import CurtailmentReplayResult, RunConfig, RunResult
     from .stratified import stratify_runs
 
     series = [case.to_observations(evidence.layer) for case in evidence.cases]
     intended: tuple[str, ...] = ()
     targets: dict[str, float] = {}
+
+    if replay_curtailment and any(case.errors for case in evidence.cases):
+        raise EvidenceError(
+            "curtailment replay requires complete ordered observations; "
+            "recorded errors leave the missing pair position unknown"
+        )
 
     if suite is not None:
         if tuple(suite.inputs) != evidence.inputs:
@@ -439,6 +449,55 @@ def assess_evidence(
         for _ in range(case.errors)
     )
     observed_keys = tuple(item[0].key(evidence.layer) for item in series)
+    curtailment_replay = None
+    if replay_curtailment:
+        endpoint_pairs = sum(len(item) // 2 for item in series)
+        planned_calls = sum(len(item) for item in series)
+        pair_rounds = [len(item) // 2 for item in series]
+        flips = 0
+        pairs = 0
+        stopping_pair = None
+        for round_index in range(max(pair_rounds, default=0)):
+            for item, rounds in zip(series, pair_rounds, strict=True):
+                if round_index >= rounds:
+                    continue
+                first = item[2 * round_index]
+                second = item[2 * round_index + 1]
+                pairs += 1
+                flips += int(pair_flipped(first, second, evidence.layer))
+                if (
+                    pairs < endpoint_pairs
+                    and best_case_admission_pairs(
+                        epsilon,
+                        flips=flips,
+                        pairs=pairs,
+                        max_pairs=endpoint_pairs,
+                    )
+                    is None
+                ):
+                    stopping_pair = pairs
+                    break
+            if stopping_pair is not None:
+                break
+        if stopping_pair is None:
+            reason = (
+                "the admission endpoint remained reachable until the recorded "
+                "endpoint; no work would have been avoided"
+            )
+            meter_calls_avoided = 0
+        else:
+            reason = (
+                "admission became unreachable at the recorded fixed endpoint "
+                "even if every remaining pair agreed"
+            )
+            meter_calls_avoided = planned_calls - 2 * stopping_pair
+        curtailment_replay = CurtailmentReplayResult(
+            endpoint_pairs=endpoint_pairs,
+            stopping_pair=stopping_pair,
+            observed_flips=flips,
+            meter_calls_avoided=meter_calls_avoided,
+            reason=reason,
+        )
     return RunResult(
         config=RunConfig(
             k=repeats,
@@ -466,4 +525,5 @@ def assess_evidence(
         intended_decisions=intended,
         requested_inputs=len(evidence.cases),
         isolation=evidence.isolation,
+        curtailment_replay=curtailment_replay,
     )

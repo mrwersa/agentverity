@@ -186,6 +186,13 @@ pair and avoided calls but no final repeatability class. It never admits early:
 a path that could qualify still pays the full fixed budget and is classified
 only there.
 
+For evidence already collected, `assess --replay-curtailment` reports the
+first prefix where that same rule would have stopped and the work it would
+have avoided. The replay is explicitly post-hoc and counterfactual: it uses
+the recorded endpoint and round-robin case order, never changes the observed
+endpoint classification, and cannot be presented as a release procedure that
+was declared before collection.
+
 Use `agentverity plan --suite examples/route_stability_plan.json` before
 spending remote calls. The [decision repeatability method guide](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md)
 explains the arithmetic, and the [validation artifact](https://github.com/mrwersa/agentverity/blob/main/docs/method-validation.md)
@@ -265,6 +272,6 @@ coverage. See the contributing guide above before opening a pull request.
 ## Status and licence
 
 Alpha. Pin the current minor series for production use:
-`agentverity~=0.22.0`. Patch releases preserve the public API.
+`agentverity~=0.23.0`. Patch releases preserve the public API.
 
 Apache-2.0.

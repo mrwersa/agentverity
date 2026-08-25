@@ -109,6 +109,26 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
             "final_classification": None,
         }
 
+    curtailment_replay = None
+    if result.curtailment_replay is not None:
+        replay = result.curtailment_replay
+        curtailment_replay = {
+            "analysis": "post-hoc-counterfactual",
+            "schedule": "round-robin-case-order",
+            "outcome": (
+                "admission-unreachable"
+                if replay.stopped_early
+                else "endpoint-required"
+            ),
+            "stopping_pair": replay.stopping_pair,
+            "endpoint_pairs": replay.endpoint_pairs,
+            "observed_flips": replay.observed_flips,
+            "avoided_pairs": replay.avoided_pairs,
+            "meter_calls_avoided": replay.meter_calls_avoided,
+            "reason": replay.reason,
+            "changes_endpoint_classification": False,
+        }
+
     blindness = None
     if result.blindness is not None:
         blindness = {
@@ -187,6 +207,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         },
         "meter": meter,
         "curtailment": curtailment,
+        "curtailment_replay": curtailment_replay,
         "blindness": blindness,
         "decision_contract": decision_contract,
         "route_stability": route_stability,

@@ -136,7 +136,7 @@ An importer must therefore reject ambiguous mappings rather than infer them.
 
 ### Verified implementation
 
-The 0.22.0 package is a zero-mandatory-dependency Python 3.10–3.14 library and
+The 0.23.0 package is a zero-mandatory-dependency Python 3.10–3.14 library and
 CLI. Its public workflow is:
 
 - `plan` prices a suite before calls are made or an all-agree continuation

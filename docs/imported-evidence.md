@@ -152,6 +152,30 @@ source cannot act on is refused rather than discarded. `--provider` and
 path flags belong to both importers but not to `--evidence`, which records its
 own layer and field names.
 
+## Replay fixed-endpoint curtailment
+
+Ordered observations can show what the live impossibility rule would have
+saved without rerunning the agent:
+
+```bash
+agentverity assess --evidence runs.json \
+  --replay-curtailment --json assessment.json
+```
+
+The endpoint comes from all recorded usable pairs; there is deliberately no
+flag for choosing a smaller endpoint after seeing the outcomes. Replay visits
+pair rounds in case order, matching live `--curtail` collection. It reports
+the first prefix where admission became unreachable and the remaining pairs
+and calls, or says the full endpoint was required.
+
+This is a **post-hoc counterfactual**, not proof that collection validly
+stopped there. The ordinary endpoint meter call remains the assessment and
+the replay cannot create an early `deterministic`, `stochastic`, or
+`undecided` result. Evidence with recorded errors is refused because the
+missing pair's position cannot be reconstructed honestly. To claim savings
+from an admissible release procedure, predeclare live `--curtail` before
+collection instead.
+
 Adding another source? Follow the repository's
 [integration conformance contract](integration-contract.md). Its shared
 fixtures pin ordering, aggregate refusal, provenance, isolation, and evidence

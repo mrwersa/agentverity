@@ -31,6 +31,10 @@ The fixture includes the executed `curtailed` path and optional JSON
 `curtailment` member. CI compares the checkout directly with the published
 semantics; the 0.20.0 fixture remains as an unaltered historical record.
 
+The 0.23.0 candidate adds an optional JSON `curtailment_replay` member. Its
+counterfactual behaviour is exercised by focused tests, while this audit
+asserts that existing return types, statuses, and report surfaces do not move.
+
 ## Provenance and Reproduction
 
 The committed fixture was written by the published 0.21.0 wheel. Run the

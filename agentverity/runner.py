@@ -292,6 +292,34 @@ class CurtailmentResult:
 
 
 @dataclass(frozen=True)
+class CurtailmentReplayResult:
+    """Post-hoc counterfactual replay of fixed-endpoint curtailment.
+
+    The observed endpoint remains the qualification result. This object says
+    only what the live impossibility rule would have done had the recorded
+    case series been collected in round-robin input order.
+    """
+
+    endpoint_pairs: int
+    stopping_pair: int | None
+    observed_flips: int
+    meter_calls_avoided: int
+    reason: str
+
+    @property
+    def avoided_pairs(self) -> int:
+        """Counterfactual pairs after the first unreachable prefix."""
+        if self.stopping_pair is None:
+            return 0
+        return self.endpoint_pairs - self.stopping_pair
+
+    @property
+    def stopped_early(self) -> bool:
+        """Whether the replay found an unreachable pre-endpoint prefix."""
+        return self.stopping_pair is not None
+
+
+@dataclass(frozen=True)
 class RunResult:
     """The complete outcome of a runner pass.
 
@@ -321,6 +349,8 @@ class RunResult:
         curtailment: The fixed-endpoint impossibility result when meter
             collection stopped early, otherwise None. A curtailed run has no
             final meter classification.
+        curtailment_replay: A labelled post-hoc counterfactual over imported
+            ordered evidence. It never changes the endpoint classification.
     """
 
     meter: MeterResult | None
@@ -340,6 +370,7 @@ class RunResult:
     duration_seconds: float = 0.0
     isolation: str = "unknown"
     curtailment: CurtailmentResult | None = None
+    curtailment_replay: CurtailmentReplayResult | None = None
 
     @property
     def complete(self) -> bool:
@@ -670,6 +701,29 @@ class RunResult:
                 f"   inputs:      {m.inputs}, repeats: {repeats}, layer: {m.layer}"
             )
             lines.append(f"   advice:      {m.advice}")
+            lines.append("")
+
+        if self.curtailment_replay is not None:
+            replay = self.curtailment_replay
+            lines.append("1A. COUNTERFACTUAL CURTAILMENT REPLAY")
+            lines.append("   basis:       post-hoc; not an admissible stopping procedure")
+            lines.append("   schedule:    round-robin case order")
+            if replay.stopping_pair is None:
+                lines.append(
+                    f"   outcome:     no early stop before {replay.endpoint_pairs} pairs"
+                )
+            else:
+                lines.append(
+                    "   outcome:     admission-unreachable at "
+                    f"{replay.stopping_pair}/{replay.endpoint_pairs} pairs"
+                )
+                lines.append(f"   flips:       {replay.observed_flips}")
+                lines.append(
+                    f"   avoided:     {replay.avoided_pairs} pairs "
+                    f"({replay.meter_calls_avoided} meter calls)"
+                )
+            lines.append(f"   reason:      {replay.reason}")
+            lines.append("   endpoint classification above is unchanged")
             lines.append("")
 
         if self.blindness is not None:

@@ -605,6 +605,70 @@ def test_assess_writes_the_same_json_report_a_live_run_would(tmp_path):
     assert payload["schema"].startswith("agentverity.run/")
 
 
+def test_assess_replays_curtailment_without_reclassifying_the_endpoint(
+    tmp_path, capsys
+):
+    """The CLI labels retrospective savings and keeps the observed call."""
+    evidence_path = tmp_path / "runs.json"
+    report_path = tmp_path / "report.json"
+    evidence_path.write_text(
+        json.dumps(
+            {
+                "schema": "agentverity.evidence/v2",
+                "isolation": "fresh-session",
+                "cases": [
+                    {
+                        "input": "a",
+                        "observations": ["approve", "review"]
+                        + ["approve"] * 72,
+                    },
+                    {"input": "b", "observations": ["deny"] * 74},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "assess",
+            "--evidence",
+            str(evidence_path),
+            "--replay-curtailment",
+            "--json",
+            str(report_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    payload = json.loads(report_path.read_text())
+    assert exit_code == 2
+    assert "COUNTERFACTUAL CURTAILMENT REPLAY" in output
+    assert "not an admissible stopping procedure" in output
+    assert payload["status"] == "undecided"
+    assert payload["meter"]["call"].startswith("undecided")
+    assert payload["curtailment_replay"]["stopping_pair"] == 1
+    assert payload["curtailment_replay"]["changes_endpoint_classification"] is False
+
+
+def test_assess_replay_exposes_no_post_hoc_endpoint_selector(capsys):
+    """An endpoint chosen after seeing outcomes could manufacture savings."""
+    with pytest.raises(SystemExit) as raised:
+        main(
+            [
+                "assess",
+                "--evidence",
+                str(EXAMPLES / "imported_evidence.json"),
+                "--replay-curtailment",
+                "--max-pairs",
+                "4",
+            ]
+        )
+
+    assert raised.value.code == 2
+    assert "unrecognized arguments: --max-pairs 4" in capsys.readouterr().err
+
+
 def test_assess_imports_promptfoo_without_calling_the_target(tmp_path, capsys):
     suite_path = tmp_path / "suite.json"
     suite_path.write_text(

@@ -716,6 +716,15 @@ def _build_parser() -> argparse.ArgumentParser:
     assess_parser.add_argument(
         "--json", dest="json_path", default=None, help="write the JSON report here"
     )
+    assess_parser.add_argument(
+        "--replay-curtailment",
+        action="store_true",
+        help=(
+            "replay fixed-endpoint impossibility over recorded observations in "
+            "round-robin case order; reports a post-hoc counterfactual, never "
+            "an early class"
+        ),
+    )
 
     drift_parser = sub.add_parser(
         "compare-evidence",
@@ -851,7 +860,12 @@ def _assess_command(args: argparse.Namespace) -> int:
             evidence = load_jsonl(args.jsonl, suite=suite, **options)
         else:
             evidence = load_evidence(args.evidence)
-        result = assess_evidence(evidence, suite, epsilon=args.epsilon)
+        result = assess_evidence(
+            evidence,
+            suite,
+            epsilon=args.epsilon,
+            replay_curtailment=args.replay_curtailment,
+        )
     except (TypeError, ValueError) as exc:
         print(f"assessment refused: {exc}", file=sys.stderr)
         return 2

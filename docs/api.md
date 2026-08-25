@@ -102,6 +102,9 @@ The CLI accepts the same versioned structure with `--suite suite.json`.
 - `RunResult.curtailment` is a `CurtailmentResult` when fixed-endpoint
   admission became unreachable. It records the stopping pair and avoided work;
   `RunResult.meter` is `None` because the endpoint was not classified.
+- `RunResult.curtailment_replay` is a `CurtailmentReplayResult` only when an
+  imported assessment requested retrospective replay. It is a post-hoc
+  counterfactual and leaves `RunResult.meter` and `RunResult.status` unchanged.
 - `RunResult.summary()` returns the terminal report.
 - `run_result_to_dict` and `write_run_json` produce versioned JSON.
 - `run_result_to_junit_xml` and `write_junit_xml` produce CI test reports.
