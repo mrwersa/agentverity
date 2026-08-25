@@ -1,14 +1,13 @@
 # Public Class-Member Audit
 
 This preliminary compatibility audit records the caller-visible structure of
-all 37 classes exported by the AgentVerity 0.23.0 candidate. It closes the gap
+all 37 classes exported by AgentVerity 0.23.0. It closes the gap
 between a stable constructor signature and the methods, properties, or fields
 callers use after construction.
 
 ## What CI Pins
 
-`tests/fixtures/compatibility/v0.21.0/class-members.json` records the published
-baseline. CI checks its explicit additive candidate delta, for a total of:
+`tests/fixtures/compatibility/v0.23.0/class-members.json` records:
 
 - all 190 fields across the 33 exported dataclasses, in declaration order;
 - field annotations, constructor participation, keyword-only status, and
@@ -23,23 +22,24 @@ cannot disappear between the two inventories. Private and generated dunder
 methods, inherited `object`/exception machinery, docstrings, and method bodies
 are deliberately excluded.
 
-The reviewed delta is `CurtailmentReplayResult` and its two properties, plus
-the optional `RunResult.curtailment_replay` field. The published 0.21.0
-fixture remains unchanged rather than being relabelled as a candidate release.
+That surface includes `CurtailmentReplayResult` and its two properties, plus
+the optional `RunResult.curtailment_replay` field. CI compares the checkout
+directly with the published fixture; the 0.21.0 fixture remains unchanged as a
+historical record.
 
 ## Provenance and Reproduction
 
-The committed fixture was produced by the published 0.21.0 wheel. Run outside
+The committed fixture was produced by the published 0.23.0 wheel. Run outside
 the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v021-members
-/tmp/agentverity-v021-members/bin/pip install agentverity==0.21.0
+python -m venv /tmp/agentverity-v023-members
+/tmp/agentverity-v023-members/bin/pip install agentverity==0.23.0
 cd /tmp
-/tmp/agentverity-v021-members/bin/python \
+/tmp/agentverity-v023-members/bin/python \
   /path/to/agentverity/scripts/audit_class_members.py \
-  /path/to/agentverity/tests/fixtures/compatibility/v0.21.0/class-members.json \
-  --expected-version 0.21.0
+  /path/to/agentverity/tests/fixtures/compatibility/v0.23.0/class-members.json \
+  --expected-version 0.23.0
 ```
 
 The auditor refuses to write if the imported version differs from the named

@@ -80,11 +80,9 @@ minor that produced every currently supported schema. There are no migration
 paths to test: older evidence and snapshot schemas are deliberately refused.
 
 The preliminary compatibility suite now covers four complementary surfaces.
-The 0.23.0 candidate is checked as an explicit additive delta from the
-published 0.22.0 public-surface inventory. The class and return inventories
-retain their published 0.21.0 baselines with explicit replay deltas, while the
-executable CLI contract retains its reviewed 0.20.0 baseline and focused
-0.21.0 curtailment scenarios:
+The public-surface, class-member, and return-semantic inventories come from
+the published 0.23.0 wheel. The executable CLI contract retains its reviewed
+0.20.0 baseline and focused 0.21.0 curtailment scenarios:
 
 - the [public surface audit](docs/public-surface-audit.md) pins top-level
   exports, signatures, constants, commands, flags, and parser defaults;

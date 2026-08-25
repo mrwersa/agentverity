@@ -1,12 +1,12 @@
 # Public surface compatibility audit
 
 This preliminary audit records the top-level Python and command-line surface
-published in AgentVerity 0.22.0. It makes accidental drift visible without
+published in AgentVerity 0.23.0. It makes accidental drift visible without
 claiming the API is frozen before 1.0.
 
 ## What CI pins
 
-`tests/fixtures/compatibility/v0.22.0/public-surface.json` records:
+`tests/fixtures/compatibility/v0.23.0/public-surface.json` records:
 
 - every name in `agentverity.__all__`, classified as a function, class, or
   constant;
@@ -18,17 +18,14 @@ claiming the API is frozen before 1.0.
 CI recollects the surface and compares it with the reviewed fixture. An
 intentional pre-1.0 break is still permitted, but it must now update one
 readable artifact alongside the required minor version and migration notes.
-The reviewed 0.22.0 fixture includes `CurtailmentResult`, the
+The reviewed 0.23.0 fixture includes `CurtailmentResult`, the
 `RunConfig.curtail` and `RunResult.curtailment` fields, and the `--curtail`
 options on `run` and `snapshot`. It also records that `plan` accepts the
 mutually exclusive `--observed` source and its optional `--max-pairs`
-endpoint. CI compares the checkout directly with that published surface; the
-0.21.0 fixture remains an unaltered historical record.
-
-The 0.23.0 candidate is checked as an explicit additive delta: one
-`CurtailmentReplayResult` export, optional `assess_evidence` and `RunResult`
-members, and `assess --replay-curtailment`. The published fixture remains
-unchanged until the release exists.
+endpoint. It also records `CurtailmentReplayResult`, the optional
+`assess_evidence` and `RunResult` additions, and
+`assess --replay-curtailment`. CI compares the checkout directly with that
+published surface; the 0.22.0 fixture remains an unaltered historical record.
 
 Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit
@@ -42,17 +39,17 @@ by focused tests and the return audit rather than this signature inventory.
 
 ## Provenance and reproduction
 
-The committed inventory is generated from the published 0.22.0 wheel. Run
+The committed inventory is generated from the published 0.23.0 wheel. Run
 outside the checkout so local source cannot shadow it:
 
 ```bash
-python -m venv /tmp/agentverity-v022
-/tmp/agentverity-v022/bin/pip install agentverity==0.22.0
+python -m venv /tmp/agentverity-v023
+/tmp/agentverity-v023/bin/pip install agentverity==0.23.0
 cd /tmp
-/tmp/agentverity-v022/bin/python \
+/tmp/agentverity-v023/bin/python \
   /path/to/agentverity/scripts/audit_public_surface.py \
-  /path/to/agentverity/tests/fixtures/compatibility/v0.22.0/public-surface.json \
-  --expected-version 0.22.0
+  /path/to/agentverity/tests/fixtures/compatibility/v0.23.0/public-surface.json \
+  --expected-version 0.23.0
 ```
 
 The auditor refuses to write when the imported version differs from the named

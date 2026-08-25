@@ -1,0 +1,2744 @@
+{
+  "producer": "agentverity==0.23.0",
+  "surface": {
+    "classes": {
+      "BlindnessResult": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "inputs",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "layer",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "majority_verdict",
+            "type": "Any"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "skew",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "distinct",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "threshold",
+            "type": "float"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "blind",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "warning",
+            "signature": "(self) -> 'str | None'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.blindness",
+        "qualified_name": "BlindnessResult"
+      },
+      "CurtailmentReplayResult": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "endpoint_pairs",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "stopping_pair",
+            "type": "int | None"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "observed_flips",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "meter_calls_avoided",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "reason",
+            "type": "str"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "avoided_pairs",
+            "signature": "(self) -> 'int'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "stopped_early",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.runner",
+        "qualified_name": "CurtailmentReplayResult"
+      },
+      "CurtailmentResult": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "stopping_pair",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "endpoint_pairs",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "observed_flips",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "meter_calls_spent",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "meter_calls_avoided",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "reason",
+            "type": "str"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "avoided_pairs",
+            "signature": "(self) -> 'int'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.runner",
+        "qualified_name": "CurtailmentResult"
+      },
+      "Decision": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "label",
+            "type": "str"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "comparable",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "is_incomplete",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.decision",
+        "qualified_name": "Decision"
+      },
+      "DecisionCase": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "expected",
+            "type": "str"
+          }
+        ],
+        "members": [
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, str]'"
+          }
+        ],
+        "module": "agentverity.decision_contract",
+        "qualified_name": "DecisionCase"
+      },
+      "DecisionContract": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "allowed",
+            "type": "frozenset[str]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "required",
+            "type": "frozenset[str] | None"
+          },
+          {
+            "default": {
+              "factory": "frozenset",
+              "kind": "factory"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "critical",
+            "type": "frozenset[str]"
+          },
+          {
+            "default": {
+              "factory": "dict",
+              "kind": "factory"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "stability_targets",
+            "type": "Mapping[str, float]"
+          },
+          {
+            "default": {
+              "factory": "dict",
+              "kind": "factory"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "minimum_cases",
+            "type": "Mapping[str, int]"
+          },
+          {
+            "default": {
+              "factory": "frozenset",
+              "kind": "factory"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "allowed_no_decisions",
+            "type": "frozenset[str]"
+          }
+        ],
+        "members": [
+          {
+            "kind": "classmethod",
+            "name": "from_dict",
+            "signature": "(value: 'Any') -> 'DecisionContract'"
+          },
+          {
+            "kind": "method",
+            "name": "target_for",
+            "signature": "(self, decision: 'str', default: 'float') -> 'float'"
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          }
+        ],
+        "module": "agentverity.decision_contract",
+        "qualified_name": "DecisionContract"
+      },
+      "DecisionCount": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "decision",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "count",
+            "type": "int"
+          }
+        ],
+        "members": [],
+        "module": "agentverity.decision_contract",
+        "qualified_name": "DecisionCount"
+      },
+      "DecisionCoverageResult": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "contract",
+            "type": "DecisionContract"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "intended_counts",
+            "type": "tuple[DecisionCount, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "observed_counts",
+            "type": "tuple[DecisionCount, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "missing_intended",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "missing_observed",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "unknown_observed",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "under_cased",
+            "type": "tuple[tuple[str, int, int], ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "observed_case_counts",
+            "type": "tuple[DecisionCount, ...]"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "advice",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "intended_coverage",
+            "signature": "(self) -> 'float'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "missing_critical",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "observed_coverage",
+            "signature": "(self) -> 'float'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "satisfied",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.decision_contract",
+        "qualified_name": "DecisionCoverageResult"
+      },
+      "DecisionSuite": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "contract",
+            "type": "DecisionContract"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "cases",
+            "type": "tuple[DecisionCase, ...]"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "expected",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "classmethod",
+            "name": "from_dict",
+            "signature": "(value: 'Any') -> 'DecisionSuite'"
+          },
+          {
+            "kind": "property",
+            "name": "inputs",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "missing_required_cases",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          }
+        ],
+        "module": "agentverity.decision_contract",
+        "qualified_name": "DecisionSuite"
+      },
+      "EvidenceCase": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "observations",
+            "type": "tuple[str | tuple[str, ...] | Decision | NoDecision, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "expected",
+            "type": "str | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": 0
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "errors",
+            "type": "int"
+          }
+        ],
+        "members": [
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          },
+          {
+            "kind": "method",
+            "name": "to_observations",
+            "signature": "(self, layer: 'str') -> 'tuple[Observation, ...]'"
+          },
+          {
+            "kind": "property",
+            "name": "usable_pairs",
+            "signature": "(self) -> 'int'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.evidence",
+        "qualified_name": "EvidenceCase"
+      },
+      "EvidenceDrift": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "routes",
+            "type": "tuple[RouteDrift, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "gained_decisions",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "lost_decisions",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "gained_flip_pairs",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "lost_flip_pairs",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "provenance_changes",
+            "type": "tuple[tuple[str, Any, Any], ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "informational_changes",
+            "type": "tuple[tuple[str, Any, Any], ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "isolation_before",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "isolation_after",
+            "type": "str"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "changed_routes",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "drifted",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "independence_note",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "isolation_changed",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "render",
+            "signature": "(self) -> 'str'"
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          }
+        ],
+        "module": "agentverity.drift",
+        "qualified_name": "EvidenceDrift"
+      },
+      "EvidenceError": {
+        "attributes": [],
+        "fields": [],
+        "members": [],
+        "module": "agentverity.evidence",
+        "qualified_name": "EvidenceError"
+      },
+      "EvidenceSet": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "cases",
+            "type": "tuple[EvidenceCase, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "verdict"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "layer",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "unknown"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "isolation",
+            "type": "str"
+          },
+          {
+            "default": {
+              "factory": "dict",
+              "kind": "factory"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "provenance",
+            "type": "dict[str, Any]"
+          }
+        ],
+        "members": [
+          {
+            "kind": "classmethod",
+            "name": "from_dict",
+            "signature": "(value: 'Any') -> 'EvidenceSet'"
+          },
+          {
+            "kind": "property",
+            "name": "independence_caveat",
+            "signature": "(self) -> 'str | None'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "inputs",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "intended",
+            "signature": "(self) -> 'tuple[str | None, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          },
+          {
+            "kind": "property",
+            "name": "total_pairs",
+            "signature": "(self) -> 'int'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.evidence",
+        "qualified_name": "EvidenceSet"
+      },
+      "FlipPair": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "decisions",
+            "type": "tuple[str, str]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "count",
+            "type": "int"
+          }
+        ],
+        "members": [
+          {
+            "kind": "method",
+            "name": "render",
+            "signature": "(self) -> 'str'"
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          }
+        ],
+        "module": "agentverity.stratified",
+        "qualified_name": "FlipPair"
+      },
+      "MeterResult": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "layer",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "epsilon",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "inputs",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "repeats",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "pair_trials",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "pair_flips",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "inputs_with_flip",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "ci_low",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "ci_high",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "max_repeats",
+            "type": "int | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "sequential_call",
+            "type": "str | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "sequential_pairs",
+            "type": "int | None"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "advice",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "call",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "flip_rate",
+            "signature": "(self) -> 'float'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.meter",
+        "qualified_name": "MeterResult"
+      },
+      "NoDecision": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "reason",
+            "type": "str"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "comparable",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "is_incomplete",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.decision",
+        "qualified_name": "NoDecision"
+      },
+      "Observation": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "value",
+              "value": ""
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "text",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "verdict",
+            "type": "str | Outcome | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "tools",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "raw",
+            "type": "Any"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "is_incomplete",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "key",
+            "signature": "(self, on: 'str' = 'verdict') -> 'Any'"
+          },
+          {
+            "kind": "property",
+            "name": "outcome",
+            "signature": "(self) -> 'Outcome'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.observation",
+        "qualified_name": "Observation"
+      },
+      "OutcomeNotScorable": {
+        "attributes": [],
+        "fields": [],
+        "members": [],
+        "module": "agentverity.decision",
+        "qualified_name": "OutcomeNotScorable"
+      },
+      "ProgressEvent": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "phase",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "completed",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "total",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input_index",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input_fingerprint",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "status",
+            "type": "Literal['ok', 'error']"
+          }
+        ],
+        "members": [],
+        "module": "agentverity.execution",
+        "qualified_name": "ProgressEvent"
+      },
+      "Relation": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "name",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "rtype",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "transform",
+            "type": "Callable[[str], str]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "check",
+            "type": "Callable[[Observation, Observation], bool]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": ""
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "description",
+            "type": "str"
+          }
+        ],
+        "members": [],
+        "module": "agentverity.relations",
+        "qualified_name": "Relation"
+      },
+      "RelationCoverage": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "routes",
+            "type": "tuple[RouteRelationCoverage, ...]"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "advice",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "probed",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          },
+          {
+            "kind": "property",
+            "name": "unprobed",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.stratified",
+        "qualified_name": "RelationCoverage"
+      },
+      "RelationResult": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "relation",
+            "type": "Relation"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "total",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "held",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "violated",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": 0
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "skipped",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": 0
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "errors",
+            "type": "int"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "exercised",
+            "signature": "(self) -> 'int'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "is_vacuous",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "violation_rate",
+            "signature": "(self) -> 'float | None'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.runner",
+        "qualified_name": "RelationResult"
+      },
+      "RouteDrift": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "decision",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "before_flips",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "before_trials",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "after_flips",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "after_trials",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "before_call",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "after_call",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "epsilon",
+            "type": "float"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "after_rate",
+            "signature": "(self) -> 'float | None'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "before_rate",
+            "signature": "(self) -> 'float | None'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "direction",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          },
+          {
+            "kind": "property",
+            "name": "verdict_changed",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.drift",
+        "qualified_name": "RouteDrift"
+      },
+      "RoutePlan": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "decision",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "cases",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "target",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "pairs_needed",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "repeats_each",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "calls",
+            "type": "int"
+          }
+        ],
+        "members": [
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          }
+        ],
+        "module": "agentverity.stratified",
+        "qualified_name": "RoutePlan"
+      },
+      "RouteRelationCoverage": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "decision",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "cases",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "exercised",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "skipped",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "held",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "violated",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": 0
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "errors",
+            "type": "int"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "probed",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          },
+          {
+            "kind": "property",
+            "name": "violation_rate",
+            "signature": "(self) -> 'float | None'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.stratified",
+        "qualified_name": "RouteRelationCoverage"
+      },
+      "RouteStability": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "decision",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "cases",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "pair_trials",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "pair_flips",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "ci_low",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "ci_high",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "epsilon",
+            "type": "float"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "call",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "decided",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "flip_rate",
+            "signature": "(self) -> 'float'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "pairs_needed",
+            "signature": "(self) -> 'int | None'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          }
+        ],
+        "module": "agentverity.stratified",
+        "qualified_name": "RouteStability"
+      },
+      "RunConfig": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "budget",
+            "type": "int | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "balanced"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "precision",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "k",
+            "type": "int | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "epsilon",
+            "type": "float | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": 0.9
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "blindness_threshold",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "verdict"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "layer",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": true
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "run_meter",
+            "type": "bool"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": true
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "run_blindness",
+            "type": "bool"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": true
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "reuse_unchanged_calls",
+            "type": "bool"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": false
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "sequential",
+            "type": "bool"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": 1
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "max_workers",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "raise"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "error_policy",
+            "type": "ErrorPolicy"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": false
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "curtail",
+            "type": "bool"
+          }
+        ],
+        "members": [],
+        "module": "agentverity.runner",
+        "qualified_name": "RunConfig"
+      },
+      "RunError": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "phase",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input_index",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input_fingerprint",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "exception_type",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "message",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "relation",
+            "type": "str | None"
+          }
+        ],
+        "members": [],
+        "module": "agentverity.execution",
+        "qualified_name": "RunError"
+      },
+      "RunResult": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "meter",
+            "type": "MeterResult | None"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "blindness",
+            "type": "BlindnessResult | None"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "relation_results",
+            "type": "list[RelationResult]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "config",
+            "type": "RunConfig"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "decision_coverage",
+            "type": "DecisionCoverageResult | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "route_stability",
+            "type": "StratifiedStability | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "route_plans",
+            "type": "tuple[RoutePlan, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "relation_coverage",
+            "type": "RelationCoverage | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "errors",
+            "type": "tuple[RunError, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "caveats",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input_fingerprints",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "observed_keys",
+            "type": "tuple[Any | None, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": []
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "intended_decisions",
+            "type": "tuple[str, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": 0
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "requested_inputs",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": 0.0
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "duration_seconds",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "unknown"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "isolation",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "curtailment",
+            "type": "CurtailmentResult | None"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "curtailment_replay",
+            "type": "CurtailmentReplayResult | None"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "complete",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "headline",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "is_blind",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "is_stochastic",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "status",
+            "signature": "(self) -> 'RunStatus'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "suite_is_meaningful",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "summary",
+            "signature": "(self) -> 'str'"
+          },
+          {
+            "kind": "property",
+            "name": "targeted_stochastic",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "targeted_undecided",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "vacuous_relations",
+            "signature": "(self) -> 'list[RelationResult]'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.runner",
+        "qualified_name": "RunResult"
+      },
+      "SequentialPlan": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "epsilon",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "alpha",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "checkpoints",
+            "type": "tuple[int, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "certify_at_most",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "stochastic_at_least",
+            "type": "dict[int, int]"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "budget",
+            "signature": "(self) -> 'int'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "call_at",
+            "signature": "(self, checkpoint: 'int', flips: 'int') -> 'str | None'"
+          },
+          {
+            "kind": "property",
+            "name": "certification_is_closed_form",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.sequential",
+        "qualified_name": "SequentialPlan"
+      },
+      "Snapshot": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "schema",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "created_at",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "agentverity_version",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "layer",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "epsilon",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "k",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "blindness_threshold",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "meter_pair_trials",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "meter_ci_high",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "blindness_skew",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "blindness_distinct",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "decision_contract",
+            "type": "DecisionContract | None"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "probes",
+            "type": "tuple[SnapshotProbe, ...]"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "unknown"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "isolation",
+            "type": "str"
+          }
+        ],
+        "members": [
+          {
+            "kind": "classmethod",
+            "name": "from_dict",
+            "signature": "(value: 'dict[str, Any]') -> 'Snapshot'"
+          },
+          {
+            "kind": "property",
+            "name": "independence_asserted",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          }
+        ],
+        "module": "agentverity.snapshot",
+        "qualified_name": "Snapshot"
+      },
+      "SnapshotChange": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input_fingerprint",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "expected",
+            "type": "Any"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "actual",
+            "type": "Any"
+          }
+        ],
+        "members": [],
+        "module": "agentverity.snapshot",
+        "qualified_name": "SnapshotChange"
+      },
+      "SnapshotCompatibilityError": {
+        "attributes": [],
+        "fields": [],
+        "members": [],
+        "module": "agentverity.snapshot",
+        "qualified_name": "SnapshotCompatibilityError"
+      },
+      "SnapshotDiff": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "changes",
+            "type": "tuple[SnapshotChange, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "checked",
+            "type": "int"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "unknown"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "isolation_before",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": "unknown"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "isolation_after",
+            "type": "str"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "clean",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "provenance_note",
+            "signature": "(self) -> 'str | None'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "provenance_weakened",
+            "signature": "(self) -> 'bool'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.snapshot",
+        "qualified_name": "SnapshotDiff"
+      },
+      "SnapshotProbe": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "input_fingerprint",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "expected",
+            "type": "Any"
+          },
+          {
+            "default": {
+              "kind": "value",
+              "value": null
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "intended",
+            "type": "str | None"
+          }
+        ],
+        "members": [],
+        "module": "agentverity.snapshot",
+        "qualified_name": "SnapshotProbe"
+      },
+      "SnapshotRefused": {
+        "attributes": [],
+        "fields": [],
+        "members": [],
+        "module": "agentverity.snapshot",
+        "qualified_name": "SnapshotRefused"
+      },
+      "StratifiedStability": {
+        "attributes": [],
+        "dataclass": {
+          "frozen": true,
+          "order": false
+        },
+        "fields": [
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "layer",
+            "type": "str"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "epsilon",
+            "type": "float"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "routes",
+            "type": "tuple[RouteStability, ...]"
+          },
+          {
+            "default": {
+              "kind": "required"
+            },
+            "init": true,
+            "kw_only": false,
+            "name": "flip_pairs",
+            "type": "tuple[FlipPair, ...]"
+          }
+        ],
+        "members": [
+          {
+            "kind": "property",
+            "name": "advice",
+            "signature": "(self) -> 'str'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "deterministic",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "property",
+            "name": "stochastic",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          },
+          {
+            "kind": "method",
+            "name": "to_dict",
+            "signature": "(self) -> 'dict[str, Any]'"
+          },
+          {
+            "kind": "property",
+            "name": "undecided",
+            "signature": "(self) -> 'tuple[str, ...]'",
+            "writable": false
+          }
+        ],
+        "module": "agentverity.stratified",
+        "qualified_name": "StratifiedStability"
+      }
+    },
+    "schema": "agentverity.class-member-audit/v1"
+  }
+}
