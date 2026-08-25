@@ -232,6 +232,9 @@ def test_public_positioning_and_machine_terms_are_kept_separate() -> None:
     assert positioning in pyproject
     assert "regression reference" in readme
     assert "regression reference" in roadmap
+    assert "**flakiness**" in readme
+    assert "`plan --observed FLIPS/PAIRS`" in roadmap
+    assert "Do not add `--windows`" in roadmap
     for current, explanatory in (
         ("`deterministic`", "repeatability qualified"),
         ("`stochastic`", "repeatability rejected"),
