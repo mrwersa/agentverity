@@ -166,6 +166,20 @@ fixed-sample interval and stop when the result looks favourable.
 For evidence already collected, `best_case_admission_pairs` tests whether an
 all-agree continuation could admit within a predeclared pair budget. It may
 justify stopping an impossible run early; it never creates an early admission.
+The CLI exposes the same calculation without making more calls:
+
+```console
+$ agentverity plan --observed 4/73 --epsilon 0.05 --max-pairs 201
+agentverity — observed-count admission plan
+  observed:     4 flips / 73 pairs
+  tolerance:    0.05
+  assumption:   every additional pair agrees
+  earliest:     202 total pairs
+  additional:   129 pairs
+  maximum:      201 total pairs
+  reachable:    no
+```
+
 For live fixed-endpoint collection, `--curtail` stops as soon as even an
 all-agree continuation cannot qualify by the endpoint. It reports the stopping
 pair and avoided calls but no final repeatability class. It never admits early:
@@ -251,6 +265,6 @@ coverage. See the contributing guide above before opening a pull request.
 ## Status and licence
 
 Alpha. Pin the current minor series for production use:
-`agentverity~=0.21.0`. Patch releases preserve the public API.
+`agentverity~=0.22.0`. Patch releases preserve the public API.
 
 Apache-2.0.

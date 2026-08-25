@@ -47,6 +47,9 @@ rate fixed, but it could first admit at 202 total pairs if every later pair
 agreed. `best_case_admission_pairs(0.05, flips=4, pairs=73)` returns `202`;
 with `max_pairs=201` it returns `None`. This is an optimistic endpoint check,
 not permission to inspect the interval repeatedly and stop when it passes.
+The CLI equivalent is `agentverity plan --observed 4/73 --epsilon 0.05`.
+Add `--max-pairs 201` to test a predeclared endpoint; the plan reports that
+202 is the earliest all-agree total and 201 is unreachable.
 
 For live collection, `RunConfig(curtail=True)` or `--curtail` predeclares the
 ordinary fixed endpoint and applies only that impossibility direction. If the

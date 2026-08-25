@@ -136,10 +136,11 @@ An importer must therefore reject ambiguous mappings rather than infer them.
 
 ### Verified implementation
 
-The 0.21.0 package is a zero-mandatory-dependency Python 3.10–3.14 library and
+The 0.22.0 package is a zero-mandatory-dependency Python 3.10–3.14 library and
 CLI. Its public workflow is:
 
-- `plan` prices a suite before calls are made;
+- `plan` prices a suite before calls are made or an all-agree continuation
+  from observed counts;
 - `run` collects paired repeated observations through callable, Strands, or
   LangGraph adapters;
 - `assess` imports Promptfoo, DeepEval test cases, or generic JSONL evidence;

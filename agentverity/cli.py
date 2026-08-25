@@ -20,6 +20,7 @@ from agentverity.integrations.jsonl import load_jsonl
 from agentverity.integrations.promptfoo import load_promptfoo
 from agentverity.meter import (
     PRECISION_LEVELS,
+    best_case_admission_pairs,
     pairs_for_deterministic_call,
     resolve_epsilon,
 )
@@ -598,25 +599,48 @@ def _build_parser() -> argparse.ArgumentParser:
     plan_parser = sub.add_parser(
         "plan",
         help=(
-            "show the zero-change call plan for a declared suite, without "
+            "price a zero-change suite or an all-agree continuation, without "
             "calling the agent"
         ),
     )
-    plan_parser.add_argument("--suite", required=True, help="decision suite JSON")
+    plan_source = plan_parser.add_mutually_exclusive_group(required=True)
+    plan_source.add_argument("--suite", help="decision suite JSON")
+    plan_source.add_argument(
+        "--observed",
+        metavar="FLIPS/PAIRS",
+        help=(
+            "observed disjoint-pair counts to price under the optimistic "
+            "assumption that every additional pair agrees; this cannot create "
+            "early admission"
+        ),
+    )
     plan_parser.add_argument(
         "--precision",
         choices=sorted(PRECISION_LEVELS),
         default="balanced",
         help=(
-            "Default route tolerance: cheap (10%%), balanced (5%%), or "
-            "strict (1%%). Overridden by --epsilon."
+            "Tolerance: cheap (10%%), balanced (5%%), or strict (1%%). For "
+            "--suite this is the default for routes without a declared "
+            "target. Overridden by --epsilon."
         ),
     )
     plan_parser.add_argument(
         "--epsilon",
         type=float,
         default=None,
-        help="exact default tolerance for routes with no declared target",
+        help=(
+            "exact flip-rate tolerance; for --suite, the default for routes "
+            "without a declared target"
+        ),
+    )
+    plan_parser.add_argument(
+        "--max-pairs",
+        type=int,
+        default=None,
+        help=(
+            "--observed only: test whether admission remains reachable by "
+            "this predeclared total pair endpoint"
+        ),
     )
 
     assess_parser = sub.add_parser(
@@ -839,15 +863,76 @@ def _assess_command(args: argparse.Namespace) -> int:
 
 
 def _plan_command(args: argparse.Namespace) -> int:
-    """Print what a suite would cost before any agent call is made.
+    """Print what a suite or all-agree continuation would cost.
 
     Knowing the bill in advance is the difference between adopting a tighter
     tolerance and discovering it after a provider invoice.
     """
+    try:
+        epsilon = resolve_epsilon(args.precision, args.epsilon)
+    except ValueError as exc:
+        print(f"plan refused: {exc}", file=sys.stderr)
+        return 2
+    if args.observed is not None:
+        try:
+            flips, pairs = _parse_observed_counts(args.observed)
+            earliest = best_case_admission_pairs(
+                epsilon,
+                flips=flips,
+                pairs=pairs,
+            )
+            if args.max_pairs is not None and args.max_pairs < pairs:
+                raise ValueError("--max-pairs must be at least the observed pairs")
+            reachable = (
+                best_case_admission_pairs(
+                    epsilon,
+                    flips=flips,
+                    pairs=pairs,
+                    max_pairs=args.max_pairs,
+                )
+                is not None
+                if args.max_pairs is not None
+                else None
+            )
+        except (TypeError, ValueError) as exc:
+            print(f"plan refused: {exc}", file=sys.stderr)
+            return 2
+
+        if earliest is None:  # pragma: no cover - finite fixed counts always converge
+            raise RuntimeError(
+                "all-agree continuation unexpectedly had no finite total"
+            )
+        flip_word = "flip" if flips == 1 else "flips"
+        pair_word = "pair" if pairs == 1 else "pairs"
+        additional = earliest - pairs
+        additional_word = "pair" if additional == 1 else "pairs"
+        print("agentverity — observed-count admission plan")
+        print(f"  observed:     {flips} {flip_word} / {pairs} {pair_word}")
+        print(f"  tolerance:    {epsilon:g}")
+        print("  assumption:   every additional pair agrees")
+        print(f"  earliest:     {earliest} total pairs")
+        print(f"  additional:   {additional} {additional_word}")
+        if args.max_pairs is not None:
+            print(f"  maximum:      {args.max_pairs} total pairs")
+            print(f"  reachable:    {'yes' if reachable else 'no'}")
+        print(
+            "\nThis is an optimistic fixed-endpoint calculation. It cannot "
+            "create early admission: qualification still belongs at a "
+            "predeclared endpoint or to a predeclared sequential rule."
+        )
+        return 0
+
+    if args.max_pairs is not None:
+        print(
+            "plan refused: --max-pairs applies to --observed, not --suite",
+            file=sys.stderr,
+        )
+        return 2
+
     suite = load_decision_suite(args.suite)
     plans = plan_route_repeats(
         suite.expected,
-        epsilon=resolve_epsilon(args.precision, args.epsilon),
+        epsilon=epsilon,
         targets=suite.contract.stability_targets,
     )
     print("agentverity — zero-flip call plan")
@@ -858,6 +943,19 @@ def _plan_command(args: argparse.Namespace) -> int:
         "stochastic."
     )
     return 0
+
+
+def _parse_observed_counts(value: str) -> tuple[int, int]:
+    """Parse ``FLIPS/PAIRS`` without accepting ambiguous signed values."""
+    parts = value.split("/")
+    if len(parts) != 2 or not all(part.isascii() and part.isdigit() for part in parts):
+        raise ValueError("--observed must be FLIPS/PAIRS using non-negative integers")
+    flips, pairs = (int(part) for part in parts)
+    if pairs < 1:
+        raise ValueError("observed pairs must be at least 1")
+    if flips > pairs:
+        raise ValueError("observed flips cannot exceed observed pairs")
+    return flips, pairs
 
 
 def main(argv: list[str] | None = None) -> int:
