@@ -639,7 +639,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "--observed only: test whether admission remains reachable by "
-            "this predeclared total pair endpoint"
+            "this predeclared total pair endpoint, which must be at least the "
+            "observed pairs"
         ),
     )
 
@@ -884,15 +885,7 @@ def _plan_command(args: argparse.Namespace) -> int:
             if args.max_pairs is not None and args.max_pairs < pairs:
                 raise ValueError("--max-pairs must be at least the observed pairs")
             reachable = (
-                best_case_admission_pairs(
-                    epsilon,
-                    flips=flips,
-                    pairs=pairs,
-                    max_pairs=args.max_pairs,
-                )
-                is not None
-                if args.max_pairs is not None
-                else None
+                args.max_pairs >= earliest if args.max_pairs is not None else None
             )
         except (TypeError, ValueError) as exc:
             print(f"plan refused: {exc}", file=sys.stderr)

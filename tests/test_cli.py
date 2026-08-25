@@ -507,6 +507,15 @@ def test_plan_requires_exactly_one_planning_source(tmp_path):
     assert missing.value.code == conflicting.value.code == 2
 
 
+def test_plan_help_states_the_observed_endpoint_floor(capsys):
+    with pytest.raises(SystemExit) as raised:
+        main(["plan", "--help"])
+
+    assert raised.value.code == 0
+    help_text = " ".join(capsys.readouterr().out.split())
+    assert "must be at least the observed pairs" in help_text
+
+
 def test_run_refuses_an_underfunded_route_plan_before_agent_calls(
     tmp_path,
     capsys,
