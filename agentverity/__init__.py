@@ -85,6 +85,7 @@ from agentverity.reporting import (
     write_run_json,
 )
 from agentverity.runner import (
+    CurtailmentReplayResult,
     CurtailmentResult,
     RelationResult,
     RunConfig,
@@ -138,6 +139,7 @@ __all__ = [
     "SNAPSHOT_SCHEMA",
     "TELEMETRY_SCHEMA",
     "BlindnessResult",
+    "CurtailmentReplayResult",
     "CurtailmentResult",
     "Decision",
     "DecisionCase",

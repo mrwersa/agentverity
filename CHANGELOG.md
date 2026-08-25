@@ -8,6 +8,30 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-08-25
+
+### Added
+
+- `agentverity assess --replay-curtailment` and
+  `assess_evidence(..., replay_curtailment=True)` replay the live
+  fixed-endpoint impossibility boundary over recorded ordered evidence. The
+  structured `CurtailmentReplayResult` reports the first unreachable prefix
+  and avoided work, or that the full endpoint was required.
+- Terminal and JSON reports label replay as a post-hoc counterfactual, expose
+  its round-robin case schedule, and retain the ordinary endpoint
+  classification unchanged. Versioned live fixtures check path-by-path
+  equivalence.
+
+### Compatibility
+
+- This minor release adds one top-level class, one optional `RunResult` field,
+  one opt-in `assess_evidence` parameter, one `assess` flag, and one optional
+  JSON report member. Existing defaults, process exit classes, qualification
+  rules, stored evidence/snapshot schemas, and live curtailment are unchanged.
+- Replay derives its endpoint from the evidence and exposes no endpoint
+  override. It refuses recorded errors and cannot be interpreted as a stopping
+  rule declared before the historical collection.
+
 ## [0.22.0] - 2026-08-25
 
 ### Added
@@ -1209,7 +1233,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.22.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.23.0...HEAD
+[0.23.0]: https://github.com/mrwersa/agentverity/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/mrwersa/agentverity/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/mrwersa/agentverity/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/mrwersa/agentverity/compare/v0.19.0...v0.20.0

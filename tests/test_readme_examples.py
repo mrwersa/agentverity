@@ -222,6 +222,7 @@ def test_public_positioning_and_machine_terms_are_kept_separate() -> None:
     """Entry points should explain the method without renaming API values."""
     root = pathlib.Path(__file__).resolve().parents[1]
     readme = (root / "README.md").read_text(encoding="utf-8")
+    readme_prose = " ".join(readme.split())
     roadmap = (root / "ROADMAP.md").read_text(encoding="utf-8")
     pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
 
@@ -233,6 +234,9 @@ def test_public_positioning_and_machine_terms_are_kept_separate() -> None:
     assert "regression reference" in readme
     assert "regression reference" in roadmap
     assert "flakiness" in readme
+    assert "assess --replay-curtailment" in readme
+    assert "post-hoc and counterfactual" in readme
+    assert "never changes the observed endpoint classification" in readme_prose
     assert "`plan --observed FLIPS/PAIRS`" in roadmap
     assert "Do not add `--windows`" in roadmap
     for current, explanatory in (

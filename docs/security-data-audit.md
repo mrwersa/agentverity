@@ -53,6 +53,10 @@ The 0.21.0 curtailment extension adds only generated status text and aggregate
 pair, flip, endpoint, and avoided-call counts to terminal, JSON, JUnit, and
 OpenTelemetry output. It does not add partial observations or raw inputs to
 those surfaces; the published 0.20.0 retention fixture remains the baseline.
+The 0.23.0 retrospective replay likewise adds only generated counterfactual
+labels and aggregate pair, flip, and avoided-call counts to terminal and JSON
+reports. Focused sentinel tests confirm that its optional JSON member retains
+neither probe inputs nor observation values.
 
 ## Operator Controls and Failure Modes
 

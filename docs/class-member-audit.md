@@ -1,20 +1,20 @@
 # Public Class-Member Audit
 
 This preliminary compatibility audit records the caller-visible structure of
-all 36 classes exported by AgentVerity 0.21.0. It closes the gap
+all 37 classes exported by the AgentVerity 0.23.0 candidate. It closes the gap
 between a stable constructor signature and the methods, properties, or fields
 callers use after construction.
 
 ## What CI Pins
 
 `tests/fixtures/compatibility/v0.21.0/class-members.json` records the published
-surface, for a total of:
+baseline. CI checks its explicit additive candidate delta, for a total of:
 
-- all 184 fields across the 32 exported dataclasses, in declaration order;
+- all 190 fields across the 33 exported dataclasses, in declaration order;
 - field annotations, constructor participation, keyword-only status, and
   whether defaults are required, literal values, or factories;
 - frozen and ordering policy for each dataclass; and
-- all 89 public methods, class methods, static methods, and properties declared
+- all 91 public methods, class methods, static methods, and properties declared
   by exported classes, including callable signatures and property writability.
 
 The collector audits every class named by `agentverity.__all__`. A separate CI
@@ -23,10 +23,9 @@ cannot disappear between the two inventories. Private and generated dunder
 methods, inherited `object`/exception machinery, docstrings, and method bodies
 are deliberately excluded.
 
-That surface includes `CurtailmentResult` and its `avoided_pairs` property,
-plus the optional `RunConfig.curtail` and `RunResult.curtailment` fields. CI
-compares the checkout directly with the published fixture; the 0.20.0 fixture
-remains unchanged as a historical record.
+The reviewed delta is `CurtailmentReplayResult` and its two properties, plus
+the optional `RunResult.curtailment_replay` field. The published 0.21.0
+fixture remains unchanged rather than being relabelled as a candidate release.
 
 ## Provenance and Reproduction
 

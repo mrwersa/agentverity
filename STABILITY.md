@@ -23,13 +23,13 @@ not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.22.0
+agentverity~=0.23.0
 ```
 
-That accepts compatible `0.22.x` fixes without moving to a later pre-1.0 minor
+That accepts compatible `0.23.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.22 reads and writes one version of each schema:
+Version 0.23 reads and writes one version of each schema:
 `agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v4`,
 `agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
 differ because each records its own format history, not a release. Evidence is
@@ -80,10 +80,11 @@ minor that produced every currently supported schema. There are no migration
 paths to test: older evidence and snapshot schemas are deliberately refused.
 
 The preliminary compatibility suite now covers four complementary surfaces.
-The public-surface inventory comes from the published 0.22.0 wheel. The class
-and return inventories remain at 0.21.0 because 0.22.0 changed neither
-surface, while the executable CLI contract retains its reviewed 0.20.0
-baseline and focused 0.21.0 curtailment scenarios:
+The 0.23.0 candidate is checked as an explicit additive delta from the
+published 0.22.0 public-surface inventory. The class and return inventories
+retain their published 0.21.0 baselines with explicit replay deltas, while the
+executable CLI contract retains its reviewed 0.20.0 baseline and focused
+0.21.0 curtailment scenarios:
 
 - the [public surface audit](docs/public-surface-audit.md) pins top-level
   exports, signatures, constants, commands, flags, and parser defaults;
