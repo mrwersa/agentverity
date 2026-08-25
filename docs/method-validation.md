@@ -22,7 +22,7 @@ true flip rates, four dependence settings (`rho=0, 0.02, 0.05, 0.10`), and
 100,000 qualification runs per scenario. It records exact boundary
 probabilities, every simulated call share, Monte Carlo uncertainty, and mean
 pairs spent in the versioned
-[`agentverity.method-validation/v4`](evidence/method-validation.json) artifact.
+[`agentverity.method-validation/v5`](evidence/method-validation.json) artifact.
 The script has no dependencies outside Python and AgentVerity.
 
 ## Experiment
@@ -150,6 +150,7 @@ The sensitivity model covers one exchangeable dependence pattern, not stateful
 agents generally. It does not establish that `rho=0.10` is realistic, detect
 contamination from observations, validate case representativeness, or test the
 correctness of any decision. Independent expert review of the method remains
-an open Phase 1 outcome. A 146-pair budget is still one within-window claim:
+an open Phase 1 outcome. A 146-pair budget is still one within-period claim:
 it neither repairs dependent trials nor supports a cross-time claim. Repeated
-collection windows require a separately specified estimand and guarantee.
+independent evaluation periods require a separately specified estimand and
+guarantee.

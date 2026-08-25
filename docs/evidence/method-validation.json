@@ -50,7 +50,7 @@
     }
   },
   "fixed_endpoint_validation": {
-    "assumption": "iid Bernoulli disjoint pairs within one collection window",
+    "assumption": "iid Bernoulli disjoint pairs within one evaluation period",
     "endpoints": [
       {
         "exact_boundary": {
@@ -263,7 +263,7 @@
     "curtailment_never_admits_early": true,
     "curtailment_preserves_fixed_endpoint_calls": true,
     "iid_is_the_claimed_model": true,
-    "larger_within_window_budget_is_not_cross_time_evidence": true,
+    "larger_within_period_budget_is_not_cross_time_evidence": true,
     "positive_correlation_is_sensitivity_only": true,
     "simulation_is_not_a_proof": true
   },
@@ -1209,5 +1209,5 @@
       "wrong_direction_rate": 0.00134
     }
   ],
-  "schema": "agentverity.method-validation/v4"
+  "schema": "agentverity.method-validation/v5"
 }
