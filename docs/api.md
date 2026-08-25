@@ -140,6 +140,11 @@ The CLI exposes the same path through `agentverity snapshot` and
 calling the agent. The plan assumes zero decision changes. A changing route
 can remain undecided or resolve as stochastic.
 
+`agentverity plan --observed FLIPS/PAIRS` instead prices evidence already
+seen. It reports the earliest total that could admit if every later pair
+agrees. Add `--max-pairs N` to test a predeclared endpoint. This optimistic
+calculation cannot create early admission and does not classify the evidence.
+
 Programmatic callers can import `RoutePlan` and `plan_route_repeats`.
 `RunConfig.k` is a minimum when route targets are declared, and the route plan
 records any larger per-route allocation. `RunConfig.budget` remains a hard cap
@@ -155,7 +160,8 @@ unless the caller explicitly supplies `k`.
   projected fixed flip rate.
 - `best_case_admission_pairs` asks when observed flip counts could first admit
   if every additional pair agrees. Supply `max_pairs` to test a predeclared
-  endpoint. `RunConfig(curtail=True)` applies only its early-impossibility
+  endpoint. `agentverity plan --observed FLIPS/PAIRS` exposes the same
+  calculation. `RunConfig(curtail=True)` applies only its early-impossibility
   direction during live fixed collection; it never admits early.
 - `plan_repeats` converts the input count and precision into `k`.
 - `plan_route_repeats` produces a zero-change budget for a declared suite.

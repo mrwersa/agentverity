@@ -436,6 +436,86 @@ def test_plan_prints_a_budget_without_calling_the_agent(tmp_path, capsys):
     assert "minimum needed to certify quiet routes" in out
 
 
+@pytest.mark.parametrize(
+    ("observed", "earliest"),
+    (("1/73", 110), ("3/73", 173), ("4/73", 202), ("8/73", 311)),
+)
+def test_plan_prices_the_audited_all_agree_continuations(
+    observed, earliest, capsys
+):
+    """The CLI exposes reviewed inverse boundaries without rederiving them."""
+    assert main([
+        "plan", "--observed", observed, "--epsilon", "0.05",
+    ]) == 0
+
+    out = capsys.readouterr().out
+    assert f"earliest:     {earliest} total pairs" in out
+    assert "assumption:   every additional pair agrees" in out
+    assert "cannot create early admission" in out
+
+
+@pytest.mark.parametrize(
+    ("maximum", "reachable"),
+    (("201", "no"), ("202", "yes")),
+)
+def test_plan_checks_a_predeclared_maximum(maximum, reachable, capsys):
+    assert main([
+        "plan", "--observed", "4/73", "--epsilon", "0.05",
+        "--max-pairs", maximum,
+    ]) == 0
+
+    out = capsys.readouterr().out
+    assert f"maximum:      {maximum} total pairs" in out
+    assert f"reachable:    {reachable}" in out
+
+
+@pytest.mark.parametrize("observed", ("three/73", "1", "-1/73", "0/0", "4/3"))
+def test_plan_refuses_malformed_observed_counts(observed, capsys):
+    option = f"--observed={observed}" if observed.startswith("-") else "--observed"
+    argv = ["plan", option] if option != "--observed" else ["plan", option, observed]
+    assert main(argv) == 2
+    assert "plan refused:" in capsys.readouterr().err
+
+
+def test_plan_refuses_an_invalid_tolerance(capsys):
+    assert main(["plan", "--observed", "1/73", "--epsilon", "0"]) == 2
+    assert "epsilon must be between 0 and 1" in capsys.readouterr().err
+
+
+def test_maximum_pairs_applies_only_to_observed_planning(tmp_path, capsys):
+    suite = {
+        "schema": "agentverity.decision-suite/v1",
+        "contract": {"allowed": ["approve"]},
+        "cases": [{"input": "routine", "expected": "approve"}],
+    }
+    path = tmp_path / "suite.json"
+    path.write_text(json.dumps(suite), encoding="utf-8")
+
+    assert main(["plan", "--suite", str(path), "--max-pairs", "100"]) == 2
+    assert "--max-pairs applies to --observed" in capsys.readouterr().err
+
+
+def test_plan_requires_exactly_one_planning_source(tmp_path):
+    path = tmp_path / "suite.json"
+    path.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(SystemExit) as missing:
+        main(["plan"])
+    with pytest.raises(SystemExit) as conflicting:
+        main(["plan", "--suite", str(path), "--observed", "1/73"])
+
+    assert missing.value.code == conflicting.value.code == 2
+
+
+def test_plan_help_states_the_observed_endpoint_floor(capsys):
+    with pytest.raises(SystemExit) as raised:
+        main(["plan", "--help"])
+
+    assert raised.value.code == 0
+    help_text = " ".join(capsys.readouterr().out.split())
+    assert "must be at least the observed pairs" in help_text
+
+
 def test_run_refuses_an_underfunded_route_plan_before_agent_calls(
     tmp_path,
     capsys,

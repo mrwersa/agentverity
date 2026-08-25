@@ -23,13 +23,13 @@ not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.21.0
+agentverity~=0.22.0
 ```
 
-That accepts compatible `0.21.x` fixes without moving to a later pre-1.0 minor
+That accepts compatible `0.22.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.21 reads and writes one version of each schema:
+Version 0.22 reads and writes one version of each schema:
 `agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v4`,
 `agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
 differ because each records its own format history, not a release. Evidence is

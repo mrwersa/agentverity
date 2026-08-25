@@ -8,6 +8,23 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-08-25
+
+### Added
+
+- `agentverity plan --observed FLIPS/PAIRS` reports the earliest total pair
+  count that could admit if every additional pair agrees. Optional
+  `--max-pairs` tests whether a predeclared endpoint remains reachable. The
+  command makes no calls, assigns no repeatability class, and states its
+  optimistic all-agree assumption in both help and output.
+
+### Compatibility
+
+- This minor release adds an alternative, mutually exclusive input to
+  `agentverity plan` and one option used only with it. Existing `plan --suite`
+  output and behaviour, Python APIs, qualification rules, and product evidence
+  schemas are unchanged.
+
 ## [0.21.0] - 2026-08-24
 
 ### Added
@@ -1192,7 +1209,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/mrwersa/agentverity/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/mrwersa/agentverity/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/mrwersa/agentverity/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/mrwersa/agentverity/compare/v0.18.3...v0.19.0

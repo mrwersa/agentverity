@@ -20,9 +20,11 @@ intentional pre-1.0 break is still permitted, but it must now update one
 readable artifact alongside the required minor version and migration notes.
 The reviewed 0.21.0 fixture includes `CurtailmentResult`, the
 `RunConfig.curtail` and `RunResult.curtailment` fields, and the `--curtail`
-options on `run` and `snapshot`. CI now compares the checkout directly with
-that published surface; the 0.20.0 fixture remains as an unaltered historical
-record.
+options on `run` and `snapshot`. The 0.22.0 candidate test declares exactly
+one additive CLI delta: `plan` accepts the mutually exclusive `--observed`
+source and its optional `--max-pairs` endpoint. The published fixture remains
+unaltered; after release it will be regenerated from the published wheel and
+CI will return to direct comparison.
 
 Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit
