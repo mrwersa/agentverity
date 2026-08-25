@@ -238,7 +238,10 @@ def test_public_positioning_and_machine_terms_are_kept_separate() -> None:
     assert "post-hoc and counterfactual" in readme
     assert "never changes the observed endpoint classification" in readme_prose
     assert "`plan --observed FLIPS/PAIRS`" in roadmap
-    assert "Do not add `--windows`" in roadmap
+    assert "Evaluation-period claim language" in roadmap
+    assert "within-period disagreement probability" in roadmap
+    assert "across-period marginal estimand" in roadmap
+    assert "Do not add `--periods`" in roadmap
     for current, explanatory in (
         ("`deterministic`", "repeatability qualified"),
         ("`stochastic`", "repeatability rejected"),
