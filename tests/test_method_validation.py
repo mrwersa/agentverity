@@ -64,6 +64,7 @@ def test_both_fixed_budgets_have_exact_calls_and_pathwise_replay_agreement():
     )
     endpoints = result["fixed_endpoint_validation"]["endpoints"]
 
+    assert result["fixed_endpoint_validation"]["seed"] == result["method"]["seed"] + 1
     assert [row["pairs"] for row in endpoints] == [73, 146]
     assert [row["maximum_admissible_flips"] for row in endpoints] == [0, 2]
     assert [row["reachability_states_checked"] for row in endpoints] == [2700, 10730]

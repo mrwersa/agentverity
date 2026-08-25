@@ -47,6 +47,8 @@ most two flips rather than none. Exact binomial enumeration checks the call
 probabilities at the 5% boundary. The replay also checks every feasible
 prefix-count state against the production inverse, then compares ordered-path
 stopping and admission against the ordinary endpoint result.
+This replay uses seed `20260823`, derived as the main seed plus one so the
+added stream does not rewrite the established `20260822` dependence sweep.
 
 “Wrong direction” means stochastic below the 5% boundary, deterministic above
 it, and either directional claim exactly at the boundary.
