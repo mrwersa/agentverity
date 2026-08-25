@@ -47,6 +47,8 @@ def test_run_report_is_versioned_and_does_not_retain_raw_inputs():
     assert report["status"] == result.status
     assert secret_input not in encoded
     assert len(report["input_fingerprints"]) == 2
+    assert report["caveats"] == list(result.caveats)
+    assert "within-period disagreement probability" in report["caveats"][0]
 
 
 def test_recorded_error_makes_machine_report_incomplete():
@@ -161,6 +163,9 @@ def test_junit_report_maps_blindness_and_vacuous_relations_without_raw_inputs():
     assert root.find("./testcase[@name='preflight.probe_coverage']/failure") is not None
     assert root.find("./testcase[@name='preflight.relation_coverage']/failure") is not None
     assert root.find("./testcase[@name='relation.deliberate-no-op']/skipped") is not None
+    scope = root.find("./testcase[@name='evidence.complete']/system-out")
+    assert scope is not None
+    assert "within-period disagreement probability" in (scope.text or "")
     assert secret_input not in payload
 
 

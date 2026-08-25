@@ -375,7 +375,12 @@ def assess_evidence(
     from .decision_contract import assess_decision_coverage
     from .execution import RunError, input_fingerprint
     from .meter import best_case_admission_pairs, pair_flipped, score_runs
-    from .runner import CurtailmentReplayResult, RunConfig, RunResult
+    from .runner import (
+        _EVALUATION_PERIOD_CAVEAT,
+        CurtailmentReplayResult,
+        RunConfig,
+        RunResult,
+    )
     from .stratified import stratify_runs
 
     series = [case.to_observations(evidence.layer) for case in evidence.cases]
@@ -513,7 +518,8 @@ def assess_evidence(
         decision_coverage=decision_coverage,
         route_stability=route_stability,
         errors=errors,
-        caveats=(
+        caveats=(_EVALUATION_PERIOD_CAVEAT,)
+        + (
             (evidence.independence_caveat,)
             if evidence.independence_caveat is not None
             else ()

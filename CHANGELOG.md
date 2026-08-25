@@ -8,6 +8,22 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-08-25
+
+### Changed
+
+- Terminal, JSON, and JUnit reports now state that supplied evidence is treated
+  as one evaluation period. A within-period repeatability qualification does
+  not estimate an across-period marginal disagreement probability.
+- Documentation distinguishes an evidence window, which is a stored comparison
+  artefact, from an independently sampled evaluation period.
+
+### Compatibility
+
+- This patch changes report guidance only. Public Python and CLI contracts,
+  qualification rules, schemas, accepted inputs, and stored artefacts are
+  unchanged. JSON consumers should continue to treat caveat text as prose.
+
 ## [0.23.0] - 2026-08-25
 
 ### Added
@@ -1233,7 +1249,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.23.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.23.1...HEAD
+[0.23.1]: https://github.com/mrwersa/agentverity/compare/v0.23.0...v0.23.1
 [0.23.0]: https://github.com/mrwersa/agentverity/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/mrwersa/agentverity/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/mrwersa/agentverity/compare/v0.20.0...v0.21.0

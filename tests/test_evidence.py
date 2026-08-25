@@ -281,12 +281,13 @@ class TestAssessment:
             matching_suite(),
             epsilon=0.05,
         )
-        assert len(result.caveats) == 1
-        assert "not independent" in result.caveats[0]
+        assert len(result.caveats) == 2
+        assert "within-period disagreement probability" in result.caveats[0]
+        assert "not independent" in result.caveats[1]
         assert "EVIDENCE CAVEATS" in result.summary()
         assert run_result_to_dict(result)["caveats"] == list(result.caveats)
         assert "not independent" in run_result_to_junit_xml(result)
-        assert run_result_to_otel_attributes(result)["agentverity.caveats"] == 1
+        assert run_result_to_otel_attributes(result)["agentverity.caveats"] == 2
 
 
 class TestRoundTrip:

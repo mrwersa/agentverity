@@ -113,6 +113,12 @@ In ordinary testing language, repeat-run variation is often called
 **flakiness**; AgentVerity reports `stochastic` only when the evidence supports
 variation above the declared tolerance.
 
+Reports treat the supplied run or evidence set as one **evaluation period**.
+The qualification concerns its within-period disagreement probability; it does
+not estimate an across-period marginal rate over deployments, model updates,
+or time. An evidence window is a stored comparison artefact, not proof of an
+independently sampled period.
+
 It then checks whether the probe set collapsed onto one decision and, when a
 decision contract is supplied, whether every required route was intended and
 observed. Per-route results show where changes concentrate. Optional relations

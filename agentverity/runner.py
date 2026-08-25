@@ -86,6 +86,12 @@ RunStatus = Literal[
     "unmeasured",
 ]
 
+_EVALUATION_PERIOD_CAVEAT = (
+    "the supplied evidence is treated as one evaluation period; any "
+    "repeatability qualification describes its within-period disagreement "
+    "probability, not an across-period marginal disagreement probability"
+)
+
 
 def _reject_duplicates(inputs: list[str]) -> None:
     """Refuse a probe set containing the same input twice.
@@ -1585,6 +1591,7 @@ def run(
                 ),
             )
         ),
+        caveats=(_EVALUATION_PERIOD_CAVEAT,) if config.run_meter else (),
         input_fingerprints=tuple(input_fingerprint(text) for text in inputs),
         observed_keys=observed_keys,
         intended_decisions=intended_decisions,
