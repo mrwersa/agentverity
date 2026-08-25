@@ -7,6 +7,12 @@
       "observed_pairs": 73
     },
     {
+      "fixed_count_best_case_pairs": 142,
+      "fixed_rate_projection_pairs": 358,
+      "observed_flips": 2,
+      "observed_pairs": 73
+    },
+    {
       "fixed_count_best_case_pairs": 173,
       "fixed_rate_projection_pairs": 2302,
       "observed_flips": 3,
@@ -43,11 +49,221 @@
       "wrong_direction_rate": 0.03281460015523978
     }
   },
+  "fixed_endpoint_validation": {
+    "assumption": "iid Bernoulli disjoint pairs within one collection window",
+    "endpoints": [
+      {
+        "exact_boundary": {
+          "calls": {
+            "deterministic": 0.023649566588229934,
+            "stochastic": 0.029210997662895172,
+            "undecided": 0.9471394357488719
+          },
+          "wrong_direction_rate": 0.052860564251125106
+        },
+        "maximum_admissible_flips": 0,
+        "pairs": 73,
+        "reachability_state_mismatches": 0,
+        "reachability_states_checked": 2700,
+        "scenarios": [
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 1.0,
+              "stochastic": 0.0,
+              "undecided": 0.0
+            },
+            "correlation": 0.0,
+            "mean_pairs": 73.0,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.0,
+            "wrong_direction_mc95_half_width": 0.0,
+            "wrong_direction_rate": 0.0
+          },
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 0.15647,
+              "stochastic": 0.00057,
+              "undecided": 0.84296
+            },
+            "correlation": 0.0,
+            "mean_pairs": 33.62785,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.025,
+            "wrong_direction_mc95_half_width": 0.00014793457554473192,
+            "wrong_direction_rate": 0.00057
+          },
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 0.02378,
+              "stochastic": 0.02933,
+              "undecided": 0.94689
+            },
+            "correlation": 0.0,
+            "mean_pairs": 19.46958,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.05,
+            "wrong_direction_mc95_half_width": 0.0013899333871111954,
+            "wrong_direction_rate": 0.05311
+          },
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 0.00042,
+              "stochastic": 0.44897,
+              "undecided": 0.55061
+            },
+            "correlation": 0.0,
+            "mean_pairs": 10.02725,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.1,
+            "wrong_direction_mc95_half_width": 0.00012699584015864459,
+            "wrong_direction_rate": 0.00042
+          },
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 0.0,
+              "stochastic": 0.99999,
+              "undecided": 1e-05
+            },
+            "correlation": 0.0,
+            "mean_pairs": 3.33252,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.3,
+            "wrong_direction_mc95_half_width": 0.0,
+            "wrong_direction_rate": 0.0
+          }
+        ]
+      },
+      {
+        "exact_boundary": {
+          "calls": {
+            "deterministic": 0.02125657461886036,
+            "stochastic": 0.03197023877413489,
+            "undecided": 0.9467731866069986
+          },
+          "wrong_direction_rate": 0.05322681339299525
+        },
+        "maximum_admissible_flips": 2,
+        "pairs": 146,
+        "reachability_state_mismatches": 0,
+        "reachability_states_checked": 10730,
+        "scenarios": [
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 1.0,
+              "stochastic": 0.0,
+              "undecided": 0.0
+            },
+            "correlation": 0.0,
+            "mean_pairs": 146.0,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.0,
+            "wrong_direction_mc95_half_width": 0.0,
+            "wrong_direction_rate": 0.0
+          },
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 0.28975,
+              "stochastic": 0.00012,
+              "undecided": 0.71013
+            },
+            "correlation": 0.0,
+            "mean_pairs": 102.62878,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.025,
+            "wrong_direction_mc95_half_width": 6.789231775097975e-05,
+            "wrong_direction_rate": 0.00012
+          },
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 0.02135,
+              "stochastic": 0.03171,
+              "undecided": 0.94694
+            },
+            "correlation": 0.0,
+            "mean_pairs": 59.6401,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.05,
+            "wrong_direction_mc95_half_width": 0.0013893156415812787,
+            "wrong_direction_rate": 0.05306
+          },
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 3e-05,
+              "stochastic": 0.71061,
+              "undecided": 0.28936
+            },
+            "correlation": 0.0,
+            "mean_pairs": 30.02714,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.1,
+            "wrong_direction_mc95_half_width": 3.394768660159334e-05,
+            "wrong_direction_rate": 3e-05
+          },
+          {
+            "admission_mismatches": 0,
+            "assumption": "iid",
+            "calls": {
+              "deterministic": 0.0,
+              "stochastic": 1.0,
+              "undecided": 0.0
+            },
+            "correlation": 0.0,
+            "mean_pairs": 10.00875,
+            "rule": "fixed-wilson-curtailed",
+            "stopping_pair_mismatches": 0,
+            "trials": 100000,
+            "true_flip_rate": 0.3,
+            "wrong_direction_mc95_half_width": 0.0,
+            "wrong_direction_rate": 0.0
+          }
+        ]
+      }
+    ],
+    "seed": 20260823,
+    "trials_per_scenario": 100000
+  },
   "interpretation": {
     "best_case_is_not_an_adaptive_stopping_rule": true,
     "curtailment_never_admits_early": true,
     "curtailment_preserves_fixed_endpoint_calls": true,
     "iid_is_the_claimed_model": true,
+    "larger_within_window_budget_is_not_cross_time_evidence": true,
     "positive_correlation_is_sensitivity_only": true,
     "simulation_is_not_a_proof": true
   },
@@ -993,5 +1209,5 @@
       "wrong_direction_rate": 0.00134
     }
   ],
-  "schema": "agentverity.method-validation/v3"
+  "schema": "agentverity.method-validation/v4"
 }

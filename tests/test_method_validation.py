@@ -54,6 +54,29 @@ def test_curtailment_preserves_every_fixed_endpoint_call_and_only_reduces_spend(
             assert early["mean_pairs"] <= ordinary["mean_pairs"]
 
 
+def test_both_fixed_budgets_have_exact_calls_and_pathwise_replay_agreement():
+    """The added endpoint is validated by counts and ordered replay."""
+    result = simulate(
+        trials=500,
+        seed=17,
+        rates=(0.0, 0.05, 0.3),
+        correlations=(0.0,),
+    )
+    endpoints = result["fixed_endpoint_validation"]["endpoints"]
+
+    assert result["fixed_endpoint_validation"]["seed"] == result["method"]["seed"] + 1
+    assert [row["pairs"] for row in endpoints] == [73, 146]
+    assert [row["maximum_admissible_flips"] for row in endpoints] == [0, 2]
+    assert [row["reachability_states_checked"] for row in endpoints] == [2700, 10730]
+    for endpoint in endpoints:
+        assert endpoint["reachability_state_mismatches"] == 0
+        assert sum(endpoint["exact_boundary"]["calls"].values()) == pytest.approx(1)
+        for scenario in endpoint["scenarios"]:
+            assert scenario["stopping_pair_mismatches"] == 0
+            assert scenario["admission_mismatches"] == 0
+            assert scenario["mean_pairs"] <= endpoint["pairs"]
+
+
 def test_iid_boundary_behavior_is_inside_the_nominal_budget() -> None:
     """At p=epsilon, either directional claim is a false boundary call."""
     result = simulate(
@@ -141,6 +164,31 @@ def test_the_committed_asset_and_document_record_the_boundary_finding() -> None:
     assert all(curtailed[key]["calls"] == fixed[key]["calls"] for key in fixed)
     assert curtailed[(0.0, 0.05)]["mean_pairs"] == pytest.approx(19.52772)
 
+    endpoints = payload["fixed_endpoint_validation"]["endpoints"]
+    assert [row["pairs"] for row in endpoints] == [73, 146]
+    assert [row["reachability_states_checked"] for row in endpoints] == [2700, 10730]
+    assert endpoints[1]["maximum_admissible_flips"] == 2
+    assert endpoints[1]["exact_boundary"]["wrong_direction_rate"] == pytest.approx(
+        0.05322681339299525
+    )
+    assert all(
+        endpoint["reachability_state_mismatches"] == 0
+        and scenario["stopping_pair_mismatches"] == 0
+        and scenario["admission_mismatches"] == 0
+        for endpoint in endpoints
+        for scenario in endpoint["scenarios"]
+    )
+    assert "146-pair" in documentation
+    assert "cross-time" in documentation
+    assert "| 73 pairs | 33.6 | 19.5 | 3.3 | 0 / 2,700 | 0 |" in documentation
+    assert "| 146 pairs | 102.6 | 59.6 | 10.0 | 0 / 10,730 | 0 |" in documentation
+    assert (
+        payload["interpretation"][
+            "larger_within_window_budget_is_not_cross_time_evidence"
+        ]
+        is True
+    )
+
 
 def test_the_committed_asset_separates_rate_projection_from_best_case_continuation():
     """Evidence must preserve the distinction that exposed the planning defect."""
@@ -148,10 +196,10 @@ def test_the_committed_asset_separates_rate_projection_from_best_case_continuati
 
     assert [
         row["fixed_count_best_case_pairs"] for row in payload["continuation_planning"]
-    ] == [110, 173, 202, 311]
+    ] == [110, 142, 173, 202, 311]
     assert [
         row["fixed_rate_projection_pairs"] for row in payload["continuation_planning"]
-    ] == [139, 2302, None, None]
+    ] == [139, 358, 2302, None, None]
     assert (
         payload["interpretation"]["best_case_is_not_an_adaptive_stopping_rule"] is True
     )
