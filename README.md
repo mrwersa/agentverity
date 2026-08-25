@@ -109,6 +109,9 @@ repeatability terms:
 
 These strings remain the public machine contract. `deterministic` does not
 claim that the underlying agent has zero randomness.
+In ordinary testing language, repeat-run variation is often called
+**flakiness**; AgentVerity reports `stochastic` only when the evidence supports
+variation above the declared tolerance.
 
 It then checks whether the probe set collapsed onto one decision and, when a
 decision contract is supplied, whether every required route was intended and
