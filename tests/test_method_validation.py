@@ -184,7 +184,7 @@ def test_the_committed_asset_and_document_record_the_boundary_finding() -> None:
     assert "| 146 pairs | 102.6 | 59.6 | 10.0 | 0 / 10,730 | 0 |" in documentation
     assert (
         payload["interpretation"][
-            "larger_within_window_budget_is_not_cross_time_evidence"
+            "larger_within_period_budget_is_not_cross_time_evidence"
         ]
         is True
     )

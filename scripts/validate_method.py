@@ -24,7 +24,7 @@ from agentverity.meter import (
 )
 from agentverity.sequential import decide_sequentially, plan_sequential
 
-SCHEMA = "agentverity.method-validation/v4"
+SCHEMA = "agentverity.method-validation/v5"
 DETERMINISTIC = "deterministic"
 STOCHASTIC = "stochastic"
 UNDECIDED = "undecided"
@@ -312,7 +312,7 @@ def _fixed_endpoint_validation(
             }
         )
     return {
-        "assumption": "iid Bernoulli disjoint pairs within one collection window",
+        "assumption": "iid Bernoulli disjoint pairs within one evaluation period",
         "trials_per_scenario": trials,
         "seed": replay_seed,
         "endpoints": endpoint_rows,
@@ -522,7 +522,7 @@ def simulate(
             "curtailment_preserves_fixed_endpoint_calls": True,
             "iid_is_the_claimed_model": True,
             "positive_correlation_is_sensitivity_only": True,
-            "larger_within_window_budget_is_not_cross_time_evidence": True,
+            "larger_within_period_budget_is_not_cross_time_evidence": True,
             "simulation_is_not_a_proof": True,
         },
         "results": rows,
