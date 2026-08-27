@@ -1,0 +1,43 @@
+{
+  "schema": "agentverity.bfcl-evaluation-protocol/v1",
+  "dataset": {
+    "name": "berkeley-function-call-leaderboard v4",
+    "upstream_revision": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8",
+    "category": "multiple",
+    "cases_file": "cases-multiple.jsonl",
+    "answers_file": "answers-multiple.jsonl"
+  },
+  "case_ids": [
+    "multiple_10", "multiple_11", "multiple_12", "multiple_13", "multiple_14",
+    "multiple_15", "multiple_16", "multiple_17", "multiple_18", "multiple_19",
+    "multiple_20", "multiple_21", "multiple_22", "multiple_23", "multiple_24",
+    "multiple_25", "multiple_26", "multiple_27", "multiple_28", "multiple_29",
+    "multiple_30", "multiple_31", "multiple_32", "multiple_33", "multiple_34",
+    "multiple_35", "multiple_36", "multiple_37", "multiple_38", "multiple_39",
+    "multiple_40", "multiple_41", "multiple_42", "multiple_43", "multiple_44",
+    "multiple_45", "multiple_46", "multiple_47", "multiple_48", "multiple_49",
+    "multiple_50", "multiple_51", "multiple_52", "multiple_53", "multiple_54",
+    "multiple_55", "multiple_56", "multiple_57", "multiple_58", "multiple_59"
+  ],
+  "full_budget_validation_case_ids": [
+    "multiple_21", "multiple_23", "multiple_24", "multiple_26", "multiple_39",
+    "multiple_40", "multiple_41", "multiple_42", "multiple_53", "multiple_56"
+  ],
+  "validation_subset_selection": "ten lowest SHA-256(case_id) values among case_ids",
+  "models": [
+    {"key": "gpt4o_mini", "endpoint": "openai/gpt-4o-mini"},
+    {"key": "mistral_small", "endpoint": "mistralai/mistral-small-3.2-24b-instruct"},
+    {"key": "nova", "endpoint": "amazon/nova-micro-v1"}
+  ],
+  "primary_mapping": "numeric",
+  "comparison_mappings": ["exact"],
+  "endpoint_pairs": 73,
+  "epsilon": 0.05,
+  "alpha": 0.05,
+  "z": 1.96,
+  "periods": [
+    {"id": "period-1", "not_before": "2026-08-27"},
+    {"id": "period-2", "not_before": "2026-09-17"}
+  ],
+  "maximum_terminal_errors_per_cell": 3
+}

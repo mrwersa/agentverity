@@ -11,3 +11,6 @@ dist/
 
 # Demo reports written by the evidence-gate workflow
 evidence-gate-reports/
+
+# Private provider receipts for the BFCL repeated-evaluation protocol.
+docs/evidence/bfcl/private/
