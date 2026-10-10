@@ -1,0 +1,328 @@
+{
+  "schema": "anonymous.maintenance-audit/v2",
+  "budget_pairs": 146,
+  "epsilon": 0.05,
+  "confidence": 0.95,
+  "cells": [
+    {
+      "configuration": "C1",
+      "request": "R1",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C1",
+      "request": "R2",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C1",
+      "request": "R3",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C1",
+      "request": "R4",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C1",
+      "request": "R5",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C1",
+      "request": "R6",
+      "stop_pair": 55,
+      "disagreements_at_stop": 3,
+      "final_classification": "undecided",
+      "final_disagreements": 3
+    },
+    {
+      "configuration": "C1",
+      "request": "R7",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C1",
+      "request": "R8",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C1",
+      "request": "R9",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C1",
+      "request": "R10",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C2",
+      "request": "R1",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C2",
+      "request": "R2",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C2",
+      "request": "R3",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C2",
+      "request": "R4",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C2",
+      "request": "R5",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C2",
+      "request": "R6",
+      "stop_pair": 4,
+      "disagreements_at_stop": 3,
+      "final_classification": "exceeds_tolerance",
+      "final_disagreements": 53
+    },
+    {
+      "configuration": "C2",
+      "request": "R7",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 1
+    },
+    {
+      "configuration": "C2",
+      "request": "R8",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C2",
+      "request": "R9",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C2",
+      "request": "R10",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R1",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R2",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R3",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R4",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R5",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R6",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 1
+    },
+    {
+      "configuration": "C3",
+      "request": "R7",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R8",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R9",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C3",
+      "request": "R10",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R1",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R2",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R3",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R4",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R5",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R6",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R7",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R8",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R9",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    },
+    {
+      "configuration": "C4",
+      "request": "R10",
+      "stop_pair": null,
+      "disagreements_at_stop": null,
+      "final_classification": "qualify",
+      "final_disagreements": 0
+    }
+  ]
+}

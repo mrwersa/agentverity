@@ -1,0 +1,88 @@
+{
+  "budget_pairs": 146,
+  "by_configuration": {
+    "C1": {
+      "cells": 10,
+      "final_classifications": {
+        "qualify": 9,
+        "undecided": 1
+      },
+      "mean_stop_pair": 55.0,
+      "multi_disagreement_stops": 1,
+      "pairs_planned": 1460,
+      "pairs_saved": 91,
+      "pairs_spent": 1369,
+      "saved_share": 0.06232876712328767,
+      "saved_share_when_stopped": 0.6232876712328768,
+      "stopped_pairs_planned": 146,
+      "stops": 1
+    },
+    "C2": {
+      "cells": 10,
+      "final_classifications": {
+        "exceeds_tolerance": 1,
+        "qualify": 9
+      },
+      "mean_stop_pair": 4.0,
+      "multi_disagreement_stops": 1,
+      "pairs_planned": 1460,
+      "pairs_saved": 142,
+      "pairs_spent": 1318,
+      "saved_share": 0.09726027397260274,
+      "saved_share_when_stopped": 0.9726027397260274,
+      "stopped_pairs_planned": 146,
+      "stops": 1
+    },
+    "C3": {
+      "cells": 10,
+      "final_classifications": {
+        "qualify": 10
+      },
+      "mean_stop_pair": null,
+      "multi_disagreement_stops": 0,
+      "pairs_planned": 1460,
+      "pairs_saved": 0,
+      "pairs_spent": 1460,
+      "saved_share": 0.0,
+      "saved_share_when_stopped": null,
+      "stopped_pairs_planned": 0,
+      "stops": 0
+    },
+    "C4": {
+      "cells": 10,
+      "final_classifications": {
+        "qualify": 10
+      },
+      "mean_stop_pair": null,
+      "multi_disagreement_stops": 0,
+      "pairs_planned": 1460,
+      "pairs_saved": 0,
+      "pairs_spent": 1460,
+      "saved_share": 0.0,
+      "saved_share_when_stopped": null,
+      "stopped_pairs_planned": 0,
+      "stops": 0
+    }
+  },
+  "confidence": 0.95,
+  "derived_input_inconsistencies": 0,
+  "epsilon": 0.05,
+  "overall": {
+    "cells": 40,
+    "final_classifications": {
+      "exceeds_tolerance": 1,
+      "qualify": 38,
+      "undecided": 1
+    },
+    "mean_stop_pair": 29.5,
+    "multi_disagreement_stops": 2,
+    "pairs_planned": 5840,
+    "pairs_saved": 233,
+    "pairs_spent": 5607,
+    "saved_share": 0.039897260273972605,
+    "saved_share_when_stopped": 0.797945205479452,
+    "stopped_pairs_planned": 292,
+    "stops": 2
+  },
+  "schema": "anonymous.maintenance-audit-result/v2"
+}
