@@ -1,0 +1,57 @@
+{
+  "schema": "agentverity.workshop-reproduction/v1",
+  "scope": "core workshop supplement",
+  "source_revision": "34b70f35e8ad75f1d6b381aee08b217b0287961e",
+  "python": "3.12",
+  "raw_maintenance_receipts_included": false,
+  "first_crossing_positions_independently_verified": false,
+  "changes": {
+    "validate_method.py": "Parenthesised string concatenation for lint. No numerical change."
+  },
+  "files": {
+    "validate_method.py": {
+      "sha256": "4b454ff70573a2fe44cac0e72e606d6f644987ce2053e0b848ec64e03578dc34",
+      "source_sha256": "0861442467b6f459021b56c6290a2e8dfadfcacbb7855de5a733136ce1e4f6d7"
+    },
+    "budget_analysis.py": {
+      "sha256": "f953f80baf6a315517ca57f84aaf73041f0e2845da820a56bb3e6eb9c96bde5b",
+      "source_sha256": "f953f80baf6a315517ca57f84aaf73041f0e2845da820a56bb3e6eb9c96bde5b"
+    },
+    "analyse_maintenance.py": {
+      "sha256": "952972f29348abf87156fd18510a4ac14326e05b15a3d769762a3182e849c918",
+      "source_sha256": "952972f29348abf87156fd18510a4ac14326e05b15a3d769762a3182e849c918"
+    },
+    "maintenance_input.json": {
+      "sha256": "1fbabc87bfb74e178e52b71ad211e955fa8c3d56360053d8fd985aaa06a56889",
+      "source_sha256": "1fbabc87bfb74e178e52b71ad211e955fa8c3d56360053d8fd985aaa06a56889"
+    },
+    "maintenance_results.json": {
+      "sha256": "9faa2afb629d7142ec83edceaa6396bd07b404f9c762138458c53bf82cb9010a",
+      "source_sha256": "9faa2afb629d7142ec83edceaa6396bd07b404f9c762138458c53bf82cb9010a"
+    },
+    "tests/test_artifact.py": {
+      "sha256": "b25e8a1e3c7d856dd3f66389b87caf6d8c0e84dfd41e578cab9d52ea86a9ab49",
+      "source_sha256": "b25e8a1e3c7d856dd3f66389b87caf6d8c0e84dfd41e578cab9d52ea86a9ab49"
+    },
+    "tests/test_budget_analysis.py": {
+      "sha256": "0a4cbec25261fc00cd1037d166e144ba6f3a35a2d0164e84f673a4ba0c9ad7e5",
+      "source_sha256": "0a4cbec25261fc00cd1037d166e144ba6f3a35a2d0164e84f673a4ba0c9ad7e5"
+    },
+    "budget_results.json": {
+      "sha256": "21d094a047064c25b4e8fe16c39b1d1b94bada7b948e08ed69150081652104f6",
+      "source_sha256": "21d094a047064c25b4e8fe16c39b1d1b94bada7b948e08ed69150081652104f6"
+    },
+    "budget_table.tex": {
+      "sha256": "81ee5b7f33c02052389f6170bbe5dd363465b88e164efeb10e0935a2558b0163",
+      "source_sha256": "81ee5b7f33c02052389f6170bbe5dd363465b88e164efeb10e0935a2558b0163"
+    },
+    "budget_cost_table.tex": {
+      "sha256": "b29419ce74de5e6a58a222ebf6757953bf6b9349bf9a90d031b0a4e92c66a4ba",
+      "source_sha256": "b29419ce74de5e6a58a222ebf6757953bf6b9349bf9a90d031b0a4e92c66a4ba"
+    },
+    "budget_figure.tex": {
+      "sha256": "f9d9ddc1a31d6ae67036b45247cf194747b502448eef214c0929c6fbd6296852",
+      "source_sha256": "f9d9ddc1a31d6ae67036b45247cf194747b502448eef214c0929c6fbd6296852"
+    }
+  }
+}

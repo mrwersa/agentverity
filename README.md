@@ -255,6 +255,8 @@ answers.
 - **Understand the method:** [decision repeatability](https://github.com/mrwersa/agentverity/blob/main/docs/decision-stability.md),
   [per-route evidence](https://github.com/mrwersa/agentverity/blob/main/docs/route-evidence.md),
   and [categorical evaluator repeatability](https://github.com/mrwersa/agentverity/blob/main/docs/evaluator-stability.md)
+- **Reproduce the workshop calculations:** [fixed-budget qualification supplement](https://github.com/mrwersa/agentverity/blob/main/research/fixed_budget_qualification/README.md),
+  including budget choice, expected collection costs and the derived maintenance table
 - **Operate safely:** [security](https://github.com/mrwersa/agentverity/blob/main/SECURITY.md),
   [data-retention audit](https://github.com/mrwersa/agentverity/blob/main/docs/security-data-audit.md),
   and [API stability](https://github.com/mrwersa/agentverity/blob/main/STABILITY.md)

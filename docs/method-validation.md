@@ -136,9 +136,14 @@ it, and either directional claim exactly at the boundary.
 
 ## Consequences and limits
 
+The separate [workshop reproduction package](../research/fixed_budget_qualification/README.md)
+supplies budget-design calculations, diagnostic collection and the derived
+maintenance-table analysis. Those calculations are not a new library API or
+an extension of the production validation experiment reported above.
+
 The fixed admission rule and durable product evidence schemas remain
-unchanged. The validation artifact moves to v4 because it now records two
-fixed endpoints and their replay checks; this is a validation-artefact change,
+unchanged. The v5 validation artifact records two fixed endpoints, their replay
+checks and the within-period estimand; this is a validation-artefact change,
 not a product schema migration. The public `best_case_admission_pairs` helper
 supplies the count-aware boundary used by the runner. The fixed rule remains
 conservative in the regression-reference admission direction, while its nominal
