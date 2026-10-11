@@ -533,6 +533,23 @@ def _check_command(args: argparse.Namespace) -> int:
     return 1
 
 
+def _inspect_command(args: argparse.Namespace) -> int:
+    """Show a stored reference without re-admitting it or calling an agent.
+
+    Reading a snapshot back is review, not comparison, so this makes no calls
+    and never changes the artifact. It exists because the alternative is a
+    reviewer reading raw JSON, which is exactly where a mistaken tolerance or
+    an unasserted isolation is easiest to miss.
+    """
+    try:
+        snapshot = load_snapshot(args.snapshot)
+    except SnapshotCompatibilityError as exc:
+        print(f"snapshot inspect refused: {exc}", file=sys.stderr)
+        return 2
+    print(snapshot.render())
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agentverity",
@@ -771,6 +788,16 @@ def _build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Path to a snapshot created by 'agentverity snapshot'.",
     )
+
+    inspect_parser = sub.add_parser(
+        "inspect",
+        help="Read an admitted regression reference in plain language, calling nothing.",
+    )
+    inspect_parser.add_argument(
+        "--snapshot",
+        required=True,
+        help="Path to a snapshot created by 'agentverity snapshot'.",
+    )
     return parser
 
 
@@ -980,6 +1007,8 @@ def main(argv: list[str] | None = None) -> int:
         return _snapshot_command(args)
     if args.command == "check":
         return _check_command(args)
+    if args.command == "inspect":
+        return _inspect_command(args)
     raise AssertionError(f"unhandled command: {args.command}")
 
 

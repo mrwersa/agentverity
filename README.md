@@ -151,6 +151,7 @@ a bounded route or approval, AgentVerity can qualify that decision layer.
 | `agentverity assess` | Assess Promptfoo, DeepEval, JSONL, or native evidence |
 | `agentverity snapshot` | Admit a human-reviewed regression reference when evidence permits |
 | `agentverity check` | Re-run the admission policy and compare with a snapshot |
+| `agentverity inspect` | Read an admitted regression reference in plain language, calling nothing |
 | `agentverity compare-evidence` | Compare two independently collected evidence windows |
 
 ## Stop when more runs cannot help

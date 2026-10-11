@@ -24,8 +24,9 @@ options on `run` and `snapshot`. It also records that `plan` accepts the
 mutually exclusive `--observed` source and its optional `--max-pairs`
 endpoint. It also records `CurtailmentReplayResult`, the optional
 `assess_evidence` and `RunResult` additions, and
-`assess --replay-curtailment`. CI compares the checkout directly with that
-published surface; the 0.22.0 fixture remains an unaltered historical record.
+`assess --replay-curtailment`. The reviewed delta on top of 0.23.0 is the
+read-only `agentverity inspect --snapshot` command; CI checks that explicit
+additive candidate delta rather than relabelling the published fixture.
 
 Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit

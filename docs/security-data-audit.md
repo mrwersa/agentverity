@@ -35,7 +35,8 @@ must be treated according to its own column.
 Imported-evidence `provenance` is an unfiltered, caller-supplied mapping. It can
 therefore retain identifiers, errors, or names even though the dedicated
 evidence fields do not. Progress callbacks receive the full SHA-256
-fingerprint; the CLI prints its first 10 characters.
+fingerprint; the CLI prints a truncated prefix of it, 10 characters in progress
+output and 12 in reports and the read-only reference view.
 
 JSON reports do not contain per-call output records, but diagnostic fields such
 as `majority_verdict` can contain an observation value. JUnit and terminal

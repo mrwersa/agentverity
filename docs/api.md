@@ -127,6 +127,12 @@ declared contract and each case's intended decision.
 - `create_snapshot` admits a reviewed reference only when the evidence permits.
 - `compare_snapshot` rechecks admission before comparing current outputs.
 - `save_snapshot` and `load_snapshot` persist versioned snapshot JSON.
+- `Snapshot.render()` returns a plain-language view of a stored reference for
+  review: the projection layer, tolerance, admission evidence, isolation, the
+  declared contract, and every fingerprinted reference. It reads the stored
+  fields only and makes no calls. It marks the stored Wilson bound as
+  diagnostic and `k` as a configured minimum, because the schema records
+  neither the admission rule nor the repeats actually collected.
 
 A route proven stochastic blocks snapshot admission even when the pooled meter
 looks deterministic. An untargeted undecided route remains a diagnostic. A
@@ -134,8 +140,8 @@ route named in `stability_targets` is an explicit release condition, so an
 undecided target blocks admission and an exceeded target fails the release
 policy.
 
-The CLI exposes the same path through `agentverity snapshot` and
-`agentverity check`.
+The CLI exposes the same path through `agentverity snapshot`,
+`agentverity check`, and the read-only `agentverity inspect`.
 
 ## Planning route targets
 

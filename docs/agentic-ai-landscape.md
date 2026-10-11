@@ -145,7 +145,8 @@ CLI. Its public workflow is:
   LangGraph adapters;
 - `assess` imports Promptfoo, DeepEval test cases, or generic JSONL evidence;
 - `snapshot` admits reviewed evidence, `check` compares a later run with that
-  regression reference, and `compare-evidence` compares two collection windows;
+  regression reference, `inspect` reads a stored reference without calling
+  anything, and `compare-evidence` compares two collection windows;
 - terminal, versioned JSON, JUnit XML, and privacy-minimised OpenTelemetry
   reporting serve people, CI, and telemetry backends.
 

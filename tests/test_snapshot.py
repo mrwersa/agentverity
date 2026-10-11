@@ -14,7 +14,9 @@ from agentverity import (
 from agentverity.runner import RunConfig
 from agentverity.snapshot import (
     SNAPSHOT_SCHEMA,
+    Snapshot,
     SnapshotCompatibilityError,
+    SnapshotProbe,
     SnapshotRefused,
     compare_snapshot,
     create_snapshot,
@@ -487,3 +489,192 @@ class TestAStoredOutcomeIsValidatedOnRead:
         assert {"kind": "no_decision", "reason": "refused"} in [
             p.expected for p in probes
         ]
+
+    def test_a_non_string_isolation_is_refused_not_a_traceback(self, tmp_path):
+        """A JSON array for isolation is corrupt input, not a Python crash.
+
+        The membership test read the value straight from the file, so a list
+        raised TypeError out of the loader and past the CLI's refusal path.
+        """
+        import json
+
+        from agentverity.snapshot import SnapshotCompatibilityError, load_snapshot
+
+        path, doc = self._snapshot_file(tmp_path)
+        doc["admission_evidence"]["isolation"] = ["fresh-session"]
+        path.write_text(json.dumps(doc))
+
+        with pytest.raises(SnapshotCompatibilityError, match="isolation"):
+            load_snapshot(path)
+
+
+def _reference(**overrides):
+    """A stored reference with fixed fields, so the rendered view is exact."""
+    fields = {
+        "schema": SNAPSHOT_SCHEMA,
+        "created_at": "2026-10-11T09:00:00+00:00",
+        "agentverity_version": "0.23.1",
+        "layer": "verdict",
+        "epsilon": 0.5,
+        "k": 4,
+        "blindness_threshold": 0.9,
+        "meter_pair_trials": 8,
+        "meter_ci_high": 0.31,
+        "blindness_skew": 0.5,
+        "blindness_distinct": 2,
+        "decision_contract": None,
+        "probes": (SnapshotProbe("a" * 64, "allow"),),
+        "isolation": "fresh-session",
+    }
+    fields.update(overrides)
+    return Snapshot(**fields)
+
+
+class TestTheRegressionReferenceView:
+    """A snapshot was machine-only JSON, so auditing a reference meant reading
+    raw fields. The view renders the stored record and nothing else."""
+
+    def test_the_default_view_is_exact(self):
+        assert _reference().render() == (
+            "regression reference agentverity.snapshot/v4\n"
+            "  created                2026-10-11T09:00:00+00:00\n"
+            "  library                0.23.1\n"
+            "  projection layer       verdict\n"
+            "  tolerance              0.5\n"
+            "  configured k           4\n"
+            "  blindness threshold    0.9\n"
+            "\n"
+            "admission evidence\n"
+            "  call                   verdict-deterministic\n"
+            "  disjoint pairs         8\n"
+            "  diagnostic bound       0.3100\n"
+            "  probe skew             0.5000\n"
+            "  distinct verdicts      2\n"
+            "  isolation              fresh-session\n"
+            "  independence           asserted from separated trials\n"
+            "  reference approved     yes\n"
+            "\n"
+            "references (1)\n"
+            "  sha256=aaaaaaaaaaaa  expected=\"allow\"\n"
+            "\n"
+            "limits\n"
+            "  this record admits repeatability at the recorded tolerance, not\n"
+            "  correctness, and only for the projection, tolerance and contract\n"
+            "  above. A later match shows the decision layer was preserved.\n"
+            "  the schema does not record which rule admitted the reference (a\n"
+            "  fixed Wilson interval or a declared sequential checkpoint) or the\n"
+            "  repeats actually collected, so the bound above is diagnostic and\n"
+            "  configured k is a minimum, not the count that ran."
+        )
+
+    def test_it_shows_a_reference_by_fingerprint_not_by_input(self):
+        text = _reference().render()
+        assert "aaaaaaaaaaaa" in text
+        assert "expected=\"allow\"" in text
+
+    def test_it_says_when_independence_was_not_asserted(self):
+        text = _reference(isolation="unknown").render()
+        assert "not asserted (isolation unknown)" in text
+
+    def test_it_renders_a_no_decision_by_its_reason(self):
+        probe = SnapshotProbe("b" * 64, {"kind": "no_decision", "reason": "refused"})
+        text = _reference(probes=(probe,)).render()
+        assert "expected=no decision: refused" in text
+
+    def test_it_lists_a_declared_contract_and_intent(self):
+        contract = DecisionContract(allowed={"allow", "block"}, critical={"block"})
+        probe = SnapshotProbe("a" * 64, "allow", intended="allow")
+        text = _reference(decision_contract=contract, probes=(probe,)).render()
+        assert "declared decision contract" in text
+        assert "allowed                allow, block" in text
+        assert "critical               block" in text
+        assert "intended=allow" in text
+
+    def test_it_states_what_a_match_does_not_establish(self):
+        text = _reference().render()
+        assert "admits repeatability at the recorded tolerance" in text
+        assert "A later match shows the decision layer was preserved." in text
+
+    def test_it_renders_contract_mappings_sorted(self):
+        contract = DecisionContract(
+            allowed={"allow", "block"},
+            minimum_cases={"block": 2, "allow": 3},
+            stability_targets={"block": 0.01, "allow": 0.05},
+        )
+        text = _reference(decision_contract=contract).render()
+        assert "minimum cases          allow=3, block=2" in text
+        assert "stability targets      allow=0.05, block=0.01" in text
+
+    def test_it_names_k_as_configured_and_calls_the_bound_diagnostic(self):
+        """`k` is a configured minimum and the bound may not explain admission.
+
+        A route plan can raise the per-input count above `k`, and a declared
+        sequential checkpoint can admit at a Wilson bound above the tolerance.
+        Neither the rule nor the counts collected are in the schema, so the
+        view must not present them as the admission reason.
+        """
+        text = _reference().render()
+        assert "configured k           4" in text
+        assert "repeats per input" not in text
+        assert "confidence" not in text
+        assert "diagnostic bound       0.3100" in text
+        assert "does not record which rule admitted the reference" in text
+        assert "repeats actually collected" in text
+
+    def test_a_no_decision_without_a_reason_falls_back_to_json(self):
+        probe = SnapshotProbe("a" * 64, {"kind": "no_decision"})
+        text = _reference(probes=(probe,)).render()
+        assert 'expected={"kind": "no_decision"}' in text
+
+    def test_the_view_never_prints_a_raw_input(self):
+        text = create_snapshot(_result(), approved=True).render()
+        assert text
+        assert not any(probe in text for probe in INPUTS)
+
+    def test_a_sequential_reference_marks_the_bound_diagnostic(self):
+        inputs = [f"input_{i}" for i in range(12)] + [
+            f"secret_{i}" for i in range(12)
+        ]
+
+        def stable(text: str) -> dict:
+            return {"verdict": "block" if "secret" in text else "allow"}
+
+        result = run(
+            from_callable(stable), inputs, config=RunConfig(sequential=True)
+        )
+        snapshot = create_snapshot(result, approved=True)
+
+        # The declared checkpoint admitted at the zero-flip budget, where the
+        # Wilson bound sits above the tolerance the checkpoint never read.
+        assert snapshot.meter_ci_high > snapshot.epsilon
+        text = snapshot.render()
+        assert "diagnostic bound" in text
+        assert "not the count that ran" in text
+
+    def test_a_route_target_reference_names_k_as_a_minimum(self):
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "deny"},
+                stability_targets={"deny": 0.05},
+            ),
+            cases=(
+                DecisionCase("approve_req", "approve"),
+                DecisionCase("deny_req", "deny"),
+            ),
+        )
+
+        def agent(text: str) -> dict:
+            return {"verdict": "deny" if text.startswith("deny") else "approve"}
+
+        result = run(
+            from_callable(agent), suite=suite, config=RunConfig(epsilon=0.5)
+        )
+        snapshot = create_snapshot(result, approved=True)
+
+        # A route plan raises the collected repeats above the configured floor.
+        allocated = {plan.decision: plan.repeats_each for plan in result.route_plans}
+        assert max(allocated.values()) > snapshot.k
+        text = snapshot.render()
+        assert "configured k" in text
+        assert "repeats per input" not in text
+        assert "repeats actually collected" in text
