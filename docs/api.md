@@ -98,9 +98,11 @@ The CLI accepts the same versioned structure with `--suite suite.json`.
 ## Results and reports
 
 - `RunResult.headline` gives the plain-language interpretation in repeatability
-  terms: `REPEATABILITY QUALIFIED`, `REPEATABILITY REJECTED`,
-  `REPEATABILITY NOT ESTABLISHED`, or `INCONCLUSIVE`. It names stability at the
-  declared tolerance, never correctness.
+  terms, drawing on `REPEATABILITY QUALIFIED`, `REPEATABILITY REJECTED`,
+  `REPEATABILITY NOT ESTABLISHED`, and `INCONCLUSIVE`; the exact label reflects
+  the scope (for example route or pooled level). A qualified result names
+  stability at the declared tolerance, the other outcomes name what prevented
+  or rejected it, and none is a correctness judgement.
 - `RunResult.status` gives the canonical machine interpretation.
 - `RunResult.curtailment` is a `CurtailmentResult` when fixed-endpoint
   admission became unreachable. It records the stopping pair and avoided work;

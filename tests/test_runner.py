@@ -328,6 +328,7 @@ class TestIdentityTransformsAreNotCountedAsPasses:
         result = run(self._ascii_agent(), ["alpha", "beta"], relations=[noop])
         assert result.vacuous_relations
         assert result.suite_is_meaningful is False
+        assert result.headline.startswith("REPEATABILITY NOT ESTABLISHED")
 
 
 class TestUnchangedCallReuse:

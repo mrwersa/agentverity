@@ -561,8 +561,8 @@ class RunResult:
                     f"decision changes above tolerance on these routes: {routes}."
                 )
             return (
-                "REPEATABILITY REJECTED BY ROUTE - decision changes above "
-                f"tolerance are concentrated on these routes: {routes}."
+                "REPEATABILITY REJECTED - decision changes above tolerance "
+                f"are concentrated on these routes: {routes}."
             )
         if self.targeted_undecided:
             routes = ", ".join(self.targeted_undecided)

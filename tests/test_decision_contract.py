@@ -276,6 +276,7 @@ def test_runner_contract_failure_precedes_generic_blindness():
     assert result.status == "contract"
     assert result.decision_coverage is not None
     assert result.decision_coverage.missing_intended == ("review",)
+    assert result.headline.startswith("REPEATABILITY NOT ESTABLISHED")
     assert "add reviewed cases" in result.headline
 
 
