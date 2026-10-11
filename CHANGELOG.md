@@ -21,6 +21,13 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   stable-at-tolerance evidence, not as a correctness judgement. The machine
   `status` values, JSON fields, exit codes, and accepted inputs are unchanged.
 
+### Fixed
+
+- The qualified headline no longer says the verdict "held across every
+  identical rerun". Qualification permits disagreements below the tolerance,
+  so it now says the evidence "supports repeatability at the declared
+  tolerance".
+
 ## [0.24.0] - 2026-10-11
 
 ### Added
