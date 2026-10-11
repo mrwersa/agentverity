@@ -512,6 +512,65 @@ class TestHeadline:
         assert result.headline.startswith("REPEATABILITY QUALIFIED")
         assert "NOT ESTABLISHED" not in result.headline
 
+    def test_qualified_with_a_flip_does_not_claim_every_rerun_held(self):
+        """Qualification allows flips below the tolerance.
+
+        The headline once said "held across every identical rerun", which is
+        false the moment one pair disagrees, however comfortable the margin.
+        """
+        import itertools
+
+        counter = itertools.count()
+        inputs = [f"i{i}" for i in range(25)] + [
+            f"secret{i}" for i in range(25)
+        ]
+
+        def agent(text: str) -> dict:
+            if "secret" in text:
+                return {"verdict": "block"}
+            return {"verdict": "allow" if next(counter) % 200 else "block"}
+
+        result = run(
+            from_callable(agent),
+            inputs,
+            config=RunConfig(k=8, epsilon=0.9, blindness_threshold=0.99),
+        )
+
+        assert result.meter.call == "verdict-deterministic"
+        assert result.meter.pair_flips > 0
+        assert result.headline.startswith("REPEATABILITY QUALIFIED")
+        assert "supports repeatability at the declared tolerance" in result.headline
+        assert "every identical rerun" not in result.headline
+
+    def test_the_qualified_contract_variant_names_its_coverage(self):
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+
+        suite = DecisionSuite(
+            contract=DecisionContract(allowed={"allow", "block"}),
+            cases=(
+                DecisionCase("allow one", "allow"),
+                DecisionCase("allow two", "allow"),
+                DecisionCase("block one", "block"),
+                DecisionCase("block two", "block"),
+            ),
+        )
+
+        def agent(text: str) -> dict:
+            return {"verdict": "block" if text.startswith("block") else "allow"}
+
+        result = run(
+            from_callable(agent),
+            suite=suite,
+            config=RunConfig(k=8, epsilon=0.5),
+        )
+
+        assert result.headline.startswith("REPEATABILITY QUALIFIED")
+        assert "supports repeatability at the declared tolerance" in result.headline
+        assert (
+            "all 2 required decisions were represented and observed"
+            in result.headline
+        )
+
     def test_stochastic_is_rejected(self):
         import itertools
 

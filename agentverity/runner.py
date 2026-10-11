@@ -592,9 +592,10 @@ class RunResult:
                         "represented and observed"
                     )
                 return (
-                    "REPEATABILITY QUALIFIED AT POOLED LEVEL - the verdict held "
-                    f"across the combined reruns{contract}, but route-level "
-                    f"evidence remains undecided for: {routes}."
+                    "REPEATABILITY QUALIFIED AT POOLED LEVEL - the evidence "
+                    "supports repeatability at the declared tolerance across "
+                    f"the combined reruns{contract}, but route-level evidence "
+                    f"remains undecided for: {routes}."
                 )
             trailer = (
                 f" {len(vacuous)} relation{'s' if len(vacuous) != 1 else ''} "
@@ -605,14 +606,15 @@ class RunResult:
             if self.decision_coverage is not None:
                 required = len(self.decision_coverage.contract.required or ())
                 return (
-                    "REPEATABILITY QUALIFIED - the verdict held across every "
-                    f"identical rerun and all {required} required decisions "
-                    f"were represented and observed.{trailer}"
+                    "REPEATABILITY QUALIFIED - the evidence supports "
+                    "repeatability at the declared tolerance and all "
+                    f"{required} required decisions were represented and "
+                    f"observed.{trailer}"
                 )
             return (
-                "REPEATABILITY QUALIFIED - the verdict held across every "
-                "identical rerun and the probes cross a decision boundary."
-                f"{trailer}"
+                "REPEATABILITY QUALIFIED - the evidence supports repeatability "
+                "at the declared tolerance and the probes cross a decision "
+                f"boundary.{trailer}"
             )
         return (
             "INCONCLUSIVE - "

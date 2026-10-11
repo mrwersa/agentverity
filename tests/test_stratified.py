@@ -335,6 +335,7 @@ class TestRunIntegration:
         assert result.route_stability.undecided == ("approve", "deny", "review")
         assert result.status == "deterministic"
         assert result.headline.startswith("REPEATABILITY QUALIFIED AT POOLED LEVEL")
+        assert "supports repeatability at the declared tolerance" in result.headline
 
     def test_a_stochastic_route_overrides_a_deterministic_pool(self):
         calls: dict[str, int] = {}
