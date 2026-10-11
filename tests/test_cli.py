@@ -145,7 +145,7 @@ class TestCLI:
         ])
 
         assert exit_code == 0
-        assert "TRUSTWORTHY" in capsys.readouterr().out
+        assert "REPEATABILITY QUALIFIED" in capsys.readouterr().out
 
     def test_no_subcommand(self):
         with pytest.raises(SystemExit):
@@ -216,7 +216,7 @@ class TestCLI:
             "--no-relations",
         ])
         assert exit_code == 2
-        assert "NO ANSWER YET" in capsys.readouterr().out
+        assert "INCONCLUSIVE" in capsys.readouterr().out
 
     def test_snapshot_then_check(self, capsys, tmp_path):
         inputs_file = tmp_path / "inputs.txt"

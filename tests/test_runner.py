@@ -328,6 +328,7 @@ class TestIdentityTransformsAreNotCountedAsPasses:
         result = run(self._ascii_agent(), ["alpha", "beta"], relations=[noop])
         assert result.vacuous_relations
         assert result.suite_is_meaningful is False
+        assert result.headline.startswith("REPEATABILITY NOT ESTABLISHED")
 
 
 class TestUnchangedCallReuse:
@@ -493,24 +494,25 @@ class TestSuiteIsMeaningfulSemantics:
 
 
 class TestHeadline:
-    """One sentence should answer "can I trust this?" before any detail."""
+    """One sentence should answer "is this decision repeatable enough?" before
+    any detail, without claiming correctness."""
 
     INPUTS: ClassVar[list[str]] = ["apple", "banana", "cherry", "apricot"]
 
-    def test_blind_agent_is_not_trustworthy(self):
+    def test_blind_agent_does_not_establish_repeatability(self):
         result = run(from_callable(lambda x: {"verdict": "same"}), self.INPUTS)
-        assert result.headline.startswith("NOT TRUSTWORTHY")
+        assert result.headline.startswith("REPEATABILITY NOT ESTABLISHED")
         assert "100%" in result.headline
 
-    def test_deterministic_and_varied_is_trustworthy(self):
+    def test_deterministic_and_varied_qualifies(self):
         agent = from_callable(
             lambda x: {"verdict": "A" if x.startswith("a") else "B"}
         )
         result = run(agent, self.INPUTS)
-        assert result.headline.startswith("TRUSTWORTHY")
-        assert "NOT TRUSTWORTHY" not in result.headline
+        assert result.headline.startswith("REPEATABILITY QUALIFIED")
+        assert "NOT ESTABLISHED" not in result.headline
 
-    def test_stochastic_says_read_against_noise(self):
+    def test_stochastic_is_rejected(self):
         import itertools
 
         counter = itertools.count()
@@ -518,20 +520,22 @@ class TestHeadline:
             lambda x: {"verdict": "A" if next(counter) % 3 else "B"}
         )
         result = run(agent, self.INPUTS)
-        assert result.headline.startswith("TRUSTWORTHY WITH CARE")
+        assert result.headline.startswith("REPEATABILITY REJECTED")
 
-    def test_underpowered_says_no_answer_yet(self):
+    def test_underpowered_is_inconclusive(self):
         agent = from_callable(
             lambda x: {"verdict": "A" if x.startswith("a") else "B"}
         )
         result = run(agent, self.INPUTS, config=RunConfig(k=2, precision="strict"))
-        assert result.headline.startswith("NO ANSWER YET")
+        assert result.headline.startswith("INCONCLUSIVE")
 
     def test_headline_leads_the_summary(self):
         result = run(from_callable(lambda x: {"verdict": "same"}), self.INPUTS)
         body = result.summary()
         assert result.headline.split(" - ")[0] in body
-        assert body.index("NOT TRUSTWORTHY") < body.index("VERDICT-STOCHASTICITY")
+        assert body.index("REPEATABILITY NOT ESTABLISHED") < body.index(
+            "VERDICT-STOCHASTICITY"
+        )
 
 
 class TestBudgetAndPrecision:

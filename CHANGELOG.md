@@ -8,6 +8,19 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Changed
+
+- The human-readable headline and report title now name repeatability rather
+  than trust: `TRUSTWORTHY` becomes `REPEATABILITY QUALIFIED` (`...AT POOLED
+  LEVEL` where route-level evidence is undecided), `TRUSTWORTHY WITH CARE`
+  becomes `REPEATABILITY REJECTED` (`...BY ROUTE` where the pooled evidence is
+  deterministic and the rejection is per-route), `NOT READY` becomes
+  `REPEATABILITY REJECTED`, `NOT TRUSTWORTHY` becomes `REPEATABILITY NOT
+  ESTABLISHED`, and `NO ANSWER YET` becomes `INCONCLUSIVE`. The report banner
+  reads "decision-repeatability report". A qualified result therefore reads as
+  stable-at-tolerance evidence, not as a correctness judgement. The machine
+  `status` values, JSON fields, exit codes, and accepted inputs are unchanged.
+
 ## [0.24.0] - 2026-10-11
 
 ### Added

@@ -35,6 +35,6 @@ def test_example_states_that_repeatability_is_not_validity(capsys):
     namespace["main"]()
 
     output = capsys.readouterr().out
-    assert "NOT READY" in output
+    assert "REPEATABILITY REJECTED" in output
     assert "stochastic human-labelled classes: pass" in output
     assert "Validity still requires" in output

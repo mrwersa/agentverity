@@ -334,7 +334,7 @@ class TestRunIntegration:
         assert result.meter.call == "verdict-deterministic"
         assert result.route_stability.undecided == ("approve", "deny", "review")
         assert result.status == "deterministic"
-        assert result.headline.startswith("TRUSTWORTHY AT POOLED LEVEL")
+        assert result.headline.startswith("REPEATABILITY QUALIFIED AT POOLED LEVEL")
 
     def test_a_stochastic_route_overrides_a_deterministic_pool(self):
         calls: dict[str, int] = {}
@@ -374,9 +374,49 @@ class TestRunIntegration:
         assert result.route_stability.stochastic == ("review",)
         assert result.is_stochastic
         assert result.status == "stochastic"
-        assert "pooled evidence hides" in result.headline
+        assert result.headline.startswith("REPEATABILITY REJECTED BY ROUTE")
         with pytest.raises(SnapshotRefused, match="review"):
             create_snapshot(result, approved=True)
+
+    def test_a_pooled_rejection_is_not_attributed_to_route_stratification(self):
+        """When the pooled meter also rejects, the route split is not why.
+
+        The label must not claim the pooled evidence "hides" a route-level
+        change, because here the pooled evidence rejects on its own.
+        """
+        calls: dict[str, int] = {}
+
+        def agent(text):
+            calls[text] = calls.get(text, 0) + 1
+            if text == "review":
+                verdict = "review" if calls[text] % 2 else "deny"
+            else:
+                verdict = "approve"
+            return {"verdict": verdict}
+
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "review", "deny"},
+                required={"approve", "review"},
+            ),
+            cases=(
+                DecisionCase("approve one", "approve"),
+                DecisionCase("approve two", "approve"),
+                DecisionCase("approve three", "approve"),
+                DecisionCase("review", "review"),
+            ),
+        )
+        result = run(
+            from_callable(agent),
+            suite=suite,
+            relations=[],
+            config=RunConfig(k=26, epsilon=0.1, blindness_threshold=0.99),
+        )
+
+        assert result.meter.call == "verdict-stochastic"
+        assert result.route_stability.stochastic == ("review",)
+        assert result.headline.startswith("REPEATABILITY REJECTED -")
+        assert "BY ROUTE" not in result.headline
 
     def test_a_declared_target_is_a_release_condition(self):
         calls: dict[str, int] = {}
@@ -407,7 +447,7 @@ class TestRunIntegration:
         assert result.meter.call == "verdict-deterministic"
         assert result.targeted_undecided == ("deny",)
         assert result.status == "undecided"
-        assert result.headline.startswith("NO ANSWER YET")
+        assert result.headline.startswith("INCONCLUSIVE")
         assert result.meter.repeats < result.meter.max_repeats
         assert "repeats:" in result.summary()
         assert "by route" in result.summary()
@@ -485,7 +525,7 @@ class TestRunIntegration:
 
         assert result.targeted_stochastic == ("deny",)
         assert result.status == "target-failed"
-        assert result.headline.startswith("NOT READY")
+        assert result.headline.startswith("REPEATABILITY REJECTED")
         root = ET.fromstring(run_result_to_junit_xml(result))
         assert root.find(
             "./testcase[@name='preflight.route_stability']/failure"

@@ -236,12 +236,12 @@ before release, or on a schedule.
 
 ## What it does not prove
 
-`TRUSTWORTHY` means the supplied cases produced repeatable, non-collapsed evidence
-at the declared tolerance and satisfied any declared decision contract. It
-does not prove correctness, safety, semantic diversity, complete behavioural
-coverage, provider independence, or production reliability. AgentVerity also
-does not store traces, host a dashboard, monitor traffic, or score open-ended
-answers.
+`REPEATABILITY QUALIFIED` means the supplied cases produced repeatable,
+non-collapsed evidence at the declared tolerance and satisfied any declared
+decision contract. It does not prove correctness, safety, semantic diversity,
+complete behavioural coverage, provider independence, or production
+reliability. AgentVerity also does not store traces, host a dashboard, monitor
+traffic, or score open-ended answers.
 
 ## Documentation
 

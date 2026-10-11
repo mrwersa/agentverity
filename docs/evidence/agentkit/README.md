@@ -32,13 +32,14 @@ default. Pinning it to zero would measure a configuration nobody deploys.
 
 ## Start here: the tool refuses to certify this evidence
 
-Run the command this README recommends and the headline verdict is **NOT
-TRUSTWORTHY**:
+Run the command this README recommends and the headline verdict is
+**REPEATABILITY NOT ESTABLISHED**:
 
 ```console
 $ agentverity assess --evidence evidence-gpt4o_mini.json --suite suite.json
-  NOT TRUSTWORTHY - the declared decision contract is incomplete: required
-  decisions were represented by cases but not returned: fetch_price,
+  REPEATABILITY NOT ESTABLISHED - the declared decision
+  contract is incomplete: required decisions were
+  represented by cases but not returned: fetch_price,
   get_balance, get_portfolio.
 ```
 
