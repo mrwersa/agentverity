@@ -23,6 +23,11 @@ tests rather than relabelling the fixture: `run --curtail` exits `1` when
 fixed-endpoint admission becomes unreachable, while `snapshot --curtail`
 exits `2` because partial evidence has no final repeatability class to admit.
 
+The read-only `agentverity inspect --snapshot` view is a later additive command
+with only two outcomes: `0` when it reads a stored reference and `2` when the
+file is not one. Its focused execution tests live in `tests/test_cli.py`, the
+same way, rather than in the published fixture.
+
 Argument-parser errors also exit `2` through `argparse`. Exceptions raised by a
 user-supplied Python factory remain programming errors with tracebacks; they
 are not converted into evidence refusals.

@@ -24,12 +24,14 @@ def test_current_class_members_match_the_published_release():
     assert fixture["surface"]["schema"] == AUDIT_SCHEMA
     current = deepcopy(collect_class_members())
     snapshot = current["classes"]["Snapshot"]
-    assert [member["name"] for member in snapshot["members"]] == [
-        "from_dict",
-        "independence_asserted",
-        "render",
-        "to_dict",
-    ]
+    render = next(
+        member for member in snapshot["members"] if member["name"] == "render"
+    )
+    assert render == {
+        "name": "render",
+        "kind": "method",
+        "signature": "(self) -> 'str'",
+    }
     snapshot["members"] = [
         member for member in snapshot["members"] if member["name"] != "render"
     ]
