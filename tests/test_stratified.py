@@ -334,7 +334,7 @@ class TestRunIntegration:
         assert result.meter.call == "verdict-deterministic"
         assert result.route_stability.undecided == ("approve", "deny", "review")
         assert result.status == "deterministic"
-        assert result.headline.startswith("TRUSTWORTHY AT POOLED LEVEL")
+        assert result.headline.startswith("REPEATABILITY QUALIFIED AT POOLED LEVEL")
 
     def test_a_stochastic_route_overrides_a_deterministic_pool(self):
         calls: dict[str, int] = {}
@@ -407,7 +407,7 @@ class TestRunIntegration:
         assert result.meter.call == "verdict-deterministic"
         assert result.targeted_undecided == ("deny",)
         assert result.status == "undecided"
-        assert result.headline.startswith("NO ANSWER YET")
+        assert result.headline.startswith("INCONCLUSIVE")
         assert result.meter.repeats < result.meter.max_repeats
         assert "repeats:" in result.summary()
         assert "by route" in result.summary()
@@ -485,7 +485,7 @@ class TestRunIntegration:
 
         assert result.targeted_stochastic == ("deny",)
         assert result.status == "target-failed"
-        assert result.headline.startswith("NOT READY")
+        assert result.headline.startswith("REPEATABILITY REJECTED")
         root = ET.fromstring(run_result_to_junit_xml(result))
         assert root.find(
             "./testcase[@name='preflight.route_stability']/failure"

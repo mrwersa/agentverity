@@ -29,7 +29,7 @@ class is reported as `stochastic`.
 
 ```text
 Evaluator verdict stability
-NOT READY - decision changes exceed declared stability targets for: pass.
+REPEATABILITY REJECTED - decision changes exceed declared stability targets for: pass.
 stochastic human-labelled classes: pass
 Validity still requires comparison with human-labelled examples.
 ```

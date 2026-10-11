@@ -97,7 +97,10 @@ The CLI accepts the same versioned structure with `--suite suite.json`.
 
 ## Results and reports
 
-- `RunResult.headline` gives the plain-language interpretation.
+- `RunResult.headline` gives the plain-language interpretation in repeatability
+  terms: `REPEATABILITY QUALIFIED`, `REPEATABILITY REJECTED`,
+  `REPEATABILITY NOT ESTABLISHED`, or `INCONCLUSIVE`. It names stability at the
+  declared tolerance, never correctness.
 - `RunResult.status` gives the canonical machine interpretation.
 - `RunResult.curtailment` is a `CurtailmentResult` when fixed-endpoint
   admission became unreachable. It records the stopping pair and avoided work;

@@ -500,11 +500,13 @@ class RunResult:
 
     @property
     def headline(self) -> str:
-        """One plain sentence answering "can I trust these test results?".
+        """One plain sentence answering "is this decision repeatable enough to keep?".
 
         The detail below it matters, but a reader should not have to assemble
         the verdict from four numbered sections to learn whether their suite
-        means anything.
+        means anything. It names repeatability, not correctness: a qualified
+        result says the decision was stable at the declared tolerance, never
+        that the decision was right.
         """
         if not self.complete:
             failed = len(self.errors)
@@ -527,12 +529,12 @@ class RunResult:
             and not self.decision_coverage.satisfied
         ):
             return (
-                "NOT TRUSTWORTHY - the declared decision contract is "
-                f"incomplete: {self.decision_coverage.advice}."
+                "REPEATABILITY NOT ESTABLISHED - the declared decision contract "
+                f"is incomplete: {self.decision_coverage.advice}."
             )
         if self.is_blind and self.blindness is not None:
             return (
-                "NOT TRUSTWORTHY - the agent answered "
+                "REPEATABILITY NOT ESTABLISHED - the agent answered "
                 f"{self.blindness.majority_verdict!r} on "
                 f"{self.blindness.skew:.0%} of the probes, so a pass says more "
                 "about the probe set than about the agent."
@@ -540,37 +542,37 @@ class RunResult:
         vacuous = self.vacuous_relations
         if vacuous and not any(rr.exercised for rr in self.relation_results):
             return (
-                "NOT TRUSTWORTHY - no relation changed a single input, so "
-                "nothing was actually tested."
+                "REPEATABILITY NOT ESTABLISHED - no relation changed a single "
+                "input, so nothing was actually tested."
             )
         if self.meter is None:
             return "NO VERDICT MEASURED - the meter was disabled for this run."
         if self.targeted_stochastic:
             routes = ", ".join(self.targeted_stochastic)
             return (
-                "NOT READY - decision changes exceed declared stability "
-                f"targets for: {routes}."
+                "REPEATABILITY REJECTED - decision changes exceed declared "
+                f"stability targets for: {routes}."
             )
         if self.route_stability is not None and self.route_stability.stochastic:
             routes = ", ".join(self.route_stability.stochastic)
             if self.meter.call == "verdict-deterministic":
                 return (
-                    "TRUSTWORTHY WITH CARE - pooled evidence hides decision "
-                    f"changes above tolerance on these routes: {routes}."
+                    "REPEATABILITY REJECTED BY ROUTE - pooled evidence hides "
+                    f"decision changes above tolerance on these routes: {routes}."
                 )
             return (
-                "TRUSTWORTHY WITH CARE - decision changes above tolerance "
-                f"are concentrated on these routes: {routes}."
+                "REPEATABILITY REJECTED BY ROUTE - decision changes above "
+                f"tolerance are concentrated on these routes: {routes}."
             )
         if self.targeted_undecided:
             routes = ", ".join(self.targeted_undecided)
             return (
-                "NO ANSWER YET - declared stability targets remain undecided "
+                "INCONCLUSIVE - declared stability targets remain undecided "
                 f"for: {routes}."
             )
         if self.meter.call == "verdict-stochastic":
             return (
-                "TRUSTWORTHY WITH CARE - the verdict changed on "
+                "REPEATABILITY REJECTED - the verdict changed on "
                 f"{self.meter.flip_rate:.0%} of identical reruns, so read "
                 "relation rates against that noise, not against zero."
             )
@@ -590,9 +592,9 @@ class RunResult:
                         "represented and observed"
                     )
                 return (
-                    "TRUSTWORTHY AT POOLED LEVEL - the verdict held across "
-                    f"the combined reruns{contract}, but route-level evidence "
-                    f"remains undecided for: {routes}."
+                    "REPEATABILITY QUALIFIED AT POOLED LEVEL - the verdict held "
+                    f"across the combined reruns{contract}, but route-level "
+                    f"evidence remains undecided for: {routes}."
                 )
             trailer = (
                 f" {len(vacuous)} relation{'s' if len(vacuous) != 1 else ''} "
@@ -603,16 +605,17 @@ class RunResult:
             if self.decision_coverage is not None:
                 required = len(self.decision_coverage.contract.required or ())
                 return (
-                    "TRUSTWORTHY - the verdict held across every identical "
-                    f"rerun and all {required} required decisions were "
-                    f"represented and observed.{trailer}"
+                    "REPEATABILITY QUALIFIED - the verdict held across every "
+                    f"identical rerun and all {required} required decisions "
+                    f"were represented and observed.{trailer}"
                 )
             return (
-                "TRUSTWORTHY - the verdict held across every identical rerun "
-                f"and the probes cross a decision boundary.{trailer}"
+                "REPEATABILITY QUALIFIED - the verdict held across every "
+                "identical rerun and the probes cross a decision boundary."
+                f"{trailer}"
             )
         return (
-            "NO ANSWER YET - "
+            "INCONCLUSIVE - "
             f"{self.meter.pair_trials} pairs cannot settle a "
             f"{self.meter.epsilon:.0%} flip rate. Raise the budget, add inputs, "
             "or choose a lower precision."
@@ -626,7 +629,7 @@ class RunResult:
         """
         lines: list[str] = []
         lines.append("=" * 60)
-        lines.append("agentverity — suite-quality report")
+        lines.append("agentverity — decision-repeatability report")
         lines.append("=" * 60)
         lines.append("")
         lines.extend(

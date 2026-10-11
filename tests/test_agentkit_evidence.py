@@ -154,8 +154,10 @@ def test_the_refusal_is_now_about_unreached_routes_only() -> None:
         "get_portfolio",
     }
     assert not result.satisfied
-    assert "NOT TRUSTWORTHY" in README
-    assert "approve" not in README.split("NOT TRUSTWORTHY")[1].split("```")[0], (
+    assert "REPEATABILITY NOT ESTABLISHED" in README
+    assert "approve" not in README.split("REPEATABILITY NOT ESTABLISHED")[1].split(
+        "```"
+    )[0], (
         "the quoted refusal must not still list approve"
     )
 
