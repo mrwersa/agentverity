@@ -490,6 +490,23 @@ class TestAStoredOutcomeIsValidatedOnRead:
             p.expected for p in probes
         ]
 
+    def test_a_non_string_isolation_is_refused_not_a_traceback(self, tmp_path):
+        """A JSON array for isolation is corrupt input, not a Python crash.
+
+        The membership test read the value straight from the file, so a list
+        raised TypeError out of the loader and past the CLI's refusal path.
+        """
+        import json
+
+        from agentverity.snapshot import SnapshotCompatibilityError, load_snapshot
+
+        path, doc = self._snapshot_file(tmp_path)
+        doc["admission_evidence"]["isolation"] = ["fresh-session"]
+        path.write_text(json.dumps(doc))
+
+        with pytest.raises(SnapshotCompatibilityError, match="isolation"):
+            load_snapshot(path)
+
 
 def _reference(**overrides):
     """A stored reference with fixed fields, so the rendered view is exact."""
@@ -574,3 +591,23 @@ class TestTheRegressionReferenceView:
         text = _reference().render()
         assert "admits repeatability at the recorded tolerance" in text
         assert "A later match shows the decision layer was preserved." in text
+
+    def test_it_renders_contract_mappings_sorted(self):
+        contract = DecisionContract(
+            allowed={"allow", "block"},
+            minimum_cases={"block": 2, "allow": 3},
+            stability_targets={"block": 0.01, "allow": 0.05},
+        )
+        text = _reference(decision_contract=contract).render()
+        assert "minimum cases         allow=3, block=2" in text
+        assert "stability targets     allow=0.05, block=0.01" in text
+
+    def test_a_no_decision_without_a_reason_falls_back_to_json(self):
+        probe = SnapshotProbe("a" * 64, {"kind": "no_decision"})
+        text = _reference(probes=(probe,)).render()
+        assert 'expected={"kind": "no_decision"}' in text
+
+    def test_the_view_never_prints_a_raw_input(self):
+        text = create_snapshot(_result(), approved=True).render()
+        assert text
+        assert not any(probe in text for probe in INPUTS)

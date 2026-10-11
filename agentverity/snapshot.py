@@ -52,7 +52,9 @@ def _render_reference(value: Any) -> str:
     other outcome is shown as its lossless JSON value.
     """
     if isinstance(value, dict) and value.get("kind") == "no_decision":
-        return f"no decision: {value.get('reason')}"
+        reason = value.get("reason")
+        if isinstance(reason, str):
+            return f"no decision: {reason}"
     return json.dumps(value, sort_keys=True)
 
 
@@ -263,7 +265,7 @@ class Snapshot:
         # covers would otherwise reach a comparison and be reported as a
         # provenance change against every run.
         isolation = evidence.get("isolation")
-        if isolation not in CERTIFIABLE_ISOLATION:
+        if not isinstance(isolation, str) or isolation not in CERTIFIABLE_ISOLATION:
             raise SnapshotCompatibilityError(
                 f"snapshot records isolation {isolation!r}, which cannot have "
                 "certified it; expected one of "
