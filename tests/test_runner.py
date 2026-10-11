@@ -542,6 +542,35 @@ class TestHeadline:
         assert "supports repeatability at the declared tolerance" in result.headline
         assert "every identical rerun" not in result.headline
 
+    def test_the_qualified_contract_variant_names_its_coverage(self):
+        from agentverity import DecisionCase, DecisionContract, DecisionSuite
+
+        suite = DecisionSuite(
+            contract=DecisionContract(allowed={"allow", "block"}),
+            cases=(
+                DecisionCase("allow one", "allow"),
+                DecisionCase("allow two", "allow"),
+                DecisionCase("block one", "block"),
+                DecisionCase("block two", "block"),
+            ),
+        )
+
+        def agent(text: str) -> dict:
+            return {"verdict": "block" if text.startswith("block") else "allow"}
+
+        result = run(
+            from_callable(agent),
+            suite=suite,
+            config=RunConfig(k=8, epsilon=0.5),
+        )
+
+        assert result.headline.startswith("REPEATABILITY QUALIFIED")
+        assert "supports repeatability at the declared tolerance" in result.headline
+        assert (
+            "all 2 required decisions were represented and observed"
+            in result.headline
+        )
+
     def test_stochastic_is_rejected(self):
         import itertools
 
