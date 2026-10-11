@@ -14,7 +14,9 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   admitted regression reference in plain language without calling the agent:
   the projection layer, tolerance, admission evidence, isolation, the declared
   contract, and each fingerprinted reference with its expected decision. The
-  view is read-only and renders only the stored fields.
+  view is read-only and renders only the stored fields. It labels the stored
+  Wilson bound as diagnostic and `k` as a configured minimum, because the
+  schema records neither the admission rule nor the repeats actually collected.
 
 ## [0.23.1] - 2026-08-25
 

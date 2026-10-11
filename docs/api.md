@@ -130,7 +130,9 @@ declared contract and each case's intended decision.
 - `Snapshot.render()` returns a plain-language view of a stored reference for
   review: the projection layer, tolerance, admission evidence, isolation, the
   declared contract, and every fingerprinted reference. It reads the stored
-  fields only and makes no calls.
+  fields only and makes no calls. It marks the stored Wilson bound as
+  diagnostic and `k` as a configured minimum, because the schema records
+  neither the admission rule nor the repeats actually collected.
 
 A route proven stochastic blocks snapshot admission even when the pooled meter
 looks deterministic. An untargeted undecided route remains a diagnostic. A

@@ -537,23 +537,22 @@ class TestTheRegressionReferenceView:
     def test_the_default_view_is_exact(self):
         assert _reference().render() == (
             "regression reference agentverity.snapshot/v4\n"
-            "  created               2026-10-11T09:00:00+00:00\n"
-            "  library               0.23.1\n"
-            "  projection layer      verdict\n"
-            "  tolerance             0.5\n"
-            "  confidence            95% Wilson\n"
-            "  repeats per input     4\n"
-            "  blindness threshold   0.9\n"
+            "  created                2026-10-11T09:00:00+00:00\n"
+            "  library                0.23.1\n"
+            "  projection layer       verdict\n"
+            "  tolerance              0.5\n"
+            "  configured k           4\n"
+            "  blindness threshold    0.9\n"
             "\n"
             "admission evidence\n"
-            "  call                  verdict-deterministic\n"
-            "  disjoint pairs        8\n"
-            "  flip upper bound      0.3100\n"
-            "  probe skew            0.5000\n"
-            "  distinct verdicts     2\n"
-            "  isolation             fresh-session\n"
-            "  independence          asserted from separated trials\n"
-            "  reference approved    yes\n"
+            "  call                   verdict-deterministic\n"
+            "  disjoint pairs         8\n"
+            "  diagnostic bound       0.3100\n"
+            "  probe skew             0.5000\n"
+            "  distinct verdicts      2\n"
+            "  isolation              fresh-session\n"
+            "  independence           asserted from separated trials\n"
+            "  reference approved     yes\n"
             "\n"
             "references (1)\n"
             "  sha256=aaaaaaaaaaaa  expected=\"allow\"\n"
@@ -561,7 +560,11 @@ class TestTheRegressionReferenceView:
             "limits\n"
             "  this record admits repeatability at the recorded tolerance, not\n"
             "  correctness, and only for the projection, tolerance and contract\n"
-            "  above. A later match shows the decision layer was preserved."
+            "  above. A later match shows the decision layer was preserved.\n"
+            "  the schema does not record which rule admitted the reference (a\n"
+            "  fixed Wilson interval or a declared sequential checkpoint) or the\n"
+            "  repeats actually collected, so the bound above is diagnostic and\n"
+            "  configured k is a minimum, not the count that ran."
         )
 
     def test_it_shows_a_reference_by_fingerprint_not_by_input(self):
@@ -583,8 +586,8 @@ class TestTheRegressionReferenceView:
         probe = SnapshotProbe("a" * 64, "allow", intended="allow")
         text = _reference(decision_contract=contract, probes=(probe,)).render()
         assert "declared decision contract" in text
-        assert "allowed               allow, block" in text
-        assert "critical              block" in text
+        assert "allowed                allow, block" in text
+        assert "critical               block" in text
         assert "intended=allow" in text
 
     def test_it_states_what_a_match_does_not_establish(self):
@@ -599,8 +602,24 @@ class TestTheRegressionReferenceView:
             stability_targets={"block": 0.01, "allow": 0.05},
         )
         text = _reference(decision_contract=contract).render()
-        assert "minimum cases         allow=3, block=2" in text
-        assert "stability targets     allow=0.05, block=0.01" in text
+        assert "minimum cases          allow=3, block=2" in text
+        assert "stability targets      allow=0.05, block=0.01" in text
+
+    def test_it_names_k_as_configured_and_calls_the_bound_diagnostic(self):
+        """`k` is a configured minimum and the bound may not explain admission.
+
+        A route plan can raise the per-input count above `k`, and a declared
+        sequential checkpoint can admit at a Wilson bound above the tolerance.
+        Neither the rule nor the counts collected are in the schema, so the
+        view must not present them as the admission reason.
+        """
+        text = _reference().render()
+        assert "configured k           4" in text
+        assert "repeats per input" not in text
+        assert "confidence" not in text
+        assert "diagnostic bound       0.3100" in text
+        assert "does not record which rule admitted the reference" in text
+        assert "repeats actually collected" in text
 
     def test_a_no_decision_without_a_reason_falls_back_to_json(self):
         probe = SnapshotProbe("a" * 64, {"kind": "no_decision"})
@@ -611,3 +630,51 @@ class TestTheRegressionReferenceView:
         text = create_snapshot(_result(), approved=True).render()
         assert text
         assert not any(probe in text for probe in INPUTS)
+
+    def test_a_sequential_reference_marks_the_bound_diagnostic(self):
+        inputs = [f"input_{i}" for i in range(12)] + [
+            f"secret_{i}" for i in range(12)
+        ]
+
+        def stable(text: str) -> dict:
+            return {"verdict": "block" if "secret" in text else "allow"}
+
+        result = run(
+            from_callable(stable), inputs, config=RunConfig(sequential=True)
+        )
+        snapshot = create_snapshot(result, approved=True)
+
+        # The declared checkpoint admitted at the zero-flip budget, where the
+        # Wilson bound sits above the tolerance the checkpoint never read.
+        assert snapshot.meter_ci_high > snapshot.epsilon
+        text = snapshot.render()
+        assert "diagnostic bound" in text
+        assert "not the count that ran" in text
+
+    def test_a_route_target_reference_names_k_as_a_minimum(self):
+        suite = DecisionSuite(
+            contract=DecisionContract(
+                allowed={"approve", "deny"},
+                stability_targets={"deny": 0.05},
+            ),
+            cases=(
+                DecisionCase("approve_req", "approve"),
+                DecisionCase("deny_req", "deny"),
+            ),
+        )
+
+        def agent(text: str) -> dict:
+            return {"verdict": "deny" if text.startswith("deny") else "approve"}
+
+        result = run(
+            from_callable(agent), suite=suite, config=RunConfig(epsilon=0.5)
+        )
+        snapshot = create_snapshot(result, approved=True)
+
+        # A route plan raises the collected repeats above the configured floor.
+        allocated = {plan.decision: plan.repeats_each for plan in result.route_plans}
+        assert max(allocated.values()) > snapshot.k
+        text = snapshot.render()
+        assert "configured k" in text
+        assert "repeats per input" not in text
+        assert "repeats actually collected" in text

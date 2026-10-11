@@ -146,21 +146,23 @@ class Snapshot:
         Read-only and complete from the stored fields: it adds no measurement
         and calls nothing. Its purpose is review, so it states the decisions
         the reference freezes and the evidence that admitted them, then names
-        what a match does not establish.
+        what a match does not establish. The stored bound is labelled
+        diagnostic because the schema records neither the admission rule nor
+        the repeats actually collected: a sequential checkpoint can admit at a
+        Wilson bound above the tolerance, and configured ``k`` is a minimum.
         """
         rows = [
             ("created", self.created_at),
             ("library", self.agentverity_version),
             ("projection layer", self.layer),
             ("tolerance", f"{self.epsilon:g}"),
-            ("confidence", "95% Wilson"),
-            ("repeats per input", str(self.k)),
+            ("configured k", str(self.k)),
             ("blindness threshold", f"{self.blindness_threshold:g}"),
         ]
         evidence = [
             ("call", "verdict-deterministic"),
             ("disjoint pairs", str(self.meter_pair_trials)),
-            ("flip upper bound", f"{self.meter_ci_high:.4f}"),
+            ("diagnostic bound", f"{self.meter_ci_high:.4f}"),
             ("probe skew", f"{self.blindness_skew:.4f}"),
             ("distinct verdicts", str(self.blindness_distinct)),
             ("isolation", self.isolation),
@@ -174,10 +176,10 @@ class Snapshot:
         ]
         lines = [
             f"regression reference {self.schema}",
-            *(f"  {label:<22}{value}" for label, value in rows),
+            *(f"  {label:<22} {value}" for label, value in rows),
             "",
             "admission evidence",
-            *(f"  {label:<22}{value}" for label, value in evidence),
+            *(f"  {label:<22} {value}" for label, value in evidence),
         ]
         if self.decision_contract is not None:
             contract = self.decision_contract
@@ -201,7 +203,7 @@ class Snapshot:
             lines += [
                 "",
                 "declared decision contract",
-                *(f"  {label:<22}{value}" for label, value in contract_rows),
+                *(f"  {label:<22} {value}" for label, value in contract_rows),
             ]
         lines += ["", f"references ({len(self.probes)})"]
         for probe in self.probes:
@@ -218,6 +220,10 @@ class Snapshot:
             "  this record admits repeatability at the recorded tolerance, not",
             "  correctness, and only for the projection, tolerance and contract",
             "  above. A later match shows the decision layer was preserved.",
+            "  the schema does not record which rule admitted the reference (a",
+            "  fixed Wilson interval or a declared sequential checkpoint) or the",
+            "  repeats actually collected, so the bound above is diagnostic and",
+            "  configured k is a minimum, not the count that ran.",
         ]
         return "\n".join(lines)
 
