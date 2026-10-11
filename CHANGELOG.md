@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-11
+
 ### Added
 
 - `agentverity inspect --snapshot baseline.json` and `Snapshot.render()` show an
@@ -1259,7 +1261,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.23.1...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.24.0...HEAD
+[0.24.0]: https://github.com/mrwersa/agentverity/compare/v0.23.1...v0.24.0
 [0.23.1]: https://github.com/mrwersa/agentverity/compare/v0.23.0...v0.23.1
 [0.23.0]: https://github.com/mrwersa/agentverity/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/mrwersa/agentverity/compare/v0.21.0...v0.22.0
