@@ -9,6 +9,7 @@ Stability is a precondition for snapshot testing. It is not correctness.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
@@ -29,6 +30,30 @@ SNAPSHOT_SCHEMA = "agentverity.snapshot/v4"
 CERTIFIABLE_ISOLATION: frozenset[str] = frozenset(
     {"fresh-session", "fresh-instance", "unknown"}
 )
+
+
+def _render_labels(labels: frozenset[str]) -> str:
+    """Render a declaration set as sorted prose, or the empty marker."""
+    return ", ".join(sorted(labels)) if labels else "(none)"
+
+
+def _render_mapping(values: Mapping[str, Any]) -> str:
+    """Render a label-keyed declaration, sorted so the view is stable."""
+    if not values:
+        return "(none)"
+    return ", ".join(f"{key}={values[key]}" for key in sorted(values))
+
+
+def _render_reference(value: Any) -> str:
+    """Render one stored expected outcome the way a run records it.
+
+    A no-decision is shown by its reason, because reading it as the label
+    ``refused`` is the confusion the typed outcome exists to prevent. Any
+    other outcome is shown as its lossless JSON value.
+    """
+    if isinstance(value, dict) and value.get("kind") == "no_decision":
+        return f"no decision: {value.get('reason')}"
+    return json.dumps(value, sort_keys=True)
 
 
 class SnapshotRefused(ValueError):
@@ -112,6 +137,87 @@ class Snapshot:
                 for probe in self.probes
             ],
         }
+
+    def render(self) -> str:
+        """Return a plain-language view of an admitted reference.
+
+        Read-only and complete from the stored fields: it adds no measurement
+        and calls nothing. Its purpose is review, so it states the decisions
+        the reference freezes and the evidence that admitted them, then names
+        what a match does not establish.
+        """
+        rows = [
+            ("created", self.created_at),
+            ("library", self.agentverity_version),
+            ("projection layer", self.layer),
+            ("tolerance", f"{self.epsilon:g}"),
+            ("confidence", "95% Wilson"),
+            ("repeats per input", str(self.k)),
+            ("blindness threshold", f"{self.blindness_threshold:g}"),
+        ]
+        evidence = [
+            ("call", "verdict-deterministic"),
+            ("disjoint pairs", str(self.meter_pair_trials)),
+            ("flip upper bound", f"{self.meter_ci_high:.4f}"),
+            ("probe skew", f"{self.blindness_skew:.4f}"),
+            ("distinct verdicts", str(self.blindness_distinct)),
+            ("isolation", self.isolation),
+            (
+                "independence",
+                "asserted from separated trials"
+                if self.independence_asserted
+                else "not asserted (isolation unknown)",
+            ),
+            ("reference approved", "yes"),
+        ]
+        lines = [
+            f"regression reference {self.schema}",
+            *(f"  {label:<22}{value}" for label, value in rows),
+            "",
+            "admission evidence",
+            *(f"  {label:<22}{value}" for label, value in evidence),
+        ]
+        if self.decision_contract is not None:
+            contract = self.decision_contract
+            contract_rows = [
+                ("allowed", _render_labels(contract.allowed)),
+                (
+                    "required",
+                    _render_labels(contract.required or frozenset()),
+                ),
+                ("critical", _render_labels(contract.critical)),
+                ("minimum cases", _render_mapping(contract.minimum_cases)),
+                (
+                    "stability targets",
+                    _render_mapping(contract.stability_targets),
+                ),
+                (
+                    "allowed no-decisions",
+                    _render_labels(contract.allowed_no_decisions),
+                ),
+            ]
+            lines += [
+                "",
+                "declared decision contract",
+                *(f"  {label:<22}{value}" for label, value in contract_rows),
+            ]
+        lines += ["", f"references ({len(self.probes)})"]
+        for probe in self.probes:
+            line = (
+                f"  sha256={probe.input_fingerprint[:12]}  "
+                f"expected={_render_reference(probe.expected)}"
+            )
+            if probe.intended is not None:
+                line += f"  intended={probe.intended}"
+            lines.append(line)
+        lines += [
+            "",
+            "limits",
+            "  this record admits repeatability at the recorded tolerance, not",
+            "  correctness, and only for the projection, tolerance and contract",
+            "  above. A later match shows the decision layer was preserved.",
+        ]
+        return "\n".join(lines)
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> Snapshot:

@@ -377,6 +377,43 @@ class TestCLI:
         assert check_exit == 0
         assert "snapshot clean" in capsys.readouterr().out
 
+    def test_inspect_renders_a_snapshot_without_calling_an_agent(
+        self, capsys, tmp_path
+    ):
+        inputs_file = tmp_path / "inputs.txt"
+        snapshot_file = tmp_path / "baseline.json"
+        _write_inputs(
+            str(inputs_file),
+            ["public-a", "public-b", "secret-a", "secret-b"],
+        )
+        assert main([
+            "snapshot",
+            "--agent", "examples.toy_agent:deterministic_gate",
+            "--inputs", str(inputs_file),
+            "--output", str(snapshot_file),
+            "--k", "4",
+            "--epsilon", "0.5",
+            "--accept-reference",
+        ]) == 0
+        capsys.readouterr()
+
+        exit_code = main(["inspect", "--snapshot", str(snapshot_file)])
+        out = capsys.readouterr().out
+
+        assert exit_code == 0
+        assert "regression reference agentverity.snapshot/v4" in out
+        assert "verdict-deterministic" in out
+        assert "snapshot admitted" not in out
+
+    def test_inspect_refuses_an_unreadable_snapshot(self, capsys, tmp_path):
+        bad = tmp_path / "not-a-snapshot.json"
+        bad.write_text("{}\n", encoding="utf-8")
+
+        exit_code = main(["inspect", "--snapshot", str(bad)])
+
+        assert exit_code == 2
+        assert "snapshot inspect refused" in capsys.readouterr().err
+
 
 def test_snapshot_refuses_impossible_config_without_calling_the_agent(tmp_path):
     """An unreachable bound is arithmetic, so do not pay a model to discover it."""

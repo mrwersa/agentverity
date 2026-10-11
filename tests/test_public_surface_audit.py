@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -19,12 +20,29 @@ FIXTURE = (
 
 
 def test_current_top_level_and_cli_surface_matches_the_reviewed_release():
-    """The checkout matches the surface published in 0.23.0."""
+    """The candidate adds only the reviewed read-only inspect command."""
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
     assert fixture["producer"] == "agentverity==0.23.0"
     assert fixture["surface"]["schema"] == AUDIT_SCHEMA
-    assert collect_surface() == fixture["surface"]
+    current = deepcopy(collect_surface())
+    inspect = current["cli"]["commands"].pop("inspect")
+    assert inspect == [
+        {
+            "action": "_HelpAction",
+            "dest": "help",
+            "names": ["-h", "--help"],
+            "required": False,
+            "nargs": 0,
+        },
+        {
+            "action": "_StoreAction",
+            "dest": "snapshot",
+            "names": ["--snapshot"],
+            "required": True,
+        },
+    ]
+    assert current == fixture["surface"]
 
 
 def test_the_auditor_refuses_to_mislabel_the_current_checkout(monkeypatch, tmp_path):

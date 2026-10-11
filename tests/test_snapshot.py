@@ -14,7 +14,9 @@ from agentverity import (
 from agentverity.runner import RunConfig
 from agentverity.snapshot import (
     SNAPSHOT_SCHEMA,
+    Snapshot,
     SnapshotCompatibilityError,
+    SnapshotProbe,
     SnapshotRefused,
     compare_snapshot,
     create_snapshot,
@@ -487,3 +489,88 @@ class TestAStoredOutcomeIsValidatedOnRead:
         assert {"kind": "no_decision", "reason": "refused"} in [
             p.expected for p in probes
         ]
+
+
+def _reference(**overrides):
+    """A stored reference with fixed fields, so the rendered view is exact."""
+    fields = {
+        "schema": SNAPSHOT_SCHEMA,
+        "created_at": "2026-10-11T09:00:00+00:00",
+        "agentverity_version": "0.23.1",
+        "layer": "verdict",
+        "epsilon": 0.5,
+        "k": 4,
+        "blindness_threshold": 0.9,
+        "meter_pair_trials": 8,
+        "meter_ci_high": 0.31,
+        "blindness_skew": 0.5,
+        "blindness_distinct": 2,
+        "decision_contract": None,
+        "probes": (SnapshotProbe("a" * 64, "allow"),),
+        "isolation": "fresh-session",
+    }
+    fields.update(overrides)
+    return Snapshot(**fields)
+
+
+class TestTheRegressionReferenceView:
+    """A snapshot was machine-only JSON, so auditing a reference meant reading
+    raw fields. The view renders the stored record and nothing else."""
+
+    def test_the_default_view_is_exact(self):
+        assert _reference().render() == (
+            "regression reference agentverity.snapshot/v4\n"
+            "  created               2026-10-11T09:00:00+00:00\n"
+            "  library               0.23.1\n"
+            "  projection layer      verdict\n"
+            "  tolerance             0.5\n"
+            "  confidence            95% Wilson\n"
+            "  repeats per input     4\n"
+            "  blindness threshold   0.9\n"
+            "\n"
+            "admission evidence\n"
+            "  call                  verdict-deterministic\n"
+            "  disjoint pairs        8\n"
+            "  flip upper bound      0.3100\n"
+            "  probe skew            0.5000\n"
+            "  distinct verdicts     2\n"
+            "  isolation             fresh-session\n"
+            "  independence          asserted from separated trials\n"
+            "  reference approved    yes\n"
+            "\n"
+            "references (1)\n"
+            "  sha256=aaaaaaaaaaaa  expected=\"allow\"\n"
+            "\n"
+            "limits\n"
+            "  this record admits repeatability at the recorded tolerance, not\n"
+            "  correctness, and only for the projection, tolerance and contract\n"
+            "  above. A later match shows the decision layer was preserved."
+        )
+
+    def test_it_shows_a_reference_by_fingerprint_not_by_input(self):
+        text = _reference().render()
+        assert "aaaaaaaaaaaa" in text
+        assert "expected=\"allow\"" in text
+
+    def test_it_says_when_independence_was_not_asserted(self):
+        text = _reference(isolation="unknown").render()
+        assert "not asserted (isolation unknown)" in text
+
+    def test_it_renders_a_no_decision_by_its_reason(self):
+        probe = SnapshotProbe("b" * 64, {"kind": "no_decision", "reason": "refused"})
+        text = _reference(probes=(probe,)).render()
+        assert "expected=no decision: refused" in text
+
+    def test_it_lists_a_declared_contract_and_intent(self):
+        contract = DecisionContract(allowed={"allow", "block"}, critical={"block"})
+        probe = SnapshotProbe("a" * 64, "allow", intended="allow")
+        text = _reference(decision_contract=contract, probes=(probe,)).render()
+        assert "declared decision contract" in text
+        assert "allowed               allow, block" in text
+        assert "critical              block" in text
+        assert "intended=allow" in text
+
+    def test_it_states_what_a_match_does_not_establish(self):
+        text = _reference().render()
+        assert "admits repeatability at the recorded tolerance" in text
+        assert "A later match shows the decision layer was preserved." in text

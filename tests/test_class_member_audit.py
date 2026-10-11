@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -16,12 +17,23 @@ SURFACE_FIXTURE = FIXTURES / "public-surface.json"
 
 
 def test_current_class_members_match_the_published_release():
-    """The checkout matches the class structure published in 0.23.0."""
+    """The candidate adds only the reviewed read-only view method."""
     fixture = json.loads(CLASS_FIXTURE.read_text(encoding="utf-8"))
 
     assert fixture["producer"] == "agentverity==0.23.0"
     assert fixture["surface"]["schema"] == AUDIT_SCHEMA
-    assert collect_class_members() == fixture["surface"]
+    current = deepcopy(collect_class_members())
+    snapshot = current["classes"]["Snapshot"]
+    assert [member["name"] for member in snapshot["members"]] == [
+        "from_dict",
+        "independence_asserted",
+        "render",
+        "to_dict",
+    ]
+    snapshot["members"] = [
+        member for member in snapshot["members"] if member["name"] != "render"
+    ]
+    assert current == fixture["surface"]
 
 
 def test_every_exported_class_is_in_the_member_inventory():

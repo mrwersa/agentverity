@@ -13,7 +13,7 @@ callers use after construction.
 - field annotations, constructor participation, keyword-only status, and
   whether defaults are required, literal values, or factories;
 - frozen and ordering policy for each dataclass; and
-- all 91 public methods, class methods, static methods, and properties declared
+- all 92 public methods, class methods, static methods, and properties declared
   by exported classes, including callable signatures and property writability.
 
 The collector audits every class named by `agentverity.__all__`. A separate CI
@@ -22,10 +22,10 @@ cannot disappear between the two inventories. Private and generated dunder
 methods, inherited `object`/exception machinery, docstrings, and method bodies
 are deliberately excluded.
 
-That surface includes `CurtailmentReplayResult` and its two properties, plus
-the optional `RunResult.curtailment_replay` field. CI compares the checkout
-directly with the published fixture; the 0.21.0 fixture remains unchanged as a
-historical record.
+The reviewed delta is `Snapshot.render`, a read-only view method that adds no
+signature change to an existing caller. CI checks that explicit additive
+candidate delta against the published 0.23.0 fixture; the fixture remains
+unchanged rather than being relabelled as a candidate release.
 
 ## Provenance and Reproduction
 

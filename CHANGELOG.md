@@ -8,6 +8,14 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `agentverity inspect --snapshot baseline.json` and `Snapshot.render()` show an
+  admitted regression reference in plain language without calling the agent:
+  the projection layer, tolerance, admission evidence, isolation, the declared
+  contract, and each fingerprinted reference with its expected decision. The
+  view is read-only and renders only the stored fields.
+
 ## [0.23.1] - 2026-08-25
 
 ### Changed
