@@ -51,6 +51,27 @@ class EvidenceError(ValueError):
     """Raised when an evidence file cannot support an assessment."""
 
 
+def independence_caveat(isolation: str) -> str | None:
+    """A warning when a recorded isolation undermines the statistics.
+
+    Shared between imported evidence and a live run: a report that states a
+    conclusion while hiding that repeats were not independent is the reading
+    the snapshot policy refuses to publish, so the report must not either.
+    """
+    if isolation == "shared-session":
+        return (
+            "trials came from one shared session, so repeats are not "
+            "independent and the interval is narrower than the evidence "
+            "supports"
+        )
+    if isolation == "unknown":
+        return (
+            "how trials were isolated is not recorded, so independence is "
+            "assumed rather than established"
+        )
+    return None
+
+
 @dataclass(frozen=True)
 class EvidenceCase:
     """One input and the decisions observed across repeated runs of it."""
@@ -210,18 +231,7 @@ class EvidenceSet:
     @property
     def independence_caveat(self) -> str | None:
         """A warning when the recorded isolation undermines the statistics."""
-        if self.isolation == "shared-session":
-            return (
-                "trials came from one shared session, so repeats are not "
-                "independent and the interval is narrower than the evidence "
-                "supports"
-            )
-        if self.isolation == "unknown":
-            return (
-                "the file does not record how trials were isolated, so "
-                "independence is assumed rather than established"
-            )
-        return None
+        return independence_caveat(self.isolation)
 
 
     def to_dict(self) -> dict[str, Any]:

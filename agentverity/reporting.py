@@ -190,6 +190,7 @@ def run_result_to_dict(result: RunResult) -> dict[str, Any]:
         "schema": RUN_SCHEMA,
         "status": result.status,
         "complete": result.complete,
+        "isolation": result.isolation,
         "caveats": list(result.caveats),
         "requested_inputs": result.requested_inputs,
         "input_fingerprints": list(result.input_fingerprints),

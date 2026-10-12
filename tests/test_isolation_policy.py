@@ -302,3 +302,55 @@ def test_the_isolation_flag_reaches_the_importer_and_is_refused_elsewhere(
 
     assert main(["assess", "--evidence", str(evidence), "--isolation", "fresh-session"]) == 2
     assert "--isolation applies to" in capsys.readouterr().err
+
+
+class TestALiveRunCarriesTheIndependenceWarning:
+    """A live run must not state a conclusion while hiding that repeats were
+    not independent, any more than an imported assessment may."""
+
+    def test_a_shared_session_run_warns_in_its_report(self):
+        from agentverity import Observation, RunConfig, run
+        from agentverity.isolation import declare_isolation
+        from agentverity.reporting import run_result_to_dict
+
+        agent = declare_isolation(
+            lambda text: Observation(verdict="allow" if text == "a" else "block"),
+            "shared-session",
+        )
+        result = run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
+
+        assert result.isolation == "shared-session"
+        assert any("not independent" in caveat for caveat in result.caveats)
+        assert "not independent" in result.summary()
+        assert run_result_to_dict(result)["isolation"] == "shared-session"
+
+    def test_an_undeclared_run_says_independence_is_assumed(self):
+        from agentverity import Observation, RunConfig, run
+
+        result = run(
+            lambda text: Observation(verdict="allow" if text == "a" else "block"),
+            ["a", "b"],
+            relations=[],
+            config=RunConfig(k=4, epsilon=0.5),
+        )
+
+        assert result.isolation == "unknown"
+        assert any(
+            "assumed rather than established" in caveat
+            for caveat in result.caveats
+        )
+
+    def test_a_fresh_session_run_carries_no_independence_caveat(self):
+        from agentverity import Observation, RunConfig, run
+        from agentverity.isolation import declare_isolation
+
+        agent = declare_isolation(
+            lambda text: Observation(verdict="allow" if text == "a" else "block"),
+            "fresh-session",
+        )
+        result = run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
+
+        assert not any(
+            "not independent" in caveat or "assumed" in caveat
+            for caveat in result.caveats
+        )

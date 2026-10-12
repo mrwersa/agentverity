@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -23,12 +24,16 @@ FIXTURE = (
 
 
 def test_current_return_semantics_match_the_published_release():
-    """The checkout matches the return semantics published in 0.23.0."""
+    """The candidate adds only the reviewed isolation key to the JSON report."""
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
     assert fixture["producer"] == "agentverity==0.23.0"
     assert fixture["semantics"]["schema"] == AUDIT_SCHEMA
-    assert collect_return_semantics() == fixture["semantics"]
+    current = deepcopy(collect_return_semantics())
+    keys = current["reports"]["json"]["top_level_keys"]
+    assert keys.count("isolation") == 1
+    keys.remove("isolation")
+    assert current == fixture["semantics"]
 
 
 def test_every_canonical_run_status_has_an_executed_scenario():

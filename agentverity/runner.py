@@ -37,6 +37,7 @@ from agentverity.decision_contract import (
     DecisionSuite,
     assess_decision_coverage,
 )
+from agentverity.evidence import independence_caveat
 from agentverity.execution import (
     ErrorPolicy,
     ProgressCallback,
@@ -1632,15 +1633,26 @@ def run(
             )
             + observed_keys,
             per_case=tuple(
-                tuple(observation.key(config.layer) for observation in observations)
-                if observations
-                else ((key,) if key is not None else ())
+                tuple(
+                    observation.key(config.layer) for observation in observations
+                )
+                + ((key,) if key is not None else ())
                 for observations, key in zip(case_series, observed_keys)
             ),
         )
         if suite is not None
         else None
     )
+
+    caveats: tuple[str, ...] = (
+        (_EVALUATION_PERIOD_CAVEAT,) if config.run_meter else ()
+    )
+    # A live run carries the same independence warning imported evidence does:
+    # a report that states a conclusion while hiding that repeats were not
+    # independent is the reading the snapshot policy refuses to publish.
+    isolation_caveat = independence_caveat(declared)
+    if isolation_caveat is not None:
+        caveats += (isolation_caveat,)
 
     return RunResult(
         meter=meter_result,
@@ -1661,7 +1673,7 @@ def run(
                 ),
             )
         ),
-        caveats=(_EVALUATION_PERIOD_CAVEAT,) if config.run_meter else (),
+        caveats=caveats,
         input_fingerprints=tuple(input_fingerprint(text) for text in inputs),
         observed_keys=observed_keys,
         intended_decisions=intended_decisions,
