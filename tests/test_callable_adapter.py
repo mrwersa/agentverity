@@ -74,3 +74,14 @@ class TestFromCallable:
 
         assert obs.verdict == NoDecision("runtime_error")
         assert obs.is_incomplete
+
+    def test_dict_typed_decision_is_preserved(self):
+        from agentverity import Decision
+
+        def fn(x: str) -> dict:
+            return {"text": "ok", "verdict": Decision("allow")}
+
+        obs = from_callable(fn)("hi")
+
+        assert obs.verdict == Decision("allow")
+        assert not obs.is_incomplete

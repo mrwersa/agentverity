@@ -134,6 +134,13 @@ class TestFromStrands:
         assert obs.verdict == NoDecision("runtime_error")
         assert obs.is_incomplete
 
+    def test_an_empty_verdict_falls_back_to_the_decision_field(self):
+        result = _make_result(
+            [{"text": "x"}],
+            structured_output={"verdict": "", "decision": "allow"},
+        )
+        assert from_strands(_mock_strands_agent(result))("hi").verdict == "allow"
+
 
 class TestFromStrandsFactory:
     def test_each_call_uses_a_fresh_agent(self):

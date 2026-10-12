@@ -990,6 +990,55 @@ def _resolve(config: RunConfig, inputs: Iterable[str]) -> RunConfig:
     return replace(config, k=k, epsilon=epsilon)
 
 
+def _drop_harness_failures(
+    series: list[list[Observation] | None],
+    texts: list[str],
+    *,
+    layer: str,
+    config: RunConfig,
+    phase: str,
+) -> tuple[list[list[Observation] | None], list[RunError]]:
+    """Remove repeat series holding a typed harness failure, per error_policy.
+
+    A ``NoDecision`` harness failure is not a decision, so a series containing
+    one cannot be scored: the pooled statistic would count the failure as
+    stability. ``error_policy`` decides what that costs, exactly as for a call
+    that raised. ``raise`` stops the run; ``record`` marks the case failed and
+    keeps the others, which is the same treatment a raised agent call gets.
+    """
+    if layer != "verdict":
+        return series, []
+    kept: list[list[Observation] | None] = []
+    failures: list[RunError] = []
+    for index, run_series in enumerate(series):
+        failure = None
+        for observation in run_series or ():
+            if observation.is_incomplete:
+                failure = observation
+                break
+        if failure is None:
+            kept.append(run_series)
+            continue
+        message = (
+            f"a repeat series contains {failure.outcome}, which means the "
+            "harness failed rather than the agent answering. Evidence "
+            "containing it is incomplete and must not be scored for stability."
+        )
+        if config.error_policy == "raise":
+            raise OutcomeNotScorable(message)
+        failures.append(
+            RunError(
+                phase=phase,
+                input_index=index,
+                input_fingerprint=input_fingerprint(texts[index]),
+                exception_type="OutcomeNotScorable",
+                message=message,
+            )
+        )
+        kept.append(None)
+    return kept, failures
+
+
 def _collect_sequentially(
     agent: AgentFn,
     inputs: list[str],
@@ -1301,9 +1350,17 @@ def run(
             _collect_sequentially(agent, list(inputs), config, on_progress)
         )
         errors.extend(meter_errors)
-        complete_series = [run_series for run_series in series if len(run_series) >= 2]
+        series, incomplete_errors = _drop_harness_failures(
+            series, list(inputs), layer=config.layer, config=config, phase="meter"
+        )
+        errors.extend(incomplete_errors)
+        complete_series = [
+            run_series
+            for run_series in series
+            if run_series is not None and len(run_series) >= 2
+        ]
         for index, run_series in enumerate(series):
-            if len(run_series) >= 2:
+            if run_series is not None and len(run_series) >= 2:
                 case_series[index] = tuple(run_series)
         repeated_observations = [
             observation for run_series in complete_series for observation in run_series
@@ -1333,7 +1390,9 @@ def run(
                     zip(
                         intended_decisions,
                         [
-                            run_series if len(run_series) >= 2 else None
+                            run_series
+                            if run_series is not None and len(run_series) >= 2
+                            else None
                             for run_series in series
                         ],
                         strict=True,
@@ -1357,7 +1416,15 @@ def run(
             on_progress,
         )
         errors.extend(meter_errors)
-        complete_series = [run_series for run_series in series if len(run_series) >= 2]
+        series, incomplete_errors = _drop_harness_failures(
+            series, list(inputs), layer=config.layer, config=config, phase="meter"
+        )
+        errors.extend(incomplete_errors)
+        complete_series = [
+            run_series
+            for run_series in series
+            if run_series is not None and len(run_series) >= 2
+        ]
         for index, run_series in enumerate(series):
             if run_series:
                 case_series[index] = tuple(run_series)
@@ -1393,12 +1460,18 @@ def run(
             on_progress=on_progress,
         )
         errors.extend(meter_work.errors)
+        series, incomplete_errors = _drop_harness_failures(
+            list(meter_work.values),
+            list(inputs),
+            layer=config.layer,
+            config=config,
+            phase="meter",
+        )
+        errors.extend(incomplete_errors)
         complete_series = [
-            observations
-            for observations in meter_work.values
-            if observations is not None
+            observations for observations in series if observations is not None
         ]
-        for index, observations in enumerate(meter_work.values):
+        for index, observations in enumerate(series):
             if observations is not None:
                 case_series[index] = tuple(observations)
         repeated_observations = [
@@ -1417,14 +1490,14 @@ def run(
             # Carry failed series too. They count as cases with no usable pairs,
             # rather than disappearing from the route table.
             route_stability = stratify_runs(
-                list(zip(intended_decisions, meter_work.values, strict=True)),
+                list(zip(intended_decisions, series, strict=True)),
                 k=config.k,
                 layer=config.layer,
                 epsilon=config.epsilon,
                 targets=suite.contract.stability_targets,
             )
         if config.reuse_unchanged_calls:
-            for index, observations in enumerate(meter_work.values):
+            for index, observations in enumerate(series):
                 if observations:
                     source_observations[index] = observations[0]
 

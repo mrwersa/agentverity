@@ -738,6 +738,23 @@ class TestTypedHarnessFailures:
         with pytest.raises(OutcomeNotScorable, match="harness"):
             run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
 
+    def test_a_metered_harness_failure_honours_error_policy(self):
+        from agentverity import NoDecision
+
+        agent = from_callable(
+            lambda text: {"verdict": NoDecision("runtime_error")}
+        )
+
+        recorded = run(
+            agent,
+            ["a", "b"],
+            relations=[],
+            config=RunConfig(k=4, epsilon=0.5, error_policy="record"),
+        )
+
+        assert recorded.complete is False
+        assert len(recorded.errors) == 2
+
     def test_a_relation_harness_failure_is_recorded_not_scored(self):
         from agentverity import NoDecision, Observation, Relation
 
@@ -763,6 +780,34 @@ class TestTypedHarnessFailures:
         assert result.complete is False
         assert len(result.errors) == 2
         assert result.relation_results[0].errors == 2
+
+    def test_a_relation_source_failure_is_recorded(self):
+        from agentverity import NoDecision, Observation, Relation
+
+        def agent(text: str) -> Observation:
+            return Observation(verdict=NoDecision("runtime_error"))
+
+        relation = Relation(
+            "followup",
+            "invariant",
+            lambda text: text + "!",
+            lambda source, followup: source.verdict == followup.verdict,
+        )
+
+        result = run(
+            agent,
+            ["a"],
+            relations=[relation],
+            config=RunConfig(
+                k=4,
+                epsilon=0.5,
+                error_policy="record",
+                run_meter=False,
+            ),
+        )
+
+        assert result.complete is False
+        assert result.relation_results[0].errors == 1
 
     def test_a_relation_harness_failure_raises_under_the_raise_policy(self):
         from agentverity import NoDecision, Observation, OutcomeNotScorable, Relation

@@ -118,7 +118,8 @@ def _tool_calls_of(message: Any) -> list[str]:
     return names
 
 
-def _verdict_of(state: Any, verdict_key: str | None) -> str | None:
+def _verdict_of(state: Any, verdict_key: str | None) -> Any:
+    """Return the state's decision: a typed outcome, a label, or ``None``."""
     if not isinstance(state, dict):
         # A dataclass or plain object state exposes its fields here. A string
         # or a namedtuple has no __dict__ and carries no decision.
