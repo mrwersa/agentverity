@@ -8,12 +8,20 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-12
+
 ### Added
 
 - `SnapshotDiff.render()` renders a `compare_snapshot` result in the same
   plain-language form as `Snapshot.render()`, with any provenance weakening
   ahead of the result and every changed reference listed. `agentverity check`
   now prints this view instead of ad-hoc lines.
+
+### Fixed
+
+- The `check` provenance note no longer claims "the observations match" when
+  the same view reports drift; it says only that the current evidence
+  establishes less than the evidence that admitted the baseline.
 
 ## [0.24.1] - 2026-10-11
 
@@ -1290,7 +1298,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.24.1...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.25.0...HEAD
+[0.25.0]: https://github.com/mrwersa/agentverity/compare/v0.24.1...v0.25.0
 [0.24.1]: https://github.com/mrwersa/agentverity/compare/v0.24.0...v0.24.1
 [0.24.0]: https://github.com/mrwersa/agentverity/compare/v0.23.1...v0.24.0
 [0.23.1]: https://github.com/mrwersa/agentverity/compare/v0.23.0...v0.23.1
