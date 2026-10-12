@@ -7,12 +7,18 @@ reroutes traffic.
 
 What this reports and what it deliberately does not:
 
-- Route intervals, decision distributions, flip-pair structure, decisions that
-  appeared or disappeared, and any provenance difference between the two files.
+- Route intervals, flip-pair structure, decisions that appeared or disappeared,
+  and any provenance difference between the two files.
 - It never claims agreement between two windows proves trials were independent
   within either one. Two correlated runs agree with each other very
   comfortably. Independence is a property of how each window was collected,
   recorded in ``isolation``, and no amount of comparison recovers it.
+- Agreement is about the repeatability structure, not output identity. A route
+  that never flips is compared only by its flip rate, so renaming its observed
+  outputs (``allow`` to ``review``) is invisible; flip pairs are compared by the
+  labels that formed them, so renaming disagreeing outputs shows as flip pairs
+  gained and lost. To require the reviewed outputs themselves to match, check
+  against a snapshot.
 
 Drift here means the evidence moved. Whether that is a regression, an
 improvement, or a relabelled taxonomy is a judgement this package does not make.
