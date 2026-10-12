@@ -77,12 +77,20 @@ def _binomial_tables(
 
 def _at_most(pairs: int, flips: int, p: float) -> float:
     """P(X <= flips) for X binomial with `pairs` trials at rate `p`."""
+    if flips < 0:
+        return 0.0
+    if flips >= pairs:
+        return 1.0
     prefix, _ = _binomial_tables(pairs, p)
     return prefix[flips]
 
 
 def _at_least(pairs: int, flips: int, p: float) -> float:
     """P(X >= flips) for X binomial with `pairs` trials at rate `p`."""
+    if flips <= 0:
+        return 1.0
+    if flips > pairs:
+        return 0.0
     _, suffix = _binomial_tables(pairs, p)
     return suffix[flips]
 

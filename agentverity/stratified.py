@@ -45,8 +45,11 @@ def _label(value: Any) -> str:
     A bare label and the typed ``Decision`` for it are the same decision, so
     both render as the label; comparing their rendered forms was how identical
     evidence reported gained and lost flip pairs. A ``NoDecision`` keeps its
-    own rendering, distinct from a decision of the same name.
+    own rendering, distinct from a decision of the same name, and a tool path
+    keeps its tuple rendering.
     """
+    if isinstance(value, str):
+        return value
     if isinstance(value, (list, tuple)):
         return repr(_hashable(value))
     key = comparison_key(value)

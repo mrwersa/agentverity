@@ -257,16 +257,29 @@ def test_the_binomial_helpers_match_the_direct_formula():
 
     from agentverity.sequential import _at_least, _at_most
 
-    rate = 0.3
-    for trials in (5, 10, 40):
-        for flips in (0, 1, trials // 2, trials):
-            direct_le = math.fsum(
-                math.comb(trials, i) * rate**i * (1 - rate) ** (trials - i)
-                for i in range(flips + 1)
-            )
-            direct_ge = math.fsum(
-                math.comb(trials, i) * rate**i * (1 - rate) ** (trials - i)
-                for i in range(flips, trials + 1)
-            )
-            assert _at_most(trials, flips, rate) == pytest.approx(direct_le, abs=1e-12)
-            assert _at_least(trials, flips, rate) == pytest.approx(direct_ge, abs=1e-12)
+    for rate in (1e-6, 0.3, 0.999999):
+        for trials in (5, 10, 40, 300):
+            for flips in (0, 1, trials // 2, trials):
+                direct_le = math.fsum(
+                    math.comb(trials, i) * rate**i * (1 - rate) ** (trials - i)
+                    for i in range(flips + 1)
+                )
+                direct_ge = math.fsum(
+                    math.comb(trials, i) * rate**i * (1 - rate) ** (trials - i)
+                    for i in range(flips, trials + 1)
+                )
+                assert _at_most(trials, flips, rate) == pytest.approx(
+                    direct_le, abs=1e-9
+                )
+                assert _at_least(trials, flips, rate) == pytest.approx(
+                    direct_ge, abs=1e-9
+                )
+
+
+def test_the_binomial_helpers_are_total():
+    from agentverity.sequential import _at_least, _at_most
+
+    assert _at_most(10, -1, 0.3) == 0.0
+    assert _at_most(10, 20, 0.3) == 1.0
+    assert _at_least(10, -1, 0.3) == 1.0
+    assert _at_least(10, 11, 0.3) == 0.0
