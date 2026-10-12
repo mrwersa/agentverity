@@ -580,3 +580,54 @@ class TestMixedRepresentationDoesNotFlip:
 
         with pytest.raises(EvidenceError, match="unknown no-decision reason"):
             load_evidence(path)
+
+
+class TestCategoricalEvidenceNeedsRealDecisions:
+    """An empty string is not a categorical decision.
+
+    `Decision("")` and the JSONL importer already refuse it; native evidence
+    accepted it, so a case with no decision could qualify and enter a snapshot
+    with an empty expected value.
+    """
+
+    def test_an_empty_verdict_is_refused(self):
+        with pytest.raises(EvidenceError, match="empty verdict"):
+            EvidenceSet(
+                cases=(
+                    EvidenceCase("empty", ("",) * 80),
+                    EvidenceCase("valid", ("allow",) * 80),
+                )
+            )
+
+    def test_empty_text_is_still_allowed_on_the_text_layer(self):
+        evidence = EvidenceSet(
+            cases=(EvidenceCase("blank", ("",) * 4),), layer="text"
+        )
+        assert evidence.layer == "text"
+
+
+class TestAContractNeedsTheVerdictLayer:
+    """A live run refuses a contract on any other layer; an import must too."""
+
+    @pytest.mark.parametrize(
+        "layer, observation",
+        [
+            ("text", "allow"),
+            ("tools", ("search",)),
+        ],
+    )
+    def test_a_non_verdict_layer_is_refused_a_contract(self, layer, observation):
+        suite = DecisionSuite(
+            DecisionContract(allowed={"allow", "block"}),
+            (DecisionCase("a", "allow"), DecisionCase("b", "block")),
+        )
+        evidence = EvidenceSet(
+            (
+                EvidenceCase("a", (observation,) * 80),
+                EvidenceCase("b", (observation,) * 80),
+            ),
+            layer=layer,
+        )
+
+        with pytest.raises(EvidenceError, match="verdict observation layer"):
+            assess_evidence(evidence, suite)

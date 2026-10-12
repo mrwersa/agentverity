@@ -345,7 +345,8 @@ decisions, `minimum_cases`, and per-route `stability_targets`.
 
 The suite's case inputs must match the evidence exactly. A contract checked
 against a different run would report coverage the run never had, so a mismatch
-is an error rather than a warning.
+is an error rather than a warning. A contract also requires the `verdict`
+layer, as a live run does, so it is refused on `text` or `tools` evidence.
 
 ## Exit codes
 

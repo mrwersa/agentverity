@@ -124,6 +124,17 @@ class EvidenceCase:
                 f"case {self.input!r}: {layer} observations must be strings"
                 + ("" if layer == "text" else " or typed outcomes")
             )
+        if layer == "verdict" and any(
+            isinstance(value, str) and not value for value in self.observations
+        ):
+            # An empty string is not a categorical decision. `Decision("")` is
+            # already refused and the JSONL importer rejects it, so accepting
+            # it here let a case with no decision qualify and enter a snapshot
+            # with an empty expected value.
+            raise EvidenceError(
+                f"case {self.input!r}: an empty verdict is not a categorical "
+                "decision; record the decision label or a typed NoDecision"
+            )
         if layer == "text":
             return tuple(
                 Observation(text=value)
@@ -369,7 +380,8 @@ def assess_evidence(
             post-hoc counterfactual and never changes the endpoint call.
 
     Raises:
-        EvidenceError: If a declared suite does not describe this evidence.
+        EvidenceError: If a declared suite does not describe this evidence, or
+            a suite is supplied for a non-``verdict`` layer.
     """
     from .blindness import score as blindness_score
     from .decision_contract import assess_decision_coverage
@@ -394,6 +406,13 @@ def assess_evidence(
         )
 
     if suite is not None:
+        if evidence.layer != "verdict":
+            raise EvidenceError(
+                "a decision contract requires the verdict observation layer; "
+                f"this evidence declares {evidence.layer!r}. A live run refuses "
+                "the same combination, so a contract assessed here could report "
+                "coverage a run could never produce."
+            )
         if tuple(suite.inputs) != evidence.inputs:
             raise EvidenceError(
                 "the declared suite does not describe this evidence: its case "
