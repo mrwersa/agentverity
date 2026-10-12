@@ -287,8 +287,8 @@ def _agent_and_inputs(
         inputs = None if args.suite else _load_inputs(args.inputs)
     except (
         AttributeError,
-        FileNotFoundError,
         ImportError,
+        OSError,
         TypeError,
         ValueError,
     ) as exc:
@@ -344,21 +344,21 @@ def _run_command(args: argparse.Namespace) -> int:
     ) as exc:
         print(f"run refused: {exc}", file=sys.stderr)
         return 2
-    config = RunConfig(
-        budget=args.budget,
-        precision=args.precision,
-        k=args.k,
-        epsilon=args.epsilon,
-        blindness_threshold=args.blindness_threshold,
-        layer=args.layer,
-        run_meter=not args.no_meter,
-        run_blindness=not args.no_blindness,
-        sequential=args.sequential,
-        curtail=args.curtail,
-        max_workers=args.max_workers,
-        error_policy=args.error_policy,
-    )
     try:
+        config = RunConfig(
+            budget=args.budget,
+            precision=args.precision,
+            k=args.k,
+            epsilon=args.epsilon,
+            blindness_threshold=args.blindness_threshold,
+            layer=args.layer,
+            run_meter=not args.no_meter,
+            run_blindness=not args.no_blindness,
+            sequential=args.sequential,
+            curtail=args.curtail,
+            max_workers=args.max_workers,
+            error_policy=args.error_policy,
+        )
         result = run(
             agent,
             inputs,
@@ -431,11 +431,15 @@ def _snapshot_command(args: argparse.Namespace) -> int:
         print(f"snapshot refused: {exc}", file=sys.stderr)
         return 2
     input_count = len(suite.cases) if suite is not None else len(inputs or ())
-    infeasible = _infeasible_reason(
-        input_count,
-        args.k,
-        resolve_epsilon(args.precision, args.epsilon),
-    )
+    try:
+        infeasible = _infeasible_reason(
+            input_count,
+            args.k,
+            resolve_epsilon(args.precision, args.epsilon),
+        )
+    except ValueError as exc:
+        print(f"snapshot refused: {exc}", file=sys.stderr)
+        return 2
     if infeasible is not None:
         # Refusing after the run would be honest but expensive: on a paid model
         # every one of those calls is spent proving something the arithmetic
@@ -496,21 +500,25 @@ def _check_command(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 2
-    result = run(
-        agent,
-        inputs,
-        suite=suite,
-        relations=[],
-        config=RunConfig(
-            k=snapshot.k,
-            epsilon=snapshot.epsilon,
-            blindness_threshold=snapshot.blindness_threshold,
-            layer=snapshot.layer,
-            max_workers=args.max_workers,
-            error_policy=args.error_policy,
-        ),
-        on_progress=_progress if args.progress else None,
-    )
+    try:
+        result = run(
+            agent,
+            inputs,
+            suite=suite,
+            relations=[],
+            config=RunConfig(
+                k=snapshot.k,
+                epsilon=snapshot.epsilon,
+                blindness_threshold=snapshot.blindness_threshold,
+                layer=snapshot.layer,
+                max_workers=args.max_workers,
+                error_policy=args.error_policy,
+            ),
+            on_progress=_progress if args.progress else None,
+        )
+    except ValueError as exc:
+        print(f"snapshot check refused: {exc}", file=sys.stderr)
+        return 2
     try:
         diff = compare_snapshot(snapshot, result)
     except (SnapshotRefused, SnapshotCompatibilityError) as exc:
@@ -883,7 +891,7 @@ def _assess_command(args: argparse.Namespace) -> int:
             epsilon=args.epsilon,
             replay_curtailment=args.replay_curtailment,
         )
-    except (TypeError, ValueError) as exc:
+    except (OSError, TypeError, ValueError) as exc:
         print(f"assessment refused: {exc}", file=sys.stderr)
         return 2
     print(result.summary())
@@ -953,12 +961,16 @@ def _plan_command(args: argparse.Namespace) -> int:
         )
         return 2
 
-    suite = load_decision_suite(args.suite)
-    plans = plan_route_repeats(
-        suite.expected,
-        epsilon=epsilon,
-        targets=suite.contract.stability_targets,
-    )
+    try:
+        suite = load_decision_suite(args.suite)
+        plans = plan_route_repeats(
+            suite.expected,
+            epsilon=epsilon,
+            targets=suite.contract.stability_targets,
+        )
+    except (OSError, TypeError, ValueError) as exc:
+        print(f"plan refused: {exc}", file=sys.stderr)
+        return 2
     print("agentverity — zero-flip call plan")
     print(render_plan(plans, compare_uniform=True))
     print(

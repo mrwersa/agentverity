@@ -9,6 +9,7 @@ Stability is a precondition for snapshot testing. It is not correctness.
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -56,6 +57,77 @@ def _render_reference(value: Any) -> str:
         if isinstance(reason, str):
             return f"no decision: {reason}"
     return json.dumps(value, sort_keys=True)
+
+
+def _snapshot_number(value: Any, name: str, *, integer: bool) -> float | int:
+    """Convert a stored number, refusing a bool or an unconvertible value.
+
+    ``json.loads`` accepts ``Infinity``, ``NaN`` and huge literals, so
+    ``float(...)`` or ``int(...)`` can raise ``OverflowError`` on a file that
+    parsed. Turning every such failure into a compatibility refusal keeps a
+    corrupt reference from crashing the reader.
+    """
+    if isinstance(value, bool):
+        raise SnapshotCompatibilityError(
+            f"snapshot {name} must be a number, got {value!r}"
+        )
+    try:
+        return int(value) if integer else float(value)
+    except (OverflowError, TypeError, ValueError) as exc:
+        raise SnapshotCompatibilityError(
+            f"invalid snapshot {name}: {exc}"
+        ) from exc
+
+
+def _validate_snapshot_numbers(
+    *,
+    epsilon: float,
+    k: int,
+    blindness_threshold: float,
+    meter_pair_trials: int,
+    meter_ci_high: float,
+    blindness_skew: float,
+    blindness_distinct: int,
+) -> None:
+    """Refuse a stored snapshot whose numbers no run could have produced.
+
+    A snapshot file is hand-editable, and this is the reader's only chance to
+    catch a value that admission could never have written. Rejecting here means
+    `inspect` and `check` report a corrupt reference rather than acting on an
+    impossible one.
+    """
+    if not math.isfinite(epsilon) or not 0 < epsilon < 1:
+        raise SnapshotCompatibilityError(
+            f"snapshot epsilon must be between 0 and 1, got {epsilon!r}"
+        )
+    if k < 2:
+        raise SnapshotCompatibilityError(
+            f"snapshot k must be at least 2 repeats per input, got {k}"
+        )
+    if not math.isfinite(blindness_threshold) or not 0 < blindness_threshold <= 1:
+        raise SnapshotCompatibilityError(
+            "snapshot blindness threshold must be above 0 and at most 1, got "
+            f"{blindness_threshold!r}"
+        )
+    if meter_pair_trials < 1:
+        raise SnapshotCompatibilityError(
+            "snapshot must record at least one disjoint pair, got "
+            f"{meter_pair_trials}"
+        )
+    for name, value in (
+        ("meter_ci_high", meter_ci_high),
+        ("blindness_skew", blindness_skew),
+    ):
+        if not math.isfinite(value) or not 0 <= value <= 1:
+            raise SnapshotCompatibilityError(
+                f"snapshot {name} must be a proportion between 0 and 1, got "
+                f"{value!r}"
+            )
+    if blindness_distinct < 1:
+        raise SnapshotCompatibilityError(
+            "snapshot must record at least one distinct verdict, got "
+            f"{blindness_distinct}"
+        )
 
 
 class SnapshotRefused(ValueError):
@@ -302,25 +374,55 @@ class Snapshot:
                 raise SnapshotCompatibilityError(
                     "contract snapshot probes require intended decisions"
                 )
+            epsilon = _snapshot_number(config["epsilon"], "epsilon", integer=False)
+            k = _snapshot_number(config["k"], "k", integer=True)
+            blindness_threshold = _snapshot_number(
+                config["blindness_threshold"],
+                "blindness_threshold",
+                integer=False,
+            )
+            meter_pair_trials = _snapshot_number(
+                evidence["meter_pair_trials"], "meter_pair_trials", integer=True
+            )
+            meter_ci_high = _snapshot_number(
+                evidence["meter_ci_high"], "meter_ci_high", integer=False
+            )
+            blindness_skew = _snapshot_number(
+                evidence["blindness_skew"], "blindness_skew", integer=False
+            )
+            blindness_distinct = _snapshot_number(
+                evidence["blindness_distinct"],
+                "blindness_distinct",
+                integer=True,
+            )
+            _validate_snapshot_numbers(
+                epsilon=epsilon,
+                k=k,
+                blindness_threshold=blindness_threshold,
+                meter_pair_trials=meter_pair_trials,
+                meter_ci_high=meter_ci_high,
+                blindness_skew=blindness_skew,
+                blindness_distinct=blindness_distinct,
+            )
             return cls(
                 schema=SNAPSHOT_SCHEMA,
                 created_at=str(value["created_at"]),
                 agentverity_version=str(value["agentverity_version"]),
                 layer=str(config["layer"]),
-                epsilon=float(config["epsilon"]),
-                k=int(config["k"]),
-                blindness_threshold=float(config["blindness_threshold"]),
-                meter_pair_trials=int(evidence["meter_pair_trials"]),
-                meter_ci_high=float(evidence["meter_ci_high"]),
-                blindness_skew=float(evidence["blindness_skew"]),
-                blindness_distinct=int(evidence["blindness_distinct"]),
+                epsilon=epsilon,
+                k=k,
+                blindness_threshold=blindness_threshold,
+                meter_pair_trials=meter_pair_trials,
+                meter_ci_high=meter_ci_high,
+                blindness_skew=blindness_skew,
+                blindness_distinct=blindness_distinct,
                 decision_contract=decision_contract,
                 probes=parsed_probes,
                 isolation=str(isolation),
             )
         except SnapshotCompatibilityError:
             raise
-        except (KeyError, TypeError, ValueError) as exc:
+        except (KeyError, OverflowError, TypeError, ValueError) as exc:
             raise SnapshotCompatibilityError(
                 f"invalid snapshot structure: {exc}"
             ) from exc
@@ -733,7 +835,7 @@ def load_snapshot(path: str | Path) -> Snapshot:
     """Load a versioned snapshot from disk."""
     try:
         value = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise SnapshotCompatibilityError(f"cannot load snapshot: {exc}") from exc
     if not isinstance(value, dict):
         raise SnapshotCompatibilityError("snapshot root must be a JSON object")
