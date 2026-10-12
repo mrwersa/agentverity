@@ -356,9 +356,14 @@ the denominator.
 
 | Code | Meaning |
 |---|---|
-| `0` | Admissible |
+| `0` | Assessed: an interpretable result was produced |
 | `1` | Contract failure, blindness, a missed target, or violations |
 | `2` | Undecided, or the evidence could not be read |
+
+Exit `0` means the assessment completed and can be read, not that the evidence
+may become a baseline. Stochastic evidence exits `0` here, and snapshot
+admission refuses it; `0` is not "admissible". Admission is the separate
+`snapshot` step, which applies its own policy.
 
 ## Privacy
 
@@ -433,3 +438,9 @@ either one. Two correlated runs agree with each other very comfortably.
 Independence is a property of how each window was collected, recorded in
 `isolation`, and no comparison recovers it. The note travels with every
 comparison for that reason.
+
+`NO CHANGE` is agreement about the repeatability structure and the intended
+routes, not output identity. Replacing every observed label (`allow`/`block` to
+`review`/`deny`) leaves the routes and their flip-pair shapes unchanged, so the
+comparison reports no drift even though no output is the same. To require the
+reviewed outputs themselves to match, use `snapshot` and `check`.

@@ -29,7 +29,7 @@ agentverity~=0.25.0
 That accepts compatible `0.25.x` fixes without moving to a later pre-1.0 minor
 series.
 
-Version 0.23 reads and writes one version of each schema:
+The package reads and writes one version of each schema:
 `agentverity.run/v2`, `agentverity.telemetry/v2`, `agentverity.snapshot/v4`,
 `agentverity.evidence/v2` and `agentverity.decision-suite/v1`. The numbers
 differ because each records its own format history, not a release. Evidence is
