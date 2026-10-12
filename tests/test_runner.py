@@ -957,3 +957,39 @@ class TestTypedHarnessFailures:
         )
         assert failed.pair_trials == 0
         assert any(error.phase == "meter" for error in result.errors)
+
+
+def test_a_separate_source_observation_counts_toward_case_reach():
+    """A decision seen only in the separate source scan is still observed.
+
+    With `reuse_unchanged_calls=False` the source scan is its own repeat. A
+    decision it returns must count toward that case's reach, or the report
+    lists a decision the run actually saw as missing.
+    """
+    from agentverity import (
+        DecisionCase,
+        DecisionContract,
+        DecisionSuite,
+        Observation,
+    )
+
+    suite = DecisionSuite(
+        DecisionContract(allowed={"allow", "block"}),
+        (DecisionCase("a", "allow"), DecisionCase("b", "block")),
+    )
+    counts: dict[str, int] = {}
+
+    def agent(text: str) -> Observation:
+        counts[text] = counts.get(text, 0) + 1
+        verdict = "block" if text == "b" and counts[text] > 4 else "allow"
+        return Observation(verdict=verdict)
+
+    result = run(
+        agent,
+        suite=suite,
+        relations=[],
+        config=RunConfig(k=4, epsilon=0.5, reuse_unchanged_calls=False),
+    )
+
+    assert result.observed_keys == ("allow", "block")
+    assert result.decision_coverage.missing_observed == ()

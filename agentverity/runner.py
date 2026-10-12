@@ -37,6 +37,7 @@ from agentverity.decision_contract import (
     DecisionSuite,
     assess_decision_coverage,
 )
+from agentverity.evidence import independence_caveat
 from agentverity.execution import (
     ErrorPolicy,
     ProgressCallback,
@@ -1631,16 +1632,31 @@ def run(
                 for observation in repeated_observations
             )
             + observed_keys,
+            # Reach counts one vote per case. The source key is already among
+            # the case keys when `reuse_unchanged_calls` is on; a per-case set
+            # in `assess_decision_coverage` dedupes it, so this is a no-op
+            # there and only adds the separately collected observation.
             per_case=tuple(
-                tuple(observation.key(config.layer) for observation in observations)
-                if observations
-                else ((key,) if key is not None else ())
+                tuple(
+                    observation.key(config.layer) for observation in observations
+                )
+                + ((key,) if key is not None else ())
                 for observations, key in zip(case_series, observed_keys)
             ),
         )
         if suite is not None
         else None
     )
+
+    caveats: tuple[str, ...] = (
+        (_EVALUATION_PERIOD_CAVEAT,) if config.run_meter else ()
+    )
+    # A live run carries the same independence warning imported evidence does:
+    # a report that states a conclusion while hiding that repeats were not
+    # independent is the reading the snapshot policy refuses to publish.
+    isolation_caveat = independence_caveat(declared)
+    if isolation_caveat is not None:
+        caveats += (isolation_caveat,)
 
     return RunResult(
         meter=meter_result,
@@ -1661,7 +1677,7 @@ def run(
                 ),
             )
         ),
-        caveats=(_EVALUATION_PERIOD_CAVEAT,) if config.run_meter else (),
+        caveats=caveats,
         input_fingerprints=tuple(input_fingerprint(text) for text in inputs),
         observed_keys=observed_keys,
         intended_decisions=intended_decisions,

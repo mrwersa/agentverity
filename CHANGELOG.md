@@ -37,6 +37,13 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   qualified and could enter a snapshot with an empty expected decision.
 - `assess_evidence` refuses a decision contract on any layer but `verdict`,
   matching the check a live run already applies.
+- A live run now carries the same independence caveat as imported evidence,
+  and its JSON report includes the recorded `isolation`. A declared
+  shared-session run used to print a qualified result with no warning that its
+  repeats were not independent.
+- A decision seen only in the separate source scan now counts toward its
+  case's observed reach, so a run with `reuse_unchanged_calls=False` no longer
+  reports a decision it actually observed as missing.
 
 ## [0.25.0] - 2026-10-12
 

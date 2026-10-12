@@ -206,17 +206,18 @@ def test_the_cli_prints_the_weakening_before_the_verdict(tmp_path, capsys):
     assert printed.index("provenance") < printed.index("snapshot clean")
 
 
-def test_a_live_run_records_no_isolation_yet():
-    """States the limitation rather than leaving it to be discovered.
+def test_a_live_run_reports_the_isolation_it_declared():
+    """A declaration reaches the report, rather than being read and dropped."""
+    from agentverity import Observation, RunConfig, run
+    from agentverity.isolation import declare_isolation
 
-    The runner never sets isolation, so for a live run the policy is inert:
-    a baseline and a later check both read `unknown` and nothing is refused.
-    It bites on imported evidence, which is where isolation is recorded today.
-    Adapter-level provenance is the other half of roadmap item 4.
-    """
-    from agentverity.runner import RunResult
+    agent = declare_isolation(
+        lambda text: Observation(verdict="allow" if text == "a" else "block"),
+        "fresh-instance",
+    )
+    result = run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
 
-    assert RunResult.isolation == "unknown"
+    assert result.isolation == "fresh-instance"
 
 
 def test_the_saved_file_carries_the_new_schema(tmp_path):
@@ -302,3 +303,56 @@ def test_the_isolation_flag_reaches_the_importer_and_is_refused_elsewhere(
 
     assert main(["assess", "--evidence", str(evidence), "--isolation", "fresh-session"]) == 2
     assert "--isolation applies to" in capsys.readouterr().err
+
+
+class TestALiveRunCarriesTheIndependenceWarning:
+    """A live run must not state a conclusion while hiding that repeats were
+    not independent, any more than an imported assessment may."""
+
+    def test_a_shared_session_run_warns_in_its_report(self):
+        from agentverity import Observation, RunConfig, run
+        from agentverity.isolation import declare_isolation
+        from agentverity.reporting import run_result_to_dict, run_result_to_junit_xml
+
+        agent = declare_isolation(
+            lambda text: Observation(verdict="allow" if text == "a" else "block"),
+            "shared-session",
+        )
+        result = run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
+
+        assert result.isolation == "shared-session"
+        assert any("not independent" in caveat for caveat in result.caveats)
+        assert "not independent" in result.summary()
+        assert "not independent" in run_result_to_junit_xml(result)
+        assert run_result_to_dict(result)["isolation"] == "shared-session"
+
+    def test_an_undeclared_run_says_independence_is_assumed(self):
+        from agentverity import Observation, RunConfig, run
+
+        result = run(
+            lambda text: Observation(verdict="allow" if text == "a" else "block"),
+            ["a", "b"],
+            relations=[],
+            config=RunConfig(k=4, epsilon=0.5),
+        )
+
+        assert result.isolation == "unknown"
+        assert any(
+            "assumed rather than established" in caveat
+            for caveat in result.caveats
+        )
+
+    def test_a_fresh_session_run_carries_no_independence_caveat(self):
+        from agentverity import Observation, RunConfig, run
+        from agentverity.isolation import declare_isolation
+
+        agent = declare_isolation(
+            lambda text: Observation(verdict="allow" if text == "a" else "block"),
+            "fresh-session",
+        )
+        result = run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
+
+        assert not any(
+            "not independent" in caveat or "assumed" in caveat
+            for caveat in result.caveats
+        )

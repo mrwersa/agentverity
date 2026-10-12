@@ -13,7 +13,7 @@
     "warning": null
   },
   "caveats": [
-    "the file does not record how trials were isolated, so independence is assumed rather than established"
+    "how trials were isolated is not recorded, so independence is assumed rather than established"
   ],
   "complete": true,
   "config": {
