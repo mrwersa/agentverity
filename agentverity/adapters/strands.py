@@ -36,8 +36,18 @@ AgentFactory = Callable[[], Any]
 AgentInvoker = Callable[[Any, str], Any]
 
 
+def _coerce_verdict(value: Any) -> Any:
+    """Preserve a typed outcome; stringify a plain value; None/'' stay absent."""
+    if isinstance(value, (Decision, NoDecision)):
+        return value
+    if value is None:
+        return None
+    text = str(value)
+    return text or None
+
+
 def _verdict_field(mapping: Any, verdict_key: str | None) -> Any:
-    """Read a verdict from structured output, preserving a typed outcome.
+    """Read a verdict from a serialised mapping, preserving a typed outcome.
 
     A plain string is a decision label and stays one. A ``Decision`` or
     ``NoDecision`` is passed through rather than stringified, because
@@ -48,14 +58,29 @@ def _verdict_field(mapping: Any, verdict_key: str | None) -> Any:
     """
     keys = (verdict_key,) if verdict_key is not None else ("verdict", "decision")
     for key in keys:
-        value = mapping.get(key)
-        if isinstance(value, (Decision, NoDecision)):
-            return value
-        if value is None:
-            continue
-        text = str(value)
-        if text:
-            return text
+        parsed = _coerce_verdict(mapping.get(key))
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def _attribute_verdict(structured: Any, verdict_key: str | None) -> Any:
+    """Read a verdict from live attributes, before any serialisation.
+
+    A Pydantic model holds the typed outcome on its field. ``model_dump()``
+    recursively serialises that field into a plain dict, so
+    ``NoDecision("runtime_error")`` arrives as ``{"reason": "runtime_error"}``
+    and the adapter stringifies it into a dictionary string. Reading the
+    attribute first keeps the type.
+    """
+    if isinstance(structured, dict):
+        return None
+    keys = (verdict_key,) if verdict_key is not None else ("verdict", "decision")
+    for key in keys:
+        if hasattr(structured, key):
+            parsed = _coerce_verdict(getattr(structured, key))
+            if parsed is not None:
+                return parsed
     return None
 
 
@@ -173,10 +198,14 @@ def _extract(
     structured = getattr(result, "structured_output", None)
     verdict = None
     if structured is not None:
-        if hasattr(structured, "model_dump"):
-            verdict = _verdict_field(structured.model_dump(), verdict_key)
-        elif isinstance(structured, dict):
-            verdict = _verdict_field(structured, verdict_key)
+        # Live attributes first: a Pydantic model's model_dump() would already
+        # have serialised a typed outcome into a dict by this point.
+        verdict = _attribute_verdict(structured, verdict_key)
+        if verdict is None:
+            if hasattr(structured, "model_dump"):
+                verdict = _verdict_field(structured.model_dump(), verdict_key)
+            elif isinstance(structured, dict):
+                verdict = _verdict_field(structured, verdict_key)
 
     return Observation(
         text=text,

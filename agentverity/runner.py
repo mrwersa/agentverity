@@ -990,53 +990,28 @@ def _resolve(config: RunConfig, inputs: Iterable[str]) -> RunConfig:
     return replace(config, k=k, epsilon=epsilon)
 
 
-def _drop_harness_failures(
-    series: list[list[Observation] | None],
-    texts: list[str],
-    *,
-    layer: str,
-    config: RunConfig,
-    phase: str,
-) -> tuple[list[list[Observation] | None], list[RunError]]:
-    """Remove repeat series holding a typed harness failure, per error_policy.
+def _incomplete_message(observation: Observation) -> str:
+    """Why a typed harness failure cannot be scored as a decision."""
+    return (
+        f"a repeat series contains {observation.outcome}, which means the "
+        "harness failed rather than the agent answering. Evidence containing "
+        "it is incomplete and must not be scored for stability."
+    )
 
-    A ``NoDecision`` harness failure is not a decision, so a series containing
-    one cannot be scored: the pooled statistic would count the failure as
-    stability. ``error_policy`` decides what that costs, exactly as for a call
-    that raised. ``raise`` stops the run; ``record`` marks the case failed and
-    keeps the others, which is the same treatment a raised agent call gets.
+
+def _checked_observation(agent: AgentFn, text: str, layer: str) -> Observation:
+    """Call the agent once, refusing a typed harness failure as a failed call.
+
+    Detection belongs here, not after collection: a failed observation must
+    not reach pair comparison, a stopping checkpoint, or the curtailment
+    arithmetic, and under ``error_policy="raise"`` the run must stop at the
+    failure rather than finish the schedule. Raising inside the mapped call
+    gives a typed failure exactly the treatment a raised agent exception gets.
     """
-    if layer != "verdict":
-        return series, []
-    kept: list[list[Observation] | None] = []
-    failures: list[RunError] = []
-    for index, run_series in enumerate(series):
-        failure = None
-        for observation in run_series or ():
-            if observation.is_incomplete:
-                failure = observation
-                break
-        if failure is None:
-            kept.append(run_series)
-            continue
-        message = (
-            f"a repeat series contains {failure.outcome}, which means the "
-            "harness failed rather than the agent answering. Evidence "
-            "containing it is incomplete and must not be scored for stability."
-        )
-        if config.error_policy == "raise":
-            raise OutcomeNotScorable(message)
-        failures.append(
-            RunError(
-                phase=phase,
-                input_index=index,
-                input_fingerprint=input_fingerprint(texts[index]),
-                exception_type="OutcomeNotScorable",
-                message=message,
-            )
-        )
-        kept.append(None)
-    return kept, failures
+    observation = agent(text)
+    if layer == "verdict" and observation.is_incomplete:
+        raise OutcomeNotScorable(_incomplete_message(observation))
+    return observation
 
 
 def _collect_sequentially(
@@ -1086,7 +1061,10 @@ def _collect_sequentially(
         spent += 2 * len(live)
         round_work = map_indexed_inputs(
             live,
-            lambda index, text: [agent(text), agent(text)],
+            lambda index, text: [
+                _checked_observation(agent, text, config.layer),
+                _checked_observation(agent, text, config.layer),
+            ],
             phase="meter",
             max_workers=config.max_workers,
             error_policy=config.error_policy,
@@ -1146,7 +1124,10 @@ def _collect_with_curtailment(
             spent_calls += 2
             work = map_indexed_inputs(
                 [(index, text)],
-                lambda _index, value: [agent(value), agent(value)],
+                lambda _index, value: [
+                    _checked_observation(agent, value, config.layer),
+                    _checked_observation(agent, value, config.layer),
+                ],
                 phase="meter",
                 max_workers=1,
                 error_policy=config.error_policy,
@@ -1200,7 +1181,7 @@ def _collect_with_curtailment(
         spent_calls += len(odd)
         work = map_indexed_inputs(
             odd,
-            lambda _index, text: agent(text),
+            lambda _index, text: _checked_observation(agent, text, config.layer),
             phase="meter",
             max_workers=1,
             error_policy=config.error_policy,
@@ -1350,10 +1331,6 @@ def run(
             _collect_sequentially(agent, list(inputs), config, on_progress)
         )
         errors.extend(meter_errors)
-        series, incomplete_errors = _drop_harness_failures(
-            series, list(inputs), layer=config.layer, config=config, phase="meter"
-        )
-        errors.extend(incomplete_errors)
         complete_series = [
             run_series
             for run_series in series
@@ -1416,10 +1393,6 @@ def run(
             on_progress,
         )
         errors.extend(meter_errors)
-        series, incomplete_errors = _drop_harness_failures(
-            series, list(inputs), layer=config.layer, config=config, phase="meter"
-        )
-        errors.extend(incomplete_errors)
         complete_series = [
             run_series
             for run_series in series
@@ -1453,21 +1426,17 @@ def run(
     elif config.run_meter:
         meter_work = map_inputs(
             inputs,
-            lambda index, text: [agent(text) for _ in range(repeats_per_input[index])],
+            lambda index, text: [
+                _checked_observation(agent, text, config.layer)
+                for _ in range(repeats_per_input[index])
+            ],
             phase="meter",
             max_workers=config.max_workers,
             error_policy=config.error_policy,
             on_progress=on_progress,
         )
         errors.extend(meter_work.errors)
-        series, incomplete_errors = _drop_harness_failures(
-            list(meter_work.values),
-            list(inputs),
-            layer=config.layer,
-            config=config,
-            phase="meter",
-        )
-        errors.extend(incomplete_errors)
+        series = list(meter_work.values)
         complete_series = [
             observations for observations in series if observations is not None
         ]
@@ -1516,7 +1485,9 @@ def run(
         if missing:
             source_work = map_indexed_inputs(
                 missing,
-                lambda _index, text: agent(text),
+                lambda _index, text: _checked_observation(
+                    agent, text, config.layer
+                ),
                 phase="blindness" if config.run_blindness else "decision_contract",
                 max_workers=config.max_workers,
                 error_policy=config.error_policy,

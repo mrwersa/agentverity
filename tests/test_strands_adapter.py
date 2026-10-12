@@ -141,6 +141,29 @@ class TestFromStrands:
         )
         assert from_strands(_mock_strands_agent(result))("hi").verdict == "allow"
 
+    def test_a_typed_outcome_survives_a_serialising_model_dump(self):
+        """A Pydantic model serialises NoDecision to {"reason": ...} in model_dump.
+
+        The live attribute keeps the typed outcome; reading model_dump first
+        would stringify the dict into a label.
+        """
+        from agentverity import NoDecision
+
+        class FakeStructured:
+            def __init__(self):
+                self.verdict = NoDecision("runtime_error")
+
+            def model_dump(self):
+                return {"verdict": {"reason": "runtime_error"}}
+
+        result = _make_result(
+            [{"text": "x"}], structured_output=FakeStructured()
+        )
+        obs = from_strands(_mock_strands_agent(result))("hi")
+
+        assert obs.verdict == NoDecision("runtime_error")
+        assert obs.is_incomplete
+
 
 class TestFromStrandsFactory:
     def test_each_call_uses_a_fresh_agent(self):

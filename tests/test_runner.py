@@ -753,7 +753,7 @@ class TestTypedHarnessFailures:
         )
 
         assert recorded.complete is False
-        assert len(recorded.errors) == 2
+        assert sum(error.phase == "meter" for error in recorded.errors) == 2
 
     def test_a_relation_harness_failure_is_recorded_not_scored(self):
         from agentverity import NoDecision, Observation, Relation
@@ -831,3 +831,59 @@ class TestTypedHarnessFailures:
                 relations=[relation],
                 config=RunConfig(k=4, epsilon=0.5, error_policy="raise"),
             )
+
+    def test_sequential_stops_at_a_typed_failure(self):
+        from agentverity import NoDecision, Observation, OutcomeNotScorable
+
+        calls: dict[str, int] = {}
+
+        def agent(text: str) -> Observation:
+            calls[text] = calls.get(text, 0) + 1
+            verdict = NoDecision("runtime_error") if text == "bad" else "allow"
+            return Observation(verdict=verdict)
+
+        with pytest.raises(OutcomeNotScorable, match="harness"):
+            run(
+                agent,
+                ["bad", "good"],
+                relations=[],
+                config=RunConfig(
+                    epsilon=0.2,
+                    sequential=True,
+                    error_policy="raise",
+                    run_blindness=False,
+                ),
+            )
+
+        # A failed pair must not be collected, compared, or made to spend the
+        # rest of the schedule before the refusal.
+        assert sum(calls.values()) == 1
+
+    def test_a_failed_separate_source_scan_is_recorded(self):
+        from agentverity import NoDecision, Observation
+
+        calls: dict[str, int] = {}
+
+        def agent(text: str) -> Observation:
+            calls[text] = calls.get(text, 0) + 1
+            verdict = (
+                NoDecision("runtime_error")
+                if text == "a" and calls[text] > 4
+                else ("allow" if text == "a" else "block")
+            )
+            return Observation(verdict=verdict)
+
+        result = run(
+            agent,
+            ["a", "b"],
+            relations=[],
+            config=RunConfig(
+                k=4,
+                epsilon=0.5,
+                reuse_unchanged_calls=False,
+                error_policy="record",
+            ),
+        )
+
+        assert result.complete is False
+        assert any(error.phase == "blindness" for error in result.errors)
