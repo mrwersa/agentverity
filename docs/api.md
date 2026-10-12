@@ -138,6 +138,9 @@ declared contract and each case's intended decision.
   fields only and makes no calls. It marks the stored Wilson bound as
   diagnostic and `k` as a configured minimum, because the schema records
   neither the admission rule nor the repeats actually collected.
+- `SnapshotDiff.render()` renders a `compare_snapshot` result the same way:
+  references checked, isolation on each side, any provenance weakening ahead
+  of the result, and every changed reference. `agentverity check` prints it.
 
 A route proven stochastic blocks snapshot admission even when the pooled meter
 looks deterministic. An untargeted undecided route remains a diagnostic. A

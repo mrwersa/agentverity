@@ -516,21 +516,11 @@ def _check_command(args: argparse.Namespace) -> int:
     except (SnapshotRefused, SnapshotCompatibilityError) as exc:
         print(f"snapshot check refused: {exc}", file=sys.stderr)
         return 2
-    # Printed before the verdict either way. A clean check that quietly rests
+    # Provenance precedes the result, because a clean check that quietly rests
     # on weaker provenance than the baseline is the reading this is here to
     # prevent, and it is exactly the case a reader would otherwise skip.
-    if diff.provenance_note is not None:
-        print(f"provenance: {diff.provenance_note}")
-    if diff.clean:
-        print(f"snapshot clean: {diff.checked}/{diff.checked} references matched")
-        return 0
-    print(f"snapshot drift: {len(diff.changes)}/{diff.checked} references changed")
-    for change in diff.changes:
-        print(
-            f"  sha256={change.input_fingerprint[:12]} "
-            f"expected={change.expected!r} actual={change.actual!r}"
-        )
-    return 1
+    print(diff.render())
+    return 0 if diff.clean else 1
 
 
 def _inspect_command(args: argparse.Namespace) -> int:

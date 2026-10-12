@@ -678,3 +678,39 @@ class TestTheRegressionReferenceView:
         assert "configured k" in text
         assert "repeats per input" not in text
         assert "repeats actually collected" in text
+
+
+class TestTheReferenceCheckView:
+    """The comparison result renders like the stored reference, not ad hoc."""
+
+    def test_a_clean_check_names_the_count_and_isolation(self):
+        snapshot = create_snapshot(_result(), approved=True)
+        text = compare_snapshot(snapshot, _result()).render()
+        assert text.startswith("regression reference check")
+        assert "snapshot clean (4/4 references matched)" in text
+        assert "isolation   unknown -> unknown" in text
+
+    def test_a_drift_check_lists_each_changed_reference(self):
+        snapshot = create_snapshot(_result(), approved=True)
+
+        def changed(text: str) -> dict:
+            if text == "allow-a":
+                return {"verdict": "block"}
+            return _gate(text)
+
+        text = compare_snapshot(snapshot, _result(agent=changed)).render()
+        assert "snapshot drift (1/4 references changed)" in text
+        assert "changed references (1)" in text
+        assert 'expected="allow"' in text
+        assert 'actual="block"' in text
+
+    def test_the_view_never_prints_a_raw_input(self):
+        snapshot = create_snapshot(_result(), approved=True)
+
+        def changed(text: str) -> dict:
+            if text == "allow-a":
+                return {"verdict": "block"}
+            return _gate(text)
+
+        text = compare_snapshot(snapshot, _result(agent=changed)).render()
+        assert not any(probe in text for probe in INPUTS)

@@ -379,6 +379,52 @@ class SnapshotDiff:
             "evidence that admitted the baseline"
         )
 
+    def render(self) -> str:
+        """Return a plain-language view of a comparison against a reference.
+
+        Read-only and complete from the compared fields: it states how many
+        references were checked, whether any changed, the isolation on each
+        side, and any provenance weakening. It adds no measurement and calls
+        nothing. Provenance precedes the result, because a clean check resting
+        on weaker evidence than the baseline is the reading a reader would
+        otherwise skip.
+        """
+        if self.clean:
+            result = (
+                f"snapshot clean ({self.checked}/{self.checked} references matched)"
+            )
+        else:
+            result = (
+                f"snapshot drift ({len(self.changes)}/{self.checked} "
+                "references changed)"
+            )
+        rows = [
+            ("isolation", f"{self.isolation_before} -> {self.isolation_after}"),
+        ]
+        if self.provenance_note is not None:
+            rows.append(("provenance", self.provenance_note))
+        rows.append(("result", result))
+        lines = [
+            "regression reference check",
+            *(f"  {label:<11} {value}" for label, value in rows),
+        ]
+        if self.changes:
+            lines += ["", f"changed references ({len(self.changes)})"]
+            for change in self.changes:
+                lines.append(
+                    f"  sha256={change.input_fingerprint[:12]}  "
+                    f"expected={_render_reference(change.expected)}  "
+                    f"actual={_render_reference(change.actual)}"
+                )
+        lines += [
+            "",
+            "limits",
+            "  a match confirms the recorded decision layer was preserved, not",
+            "  that it was correct, and only for the reference's recorded",
+            "  projection and tolerance.",
+        ]
+        return "\n".join(lines)
+
 
 def _package_version() -> str:
     try:

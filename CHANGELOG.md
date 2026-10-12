@@ -8,6 +8,13 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `SnapshotDiff.render()` renders a `compare_snapshot` result in the same
+  plain-language form as `Snapshot.render()`, with any provenance weakening
+  ahead of the result and every changed reference listed. `agentverity check`
+  now prints this view instead of ad-hoc lines.
+
 ## [0.24.1] - 2026-10-11
 
 ### Changed
