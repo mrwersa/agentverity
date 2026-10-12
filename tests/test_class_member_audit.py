@@ -23,17 +23,26 @@ def test_current_class_members_match_the_published_release():
     assert fixture["producer"] == "agentverity==0.23.0"
     assert fixture["surface"]["schema"] == AUDIT_SCHEMA
     current = deepcopy(collect_class_members())
-    snapshot = current["classes"]["Snapshot"]
-    render = next(
-        member for member in snapshot["members"] if member["name"] == "render"
-    )
-    assert render == {
+    render_signature = {
         "name": "render",
         "kind": "method",
         "signature": "(self) -> 'str'",
     }
+    snapshot = current["classes"]["Snapshot"]
+    assert next(
+        member for member in snapshot["members"] if member["name"] == "render"
+    ) == render_signature
     snapshot["members"] = [
         member for member in snapshot["members"] if member["name"] != "render"
+    ]
+    snapshot_diff = current["classes"]["SnapshotDiff"]
+    assert next(
+        member for member in snapshot_diff["members"] if member["name"] == "render"
+    ) == render_signature
+    snapshot_diff["members"] = [
+        member
+        for member in snapshot_diff["members"]
+        if member["name"] != "render"
     ]
     assert current == fixture["surface"]
 

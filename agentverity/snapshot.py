@@ -355,8 +355,9 @@ class SnapshotDiff:
 
         Only one case reaches here, because `shared-session` is refused on both
         sides: a baseline certified from separated trials, checked against a
-        run that does not say. The observations still match, and the match is
-        real. What weakened is how much the new evidence establishes.
+        run that does not say. The observations may still match; what weakened
+        is how much the new evidence establishes. The note does not assert a
+        match, because a check can drift and weaken at once.
 
         This reports rather than fails, unlike admission. Admission is where a
         number becomes a commitment. A check compares two runs that both
@@ -374,10 +375,56 @@ class SnapshotDiff:
             return None
         return (
             f"the baseline was certified under {self.isolation_before!r} and "
-            f"this run records {self.isolation_after!r}, so the observations "
-            "match but the current evidence establishes less than the "
-            "evidence that admitted the baseline"
+            f"this run records {self.isolation_after!r}, so the current "
+            "evidence establishes less than the evidence that admitted the "
+            "baseline"
         )
+
+    def render(self) -> str:
+        """Return a plain-language view of a comparison against a reference.
+
+        Read-only and complete from the compared fields: it states how many
+        references were checked, whether any changed, the isolation on each
+        side, and any provenance weakening. It adds no measurement and calls
+        nothing. Provenance precedes the result, because a clean check resting
+        on weaker evidence than the baseline is the reading a reader would
+        otherwise skip.
+        """
+        if self.clean:
+            result = (
+                f"snapshot clean ({self.checked}/{self.checked} references matched)"
+            )
+        else:
+            result = (
+                f"snapshot drift ({len(self.changes)}/{self.checked} "
+                "references changed)"
+            )
+        rows = [
+            ("isolation", f"{self.isolation_before} -> {self.isolation_after}"),
+        ]
+        if self.provenance_note is not None:
+            rows.append(("provenance", self.provenance_note))
+        rows.append(("result", result))
+        lines = [
+            "regression reference check",
+            *(f"  {label:<11} {value}" for label, value in rows),
+        ]
+        if self.changes:
+            lines += ["", f"changed references ({len(self.changes)})"]
+            for change in self.changes:
+                lines.append(
+                    f"  sha256={change.input_fingerprint[:12]}  "
+                    f"expected={_render_reference(change.expected)}  "
+                    f"actual={_render_reference(change.actual)}"
+                )
+        lines += [
+            "",
+            "limits",
+            "  a match confirms the recorded decision layer was preserved, not",
+            "  that it was correct, and only for the reference's recorded",
+            "  projection and tolerance.",
+        ]
+        return "\n".join(lines)
 
 
 def _package_version() -> str:

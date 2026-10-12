@@ -103,6 +103,50 @@ def test_a_check_reports_provenance_that_weakened():
     assert "establishes less" in diff.provenance_note
 
 
+def test_the_rendered_check_names_provenance_before_the_result():
+    """A reader must see the weakening before the reassuring clean result."""
+    diff = compare_snapshot(_snapshot("fresh-session"), _result("unknown"))
+    text = diff.render()
+
+    assert text.startswith("regression reference check")
+    assert "snapshot clean" in text
+    assert "establishes less" in text
+    assert text.index("provenance") < text.index("result")
+
+
+def test_a_drifted_and_weakened_check_does_not_claim_a_match():
+    """A check can drift and weaken at once.
+
+    The provenance note once said "the observations match", which contradicts
+    the drift result printed beside it.
+    """
+    base = _snapshot("fresh-session")
+    cases = tuple(
+        EvidenceCase(
+            input=f"probe-{index}",
+            observations=(("refund", "billing")[index % 2],) * 80,
+        )
+        for index in range(6)
+    )
+    drifted = EvidenceSet(
+        cases=(
+            EvidenceCase("probe-0", ("billing",) * 80),
+            *cases[1:],
+        ),
+        layer="verdict",
+        isolation="unknown",
+    )
+
+    diff = compare_snapshot(base, assess_evidence(drifted, epsilon=0.05))
+
+    assert not diff.clean
+    assert diff.provenance_weakened
+    text = diff.render()
+    assert "snapshot drift" in text
+    assert "establishes less" in text
+    assert "observations match" not in text
+
+
 def test_a_check_is_quiet_when_provenance_held_or_improved():
     """A note printed on every run is a note nobody reads."""
     same = compare_snapshot(_snapshot("fresh-session"), _result("fresh-session"))
@@ -158,8 +202,8 @@ def test_the_cli_prints_the_weakening_before_the_verdict(tmp_path, capsys):
     printed = capsys.readouterr().out
 
     assert code == 0, "the decisions match"
-    assert "provenance:" in printed
-    assert printed.index("provenance:") < printed.index("snapshot clean")
+    assert "provenance" in printed
+    assert printed.index("provenance") < printed.index("snapshot clean")
 
 
 def test_a_live_run_records_no_isolation_yet():
