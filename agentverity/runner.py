@@ -1632,6 +1632,10 @@ def run(
                 for observation in repeated_observations
             )
             + observed_keys,
+            # Reach counts one vote per case. The source key is already among
+            # the case keys when `reuse_unchanged_calls` is on; a per-case set
+            # in `assess_decision_coverage` dedupes it, so this is a no-op
+            # there and only adds the separately collected observation.
             per_case=tuple(
                 tuple(
                     observation.key(config.layer) for observation in observations
