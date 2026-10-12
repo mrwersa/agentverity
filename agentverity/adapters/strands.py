@@ -28,11 +28,35 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from agentverity.decision import Decision, NoDecision
 from agentverity.isolation import declare_isolation
 from agentverity.observation import Observation
 
 AgentFactory = Callable[[], Any]
 AgentInvoker = Callable[[Any, str], Any]
+
+
+def _verdict_field(mapping: Any, verdict_key: str | None) -> Any:
+    """Read a verdict from structured output, preserving a typed outcome.
+
+    A plain string is a decision label and stays one. A ``Decision`` or
+    ``NoDecision`` is passed through rather than stringified, because
+    ``str(NoDecision("runtime_error"))`` is the label
+    ``"<no decision: runtime_error>"``, which would score as a stable decision
+    and certify the failure. An absent or empty field is no verdict, not the
+    label ``"None"`` that ``str(None)`` used to invent here.
+    """
+    keys = (verdict_key,) if verdict_key is not None else ("verdict", "decision")
+    for key in keys:
+        value = mapping.get(key)
+        if isinstance(value, (Decision, NoDecision)):
+            return value
+        if value is None:
+            continue
+        text = str(value)
+        if text:
+            return text
+    return None
 
 
 def from_strands(
@@ -150,19 +174,9 @@ def _extract(
     verdict = None
     if structured is not None:
         if hasattr(structured, "model_dump"):
-            dump = structured.model_dump()
-            if verdict_key is not None:
-                verdict = str(dump.get(verdict_key, "")) or None
-            else:
-                verdict = str(dump.get("verdict", dump.get("decision", ""))) or None
+            verdict = _verdict_field(structured.model_dump(), verdict_key)
         elif isinstance(structured, dict):
-            if verdict_key is not None:
-                verdict = str(structured.get(verdict_key, "")) or None
-            else:
-                verdict = (
-                    str(structured.get("verdict", structured.get("decision", "")))
-                    or None
-                )
+            verdict = _verdict_field(structured, verdict_key)
 
     return Observation(
         text=text,

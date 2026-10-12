@@ -109,6 +109,31 @@ class TestFromStrands:
         obs = agent("hi")
         assert isinstance(obs, Observation)
 
+    def test_a_none_structured_verdict_is_absent_not_the_label_none(self):
+        class FakeStructured:
+            def model_dump(self):
+                return {"verdict": None}
+
+        result = _make_result(
+            [{"text": "x"}], structured_output=FakeStructured()
+        )
+        assert from_strands(_mock_strands_agent(result))("hi").verdict is None
+
+    def test_a_typed_no_decision_is_preserved(self):
+        from agentverity import NoDecision
+
+        class FakeStructured:
+            def model_dump(self):
+                return {"verdict": NoDecision("runtime_error")}
+
+        result = _make_result(
+            [{"text": "x"}], structured_output=FakeStructured()
+        )
+        obs = from_strands(_mock_strands_agent(result))("hi")
+
+        assert obs.verdict == NoDecision("runtime_error")
+        assert obs.is_incomplete
+
 
 class TestFromStrandsFactory:
     def test_each_call_uses_a_fresh_agent(self):

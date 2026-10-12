@@ -62,3 +62,15 @@ class TestFromCallable:
         agent = from_callable(fn)
         obs = agent("hi")
         assert obs.verdict is None
+
+    def test_dict_typed_no_decision_is_preserved(self):
+        """A typed failure must not become the label "<no decision: ...>"."""
+        from agentverity import NoDecision
+
+        def fn(x: str) -> dict:
+            return {"text": "failed", "verdict": NoDecision("runtime_error")}
+
+        obs = from_callable(fn)("hi")
+
+        assert obs.verdict == NoDecision("runtime_error")
+        assert obs.is_incomplete

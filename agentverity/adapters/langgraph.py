@@ -44,12 +44,28 @@ import uuid
 from collections.abc import Callable
 from typing import Any
 
+from agentverity.decision import Decision, NoDecision
 from agentverity.isolation import declare_isolation
 from agentverity.observation import Observation
 
 # Where a decision plausibly lives in a returned state, in the order tried.
 # A graph that keeps one under a different key should pass `verdict_key`.
 VERDICT_KEYS = ("verdict", "decision", "route", "classification")
+
+
+def _as_verdict(value: Any) -> Any:
+    """Preserve a typed outcome; stringify a plain value; None/'' stay absent.
+
+    A ``Decision`` or ``NoDecision`` in the state is returned as it is rather
+    than through ``str()``, which would turn ``NoDecision("runtime_error")``
+    into the ordinary label ``"<no decision: runtime_error>"`` and let a
+    harness failure be scored as a stable decision.
+    """
+    if isinstance(value, (Decision, NoDecision)):
+        return value
+    if value is None or value == "":
+        return None
+    return str(value)
 
 
 def _messages(state: Any) -> list[Any]:
@@ -110,12 +126,11 @@ def _verdict_of(state: Any, verdict_key: str | None) -> str | None:
     if not isinstance(state, dict):
         return None
     if verdict_key is not None:
-        value = state.get(verdict_key)
-        return str(value) if value not in (None, "") else None
+        return _as_verdict(state.get(verdict_key))
     for key in VERDICT_KEYS:
-        value = state.get(key)
-        if value not in (None, ""):
-            return str(value)
+        parsed = _as_verdict(state.get(key))
+        if parsed is not None:
+            return parsed
     return None
 
 

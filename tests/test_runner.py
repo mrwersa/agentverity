@@ -723,3 +723,66 @@ class TestReachWithoutTheMeter:
         assert counts.get("escalate") == 1
         assert counts.get("refund") == 1
         assert result.errors
+
+
+class TestTypedHarnessFailures:
+    """A typed failure is not a decision. It must not be scored as one."""
+
+    def test_an_adapter_failure_no_longer_becomes_a_stable_label(self):
+        from agentverity import NoDecision, OutcomeNotScorable
+
+        agent = from_callable(
+            lambda text: {"verdict": NoDecision("runtime_error")}
+        )
+
+        with pytest.raises(OutcomeNotScorable, match="harness"):
+            run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
+
+    def test_a_relation_harness_failure_is_recorded_not_scored(self):
+        from agentverity import NoDecision, Observation, Relation
+
+        def agent(text: str) -> Observation:
+            if text.endswith("!"):
+                return Observation(verdict=NoDecision("runtime_error"))
+            return Observation(verdict="allow")
+
+        relation = Relation(
+            "followup",
+            "invariant",
+            lambda text: text + "!",
+            lambda source, followup: source.verdict == followup.verdict,
+        )
+
+        result = run(
+            agent,
+            ["a", "b"],
+            relations=[relation],
+            config=RunConfig(k=4, epsilon=0.5, error_policy="record"),
+        )
+
+        assert result.complete is False
+        assert len(result.errors) == 2
+        assert result.relation_results[0].errors == 2
+
+    def test_a_relation_harness_failure_raises_under_the_raise_policy(self):
+        from agentverity import NoDecision, Observation, OutcomeNotScorable, Relation
+
+        def agent(text: str) -> Observation:
+            if text.endswith("!"):
+                return Observation(verdict=NoDecision("runtime_error"))
+            return Observation(verdict="allow")
+
+        relation = Relation(
+            "followup",
+            "invariant",
+            lambda text: text + "!",
+            lambda source, followup: source.verdict == followup.verdict,
+        )
+
+        with pytest.raises(OutcomeNotScorable, match="harness"):
+            run(
+                agent,
+                ["a"],
+                relations=[relation],
+                config=RunConfig(k=4, epsilon=0.5, error_policy="raise"),
+            )

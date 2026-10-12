@@ -31,6 +31,7 @@ from typing import Any, Literal
 
 from agentverity.blindness import BlindnessResult
 from agentverity.blindness import score as blindness_score
+from agentverity.decision import OutcomeNotScorable
 from agentverity.decision_contract import (
     DecisionCoverageResult,
     DecisionSuite,
@@ -1493,6 +1494,19 @@ def run(
                     if source is None:
                         source = agent(text)
                     followup = agent(followup_input)
+                    # A typed harness failure is not a decision, so a relation
+                    # comparing it would score the failure as agreement. Route
+                    # it through the same refusal a primary series gets, then
+                    # let error_policy decide: raised, or recorded as an error
+                    # that makes the evidence incomplete.
+                    if config.layer == "verdict" and (
+                        source.is_incomplete or followup.is_incomplete
+                    ):
+                        raise OutcomeNotScorable(
+                            f"a relation call for {relation.name!r} returned a "
+                            "harness failure rather than a decision, so the "
+                            "comparison is incomplete"
+                        )
                     outcomes.append(
                         "held" if relation.check(source, followup) else "violated"
                     )

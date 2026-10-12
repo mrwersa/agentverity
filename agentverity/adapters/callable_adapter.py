@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from agentverity.decision import Decision, NoDecision
 from agentverity.isolation import declare_isolation, isolation_of
 from agentverity.observation import Observation
 
@@ -35,8 +36,16 @@ def from_callable(fn: Callable[[str], Any], *,
             verdict = out.get(verdict_key) if verdict_key else out.get("verdict")
             raw_tools = out.get(tools_key) if tools_key else out.get("tools")
             tools = tuple(raw_tools) if isinstance(raw_tools, (list, tuple)) else ()
+            # A typed outcome carries the reason a run did not decide. String
+            # conversion here erased it: NoDecision("runtime_error") became the
+            # label "<no decision: runtime_error>", which scores as a stable
+            # decision and certifies the harness failure. Pass it through.
+            if isinstance(verdict, (Decision, NoDecision)) or verdict is None:
+                parsed_verdict = verdict
+            else:
+                parsed_verdict = str(verdict)
             return Observation(text=text,
-                               verdict=(str(verdict) if verdict is not None else None),
+                               verdict=parsed_verdict,
                                tools=tools, raw=out)
         # anything else: stringify into text, keep raw
         return Observation(text=str(out), raw=out)
