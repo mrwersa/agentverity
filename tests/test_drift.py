@@ -311,3 +311,61 @@ class TestCliInputErrors:
 
         assert main(["compare-evidence", str(left), str(right)]) == 2
         assert "different layers" in capsys.readouterr().err
+
+
+class TestEquivalentDecisionsDoNotDrift:
+    """A bare label and the typed Decision for it are one decision.
+
+    Rendering them differently made identical evidence report gained and lost
+    flip pairs.
+    """
+
+    def test_string_and_typed_decisions_do_not_drift(self):
+        from agentverity import Decision
+
+        plain = EvidenceSet(
+            (EvidenceCase("a", ("allow", "block") * 40, expected="allow"),)
+        )
+        typed = EvidenceSet(
+            (
+                EvidenceCase(
+                    "a",
+                    (Decision("allow"), Decision("block")) * 40,
+                    expected="allow",
+                ),
+            )
+        )
+
+        drift = compare_evidence(plain, typed)
+
+        assert not drift.drifted
+        assert drift.gained_flip_pairs == ()
+        assert drift.lost_flip_pairs == ()
+
+    def test_a_no_decision_stays_distinct_from_a_label_of_the_same_name(self):
+        from agentverity import Decision, NoDecision
+
+        label = EvidenceSet(
+            (EvidenceCase("a", ("refused", "allow") * 40, expected="allow"),)
+        )
+        same_label_typed = EvidenceSet(
+            (
+                EvidenceCase(
+                    "a",
+                    (Decision("refused"), Decision("allow")) * 40,
+                    expected="allow",
+                ),
+            )
+        )
+        no_decision = EvidenceSet(
+            (
+                EvidenceCase(
+                    "a",
+                    (NoDecision("refused"), Decision("allow")) * 40,
+                    expected="allow",
+                ),
+            )
+        )
+
+        assert not compare_evidence(label, same_label_typed).drifted
+        assert compare_evidence(label, no_decision).drifted
