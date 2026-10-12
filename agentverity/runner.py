@@ -1406,8 +1406,21 @@ def run(
                 epsilon=config.epsilon,
             )
             if suite is not None:
+                # A case that only ever failed has an empty series. Hand
+                # `stratify_runs` the same `None` the sequential and fixed
+                # paths use for a failed case, so the route is retained with
+                # zero usable pairs rather than crashing the analysis.
                 route_stability = stratify_runs(
-                    list(zip(intended_decisions, series, strict=True)),
+                    list(
+                        zip(
+                            intended_decisions,
+                            [
+                                run_series if len(run_series) >= 2 else None
+                                for run_series in series
+                            ],
+                            strict=True,
+                        )
+                    ),
                     k=config.k,
                     layer=config.layer,
                     epsilon=config.epsilon,

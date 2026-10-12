@@ -891,8 +891,15 @@ class TestTypedHarnessFailures:
     def test_odd_k_curtailment_detects_a_typed_failure(self):
         from agentverity import NoDecision, Observation
 
+        calls: dict[str, int] = {}
+
         def agent(text: str) -> Observation:
-            verdict = NoDecision("runtime_error") if text == "bad" else "allow"
+            calls[text] = calls.get(text, 0) + 1
+            verdict = (
+                NoDecision("runtime_error")
+                if text == "bad" and calls[text] >= 9
+                else "allow"
+            )
             return Observation(verdict=verdict)
 
         result = run(
@@ -900,13 +907,53 @@ class TestTypedHarnessFailures:
             ["bad", "good"],
             relations=[],
             config=RunConfig(
-                k=3,
-                epsilon=0.2,
+                k=9,
+                epsilon=0.5,
                 curtail=True,
                 error_policy="record",
                 run_blindness=False,
             ),
         )
 
+        # k=9 is four pairs plus one unpaired call. The failure lands on that
+        # final call, so the odd-k collection branch is the one that detects it.
+        assert calls["bad"] == 9
         assert result.complete is False
+        assert any(error.phase == "meter" for error in result.errors)
+
+    def test_a_curtailed_suite_retains_a_failed_route(self):
+        from agentverity import (
+            DecisionCase,
+            DecisionContract,
+            DecisionSuite,
+            NoDecision,
+            Observation,
+        )
+
+        suite = DecisionSuite(
+            DecisionContract(allowed={"allow", "block"}),
+            (DecisionCase("bad", "allow"), DecisionCase("good", "block")),
+        )
+
+        def agent(text: str) -> Observation:
+            verdict = NoDecision("runtime_error") if text == "bad" else "block"
+            return Observation(verdict=verdict)
+
+        result = run(
+            agent,
+            suite=suite,
+            relations=[],
+            config=RunConfig(
+                k=20, epsilon=0.2, curtail=True, error_policy="record"
+            ),
+        )
+
+        assert result.complete is False
+        assert result.route_stability is not None
+        failed = next(
+            route
+            for route in result.route_stability.routes
+            if route.decision == "allow"
+        )
+        assert failed.pair_trials == 0
         assert any(error.phase == "meter" for error in result.errors)
