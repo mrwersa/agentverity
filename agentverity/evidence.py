@@ -380,7 +380,8 @@ def assess_evidence(
             post-hoc counterfactual and never changes the endpoint call.
 
     Raises:
-        EvidenceError: If a declared suite does not describe this evidence.
+        EvidenceError: If a declared suite does not describe this evidence, or
+            a suite is supplied for a non-``verdict`` layer.
     """
     from .blindness import score as blindness_score
     from .decision_contract import assess_decision_coverage

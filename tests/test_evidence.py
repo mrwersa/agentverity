@@ -609,17 +609,24 @@ class TestCategoricalEvidenceNeedsRealDecisions:
 class TestAContractNeedsTheVerdictLayer:
     """A live run refuses a contract on any other layer; an import must too."""
 
-    def test_text_evidence_is_refused_a_contract(self):
+    @pytest.mark.parametrize(
+        "layer, observation",
+        [
+            ("text", "allow"),
+            ("tools", ("search",)),
+        ],
+    )
+    def test_a_non_verdict_layer_is_refused_a_contract(self, layer, observation):
         suite = DecisionSuite(
             DecisionContract(allowed={"allow", "block"}),
             (DecisionCase("a", "allow"), DecisionCase("b", "block")),
         )
         evidence = EvidenceSet(
             (
-                EvidenceCase("a", ("allow",) * 80),
-                EvidenceCase("b", ("block",) * 80),
+                EvidenceCase("a", (observation,) * 80),
+                EvidenceCase("b", (observation,) * 80),
             ),
-            layer="text",
+            layer=layer,
         )
 
         with pytest.raises(EvidenceError, match="verdict observation layer"):
