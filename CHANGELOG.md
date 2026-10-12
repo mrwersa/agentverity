@@ -17,7 +17,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   failures could produce complete, deterministic evidence and an admitted
   snapshot. The typed outcome is preserved: the callable, Strands, and
   LangGraph adapters pass it through, and Strands reads a structured model's
-  live attribute before its serialised form.
+  live attribute before its serialised form and reconstructs a serialised
+  outcome rather than stringifying it.
 - A typed harness failure is detected where the call is made, not after
   collection, so a failed observation never reaches pair comparison, a
   sequential checkpoint, a curtailment decision, or the separate source scan.

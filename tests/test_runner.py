@@ -887,3 +887,26 @@ class TestTypedHarnessFailures:
 
         assert result.complete is False
         assert any(error.phase == "blindness" for error in result.errors)
+
+    def test_odd_k_curtailment_detects_a_typed_failure(self):
+        from agentverity import NoDecision, Observation
+
+        def agent(text: str) -> Observation:
+            verdict = NoDecision("runtime_error") if text == "bad" else "allow"
+            return Observation(verdict=verdict)
+
+        result = run(
+            agent,
+            ["bad", "good"],
+            relations=[],
+            config=RunConfig(
+                k=3,
+                epsilon=0.2,
+                curtail=True,
+                error_policy="record",
+                run_blindness=False,
+            ),
+        )
+
+        assert result.complete is False
+        assert any(error.phase == "meter" for error in result.errors)

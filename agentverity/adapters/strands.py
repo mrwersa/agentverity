@@ -25,10 +25,10 @@ Example::
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
-from agentverity.decision import Decision, NoDecision
+from agentverity.decision import NO_DECISION_REASONS, Decision, NoDecision
 from agentverity.isolation import declare_isolation
 from agentverity.observation import Observation
 
@@ -37,9 +37,24 @@ AgentInvoker = Callable[[Any, str], Any]
 
 
 def _coerce_verdict(value: Any) -> Any:
-    """Preserve a typed outcome; stringify a plain value; None/'' stay absent."""
+    """Preserve a typed outcome; stringify a scalar; None/'' stay absent.
+
+    A serialised outcome is reconstructed rather than stringified: a Pydantic
+    ``model_dump`` of ``NoDecision("runtime_error")`` is
+    ``{"reason": "runtime_error"}``, and ``str()`` of that is a stable label
+    that scores the harness failure as a decision. Any other mapping is not a
+    label and is dropped rather than turned into one.
+    """
     if isinstance(value, (Decision, NoDecision)):
         return value
+    if isinstance(value, Mapping):
+        reason = value.get("reason")
+        if isinstance(reason, str) and reason in NO_DECISION_REASONS:
+            return NoDecision(reason)
+        label = value.get("label")
+        if isinstance(label, str) and label:
+            return Decision(label)
+        return None
     if value is None:
         return None
     text = str(value)
@@ -47,15 +62,7 @@ def _coerce_verdict(value: Any) -> Any:
 
 
 def _verdict_field(mapping: Any, verdict_key: str | None) -> Any:
-    """Read a verdict from a serialised mapping, preserving a typed outcome.
-
-    A plain string is a decision label and stays one. A ``Decision`` or
-    ``NoDecision`` is passed through rather than stringified, because
-    ``str(NoDecision("runtime_error"))`` is the label
-    ``"<no decision: runtime_error>"``, which would score as a stable decision
-    and certify the failure. An absent or empty field is no verdict, not the
-    label ``"None"`` that ``str(None)`` used to invent here.
-    """
+    """Read a verdict from a serialised mapping, preserving a typed outcome."""
     keys = (verdict_key,) if verdict_key is not None else ("verdict", "decision")
     for key in keys:
         parsed = _coerce_verdict(mapping.get(key))
@@ -71,16 +78,21 @@ def _attribute_verdict(structured: Any, verdict_key: str | None) -> Any:
     recursively serialises that field into a plain dict, so
     ``NoDecision("runtime_error")`` arrives as ``{"reason": "runtime_error"}``
     and the adapter stringifies it into a dictionary string. Reading the
-    attribute first keeps the type.
+    attribute first keeps the type. A callable attribute of the same name is a
+    method, not a decision, so it is skipped rather than stringified.
     """
     if isinstance(structured, dict):
         return None
     keys = (verdict_key,) if verdict_key is not None else ("verdict", "decision")
     for key in keys:
-        if hasattr(structured, key):
-            parsed = _coerce_verdict(getattr(structured, key))
-            if parsed is not None:
-                return parsed
+        if not hasattr(structured, key):
+            continue
+        value = getattr(structured, key)
+        if callable(value):
+            continue
+        parsed = _coerce_verdict(value)
+        if parsed is not None:
+            return parsed
     return None
 
 

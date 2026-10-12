@@ -993,9 +993,9 @@ def _resolve(config: RunConfig, inputs: Iterable[str]) -> RunConfig:
 def _incomplete_message(observation: Observation) -> str:
     """Why a typed harness failure cannot be scored as a decision."""
     return (
-        f"a repeat series contains {observation.outcome}, which means the "
-        "harness failed rather than the agent answering. Evidence containing "
-        "it is incomplete and must not be scored for stability."
+        f"an observation is {observation.outcome}, which means the harness "
+        "failed rather than the agent answering. Evidence containing it is "
+        "incomplete and must not be scored for stability."
     )
 
 
@@ -1332,12 +1332,10 @@ def run(
         )
         errors.extend(meter_errors)
         complete_series = [
-            run_series
-            for run_series in series
-            if run_series is not None and len(run_series) >= 2
+            run_series for run_series in series if len(run_series) >= 2
         ]
         for index, run_series in enumerate(series):
-            if run_series is not None and len(run_series) >= 2:
+            if len(run_series) >= 2:
                 case_series[index] = tuple(run_series)
         repeated_observations = [
             observation for run_series in complete_series for observation in run_series
@@ -1367,9 +1365,7 @@ def run(
                     zip(
                         intended_decisions,
                         [
-                            run_series
-                            if run_series is not None and len(run_series) >= 2
-                            else None
+                            run_series if len(run_series) >= 2 else None
                             for run_series in series
                         ],
                         strict=True,
@@ -1394,9 +1390,7 @@ def run(
         )
         errors.extend(meter_errors)
         complete_series = [
-            run_series
-            for run_series in series
-            if run_series is not None and len(run_series) >= 2
+            run_series for run_series in series if len(run_series) >= 2
         ]
         for index, run_series in enumerate(series):
             if run_series:
