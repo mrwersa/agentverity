@@ -32,6 +32,11 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 - Loading a snapshot now validates its numbers, so a hand-edited reference with
   `epsilon=NaN`, `k=0`, negative pair trials, a proportion outside `[0, 1]`, or
   no distinct verdict is refused rather than acted on.
+- Native evidence refuses an empty categorical observation on the verdict
+  layer, matching `Decision("")` and the JSONL importer; it previously
+  qualified and could enter a snapshot with an empty expected decision.
+- `assess_evidence` refuses a decision contract on any layer but `verdict`,
+  matching the check a live run already applies.
 
 ## [0.25.0] - 2026-10-12
 
