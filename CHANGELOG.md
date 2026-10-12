@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-10-11
+
 ### Changed
 
 - The human-readable headline and report title now name repeatability rather
@@ -1281,7 +1283,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.24.0...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.24.1...HEAD
+[0.24.1]: https://github.com/mrwersa/agentverity/compare/v0.24.0...v0.24.1
 [0.24.0]: https://github.com/mrwersa/agentverity/compare/v0.23.1...v0.24.0
 [0.23.1]: https://github.com/mrwersa/agentverity/compare/v0.23.0...v0.23.1
 [0.23.0]: https://github.com/mrwersa/agentverity/compare/v0.22.0...v0.23.0
