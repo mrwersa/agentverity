@@ -31,6 +31,7 @@ from typing import Any, Literal
 
 from agentverity.blindness import BlindnessResult
 from agentverity.blindness import score as blindness_score
+from agentverity.decision import OutcomeNotScorable
 from agentverity.decision_contract import (
     DecisionCoverageResult,
     DecisionSuite,
@@ -989,6 +990,30 @@ def _resolve(config: RunConfig, inputs: Iterable[str]) -> RunConfig:
     return replace(config, k=k, epsilon=epsilon)
 
 
+def _incomplete_message(observation: Observation) -> str:
+    """Why a typed harness failure cannot be scored as a decision."""
+    return (
+        f"an observation is {observation.outcome}, which means the harness "
+        "failed rather than the agent answering. Evidence containing it is "
+        "incomplete and must not be scored for stability."
+    )
+
+
+def _checked_observation(agent: AgentFn, text: str, layer: str) -> Observation:
+    """Call the agent once, refusing a typed harness failure as a failed call.
+
+    Detection belongs here, not after collection: a failed observation must
+    not reach pair comparison, a stopping checkpoint, or the curtailment
+    arithmetic, and under ``error_policy="raise"`` the run must stop at the
+    failure rather than finish the schedule. Raising inside the mapped call
+    gives a typed failure exactly the treatment a raised agent exception gets.
+    """
+    observation = agent(text)
+    if layer == "verdict" and observation.is_incomplete:
+        raise OutcomeNotScorable(_incomplete_message(observation))
+    return observation
+
+
 def _collect_sequentially(
     agent: AgentFn,
     inputs: list[str],
@@ -1036,7 +1061,10 @@ def _collect_sequentially(
         spent += 2 * len(live)
         round_work = map_indexed_inputs(
             live,
-            lambda index, text: [agent(text), agent(text)],
+            lambda index, text: [
+                _checked_observation(agent, text, config.layer),
+                _checked_observation(agent, text, config.layer),
+            ],
             phase="meter",
             max_workers=config.max_workers,
             error_policy=config.error_policy,
@@ -1096,7 +1124,10 @@ def _collect_with_curtailment(
             spent_calls += 2
             work = map_indexed_inputs(
                 [(index, text)],
-                lambda _index, value: [agent(value), agent(value)],
+                lambda _index, value: [
+                    _checked_observation(agent, value, config.layer),
+                    _checked_observation(agent, value, config.layer),
+                ],
                 phase="meter",
                 max_workers=1,
                 error_policy=config.error_policy,
@@ -1150,7 +1181,7 @@ def _collect_with_curtailment(
         spent_calls += len(odd)
         work = map_indexed_inputs(
             odd,
-            lambda _index, text: agent(text),
+            lambda _index, text: _checked_observation(agent, text, config.layer),
             phase="meter",
             max_workers=1,
             error_policy=config.error_policy,
@@ -1300,7 +1331,9 @@ def run(
             _collect_sequentially(agent, list(inputs), config, on_progress)
         )
         errors.extend(meter_errors)
-        complete_series = [run_series for run_series in series if len(run_series) >= 2]
+        complete_series = [
+            run_series for run_series in series if len(run_series) >= 2
+        ]
         for index, run_series in enumerate(series):
             if len(run_series) >= 2:
                 case_series[index] = tuple(run_series)
@@ -1356,7 +1389,9 @@ def run(
             on_progress,
         )
         errors.extend(meter_errors)
-        complete_series = [run_series for run_series in series if len(run_series) >= 2]
+        complete_series = [
+            run_series for run_series in series if len(run_series) >= 2
+        ]
         for index, run_series in enumerate(series):
             if run_series:
                 case_series[index] = tuple(run_series)
@@ -1371,8 +1406,21 @@ def run(
                 epsilon=config.epsilon,
             )
             if suite is not None:
+                # A case that only ever failed has an empty series. Hand
+                # `stratify_runs` the same `None` the sequential and fixed
+                # paths use for a failed case, so the route is retained with
+                # zero usable pairs rather than crashing the analysis.
                 route_stability = stratify_runs(
-                    list(zip(intended_decisions, series, strict=True)),
+                    list(
+                        zip(
+                            intended_decisions,
+                            [
+                                run_series if len(run_series) >= 2 else None
+                                for run_series in series
+                            ],
+                            strict=True,
+                        )
+                    ),
                     k=config.k,
                     layer=config.layer,
                     epsilon=config.epsilon,
@@ -1385,19 +1433,21 @@ def run(
     elif config.run_meter:
         meter_work = map_inputs(
             inputs,
-            lambda index, text: [agent(text) for _ in range(repeats_per_input[index])],
+            lambda index, text: [
+                _checked_observation(agent, text, config.layer)
+                for _ in range(repeats_per_input[index])
+            ],
             phase="meter",
             max_workers=config.max_workers,
             error_policy=config.error_policy,
             on_progress=on_progress,
         )
         errors.extend(meter_work.errors)
+        series = list(meter_work.values)
         complete_series = [
-            observations
-            for observations in meter_work.values
-            if observations is not None
+            observations for observations in series if observations is not None
         ]
-        for index, observations in enumerate(meter_work.values):
+        for index, observations in enumerate(series):
             if observations is not None:
                 case_series[index] = tuple(observations)
         repeated_observations = [
@@ -1416,14 +1466,14 @@ def run(
             # Carry failed series too. They count as cases with no usable pairs,
             # rather than disappearing from the route table.
             route_stability = stratify_runs(
-                list(zip(intended_decisions, meter_work.values, strict=True)),
+                list(zip(intended_decisions, series, strict=True)),
                 k=config.k,
                 layer=config.layer,
                 epsilon=config.epsilon,
                 targets=suite.contract.stability_targets,
             )
         if config.reuse_unchanged_calls:
-            for index, observations in enumerate(meter_work.values):
+            for index, observations in enumerate(series):
                 if observations:
                     source_observations[index] = observations[0]
 
@@ -1442,7 +1492,9 @@ def run(
         if missing:
             source_work = map_indexed_inputs(
                 missing,
-                lambda _index, text: agent(text),
+                lambda _index, text: _checked_observation(
+                    agent, text, config.layer
+                ),
                 phase="blindness" if config.run_blindness else "decision_contract",
                 max_workers=config.max_workers,
                 error_policy=config.error_policy,
@@ -1493,6 +1545,19 @@ def run(
                     if source is None:
                         source = agent(text)
                     followup = agent(followup_input)
+                    # A typed harness failure is not a decision, so a relation
+                    # comparing it would score the failure as agreement. Route
+                    # it through the same refusal a primary series gets, then
+                    # let error_policy decide: raised, or recorded as an error
+                    # that makes the evidence incomplete.
+                    if config.layer == "verdict" and (
+                        source.is_incomplete or followup.is_incomplete
+                    ):
+                        raise OutcomeNotScorable(
+                            f"a relation call for {relation.name!r} returned a "
+                            "harness failure rather than a decision, so the "
+                            "comparison is incomplete"
+                        )
                     outcomes.append(
                         "held" if relation.check(source, followup) else "violated"
                     )

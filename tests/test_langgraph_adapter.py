@@ -275,3 +275,16 @@ def test_a_boolean_decision_keeps_pythons_spelling() -> None:
     # the mismatch loudly rather than hiding it.
     assert extract({"messages": [], "verdict": True}).verdict == "True"
     assert extract({"messages": [], "verdict": False}).verdict == "False"
+
+
+def test_a_none_verdict_is_absent_not_the_label_none() -> None:
+    assert extract({"messages": [], "verdict": None}).verdict is None
+
+
+def test_a_typed_no_decision_is_preserved() -> None:
+    from agentverity import NoDecision
+
+    observation = extract({"messages": [], "verdict": NoDecision("runtime_error")})
+
+    assert observation.verdict == NoDecision("runtime_error")
+    assert observation.is_incomplete

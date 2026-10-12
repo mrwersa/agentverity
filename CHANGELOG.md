@@ -8,6 +8,24 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- Adapters no longer stringify a typed `Decision`/`NoDecision` verdict into an
+  ordinary label. `NoDecision("runtime_error")` used to become
+  `"<no decision: runtime_error>"` (or, out of a Pydantic `model_dump`, a
+  dictionary string), which scores as a stable decision, so repeated harness
+  failures could produce complete, deterministic evidence and an admitted
+  snapshot. The typed outcome is preserved: the callable, Strands, and
+  LangGraph adapters pass it through, and Strands reads a structured model's
+  live attribute before its serialised form and reconstructs a serialised
+  outcome rather than stringifying it.
+- A typed harness failure is detected where the call is made, not after
+  collection, so a failed observation never reaches pair comparison, a
+  sequential checkpoint, a curtailment decision, or the separate source scan.
+  It follows `error_policy`: raised, or recorded as an error that makes the
+  evidence incomplete. A relation source or follow-up that returns one is
+  treated the same way.
+
 ## [0.25.0] - 2026-10-12
 
 ### Added

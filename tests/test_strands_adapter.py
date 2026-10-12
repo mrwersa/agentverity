@@ -109,6 +109,100 @@ class TestFromStrands:
         obs = agent("hi")
         assert isinstance(obs, Observation)
 
+    def test_a_none_structured_verdict_is_absent_not_the_label_none(self):
+        class FakeStructured:
+            def model_dump(self):
+                return {"verdict": None}
+
+        result = _make_result(
+            [{"text": "x"}], structured_output=FakeStructured()
+        )
+        assert from_strands(_mock_strands_agent(result))("hi").verdict is None
+
+    def test_a_typed_no_decision_is_preserved(self):
+        from agentverity import NoDecision
+
+        class FakeStructured:
+            def model_dump(self):
+                return {"verdict": NoDecision("runtime_error")}
+
+        result = _make_result(
+            [{"text": "x"}], structured_output=FakeStructured()
+        )
+        obs = from_strands(_mock_strands_agent(result))("hi")
+
+        assert obs.verdict == NoDecision("runtime_error")
+        assert obs.is_incomplete
+
+    def test_an_empty_verdict_falls_back_to_the_decision_field(self):
+        result = _make_result(
+            [{"text": "x"}],
+            structured_output={"verdict": "", "decision": "allow"},
+        )
+        assert from_strands(_mock_strands_agent(result))("hi").verdict == "allow"
+
+    def test_a_typed_outcome_survives_a_serialising_model_dump(self):
+        """A Pydantic model serialises NoDecision to {"reason": ...} in model_dump.
+
+        The live attribute keeps the typed outcome; reading model_dump first
+        would stringify the dict into a label.
+        """
+        from agentverity import NoDecision
+
+        class FakeStructured:
+            def __init__(self):
+                self.verdict = NoDecision("runtime_error")
+
+            def model_dump(self):
+                return {"verdict": {"reason": "runtime_error"}}
+
+        result = _make_result(
+            [{"text": "x"}], structured_output=FakeStructured()
+        )
+        obs = from_strands(_mock_strands_agent(result))("hi")
+
+        assert obs.verdict == NoDecision("runtime_error")
+        assert obs.is_incomplete
+
+    def test_a_serialised_no_decision_is_reconstructed(self):
+        from agentverity import NoDecision
+
+        result = _make_result(
+            [{"text": "x"}],
+            structured_output={"verdict": {"reason": "runtime_error"}},
+        )
+        obs = from_strands(_mock_strands_agent(result))("hi")
+
+        assert obs.verdict == NoDecision("runtime_error")
+        assert obs.is_incomplete
+
+    def test_a_serialised_decision_is_reconstructed(self):
+        from agentverity import Decision
+
+        result = _make_result(
+            [{"text": "x"}], structured_output={"verdict": {"label": "allow"}}
+        )
+        assert from_strands(_mock_strands_agent(result))("hi").verdict == Decision(
+            "allow"
+        )
+
+    def test_an_unrecognised_mapping_verdict_is_dropped_not_stringified(self):
+        result = _make_result(
+            [{"text": "x"}], structured_output={"verdict": {"foo": "bar"}}
+        )
+        assert from_strands(_mock_strands_agent(result))("hi").verdict is None
+
+    def test_a_callable_attribute_is_not_read_as_a_verdict(self):
+        class WithMethod:
+            def model_dump(self):
+                return {"verdict": "allow"}
+
+            def verdict(self):
+                raise AssertionError("a method must not be a verdict")
+
+        result = _make_result([{"text": "x"}], structured_output=WithMethod())
+        assert from_strands(_mock_strands_agent(result))("hi").verdict == "allow"
+
 
 class TestFromStrandsFactory:
     def test_each_call_uses_a_fresh_agent(self):

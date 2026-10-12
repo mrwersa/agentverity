@@ -25,14 +25,75 @@ Example::
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
+from agentverity.decision import NO_DECISION_REASONS, Decision, NoDecision
 from agentverity.isolation import declare_isolation
 from agentverity.observation import Observation
 
 AgentFactory = Callable[[], Any]
 AgentInvoker = Callable[[Any, str], Any]
+
+
+def _coerce_verdict(value: Any) -> Any:
+    """Preserve a typed outcome; stringify a scalar; None/'' stay absent.
+
+    A serialised outcome is reconstructed rather than stringified: a Pydantic
+    ``model_dump`` of ``NoDecision("runtime_error")`` is
+    ``{"reason": "runtime_error"}``, and ``str()`` of that is a stable label
+    that scores the harness failure as a decision. Any other mapping is not a
+    label and is dropped rather than turned into one.
+    """
+    if isinstance(value, (Decision, NoDecision)):
+        return value
+    if isinstance(value, Mapping):
+        reason = value.get("reason")
+        if isinstance(reason, str) and reason in NO_DECISION_REASONS:
+            return NoDecision(reason)
+        label = value.get("label")
+        if isinstance(label, str) and label:
+            return Decision(label)
+        return None
+    if value is None:
+        return None
+    text = str(value)
+    return text or None
+
+
+def _verdict_field(mapping: Any, verdict_key: str | None) -> Any:
+    """Read a verdict from a serialised mapping, preserving a typed outcome."""
+    keys = (verdict_key,) if verdict_key is not None else ("verdict", "decision")
+    for key in keys:
+        parsed = _coerce_verdict(mapping.get(key))
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def _attribute_verdict(structured: Any, verdict_key: str | None) -> Any:
+    """Read a verdict from live attributes, before any serialisation.
+
+    A Pydantic model holds the typed outcome on its field. ``model_dump()``
+    recursively serialises that field into a plain dict, so
+    ``NoDecision("runtime_error")`` arrives as ``{"reason": "runtime_error"}``
+    and the adapter stringifies it into a dictionary string. Reading the
+    attribute first keeps the type. A callable attribute of the same name is a
+    method, not a decision, so it is skipped rather than stringified.
+    """
+    if isinstance(structured, dict):
+        return None
+    keys = (verdict_key,) if verdict_key is not None else ("verdict", "decision")
+    for key in keys:
+        if not hasattr(structured, key):
+            continue
+        value = getattr(structured, key)
+        if callable(value):
+            continue
+        parsed = _coerce_verdict(value)
+        if parsed is not None:
+            return parsed
+    return None
 
 
 def from_strands(
@@ -149,20 +210,14 @@ def _extract(
     structured = getattr(result, "structured_output", None)
     verdict = None
     if structured is not None:
-        if hasattr(structured, "model_dump"):
-            dump = structured.model_dump()
-            if verdict_key is not None:
-                verdict = str(dump.get(verdict_key, "")) or None
-            else:
-                verdict = str(dump.get("verdict", dump.get("decision", ""))) or None
-        elif isinstance(structured, dict):
-            if verdict_key is not None:
-                verdict = str(structured.get(verdict_key, "")) or None
-            else:
-                verdict = (
-                    str(structured.get("verdict", structured.get("decision", "")))
-                    or None
-                )
+        # Live attributes first: a Pydantic model's model_dump() would already
+        # have serialised a typed outcome into a dict by this point.
+        verdict = _attribute_verdict(structured, verdict_key)
+        if verdict is None:
+            if hasattr(structured, "model_dump"):
+                verdict = _verdict_field(structured.model_dump(), verdict_key)
+            elif isinstance(structured, dict):
+                verdict = _verdict_field(structured, verdict_key)
 
     return Observation(
         text=text,

@@ -723,3 +723,237 @@ class TestReachWithoutTheMeter:
         assert counts.get("escalate") == 1
         assert counts.get("refund") == 1
         assert result.errors
+
+
+class TestTypedHarnessFailures:
+    """A typed failure is not a decision. It must not be scored as one."""
+
+    def test_an_adapter_failure_no_longer_becomes_a_stable_label(self):
+        from agentverity import NoDecision, OutcomeNotScorable
+
+        agent = from_callable(
+            lambda text: {"verdict": NoDecision("runtime_error")}
+        )
+
+        with pytest.raises(OutcomeNotScorable, match="harness"):
+            run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
+
+    def test_a_metered_harness_failure_honours_error_policy(self):
+        from agentverity import NoDecision
+
+        agent = from_callable(
+            lambda text: {"verdict": NoDecision("runtime_error")}
+        )
+
+        recorded = run(
+            agent,
+            ["a", "b"],
+            relations=[],
+            config=RunConfig(k=4, epsilon=0.5, error_policy="record"),
+        )
+
+        assert recorded.complete is False
+        assert sum(error.phase == "meter" for error in recorded.errors) == 2
+
+    def test_a_relation_harness_failure_is_recorded_not_scored(self):
+        from agentverity import NoDecision, Observation, Relation
+
+        def agent(text: str) -> Observation:
+            if text.endswith("!"):
+                return Observation(verdict=NoDecision("runtime_error"))
+            return Observation(verdict="allow")
+
+        relation = Relation(
+            "followup",
+            "invariant",
+            lambda text: text + "!",
+            lambda source, followup: source.verdict == followup.verdict,
+        )
+
+        result = run(
+            agent,
+            ["a", "b"],
+            relations=[relation],
+            config=RunConfig(k=4, epsilon=0.5, error_policy="record"),
+        )
+
+        assert result.complete is False
+        assert len(result.errors) == 2
+        assert result.relation_results[0].errors == 2
+
+    def test_a_relation_source_failure_is_recorded(self):
+        from agentverity import NoDecision, Observation, Relation
+
+        def agent(text: str) -> Observation:
+            return Observation(verdict=NoDecision("runtime_error"))
+
+        relation = Relation(
+            "followup",
+            "invariant",
+            lambda text: text + "!",
+            lambda source, followup: source.verdict == followup.verdict,
+        )
+
+        result = run(
+            agent,
+            ["a"],
+            relations=[relation],
+            config=RunConfig(
+                k=4,
+                epsilon=0.5,
+                error_policy="record",
+                run_meter=False,
+            ),
+        )
+
+        assert result.complete is False
+        assert result.relation_results[0].errors == 1
+
+    def test_a_relation_harness_failure_raises_under_the_raise_policy(self):
+        from agentverity import NoDecision, Observation, OutcomeNotScorable, Relation
+
+        def agent(text: str) -> Observation:
+            if text.endswith("!"):
+                return Observation(verdict=NoDecision("runtime_error"))
+            return Observation(verdict="allow")
+
+        relation = Relation(
+            "followup",
+            "invariant",
+            lambda text: text + "!",
+            lambda source, followup: source.verdict == followup.verdict,
+        )
+
+        with pytest.raises(OutcomeNotScorable, match="harness"):
+            run(
+                agent,
+                ["a"],
+                relations=[relation],
+                config=RunConfig(k=4, epsilon=0.5, error_policy="raise"),
+            )
+
+    def test_sequential_stops_at_a_typed_failure(self):
+        from agentverity import NoDecision, Observation, OutcomeNotScorable
+
+        calls: dict[str, int] = {}
+
+        def agent(text: str) -> Observation:
+            calls[text] = calls.get(text, 0) + 1
+            verdict = NoDecision("runtime_error") if text == "bad" else "allow"
+            return Observation(verdict=verdict)
+
+        with pytest.raises(OutcomeNotScorable, match="harness"):
+            run(
+                agent,
+                ["bad", "good"],
+                relations=[],
+                config=RunConfig(
+                    epsilon=0.2,
+                    sequential=True,
+                    error_policy="raise",
+                    run_blindness=False,
+                ),
+            )
+
+        # A failed pair must not be collected, compared, or made to spend the
+        # rest of the schedule before the refusal.
+        assert sum(calls.values()) == 1
+
+    def test_a_failed_separate_source_scan_is_recorded(self):
+        from agentverity import NoDecision, Observation
+
+        calls: dict[str, int] = {}
+
+        def agent(text: str) -> Observation:
+            calls[text] = calls.get(text, 0) + 1
+            verdict = (
+                NoDecision("runtime_error")
+                if text == "a" and calls[text] > 4
+                else ("allow" if text == "a" else "block")
+            )
+            return Observation(verdict=verdict)
+
+        result = run(
+            agent,
+            ["a", "b"],
+            relations=[],
+            config=RunConfig(
+                k=4,
+                epsilon=0.5,
+                reuse_unchanged_calls=False,
+                error_policy="record",
+            ),
+        )
+
+        assert result.complete is False
+        assert any(error.phase == "blindness" for error in result.errors)
+
+    def test_odd_k_curtailment_detects_a_typed_failure(self):
+        from agentverity import NoDecision, Observation
+
+        calls: dict[str, int] = {}
+
+        def agent(text: str) -> Observation:
+            calls[text] = calls.get(text, 0) + 1
+            verdict = (
+                NoDecision("runtime_error")
+                if text == "bad" and calls[text] >= 9
+                else "allow"
+            )
+            return Observation(verdict=verdict)
+
+        result = run(
+            agent,
+            ["bad", "good"],
+            relations=[],
+            config=RunConfig(
+                k=9,
+                epsilon=0.5,
+                curtail=True,
+                error_policy="record",
+                run_blindness=False,
+            ),
+        )
+
+        # k=9 is four pairs plus one unpaired call. The failure lands on that
+        # final call, so the odd-k collection branch is the one that detects it.
+        assert calls["bad"] == 9
+        assert result.complete is False
+        assert any(error.phase == "meter" for error in result.errors)
+
+    def test_a_curtailed_suite_retains_a_failed_route(self):
+        from agentverity import (
+            DecisionCase,
+            DecisionContract,
+            DecisionSuite,
+            NoDecision,
+            Observation,
+        )
+
+        suite = DecisionSuite(
+            DecisionContract(allowed={"allow", "block"}),
+            (DecisionCase("bad", "allow"), DecisionCase("good", "block")),
+        )
+
+        def agent(text: str) -> Observation:
+            verdict = NoDecision("runtime_error") if text == "bad" else "block"
+            return Observation(verdict=verdict)
+
+        result = run(
+            agent,
+            suite=suite,
+            relations=[],
+            config=RunConfig(
+                k=20, epsilon=0.2, curtail=True, error_policy="record"
+            ),
+        )
+
+        assert result.complete is False
+        assert result.route_stability is not None
+        failed = next(
+            route
+            for route in result.route_stability.routes
+            if route.decision == "allow"
+        )
+        assert failed.pair_trials == 0
+        assert any(error.phase == "meter" for error in result.errors)
