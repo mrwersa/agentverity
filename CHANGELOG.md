@@ -44,6 +44,12 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 - A decision seen only in the separate source scan now counts toward its
   case's observed reach, so a run with `reuse_unchanged_calls=False` no longer
   reports a decision it actually observed as missing.
+- Equivalent typed and string decisions no longer report flip-pair drift: a
+  bare `"allow"` and `Decision("allow")` render to one identity, while a
+  `NoDecision("refused")` stays distinct from a decision of the same name.
+- `plan_sequential` no longer overflows at tight tolerances (`0.003`, `0.001`):
+  the binomial probabilities are computed in log-gamma form rather than from
+  `math.comb`, whose intermediates overflow a float.
 
 ## [0.25.0] - 2026-10-12
 

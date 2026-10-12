@@ -25,9 +25,11 @@ Example::
 
 from __future__ import annotations
 
+import itertools
 import math
 from collections.abc import Iterable
 from dataclasses import dataclass
+from functools import cache
 
 #: The three answers, matching what the pooled meter already reports.
 DETERMINISTIC = "verdict-deterministic"
@@ -35,20 +37,54 @@ STOCHASTIC = "verdict-stochastic"
 UNDECIDED = "undecided"
 
 
+def _log_binomial_pmf(trials: int, successes: int, p: float) -> float:
+    """log P(X = successes) for X binomial with `trials` trials at rate `p`.
+
+    Computed from log-gamma rather than ``math.comb``, whose intermediate value
+    is an integer with hundreds of digits at the pair counts a tight tolerance
+    needs; multiplying one by a float overflows. The log form stays finite.
+    """
+    if p <= 0.0:
+        return 0.0 if successes == 0 else -math.inf
+    if p >= 1.0:
+        return 0.0 if successes == trials else -math.inf
+    return (
+        math.lgamma(trials + 1)
+        - math.lgamma(successes + 1)
+        - math.lgamma(trials - successes + 1)
+        + successes * math.log(p)
+        + (trials - successes) * math.log1p(-p)
+    )
+
+
+@cache
+def _binomial_tables(
+    trials: int, p: float
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    """Prefix and suffix sums of the binomial pmf, for O(1) tail queries.
+
+    Built once per `(trials, p)`, so the thresholds `plan_sequential` scans are
+    read off a table rather than summing a fresh tail for every flip count.
+    """
+    pmf = tuple(
+        math.exp(_log_binomial_pmf(trials, successes, p))
+        for successes in range(trials + 1)
+    )
+    prefix = tuple(itertools.accumulate(pmf))
+    suffix = tuple(reversed(tuple(itertools.accumulate(reversed(pmf)))))
+    return prefix, suffix
+
+
 def _at_most(pairs: int, flips: int, p: float) -> float:
     """P(X <= flips) for X binomial with `pairs` trials at rate `p`."""
-    return math.fsum(
-        math.comb(pairs, i) * p**i * (1 - p) ** (pairs - i)
-        for i in range(flips + 1)
-    )
+    prefix, _ = _binomial_tables(pairs, p)
+    return prefix[flips]
 
 
 def _at_least(pairs: int, flips: int, p: float) -> float:
     """P(X >= flips) for X binomial with `pairs` trials at rate `p`."""
-    return math.fsum(
-        math.comb(pairs, i) * p**i * (1 - p) ** (pairs - i)
-        for i in range(flips, pairs + 1)
-    )
+    _, suffix = _binomial_tables(pairs, p)
+    return suffix[flips]
 
 
 @dataclass(frozen=True)

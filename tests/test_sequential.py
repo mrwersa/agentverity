@@ -240,3 +240,33 @@ def test_running_out_reports_what_was_collected_not_what_was_planned():
     plan = plan_sequential(0.05)
 
     assert decide_sequentially(plan, [False] * 40) == (UNDECIDED, 40)
+
+
+def test_a_tight_tolerance_plans_without_overflow():
+    """The pair counts a tight tolerance needs overflowed `math.comb`."""
+    small = plan_sequential(0.003)
+    tighter = plan_sequential(0.001)
+
+    assert small.budget > 0
+    assert tighter.budget > small.budget
+    assert small.certify_at_most == 0
+
+
+def test_the_binomial_helpers_match_the_direct_formula():
+    import math
+
+    from agentverity.sequential import _at_least, _at_most
+
+    rate = 0.3
+    for trials in (5, 10, 40):
+        for flips in (0, 1, trials // 2, trials):
+            direct_le = math.fsum(
+                math.comb(trials, i) * rate**i * (1 - rate) ** (trials - i)
+                for i in range(flips + 1)
+            )
+            direct_ge = math.fsum(
+                math.comb(trials, i) * rate**i * (1 - rate) ** (trials - i)
+                for i in range(flips, trials + 1)
+            )
+            assert _at_most(trials, flips, rate) == pytest.approx(direct_le, abs=1e-12)
+            assert _at_least(trials, flips, rate) == pytest.approx(direct_ge, abs=1e-12)

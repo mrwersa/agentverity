@@ -29,7 +29,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from .decision import check_scorable
+from .decision import Decision, check_scorable, comparison_key
 from .meter import _hashable, classify_call, pairs_for_deterministic_call, wilson_ci
 from .observation import Observation
 
@@ -40,8 +40,19 @@ from .observation import Observation
 
 
 def _label(value: Any) -> str:
-    """Render an observation key for a flip-pair row."""
-    return value if isinstance(value, str) else repr(_hashable(value))
+    """Render an observation key for a flip-pair row, one label per decision.
+
+    A bare label and the typed ``Decision`` for it are the same decision, so
+    both render as the label; comparing their rendered forms was how identical
+    evidence reported gained and lost flip pairs. A ``NoDecision`` keeps its
+    own rendering, distinct from a decision of the same name.
+    """
+    if isinstance(value, (list, tuple)):
+        return repr(_hashable(value))
+    key = comparison_key(value)
+    if isinstance(key, Decision):
+        return key.label
+    return repr(_hashable(key))
 
 
 @dataclass(frozen=True)
