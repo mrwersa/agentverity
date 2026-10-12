@@ -811,3 +811,63 @@ def test_input_errors_are_refusals_not_tracebacks(capsys, tmp_path):
     for argv, label in checks:
         assert main(argv) == 2, label
         assert "refused" in capsys.readouterr().err
+
+
+def test_more_input_errors_are_refusals_not_tracebacks(capsys, tmp_path):
+    inputs = tmp_path / "inputs.txt"
+    inputs.write_text(
+        "public-a\npublic-b\nsecret-a\nsecret-b\n", encoding="utf-8"
+    )
+    snapshot_file = tmp_path / "base.json"
+    assert (
+        main([
+            "snapshot",
+            "--agent", "examples.toy_agent:deterministic_gate",
+            "--inputs", str(inputs),
+            "--output", str(snapshot_file),
+            "--k", "4",
+            "--epsilon", "0.5",
+            "--accept-reference",
+        ])
+        == 0
+    )
+    capsys.readouterr()
+
+    directory = tmp_path / "adir"
+    directory.mkdir()
+    duplicates = tmp_path / "dupes.txt"
+    duplicates.write_text("x\nx\n", encoding="utf-8")
+
+    checks = [
+        (
+            [
+                "run",
+                "--agent", "examples.toy_agent:deterministic_gate",
+                "--inputs", str(directory),
+            ],
+            "run",
+        ),
+        (
+            [
+                "snapshot",
+                "--agent", "examples.toy_agent:deterministic_gate",
+                "--inputs", str(directory),
+                "--output", str(tmp_path / "out.json"),
+                "--accept-reference",
+            ],
+            "snapshot",
+        ),
+        (
+            [
+                "check",
+                "--agent", "examples.toy_agent:deterministic_gate",
+                "--inputs", str(duplicates),
+                "--snapshot", str(snapshot_file),
+            ],
+            "check",
+        ),
+    ]
+
+    for argv, label in checks:
+        assert main(argv) == 2, label
+        assert "refused" in capsys.readouterr().err

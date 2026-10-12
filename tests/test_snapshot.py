@@ -724,14 +724,19 @@ class TestAStoredSnapshotNumbersAreValidated:
         "section, field, value",
         [
             ("config", "epsilon", float("nan")),
+            ("config", "epsilon", float("inf")),
+            ("config", "epsilon", 1e400),
             ("config", "epsilon", 0.0),
             ("config", "epsilon", 1.0),
+            ("config", "k", float("inf")),
             ("config", "k", 0),
             ("config", "blindness_threshold", 1.5),
             ("admission_evidence", "meter_pair_trials", -7),
+            ("admission_evidence", "meter_pair_trials", True),
             ("admission_evidence", "meter_ci_high", 2.0),
             ("admission_evidence", "blindness_skew", -1.0),
             ("admission_evidence", "blindness_distinct", 0),
+            ("admission_evidence", "blindness_distinct", True),
         ],
     )
     def test_impossible_numbers_are_refused(self, section, field, value):

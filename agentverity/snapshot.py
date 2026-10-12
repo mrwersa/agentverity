@@ -59,6 +59,26 @@ def _render_reference(value: Any) -> str:
     return json.dumps(value, sort_keys=True)
 
 
+def _snapshot_number(value: Any, name: str, *, integer: bool) -> float | int:
+    """Convert a stored number, refusing a bool or an unconvertible value.
+
+    ``json.loads`` accepts ``Infinity``, ``NaN`` and huge literals, so
+    ``float(...)`` or ``int(...)`` can raise ``OverflowError`` on a file that
+    parsed. Turning every such failure into a compatibility refusal keeps a
+    corrupt reference from crashing the reader.
+    """
+    if isinstance(value, bool):
+        raise SnapshotCompatibilityError(
+            f"snapshot {name} must be a number, got {value!r}"
+        )
+    try:
+        return int(value) if integer else float(value)
+    except (OverflowError, TypeError, ValueError) as exc:
+        raise SnapshotCompatibilityError(
+            f"invalid snapshot {name}: {exc}"
+        ) from exc
+
+
 def _validate_snapshot_numbers(
     *,
     epsilon: float,
@@ -354,13 +374,27 @@ class Snapshot:
                 raise SnapshotCompatibilityError(
                     "contract snapshot probes require intended decisions"
                 )
-            epsilon = float(config["epsilon"])
-            k = int(config["k"])
-            blindness_threshold = float(config["blindness_threshold"])
-            meter_pair_trials = int(evidence["meter_pair_trials"])
-            meter_ci_high = float(evidence["meter_ci_high"])
-            blindness_skew = float(evidence["blindness_skew"])
-            blindness_distinct = int(evidence["blindness_distinct"])
+            epsilon = _snapshot_number(config["epsilon"], "epsilon", integer=False)
+            k = _snapshot_number(config["k"], "k", integer=True)
+            blindness_threshold = _snapshot_number(
+                config["blindness_threshold"],
+                "blindness_threshold",
+                integer=False,
+            )
+            meter_pair_trials = _snapshot_number(
+                evidence["meter_pair_trials"], "meter_pair_trials", integer=True
+            )
+            meter_ci_high = _snapshot_number(
+                evidence["meter_ci_high"], "meter_ci_high", integer=False
+            )
+            blindness_skew = _snapshot_number(
+                evidence["blindness_skew"], "blindness_skew", integer=False
+            )
+            blindness_distinct = _snapshot_number(
+                evidence["blindness_distinct"],
+                "blindness_distinct",
+                integer=True,
+            )
             _validate_snapshot_numbers(
                 epsilon=epsilon,
                 k=k,
@@ -388,7 +422,7 @@ class Snapshot:
             )
         except SnapshotCompatibilityError:
             raise
-        except (KeyError, TypeError, ValueError) as exc:
+        except (KeyError, OverflowError, TypeError, ValueError) as exc:
             raise SnapshotCompatibilityError(
                 f"invalid snapshot structure: {exc}"
             ) from exc

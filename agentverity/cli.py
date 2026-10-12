@@ -287,8 +287,8 @@ def _agent_and_inputs(
         inputs = None if args.suite else _load_inputs(args.inputs)
     except (
         AttributeError,
-        FileNotFoundError,
         ImportError,
+        OSError,
         TypeError,
         ValueError,
     ) as exc:
@@ -500,21 +500,25 @@ def _check_command(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 2
-    result = run(
-        agent,
-        inputs,
-        suite=suite,
-        relations=[],
-        config=RunConfig(
-            k=snapshot.k,
-            epsilon=snapshot.epsilon,
-            blindness_threshold=snapshot.blindness_threshold,
-            layer=snapshot.layer,
-            max_workers=args.max_workers,
-            error_policy=args.error_policy,
-        ),
-        on_progress=_progress if args.progress else None,
-    )
+    try:
+        result = run(
+            agent,
+            inputs,
+            suite=suite,
+            relations=[],
+            config=RunConfig(
+                k=snapshot.k,
+                epsilon=snapshot.epsilon,
+                blindness_threshold=snapshot.blindness_threshold,
+                layer=snapshot.layer,
+                max_workers=args.max_workers,
+                error_policy=args.error_policy,
+            ),
+            on_progress=_progress if args.progress else None,
+        )
+    except ValueError as exc:
+        print(f"snapshot check refused: {exc}", file=sys.stderr)
+        return 2
     try:
         diff = compare_snapshot(snapshot, result)
     except (SnapshotRefused, SnapshotCompatibilityError) as exc:
