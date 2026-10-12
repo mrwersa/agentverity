@@ -114,6 +114,39 @@ def test_the_rendered_check_names_provenance_before_the_result():
     assert text.index("provenance") < text.index("result")
 
 
+def test_a_drifted_and_weakened_check_does_not_claim_a_match():
+    """A check can drift and weaken at once.
+
+    The provenance note once said "the observations match", which contradicts
+    the drift result printed beside it.
+    """
+    base = _snapshot("fresh-session")
+    cases = tuple(
+        EvidenceCase(
+            input=f"probe-{index}",
+            observations=(("refund", "billing")[index % 2],) * 80,
+        )
+        for index in range(6)
+    )
+    drifted = EvidenceSet(
+        cases=(
+            EvidenceCase("probe-0", ("billing",) * 80),
+            *cases[1:],
+        ),
+        layer="verdict",
+        isolation="unknown",
+    )
+
+    diff = compare_snapshot(base, assess_evidence(drifted, epsilon=0.05))
+
+    assert not diff.clean
+    assert diff.provenance_weakened
+    text = diff.render()
+    assert "snapshot drift" in text
+    assert "establishes less" in text
+    assert "observations match" not in text
+
+
 def test_a_check_is_quiet_when_provenance_held_or_improved():
     """A note printed on every run is a note nobody reads."""
     same = compare_snapshot(_snapshot("fresh-session"), _result("fresh-session"))

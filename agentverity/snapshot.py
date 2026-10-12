@@ -355,8 +355,9 @@ class SnapshotDiff:
 
         Only one case reaches here, because `shared-session` is refused on both
         sides: a baseline certified from separated trials, checked against a
-        run that does not say. The observations still match, and the match is
-        real. What weakened is how much the new evidence establishes.
+        run that does not say. The observations may still match; what weakened
+        is how much the new evidence establishes. The note does not assert a
+        match, because a check can drift and weaken at once.
 
         This reports rather than fails, unlike admission. Admission is where a
         number becomes a commitment. A check compares two runs that both
@@ -374,9 +375,9 @@ class SnapshotDiff:
             return None
         return (
             f"the baseline was certified under {self.isolation_before!r} and "
-            f"this run records {self.isolation_after!r}, so the observations "
-            "match but the current evidence establishes less than the "
-            "evidence that admitted the baseline"
+            f"this run records {self.isolation_after!r}, so the current "
+            "evidence establishes less than the evidence that admitted the "
+            "baseline"
         )
 
     def render(self) -> str:

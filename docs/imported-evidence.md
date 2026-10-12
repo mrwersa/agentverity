@@ -308,10 +308,15 @@ later run establishes less:
 
 ```console
 $ agentverity check --agent app:router --inputs probes.txt --snapshot base.json
-provenance: the baseline was certified under 'fresh-session' and this run
-records 'unknown', so the observations match but the current evidence
-establishes less than the evidence that admitted the baseline
-snapshot clean: 100/100 references matched
+regression reference check
+  isolation   fresh-session -> unknown
+  provenance  the baseline was certified under 'fresh-session' and this run records 'unknown', so the current evidence establishes less than the evidence that admitted the baseline
+  result      snapshot clean (100/100 references matched)
+
+limits
+  a match confirms the recorded decision layer was preserved, not
+  that it was correct, and only for the reference's recorded
+  projection and tolerance.
 ```
 
 ## What an import can and cannot check
