@@ -25,6 +25,13 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   It follows `error_policy`: raised, or recorded as an error that makes the
   evidence incomplete. A relation source or follow-up that returns one is
   treated the same way.
+- Ordinary input and configuration errors now refuse with a message and exit 2
+  instead of raising: `run` and `snapshot` with `--epsilon 0`, `plan --suite`
+  or `assess --jsonl` pointing at a missing file, and `inspect` on a snapshot
+  that is not valid UTF-8.
+- Loading a snapshot now validates its numbers, so a hand-edited reference with
+  `epsilon=NaN`, `k=0`, negative pair trials, a proportion outside `[0, 1]`, or
+  no distinct verdict is refused rather than acted on.
 
 ## [0.25.0] - 2026-10-12
 

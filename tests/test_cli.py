@@ -772,3 +772,42 @@ def test_a_bad_evidence_file_is_a_clean_cli_refusal(tmp_path, capsys):
 
     assert main(["assess", "--evidence", str(path)]) == 2
     assert "assessment refused:" in capsys.readouterr().err
+
+
+def test_input_errors_are_refusals_not_tracebacks(capsys, tmp_path):
+    """Malformed input or configuration is the caller's problem, reported as a
+    refusal, not a traceback out of the command."""
+    inputs = tmp_path / "inputs.txt"
+    inputs.write_text("a\nb\n", encoding="utf-8")
+    bad_utf8 = tmp_path / "bad.json"
+    bad_utf8.write_bytes(b"\xff")
+
+    checks = [
+        (["inspect", "--snapshot", str(bad_utf8)], "inspect"),
+        (["assess", "--jsonl", str(tmp_path / "missing.jsonl")], "assess"),
+        (["plan", "--suite", str(tmp_path / "missing-suite.json")], "plan"),
+        (
+            [
+                "run",
+                "--agent", "examples.toy_agent:deterministic_gate",
+                "--inputs", str(inputs),
+                "--epsilon", "0",
+            ],
+            "run",
+        ),
+        (
+            [
+                "snapshot",
+                "--agent", "examples.toy_agent:deterministic_gate",
+                "--inputs", str(inputs),
+                "--output", str(tmp_path / "out.json"),
+                "--accept-reference",
+                "--epsilon", "0",
+            ],
+            "snapshot",
+        ),
+    ]
+
+    for argv, label in checks:
+        assert main(argv) == 2, label
+        assert "refused" in capsys.readouterr().err

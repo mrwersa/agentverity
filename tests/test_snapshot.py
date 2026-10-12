@@ -714,3 +714,29 @@ class TestTheReferenceCheckView:
 
         text = compare_snapshot(snapshot, _result(agent=changed)).render()
         assert not any(probe in text for probe in INPUTS)
+
+
+class TestAStoredSnapshotNumbersAreValidated:
+    """A hand-editable file is the reader's only chance to catch impossible
+    numbers. Loading one must refuse rather than act on it."""
+
+    @pytest.mark.parametrize(
+        "section, field, value",
+        [
+            ("config", "epsilon", float("nan")),
+            ("config", "epsilon", 0.0),
+            ("config", "epsilon", 1.0),
+            ("config", "k", 0),
+            ("config", "blindness_threshold", 1.5),
+            ("admission_evidence", "meter_pair_trials", -7),
+            ("admission_evidence", "meter_ci_high", 2.0),
+            ("admission_evidence", "blindness_skew", -1.0),
+            ("admission_evidence", "blindness_distinct", 0),
+        ],
+    )
+    def test_impossible_numbers_are_refused(self, section, field, value):
+        doc = _reference().to_dict()
+        doc[section][field] = value
+
+        with pytest.raises(SnapshotCompatibilityError):
+            Snapshot.from_dict(doc)
