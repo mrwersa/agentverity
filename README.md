@@ -281,6 +281,6 @@ coverage. See the contributing guide above before opening a pull request.
 ## Status and licence
 
 Alpha. Pin the current minor series for production use:
-`agentverity~=0.24.0`. Patch releases preserve the public API.
+`agentverity~=0.25.0`. Patch releases preserve the public API.
 
 Apache-2.0.

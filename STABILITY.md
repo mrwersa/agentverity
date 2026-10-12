@@ -23,10 +23,10 @@ not a waiver for silent breakage.
 Production users should pin the current minor series:
 
 ```text
-agentverity~=0.24.0
+agentverity~=0.25.0
 ```
 
-That accepts compatible `0.24.x` fixes without moving to a later pre-1.0 minor
+That accepts compatible `0.25.x` fixes without moving to a later pre-1.0 minor
 series.
 
 Version 0.23 reads and writes one version of each schema:
