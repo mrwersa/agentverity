@@ -13,10 +13,11 @@ What this reports and what it deliberately does not:
   within either one. Two correlated runs agree with each other very
   comfortably. Independence is a property of how each window was collected,
   recorded in ``isolation``, and no amount of comparison recovers it.
-- Agreement is about the repeatability structure, not output identity. The
-  comparison is over intended routes and their flip-pair shapes, so replacing
-  every observed label (``allow``/``block`` to ``review``/``deny``) can still
-  report no drift. To require the reviewed outputs themselves to match, check
+- Agreement is about the repeatability structure, not output identity. A route
+  that never flips is compared only by its flip rate, so renaming its observed
+  outputs (``allow`` to ``review``) is invisible; flip pairs are compared by the
+  labels that formed them, so renaming disagreeing outputs shows as flip pairs
+  gained and lost. To require the reviewed outputs themselves to match, check
   against a snapshot.
 
 Drift here means the evidence moved. Whether that is a regression, an

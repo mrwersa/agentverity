@@ -369,3 +369,28 @@ class TestEquivalentDecisionsDoNotDrift:
 
         assert not compare_evidence(label, same_label_typed).drifted
         assert compare_evidence(label, no_decision).drifted
+
+
+class TestAgreementIsAboutStructureNotOutputIdentity:
+    """`drift.py` and `imported-evidence.md` scope NO CHANGE to the
+    repeatability structure, not the observed labels."""
+
+    def test_relabelling_a_stable_route_is_invisible(self):
+        before = EvidenceSet((EvidenceCase("x", ("allow",) * 20, expected="allow"),))
+        after = EvidenceSet((EvidenceCase("x", ("review",) * 20, expected="allow"),))
+
+        assert not compare_evidence(before, after).drifted
+
+    def test_relabelling_a_flip_pair_is_gained_and_lost(self):
+        before = EvidenceSet(
+            (EvidenceCase("x", ("allow", "block") * 10, expected="allow"),)
+        )
+        after = EvidenceSet(
+            (EvidenceCase("x", ("review", "deny") * 10, expected="allow"),)
+        )
+
+        drift = compare_evidence(before, after)
+
+        assert drift.drifted
+        assert drift.gained_flip_pairs == ("deny <-> review",)
+        assert drift.lost_flip_pairs == ("allow <-> block",)

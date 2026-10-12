@@ -440,7 +440,9 @@ Independence is a property of how each window was collected, recorded in
 comparison for that reason.
 
 `NO CHANGE` is agreement about the repeatability structure and the intended
-routes, not output identity. Replacing every observed label (`allow`/`block` to
-`review`/`deny`) leaves the routes and their flip-pair shapes unchanged, so the
-comparison reports no drift even though no output is the same. To require the
-reviewed outputs themselves to match, use `snapshot` and `check`.
+routes, not output identity. A route that never flips is compared only by its
+flip rate, so renaming its observed outputs (every `allow` to `review`) is
+invisible. Flip pairs are the exception: they are compared by the labels that
+formed them, so renaming outputs that disagree is reported as flip pairs gained
+and lost. To require the reviewed outputs themselves to match, use `snapshot`
+and `check`.
