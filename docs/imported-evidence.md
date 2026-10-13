@@ -100,6 +100,8 @@ dependency. See the [complete shared-run example](../examples/deepeval_shared_ru
 Promptfoo and DeepEval each have a bridge because each has an export shape.
 This one has none: a line per run, and you name the fields.
 
+Save the following synthetic rows as `runs.jsonl`:
+
 ```jsonl
 {"input": "charged twice for 4471", "decision": "billing"}
 {"input": "charged twice for 4471", "decision": "card_security"}
@@ -108,8 +110,10 @@ This one has none: a line per run, and you name the fields.
 ```
 
 ```bash
-agentverity assess --jsonl runs.jsonl --suite payment_decisions.json
+agentverity assess --jsonl runs.jsonl
 ```
+
+For a log whose input and route are nested, select their paths explicitly:
 
 ```python
 from agentverity import load_jsonl
@@ -281,9 +285,10 @@ is precisely the hiding this package exists to stop.
 
 ## Isolation is recorded, not assumed
 
-The statistics assume trials are independent. An imported file can break that
-in ways a self-run cannot: repeats drawn from one conversation, a warm provider
-cache, a single session reused.
+The statistics assume trials are independent. Both imported and live runs can
+violate that assumption through a reused conversation, warm provider cache,
+or shared session. Live adapters record what they control; importers retain
+the caller's declaration. Neither infers independence from matching decisions.
 
 | `isolation` | Meaning | Reported | May certify a baseline |
 |---|---|---|---|
@@ -334,9 +339,11 @@ Relation results come back empty rather than passing. Reporting a relation as
 held when it never ran would be exactly the vacuous green this package exists
 to name.
 
-If you want relation coverage, run `agentverity run`. If you want an admission
-decision on evidence you already paid for, `assess` gives you everything except
-relations.
+If you want relation coverage, run `agentverity run`. To assess evidence you
+already paid for, use `assess`. Python callers can then pass that result to
+`create_snapshot(result, approved=True)` for the separate admission decision.
+The CLI `snapshot` command collects a live run; it does not import an evidence
+file.
 
 ## Matching a suite
 
@@ -357,8 +364,8 @@ the denominator.
 | Code | Meaning |
 |---|---|
 | `0` | Assessed: an interpretable result was produced |
-| `1` | Contract failure, blindness, a missed target, or violations |
-| `2` | Undecided, or the evidence could not be read |
+| `1` | Contract failure, blindness, or a target proven above tolerance |
+| `2` | Incomplete, undecided (including a missed target), malformed, or unsupported evidence |
 
 Exit `0` means the assessment completed and can be read, not that the evidence
 may become a baseline. Stochastic evidence exits `0` here, and snapshot
@@ -383,9 +390,10 @@ automatically an independent **evaluation period**, the statistical sampling
 unit needed for an across-period marginal claim. Splitting observations across
 two files does not establish independent period sampling.
 
-A run says whether a decision is repeatable now. It cannot say whether last
-month's answer was the same, which is the question after a model version
-changes, a prompt is edited, or a provider reroutes traffic.
+A run assesses repeatability in one collection period. Comparing two stored
+windows shows whether the repeatability conclusions, flip pairs, intended
+routes, isolation, or recorded provenance changed after a model or prompt
+update. It does not require the observed decisions themselves to match.
 
 ```console
 $ agentverity compare-evidence july.json august.json
@@ -400,9 +408,9 @@ evidence drift
 verdict: DRIFTED
 ```
 
-The reportable event is a **tri-state result moving**, not a rate wandering. A
-route drifting from 2% to 3% inside the same conclusion is noise. A route
-crossing from deterministic to stochastic is a release event.
+Changed tri-state conclusions count as drift. Higher or lower point estimates
+within the same conclusion are reported but do not alone set the drift flag.
+The comparator does not test whether that rate difference is significant.
 
 | Reported | Meaning |
 |---|---|
@@ -410,7 +418,7 @@ crossing from deterministic to stochastic is a release event.
 | `higher` / `lower` | The observed change rate moved inside one verdict |
 | `incomparable` | One window had no usable pairs for that route |
 | routes gained or lost | An intended decision route appeared or disappeared entirely |
-| flip pairs gained or lost | A new confusion appeared, or an old one resolved |
+| flip pairs gained or lost | A disagreeing decision-label pair appeared or disappeared |
 | provenance | A model, prompt, or harness difference between the files |
 | isolation | The two windows were collected under different isolation, so the evidence means something different |
 

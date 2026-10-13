@@ -25,8 +25,9 @@ mutually exclusive `--observed` source and its optional `--max-pairs`
 endpoint. It also records `CurtailmentReplayResult`, the optional
 `assess_evidence` and `RunResult` additions, and
 `assess --replay-curtailment`. The reviewed delta on top of 0.23.0 is the
-read-only `agentverity inspect --snapshot` command; CI checks that explicit
-additive candidate delta rather than relabelling the published fixture.
+read-only `agentverity inspect --snapshot` command, released in 0.24.0; CI
+checks that explicit additive extension rather than relabelling the published
+fixture.
 
 Help prose, class methods and properties, return-object field semantics, and
 serialized report meaning are not established by this fixture. Process exit

@@ -17,7 +17,7 @@ loop for bounded categorical decisions.
 | Price and collect | `plan`, `run` | Fixed, live-curtailed fixed, or predeclared sequential budgets; callable, Strands, and LangGraph adapters |
 | Reuse evidence | `assess` | Promptfoo, DeepEval test cases, and generic JSONL raw runs; aggregates refused |
 | Qualify | report | Wilson-bound tri-state calls, per-route evidence, blindness, relations, and declared contracts |
-| Admit and revisit | `snapshot`, `check`, `compare-evidence` | Versioned regression references, drift checks, isolation policy, and independent evidence-window comparison |
+| Admit and revisit | `snapshot`, `check`, `compare-evidence` | Versioned regression references, drift checks, isolation policy, and stored evidence-window comparison |
 | Automate | terminal, JSON, JUnit, OTEL | CI-friendly outputs and privacy-minimised telemetry |
 
 Method validation, compatibility inventories, durable reader fixtures, CLI

@@ -42,6 +42,11 @@ result = run(agent, suite=suite)
 - `RunResult.decision_coverage` reports intended, observed, missing, unknown,
   and missing-critical labels. Its `intended_counts` and `observed_counts`
   hold `DecisionCount` values, so that name is exported for annotations.
+  `observed_counts` counts primary observations. `observed_case_counts` counts
+  every case that reached a decision anywhere in its collected repeats or
+  separate source scan, with at most one vote per case per decision. Required
+  observed reach uses this latter count, so a decision seen only on a later
+  rerun is still present.
 - `DecisionContract.stability_targets` sets a per-route tolerance. Declaring
   one also sizes route repeats when the meter is enabled. Targets must name
   required decisions. They are separate from the `critical` reporting label.
@@ -104,6 +109,10 @@ The CLI accepts the same versioned structure with `--suite suite.json`.
   stability at the declared tolerance, the other outcomes name what prevented
   or rejected it, and none is a correctness judgement.
 - `RunResult.status` gives the canonical machine interpretation.
+- `RunResult.isolation` records the adapter's declaration. Live and imported
+  reports warn when isolation is `unknown` or `shared-session`; the JSON report
+  carries both `isolation` and `caveats`. A shared session cannot admit a
+  snapshot. Unknown isolation can admit with a caveat.
 - `RunResult.curtailment` is a `CurtailmentResult` when fixed-endpoint
   admission became unreachable. It records the stopping pair and avoided work;
   `RunResult.meter` is `None` because the endpoint was not classified.
@@ -123,6 +132,23 @@ actionable failure guidance elsewhere in the report. JSON also includes
 `route_plans`, and the meter reports both minimum and maximum repeats when
 allocation differs by route.
 
+Assessment success is separate from snapshot admission. In particular,
+interpretable stochastic evidence exits `0` but cannot admit a snapshot. See
+the [command-by-command exit contract](cli-exit-contract.md).
+
+### Typed decisions and failures
+
+`Observation.verdict` accepts a string, `Decision`, or `NoDecision`. Callable,
+Strands, and LangGraph adapters preserve typed outcomes. On the verdict layer,
+`NoDecision("runtime_error")`, `NoDecision("extraction_failed")`, and
+`NoDecision("malformed_response")` mean the harness failed. In a live `run`,
+`error_policy="raise"` raises `OutcomeNotScorable` at detection;
+`error_policy="record"` records an error and returns incomplete evidence.
+This applies to fixed, sequential, curtailed, source-scan, and relation calls.
+Incomplete evidence cannot enter a snapshot. Genuine agent refusals use
+`NoDecision("refused")`, which is a different outcome and may be declared in
+the contract. See [typed imported outcomes](imported-evidence.md#recording-a-run-that-produced-no-decision).
+
 ## Snapshots
 
 A snapshot is a versioned file containing the reviewed expected decisions used
@@ -132,6 +158,8 @@ declared contract and each case's intended decision.
 - `create_snapshot` admits a reviewed reference only when the evidence permits.
 - `compare_snapshot` rechecks admission before comparing current outputs.
 - `save_snapshot` and `load_snapshot` persist versioned snapshot JSON.
+  The loader refuses unsupported schemas, unreadable or malformed files, and
+  invalid numeric ranges with `SnapshotCompatibilityError`.
 - `Snapshot.render()` returns a plain-language view of a stored reference for
   review: the projection layer, tolerance, admission evidence, isolation, the
   declared contract, and every fingerprinted reference. It reads the stored
@@ -164,8 +192,9 @@ calculation cannot create early admission and does not classify the evidence.
 
 Programmatic callers can import `RoutePlan` and `plan_route_repeats`.
 `RunConfig.k` is a minimum when route targets are declared, and the route plan
-records any larger per-route allocation. `RunConfig.budget` remains a hard cap
-unless the caller explicitly supplies `k`.
+records any larger per-route allocation. With automatic sizing,
+`RunConfig.budget` caps planned meter calls; an explicit `k` takes precedence.
+Separate source-scan and relation calls are additional.
 
 ## Advanced measurement
 

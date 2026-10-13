@@ -93,7 +93,7 @@ contracts, and release policy outside one vendor dashboard.
 |---|---|
 | Plain Python | Wrap `fn(str) -> str | dict | Observation` with `from_callable` |
 | Strands Agents | Use `from_strands_factory` for isolated trials |
-| LangGraph | Wrap `graph.invoke` and return an `Observation` |
+| LangGraph | Use `from_langgraph` with a fresh thread for each trial |
 | Remote agent | Wrap the SDK or HTTP call and extract the decision or tool path |
 | AgentCore Runtime | Wrap `invoke_agent_runtime` and start a fresh session per trial |
 
@@ -169,15 +169,20 @@ agentverity run \
   --output agentverity.xml
 ```
 
-Exit codes and JUnit share one interpretation:
+Exit codes report the command outcome. For `run` and `assess`:
 
 | Code | Meaning |
 |---:|---|
-| 0 | Evidence is interpretable and no requested relation failed |
-| 1 | Poor or incomplete declared coverage, an ineffective or failed relation, or snapshot drift |
+| 0 | Interpretable diagnostics; stochastic evidence can still return 0 |
+| 1 | Blindness, failed coverage or target policy, an ineffective or failed relation, or live curtailment |
 | 2 | Incomplete, undecided, or unsupported evidence |
 
-An unstable decision changes the test strategy. It does not by itself prove
+Exit `0` does not admit a regression reference. `snapshot` applies a separate
+admission policy. JUnit represents these findings as failures, skips, errors,
+or guidance according to the check; stochasticity alone is guidance. See the
+[full CLI exit contract](cli-exit-contract.md) for the other commands.
+
+A changing decision changes the test strategy. It does not by itself prove
 that the agent is defective.
 
 ## Send the result to observability

@@ -51,6 +51,23 @@ The CLI equivalent is `agentverity plan --observed 4/73 --epsilon 0.05`.
 Add `--max-pairs 201` to test a predeclared endpoint; the plan reports that
 202 is the earliest all-agree total and 201 is unreachable.
 
+```console
+$ agentverity plan --observed 4/73 --epsilon 0.05 --max-pairs 201
+agentverity — observed-count admission plan
+  observed:     4 flips / 73 pairs
+  tolerance:    0.05
+  assumption:   every additional pair agrees
+  earliest:     202 total pairs
+  additional:   129 pairs
+  maximum:      201 total pairs
+  reachable:    no
+
+This is an optimistic fixed-endpoint calculation. It cannot create early admission: qualification still belongs at a predeclared endpoint or to a predeclared sequential rule.
+```
+
+An unreachable planning result still exits `0`: the plan was printed
+successfully. It is not a qualification result.
+
 For live collection, `RunConfig(curtail=True)` or `--curtail` predeclares the
 ordinary fixed endpoint and applies only that impossibility direction. If the
 endpoint becomes unreachable, the run records status `curtailed`, the stopping
@@ -68,8 +85,14 @@ when no changes are observed:
 | `balanced` | 5% | 73 |
 | `strict` | 1% | 381 |
 
-These are target-call budgets, not library-throughput benchmarks. Wall time is
-normally dominated by the supplied agent or remote endpoint. A local
+These are best-case pair requirements, not library-throughput benchmarks or
+guarantees of qualification. At a planned 2% disagreement rate and 5%
+tolerance, the independent-pair calculation needs 311 pairs for an 80%
+chance of qualifying. The [workshop reproduction](../research/fixed_budget_qualification/README.md#choose-a-pair-budget)
+provides that separate budget-design calculation; `agentverity plan` prints
+the zero-change minimum or an optimistic continuation, not a power target.
+
+Wall time is normally dominated by the supplied agent or remote endpoint. A local
 calls-per-second figure would therefore say little about the cost of a real
 evaluation. `plan_repeats` exposes the budget that teams can price before a
 run, while the measured

@@ -88,12 +88,19 @@ reviewed path contract.
 
 ## What a result means
 
-A trustworthy result supports this bounded statement:
+A qualified result supports this bounded statement, subject to the report's
+isolation caveat:
 
 > For these test inputs, observation layer, isolated trial method, and
 > tolerance, the run produced enough repeatability evidence and did not collapse
 > onto one highly dominant observed decision. When a decision contract was
 > supplied, every required decision was intended and observed.
+
+Qualification concerns the supplied collection period. More reruns in that
+period do not establish repeatability across deployments or time. Fresh state
+removes application-history leakage but does not establish provider
+independence. A pooled qualification can also leave untargeted routes
+undecided, as the report states.
 
 It does not prove:
 
@@ -179,7 +186,8 @@ need a second implementation.
 
 ## Trial assumptions and cost
 
-AgentVerity uses isolated non-overlapping rerun pairs. Isolation prevents
+AgentVerity uses non-overlapping rerun pairs and records declared isolation.
+The caller must arrange equivalent starting state. Isolation prevents
 conversation history from contaminating a repeat, but it cannot remove
 provider-side caching, model rollouts, routing changes, or shared external
 state.

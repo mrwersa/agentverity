@@ -10,7 +10,7 @@ The pooled stability result can hide which decision is moving. This guide
 shows how AgentVerity names that route and how to budget a tighter tolerance
 before calling the agent.
 
-## One number can hide one broken route
+## One number can hide one changing route
 
 Suppose the test suite contains two cases for each decision. Across all six
 cases, 10 of 78 repeated pairs change decision, a pooled rate of 12.8%.
@@ -98,8 +98,10 @@ changes two things:
    exits CI as an incomplete measurement. A route proven above its target
    fails the declared release policy.
 
-An explicit `budget` remains a hard cap. If the zero-change plan does not fit,
-the run refuses before calling the agent.
+With automatic sizing, `budget` caps the planned meter calls. If the
+zero-change route plan does not fit, the run refuses before calling the agent.
+An explicit `k` takes precedence over that cap; it is a minimum when route
+targets require more repeats. Source-scan and relation calls are additional.
 
 ## See the bill before making calls
 
@@ -180,10 +182,10 @@ The fix is a relation that actually perturbs those inputs, not more reruns.
 
 ## Cases are not repeats
 
-Ten `deny` cases that are paraphrases of one request satisfy any tolerance and
-leave the boundary untested. Repeats tell you a decision is stable. Distinct
-cases tell you a route was approached from more than one angle. No amount of
-statistics turns the first into the second, because the package has no idea
+Ten `deny` cases that are paraphrases of one request can satisfy a case-count
+policy while leaving the boundary untested. Repeats measure repeatability.
+Distinct cases tell you a route was approached from more than one angle. No
+amount of statistics turns the first into the second, because the package has no idea
 what inputs a route ought to contain.
 
 So the number is declared, not calculated:
@@ -238,7 +240,7 @@ input at all still fails as vacuous.
 | Result | Meaning | Next action |
 |---|---|---|
 | targeted `stochastic` | The route is proven to change more than its declared tolerance | Release fails. Repair the route or review the policy |
-| untargeted `stochastic` | The route is proven to change more than the run tolerance | Treat it as actionable diagnostic evidence |
+| untargeted `stochastic` | The route is proven to change more than the run tolerance | Snapshot admission is refused, even if the pooled result qualifies |
 | `undecided` with changes | The route moves, but the interval crosses the tolerance | Collect more evidence or expect a stochastic result |
 | `undecided` with no changes | The route was quiet but under-measured | Add repeats up to the named pair requirement |
 | `deterministic` | The route is stable enough at its declared tolerance | Review correctness before admitting a baseline |

@@ -6,15 +6,22 @@ an answer. Not every command can produce every class.
 
 | Command | 0 | 1 | 2 |
 |---|---|---|---|
-| `run` | Interpretable diagnostics | Coverage, relation, target, or curtailment finding | Incomplete, undecided, invalid, or infeasible run |
-| `plan` | Plan printed | — | CLI usage error |
-| `assess` | Interpretable imported evidence | Coverage or target finding | Malformed, incomplete, or undecided evidence |
+| `run` | Interpretable diagnostics | Blindness, coverage, relation, target, or curtailment finding | Incomplete, undecided, invalid, or infeasible run |
+| `plan` | Plan printed, including an unreachable endpoint | — | Invalid arguments, unreadable suite, or infeasible plan |
+| `assess` | Interpretable imported evidence | Blindness, coverage, or target finding | Malformed, incomplete, unsupported, or undecided evidence |
 | `compare-evidence` | No drift | Drift detected | Malformed or incompatible evidence |
 | `snapshot` | Regression reference admitted | — | Approval absent or evidence refused |
 | `check` | Snapshot clean | Snapshot drift | Invalid snapshot or current evidence refused |
+| `inspect` | Stored reference rendered | — | Unreadable, malformed, or incompatible snapshot |
 
-`tests/test_cli_exit_contract.py` executes every populated cell using synthetic,
-offline inputs. The versioned test contract lives at
+Interpretable stochastic evidence can exit `0` from `run` or `assess` while
+remaining inadmissible as a snapshot. A failed targeted tolerance exits `1`;
+an undecided target exits `2`. Read the report and use snapshot admission for
+the baseline decision.
+
+`tests/test_cli_exit_contract.py` executes the original command matrix using
+synthetic, offline inputs. Later commands and refusal paths also have focused
+tests in `tests/test_cli.py`. The versioned test contract lives at
 `tests/fixtures/compatibility/v0.20.0/cli-exit-contract.json`. This pins process
 classification, not exact output prose.
 
