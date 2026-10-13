@@ -61,8 +61,10 @@ Do not cut one when:
   day and let the changelog carry the whole of it.
 
 The version follows what changed rather than how long it has been. A patch
-preserves the public Python API and the command-line contract, and anything
-that refuses input it used to accept is a minor, however small the diff.
+preserves the public Python API and the command-line contract. Refusing a
+previously supported input requires a minor, however small the diff.
+Correctly refusing malformed artefacts or typed harness failures outside the
+documented contract is a bug fix and may ship as a patch.
 
 ## Cut a release
 

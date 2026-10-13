@@ -27,7 +27,7 @@ offline agents and evidence. Its reviewed fixture pins:
 CI recollects those semantics and compares them with
 `tests/fixtures/compatibility/v0.23.0/return-semantics.json`. A behaviour change
 therefore requires a readable fixture diff rather than passing unnoticed. The
-reviewed candidate delta adds the `isolation` member to the JSON report; CI
+reviewed 0.25.1 extension adds the `isolation` member to the JSON report; CI
 checks that explicit addition, then compares the rest with the fixture.
 The fixture includes the executed `curtailed` path and optional JSON
 `curtailment` and `curtailment_replay` members. CI compares the checkout

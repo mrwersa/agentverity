@@ -22,10 +22,10 @@ cannot disappear between the two inventories. Private and generated dunder
 methods, inherited `object`/exception machinery, docstrings, and method bodies
 are deliberately excluded.
 
-The reviewed delta is `Snapshot.render` and `SnapshotDiff.render`, two read-only
-view methods that add no signature change to an existing caller. CI checks that
-explicit additive candidate delta against the published 0.23.0 fixture; the
-fixture remains unchanged rather than being relabelled as a candidate release.
+The reviewed extensions are `Snapshot.render` (0.24.0) and
+`SnapshotDiff.render` (0.25.0), two read-only view methods. CI checks those
+explicit additions against the published 0.23.0 fixture, which remains the
+historical baseline.
 
 ## Provenance and Reproduction
 

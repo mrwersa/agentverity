@@ -93,7 +93,7 @@ the published 0.23.0 wheel. The executable CLI contract retains its reviewed
   drift, snapshot, and reporting returns; and
 - the [class-member audit](docs/class-member-audit.md) inventories declared
   fields, defaults, methods, class methods, static methods, and properties for
-  all 36 top-level exported classes.
+  all 37 top-level exported classes.
 
 These audits establish reviewable structure and representative behaviour.
 They do not freeze exact help or report prose, exhaustively specify every

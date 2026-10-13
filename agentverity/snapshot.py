@@ -60,7 +60,7 @@ def _render_reference(value: Any) -> str:
 
 
 def _snapshot_number(value: Any, name: str, *, integer: bool) -> float | int:
-    """Convert a stored number, refusing a bool or an unconvertible value.
+    """Convert a stored number, refusing bools and fractional integer fields.
 
     ``json.loads`` accepts ``Infinity``, ``NaN`` and huge literals, so
     ``float(...)`` or ``int(...)`` can raise ``OverflowError`` on a file that
@@ -72,11 +72,16 @@ def _snapshot_number(value: Any, name: str, *, integer: bool) -> float | int:
             f"snapshot {name} must be a number, got {value!r}"
         )
     try:
-        return int(value) if integer else float(value)
+        number = int(value) if integer else float(value)
     except (OverflowError, TypeError, ValueError) as exc:
         raise SnapshotCompatibilityError(
             f"invalid snapshot {name}: {exc}"
         ) from exc
+    if integer and not isinstance(value, str) and value != number:
+        raise SnapshotCompatibilityError(
+            f"snapshot {name} must be an integer, got {value!r}"
+        )
+    return number
 
 
 def _validate_snapshot_numbers(

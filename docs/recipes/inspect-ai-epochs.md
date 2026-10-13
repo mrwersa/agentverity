@@ -93,10 +93,11 @@ caveat is the honest output until someone verifies instance behaviour.
 
 ## Budget expectations
 
-At a 5% tolerance, certifying stability with zero observed flips takes 73
-disjoint pairs, so `epochs=2` across ten tasks cannot certify anything on its
-own. It can still reject: a route flipping on half its pairs is visible almost
-immediately. Size the run with `agentverity plan` before spending model calls.
+At a 5% tolerance, qualifying with zero observed flips takes 73 disjoint pairs.
+`epochs=2` across ten samples supplies ten pairs, too few for the pooled claim.
+A separate claim for each sample needs 73 pairs per sample. A short run can
+still show excessive variation. Size the run with `agentverity plan` before
+spending model calls.
 
 ## Non-guarantees
 

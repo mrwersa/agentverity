@@ -30,6 +30,7 @@ must be treated according to its own column.
 | Terminal summary | Excluded | Conditional | Excluded | Retained | Conditional | Retained |
 | Progress event | Excluded | Excluded | Retained | Excluded | Excluded | Excluded |
 | Snapshot | Excluded | Retained | Retained | Excluded | Retained | Excluded |
+| Reference views (`inspect` / `check`) | Excluded | Retained | Retained | Excluded | Retained | Excluded |
 | OpenTelemetry | Excluded | Excluded | Excluded | Excluded | Excluded | Excluded |
 
 Imported-evidence `provenance` is an unfiltered, caller-supplied mapping. It can
@@ -44,6 +45,11 @@ headlines can echo the same value on finding paths. JSON reports and terminal
 summaries retain recorded exception messages; JUnit reports retain only
 failure counts and AgentVerity-generated explanations. Snapshots necessarily
 retain the approved reference observation they later compare.
+
+`inspect` renders every stored reference value. A drifting `check` renders
+both the expected and actual values for changed references. These terminal
+views can expose model output, especially on the `text` layer, and need the
+same handling as the underlying snapshot and run logs.
 
 OpenTelemetry is the narrowest surface: only aggregate counts, configuration,
 rates, and AgentVerity status values are emitted. Exporter configuration,

@@ -2,6 +2,9 @@
 
 **Research date:** 22 August 2026
 
+**Local implementation alignment:** AgentVerity 0.25.1. External comparisons
+and adoption observations below remain dated to the research review.
+
 **Audience:** AgentVerity maintainers and technical adopters
 
 ## Executive verdict
@@ -10,8 +13,8 @@ AgentVerity should define a narrow category: an **evidence-qualification layer
 for repeated categorical agent decisions**. Evaluators decide whether an
 answer or trajectory is acceptable; observability systems record what
 happened; AgentVerity decides whether repeated evidence is sufficiently
-repeatable, covered, independent, and non-vacuous to admit as a regression
-reference.
+repeatable, covered, and non-vacuous to admit as a regression reference under
+the declared isolation and independence assumptions.
 
 That distinction is the opportunity. Repetition itself is no longer unusual:
 LangSmith, Promptfoo, and Phoenix all expose repeated experiment runs. The
@@ -136,7 +139,7 @@ An importer must therefore reject ambiguous mappings rather than infer them.
 
 ### Verified implementation
 
-The 0.23.0 package is a zero-mandatory-dependency Python 3.10–3.14 library and
+The 0.25.1 package is a zero-mandatory-dependency Python 3.10–3.14 library and
 CLI. Its public workflow is:
 
 - `plan` prices a suite before calls are made or an all-agree continuation
@@ -173,6 +176,15 @@ use `agentverity.run/v2`. Raw evidence can contain prompts and outputs, while
 the OpenTelemetry summary intentionally omits prompts, outputs, fingerprints,
 labels, relation names, and errors; fingerprints are identifiers, not
 anonymisation.
+
+Live and imported reports carry the same independence caveats, and run JSON
+records isolation explicitly. Typed harness failures make live evidence
+incomplete under the record policy. Contracts require the verdict layer, and
+empty categorical evidence is refused. Evidence comparison normalises typed
+and plain decision labels, but `NO CHANGE` concerns repeatability structure
+and provenance rather than output identity. Use `check` for reviewed reference
+outputs. Snapshot readers validate numeric ranges, and ordinary malformed
+CLI inputs are reported as refusals.
 
 ### Validation and maturity
 
