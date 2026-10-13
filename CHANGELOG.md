@@ -8,17 +8,17 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
-### Fixed
-
-- Snapshot readers refuse fractional repeat, pair-trial, and distinct-verdict
-  counts instead of silently truncating them to integers.
-
 ### Changed
 
 - Shortened the community README around the problem and an offline quickstart;
   aligned guides with released admission, isolation, comparison, failure, and
   budget semantics. Clarified reference-view data retention and the difference
   between a best-case repeat budget and a probability of qualification.
+
+### Fixed
+
+- Snapshot readers refuse fractional repeat, pair-trial, and distinct-verdict
+  counts instead of silently truncating them to integers.
 
 ## [0.25.1] - 2026-10-12
 

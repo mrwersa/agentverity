@@ -748,3 +748,16 @@ class TestAStoredSnapshotNumbersAreValidated:
 
         with pytest.raises(SnapshotCompatibilityError):
             Snapshot.from_dict(doc)
+
+    def test_whole_number_integer_fields_are_still_accepted(self):
+        """A whole float is an integer count, not a fractional one."""
+        doc = _reference().to_dict()
+        doc["config"]["k"] = 4.0
+        doc["admission_evidence"]["meter_pair_trials"] = 8.0
+        doc["admission_evidence"]["blindness_distinct"] = 2.0
+
+        loaded = Snapshot.from_dict(doc)
+
+        assert loaded.k == 4
+        assert loaded.meter_pair_trials == 8
+        assert loaded.blindness_distinct == 2
