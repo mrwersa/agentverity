@@ -8,6 +8,8 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+## [0.25.2] - 2026-10-14
+
 ### Changed
 
 - Shortened the community README around the problem and an offline quickstart;
@@ -1355,7 +1357,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.25.1...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.25.2...HEAD
+[0.25.2]: https://github.com/mrwersa/agentverity/compare/v0.25.1...v0.25.2
 [0.25.1]: https://github.com/mrwersa/agentverity/compare/v0.25.0...v0.25.1
 [0.25.0]: https://github.com/mrwersa/agentverity/compare/v0.24.1...v0.25.0
 [0.24.1]: https://github.com/mrwersa/agentverity/compare/v0.24.0...v0.24.1
