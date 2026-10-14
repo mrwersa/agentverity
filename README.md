@@ -169,4 +169,4 @@ ruff check .
 Core runtime dependencies: none. CI covers Python 3.10–3.14 and at least 90%
 statement coverage.
 
-Alpha. Pin `agentverity~=0.25.2` for compatible patch updates. Apache-2.0.
+Alpha. Pin `agentverity~=0.25.0` for compatible patch updates. Apache-2.0.

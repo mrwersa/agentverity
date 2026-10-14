@@ -85,6 +85,11 @@ release time.
    someone deciding whether to upgrade. A missing, undated, or empty section
    fails the release rather than publishing a version nobody described.
 
+   Keep `Unreleased` above the release sections. Add the new version's
+   comparison link and point the `Unreleased` link at the new version. Update
+   the roadmap's release framing, while keeping README and stability-guide
+   dependency pins at the current `major.minor.0` series.
+
 4. Run the local checks:
 
    ```bash
