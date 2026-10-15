@@ -351,6 +351,22 @@ def test_detect_stops_at_a_duck_typed_failure(reason):
 @pytest.mark.parametrize(
     "reason", ["runtime_error", "extraction_failed", "malformed_response"]
 )
+def test_detect_stops_immediately_when_the_first_duck_typed_input_fails(reason):
+    calls = []
+
+    def agent(text):
+        calls.append(text)
+        return _KeyOnlyObservation(NoDecision(reason))
+
+    with pytest.raises(OutcomeNotScorable, match=reason):
+        detect(agent, ["bad", "never-called"])
+
+    assert calls == ["bad"]
+
+
+@pytest.mark.parametrize(
+    "reason", ["runtime_error", "extraction_failed", "malformed_response"]
+)
 def test_score_stops_consuming_at_a_duck_typed_failure(reason):
     def observations():
         yield _KeyOnlyObservation("allow")
