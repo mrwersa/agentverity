@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project follows [Semantic Versioning](https://semver.org/) once it
 reaches 1.0.0; before that, minor versions may include breaking changes.
 
-## [Unreleased]
+## [0.25.3] - 2026-10-15
 
 ### Changed
 
@@ -25,6 +25,10 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   the scan's existing open-ended/text-fallback handling are preserved.
 - The optional sibling release-policy comparison now ignores historical
   introductions without dropping part of the policy.
+
+## [Unreleased]
+
+(No changes planned for the next release.)
 
 ## [0.25.2] - 2026-10-14
 
@@ -1375,7 +1379,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.25.2...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.25.3...HEAD
+[0.25.3]: https://github.com/mrwersa/agentverity/compare/v0.25.2...v0.25.3
 [0.25.2]: https://github.com/mrwersa/agentverity/compare/v0.25.1...v0.25.2
 [0.25.1]: https://github.com/mrwersa/agentverity/compare/v0.25.0...v0.25.1
 [0.25.0]: https://github.com/mrwersa/agentverity/compare/v0.24.1...v0.25.0

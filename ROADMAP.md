@@ -9,7 +9,7 @@ outcome-gated plan. Horizons guide sequencing rather than promise dates;
 
 ## Current state
 
-As of 0.25.2, the released 0.25.2 picture is a complete local qualification
+As of 0.25.3, the released 0.25.3 picture is a complete local qualification
 loop for bounded categorical decisions.
 
 | Need | Interface | Established behaviour |
