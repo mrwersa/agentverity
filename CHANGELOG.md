@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project follows [Semantic Versioning](https://semver.org/) once it
 reaches 1.0.0; before that, minor versions may include breaking changes.
 
-## [Unreleased]
+## [0.25.5] - 2026-10-15
 
 ### Fixed
 
@@ -21,6 +21,10 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   keys, structured outcome values and report schemas are unchanged.
 - Shared-session guidance and runtime refusals describe unsupported independence
   and confidence, without assuming dependence always narrows an interval.
+
+## [Unreleased]
+
+(No changes planned for the next release.)
 
 ## [0.25.4] - 2026-10-15
 
@@ -1400,7 +1404,8 @@ Initial public release.
   bare `Exception` narrowed to the specific `FrozenInstanceError` it's
   actually checking for, missing trailing newlines.
 
-[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.25.4...HEAD
+[Unreleased]: https://github.com/mrwersa/agentverity/compare/v0.25.5...HEAD
+[0.25.5]: https://github.com/mrwersa/agentverity/compare/v0.25.4...v0.25.5
 [0.25.4]: https://github.com/mrwersa/agentverity/compare/v0.25.3...v0.25.4
 [0.25.3]: https://github.com/mrwersa/agentverity/compare/v0.25.2...v0.25.3
 [0.25.2]: https://github.com/mrwersa/agentverity/compare/v0.25.1...v0.25.2
