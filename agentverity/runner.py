@@ -29,7 +29,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 from typing import Any, Literal
 
-from agentverity.blindness import BlindnessResult
+from agentverity.blindness import BlindnessResult, _verdict_display
 from agentverity.blindness import score as blindness_score
 from agentverity.decision import OutcomeNotScorable
 from agentverity.decision_contract import (
@@ -537,7 +537,7 @@ class RunResult:
         if self.is_blind and self.blindness is not None:
             return (
                 "REPEATABILITY NOT ESTABLISHED - the agent answered "
-                f"{self.blindness.majority_verdict!r} on "
+                f"{_verdict_display(self.blindness.majority_verdict)} on "
                 f"{self.blindness.skew:.0%} of the probes, so a pass says more "
                 "about the probe set than about the agent."
             )
@@ -743,7 +743,10 @@ class RunResult:
             b = self.blindness
             lines.append("2. CONSTANT-GATE-BLINDNESS DETECTOR")
             lines.append(f"   call:        {'BLIND' if b.blind else 'ok'}")
-            lines.append(f"   skew:        {b.skew:.1%} ({b.majority_verdict!r} on {b.inputs} inputs)")
+            lines.append(
+                f"   skew:        {b.skew:.1%} "
+                f"({_verdict_display(b.majority_verdict)} on {b.inputs} inputs)"
+            )
             lines.append(f"   distinct:    {b.distinct} verdict{'s' if b.distinct != 1 else ''}")
             if b.blind:
                 lines.append(f"   warning:     {b.warning}")

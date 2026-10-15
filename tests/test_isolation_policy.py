@@ -49,8 +49,8 @@ def test_shared_session_evidence_cannot_certify_a_baseline():
     result = _result("shared-session")
 
     assert result.meter.call == "verdict-deterministic"
-    assert any("not independent" in caveat for caveat in result.caveats)
-    with pytest.raises(SnapshotRefused, match="not independent"):
+    assert any("not established" in caveat for caveat in result.caveats)
+    with pytest.raises(SnapshotRefused, match="not established"):
         create_snapshot(result, approved=True)
 
 
@@ -158,7 +158,7 @@ def test_a_check_is_quiet_when_provenance_held_or_improved():
 
 def test_a_check_against_shared_session_evidence_is_refused_not_reported():
     """`compare_snapshot` admits the current run first, so the policy applies."""
-    with pytest.raises(SnapshotRefused, match="not independent"):
+    with pytest.raises(SnapshotRefused, match="not established"):
         compare_snapshot(_snapshot("fresh-session"), _result("shared-session"))
 
 
@@ -321,9 +321,9 @@ class TestALiveRunCarriesTheIndependenceWarning:
         result = run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
 
         assert result.isolation == "shared-session"
-        assert any("not independent" in caveat for caveat in result.caveats)
-        assert "not independent" in result.summary()
-        assert "not independent" in run_result_to_junit_xml(result)
+        assert any("not established" in caveat for caveat in result.caveats)
+        assert "not established" in result.summary()
+        assert "not established" in run_result_to_junit_xml(result)
         assert run_result_to_dict(result)["isolation"] == "shared-session"
 
     def test_an_undeclared_run_says_independence_is_assumed(self):
@@ -353,6 +353,6 @@ class TestALiveRunCarriesTheIndependenceWarning:
         result = run(agent, ["a", "b"], relations=[], config=RunConfig(k=4, epsilon=0.5))
 
         assert not any(
-            "not independent" in caveat or "assumed" in caveat
+            "not established" in caveat or "assumed" in caveat
             for caveat in result.caveats
         )

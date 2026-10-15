@@ -234,9 +234,9 @@ def from_langgraph_thread(
     """Wrap a graph so every call continues the same conversation.
 
     Use this only when the conversation is the thing under test. Repeated
-    trials on one thread are not independent, and every interval AgentVerity
-    reports assumes they are, so it will read narrower than the evidence
-    supports. This adapter declares ``shared-session`` for you, so the report
+    trials on one thread carry conversation state, so independence is not
+    established and the interval's stated confidence interpretation is
+    unsupported. This adapter declares ``shared-session`` for you, so the report
     says so and a baseline collected this way is refused rather than admitted
     with a caveat.
     """

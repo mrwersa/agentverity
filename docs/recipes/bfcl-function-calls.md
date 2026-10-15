@@ -54,8 +54,8 @@ How you run the repeats determines the declaration:
 What each declaration does, checked against the tool rather than assumed.
 `assess` reports on every level and never exits non-zero on isolation alone:
 `unknown` and `shared-session` each add an evidence caveat, the second saying
-the interval is narrower than the evidence supports. **The refusal happens at
-baseline admission, not at assessment.** A declared `shared-session` is refused
+the interval's stated confidence interpretation is unsupported. **The refusal
+happens at baseline admission, not at assessment.** A declared `shared-session` is refused
 a baseline, so an `assess` run that looks acceptable can still be inadmissible.
 Read the caveat, do not read the exit code.
 

@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project follows [Semantic Versioning](https://semver.org/) once it
 reaches 1.0.0; before that, minor versions may include breaking changes.
 
+## [Unreleased]
+
+### Fixed
+
+- Blindness warnings, headlines and summary lines display decision labels and
+  no-decision reasons without Python dataclass representations. Typed comparison
+  keys, structured outcome values and report schemas are unchanged.
+- Shared-session guidance and runtime refusals describe unsupported independence
+  and confidence, without assuming dependence always narrows an interval.
+
 ## [0.25.4] - 2026-10-15
 
 ### Fixed
@@ -14,10 +24,6 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   that expose `key(layer)` cannot hide typed harness failures through absent
   or false `is_incomplete` metadata. Each key is read once; detection and lazy
   scoring stop at the failing observation.
-
-## [Unreleased]
-
-(No changes planned for the next release.)
 
 ## [0.25.3] - 2026-10-15
 

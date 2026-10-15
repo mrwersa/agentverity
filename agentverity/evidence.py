@@ -55,14 +55,14 @@ def independence_caveat(isolation: str) -> str | None:
     """A warning when a recorded isolation undermines the statistics.
 
     Shared between imported evidence and a live run: a report that states a
-    conclusion while hiding that repeats were not independent is the reading
+    conclusion while hiding unsupported independence is the reading
     the snapshot policy refuses to publish, so the report must not either.
     """
     if isolation == "shared-session":
         return (
-            "trials came from one shared session, so repeats are not "
-            "independent and the interval is narrower than the evidence "
-            "supports"
+            "trials came from one shared session, so independence is not "
+            "established and the interval's stated confidence interpretation "
+            "is unsupported"
         )
     if isolation == "unknown":
         return (

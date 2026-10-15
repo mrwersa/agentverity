@@ -127,6 +127,39 @@ class TestScoreOnCollectedObservations:
         assert result.majority_verdict == ("search", "answer")
 
 
+@pytest.mark.parametrize(
+    ("verdict", "display", "stored"),
+    [
+        (Decision("allow"), "'allow'", {"kind": "decision", "label": "allow"}),
+        (Decision("refused"), "'refused'", {"kind": "decision", "label": "refused"}),
+        (Decision("line\nbreak"), "'line\\nbreak'", {"kind": "decision", "label": "line\nbreak"}),
+        (NoDecision("refused"), "'<no decision: refused>'", {"kind": "no_decision", "reason": "refused"}),
+        (
+            NoDecision("no_tool_selected"),
+            "'<no decision: no_tool_selected>'",
+            {"kind": "no_decision", "reason": "no_tool_selected"},
+        ),
+        (("search", "answer"), "('search', 'answer')", ["search", "answer"]),
+    ],
+)
+def test_typed_majorities_read_as_labels_and_reasons_in_reports(verdict, display, stored):
+    from agentverity import RunConfig, run
+    from agentverity.reporting import run_result_to_dict
+
+    result = run(
+        lambda text: Observation(verdict=verdict),
+        ["first", "second"],
+        relations=[],
+        config=RunConfig(k=4, epsilon=0.5),
+    )
+
+    assert f"agent returns {display} on 100%" in result.blindness.warning
+    assert f"agent answered {display} on 100%" in result.headline
+    assert f"({display} on 2 inputs)" in result.summary()
+    assert "Decision(" not in result.summary()
+    assert run_result_to_dict(result)["blindness"]["majority_verdict"] == stored
+
+
 class _KeyOnlyObservation:
     def __init__(self, verdict, *, text="", tools=()):
         self.verdict = verdict
