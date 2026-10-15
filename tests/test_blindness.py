@@ -133,10 +133,15 @@ class TestScoreOnCollectedObservations:
         (Decision("allow"), "'allow'", {"kind": "decision", "label": "allow"}),
         (Decision("refused"), "'refused'", {"kind": "decision", "label": "refused"}),
         (Decision("line\nbreak"), "'line\\nbreak'", {"kind": "decision", "label": "line\nbreak"}),
-        (NoDecision("refused"), "'<no decision: refused>'", {"kind": "no_decision", "reason": "refused"}),
+        (NoDecision("refused"), "<no decision: refused>", {"kind": "no_decision", "reason": "refused"}),
+        (
+            Decision("<no decision: refused>"),
+            "'<no decision: refused>'",
+            {"kind": "decision", "label": "<no decision: refused>"},
+        ),
         (
             NoDecision("no_tool_selected"),
-            "'<no decision: no_tool_selected>'",
+            "<no decision: no_tool_selected>",
             {"kind": "no_decision", "reason": "no_tool_selected"},
         ),
         (("search", "answer"), "('search', 'answer')", ["search", "answer"]),
@@ -158,6 +163,15 @@ def test_typed_majorities_read_as_labels_and_reasons_in_reports(verdict, display
     assert f"({display} on 2 inputs)" in result.summary()
     assert "Decision(" not in result.summary()
     assert run_result_to_dict(result)["blindness"]["majority_verdict"] == stored
+
+
+def test_a_literal_no_decision_label_and_a_refusal_have_distinct_warnings():
+    labelled = score([Observation(verdict=Decision("<no decision: refused>"))])
+    refused = score([Observation(verdict=NoDecision("refused"))])
+
+    assert labelled.warning != refused.warning
+    assert "returns '<no decision: refused>' on" in labelled.warning
+    assert "returns <no decision: refused> on" in refused.warning
 
 
 class _KeyOnlyObservation:

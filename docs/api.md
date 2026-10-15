@@ -209,6 +209,9 @@ Separate source-scan and relation calls are additional.
   `error_policy="record"` for a report containing recorded call errors.
   Genuine agent refusals remain outcomes in the skew distribution, and
   text and tools layers use their own observation keys.
+  Reports quote decision labels and leave typed no-decision markers unquoted,
+  so a decision literally named `<no decision: refused>` remains distinguishable
+  from a genuine refusal. Structured reports preserve the typed outcome.
   Validation uses the returned `key(layer)` value directly. Custom
   observations need no `is_incomplete` flag, and each requested key is read
   once during consumption.

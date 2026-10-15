@@ -1,12 +1,13 @@
 {
   "schema": "agentverity.workshop-reproduction/v1",
   "scope": "core workshop supplement",
-  "source_revision": "34b70f35e8ad75f1d6b381aee08b217b0287961e",
+  "source_revision": "00bc03851f801779d5fbd3ad449872e39984e8a8",
   "python": "3.12",
   "raw_maintenance_receipts_included": false,
   "first_crossing_positions_independently_verified": false,
   "changes": {
-    "validate_method.py": "Parenthesised string concatenation for lint. No numerical change."
+    "validate_method.py": "Parenthesised string concatenation for lint. No numerical change.",
+    "budget_results.json": "Retained Python 3.12 generated output. The source differs only in the last floating-point bit of nine normal-quantile z fields; classifications, budgets, probabilities and collection lengths are unchanged."
   },
   "files": {
     "validate_method.py": {
@@ -14,8 +15,8 @@
       "source_sha256": "0861442467b6f459021b56c6290a2e8dfadfcacbb7855de5a733136ce1e4f6d7"
     },
     "budget_analysis.py": {
-      "sha256": "f953f80baf6a315517ca57f84aaf73041f0e2845da820a56bb3e6eb9c96bde5b",
-      "source_sha256": "f953f80baf6a315517ca57f84aaf73041f0e2845da820a56bb3e6eb9c96bde5b"
+      "sha256": "b0f9093917d6e5cbb947999b74baa51453a5c95d824f78c6059fd1b9d13f899d",
+      "source_sha256": "b0f9093917d6e5cbb947999b74baa51453a5c95d824f78c6059fd1b9d13f899d"
     },
     "analyse_maintenance.py": {
       "sha256": "952972f29348abf87156fd18510a4ac14326e05b15a3d769762a3182e849c918",
@@ -34,24 +35,25 @@
       "source_sha256": "b25e8a1e3c7d856dd3f66389b87caf6d8c0e84dfd41e578cab9d52ea86a9ab49"
     },
     "tests/test_budget_analysis.py": {
-      "sha256": "0a4cbec25261fc00cd1037d166e144ba6f3a35a2d0164e84f673a4ba0c9ad7e5",
-      "source_sha256": "0a4cbec25261fc00cd1037d166e144ba6f3a35a2d0164e84f673a4ba0c9ad7e5"
+      "sha256": "c21a3c58c2f1c91e4d0d0c3a740daec08a898fef4168abcf793b76823e3b3d10",
+      "source_sha256": "c21a3c58c2f1c91e4d0d0c3a740daec08a898fef4168abcf793b76823e3b3d10"
     },
     "budget_results.json": {
       "sha256": "21d094a047064c25b4e8fe16c39b1d1b94bada7b948e08ed69150081652104f6",
-      "source_sha256": "21d094a047064c25b4e8fe16c39b1d1b94bada7b948e08ed69150081652104f6"
+      "source_sha256": "26bd8c9d1df778e4c52be20a0fa3dce0cbcbcb09f8e449757fa0ee1b3c9faed0"
     },
     "budget_table.tex": {
-      "sha256": "81ee5b7f33c02052389f6170bbe5dd363465b88e164efeb10e0935a2558b0163",
-      "source_sha256": "81ee5b7f33c02052389f6170bbe5dd363465b88e164efeb10e0935a2558b0163"
+      "sha256": "679159e0341fb5b31499c4d21b0055b2d9139be8142fabd766f739bbbe730ded",
+      "source_sha256": "679159e0341fb5b31499c4d21b0055b2d9139be8142fabd766f739bbbe730ded"
     },
     "budget_cost_table.tex": {
-      "sha256": "b29419ce74de5e6a58a222ebf6757953bf6b9349bf9a90d031b0a4e92c66a4ba",
-      "source_sha256": "b29419ce74de5e6a58a222ebf6757953bf6b9349bf9a90d031b0a4e92c66a4ba"
+      "sha256": "6f70402f34b4423b36ba80a2bf93ddc4620ed6928a93827d58904e049b612108",
+      "source_sha256": "6f70402f34b4423b36ba80a2bf93ddc4620ed6928a93827d58904e049b612108"
     },
     "budget_figure.tex": {
       "sha256": "f9d9ddc1a31d6ae67036b45247cf194747b502448eef214c0929c6fbd6296852",
       "source_sha256": "f9d9ddc1a31d6ae67036b45247cf194747b502448eef214c0929c6fbd6296852"
     }
-  }
+  },
+  "original_source_revision": "34b70f35e8ad75f1d6b381aee08b217b0287961e"
 }
