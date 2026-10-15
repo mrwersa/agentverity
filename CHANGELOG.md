@@ -15,7 +15,10 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   unmeasured. Clarified pooled-meter versus reference admission, ordered
   pairing, live CLI snapshot collection, targeted exit findings, and planning
   more evidence after an inconclusive result.
-- Fixed the optional sibling release-policy comparison to ignore historical
+
+### Fixed
+
+- The optional sibling release-policy comparison now ignores historical
   introductions without dropping part of the policy.
 
 ## [0.25.2] - 2026-10-14

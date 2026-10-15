@@ -21,4 +21,5 @@ Supporting files rather than examples in their own right:
 and `payment_decisions.json` are its probes and declared suite,
 `route_stability_plan.json` carries declared per-route targets, and
 `imported_evidence.json` is a minimal `agentverity.evidence/v2` file for trying
-`assess` without collecting anything.
+`assess` without collecting anything, and `onboarding/quiet_short.jsonl` is the
+short imported-evidence fixture used by the first-use walkthrough.
