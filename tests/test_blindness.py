@@ -5,7 +5,9 @@ from __future__ import annotations
 import pytest
 
 from agentverity.adapters import from_callable
-from agentverity.blindness import detect
+from agentverity.blindness import detect, score
+from agentverity.decision import Decision, NoDecision, OutcomeNotScorable
+from agentverity.observation import Observation
 
 
 class TestDetect:
@@ -123,3 +125,134 @@ class TestScoreOnCollectedObservations:
 
         assert result.distinct == 2
         assert result.majority_verdict == ("search", "answer")
+
+
+@pytest.mark.parametrize("consumer", ["detect", "score"])
+class TestTypedOutcomeValidation:
+    @staticmethod
+    def _scan(consumer, observations, *, layer="verdict"):
+        if consumer == "detect":
+            by_input = dict(zip(("a", "b"), observations, strict=True))
+            return detect(by_input.__getitem__, ["a", "b"], layer=layer)
+        return score(observations, layer=layer)
+
+    @pytest.mark.parametrize(
+        "reason", ["runtime_error", "extraction_failed", "malformed_response"]
+    )
+    def test_a_harness_failure_is_refused(self, consumer, reason):
+        observations = [
+            Observation(verdict="allow"),
+            Observation(verdict=NoDecision(reason)),
+        ]
+
+        with pytest.raises(OutcomeNotScorable, match="harness failed"):
+            self._scan(consumer, observations)
+
+    @pytest.mark.parametrize("reason", ["refused", "no_tool_selected"])
+    def test_an_agent_no_decision_remains_a_distinct_outcome(self, consumer, reason):
+        result = self._scan(consumer, [
+            Observation(verdict=NoDecision(reason)),
+            Observation(verdict=Decision(reason)),
+        ])
+
+        assert result.distinct == 2
+        assert result.skew == 0.5
+        assert not result.blind
+
+    @pytest.mark.parametrize("layer", ["text", "tools"])
+    def test_other_layers_use_their_own_keys(self, consumer, layer):
+        result = self._scan(consumer, [
+            Observation(
+                text="first", tools=("search",), verdict=NoDecision("runtime_error")
+            ),
+            Observation(
+                text="second", tools=("answer",),
+                verdict=NoDecision("extraction_failed"),
+            ),
+        ], layer=layer)
+
+        assert result.distinct == 2
+        assert result.skew == 0.5
+
+    def test_text_fallback_keeps_its_existing_distribution(self, consumer):
+        result = self._scan(consumer, [
+            Observation(text="first"),
+            Observation(text="second"),
+        ])
+
+        assert result.distinct == 2
+        assert result.skew == 0.5
+
+    def test_open_ended_outcomes_keep_their_existing_distribution(self, consumer):
+        result = self._scan(consumer, [
+            Observation(verdict=NoDecision("open_ended")),
+            Observation(verdict=Decision("allow")),
+        ])
+
+        assert result.distinct == 2
+        assert result.skew == 0.5
+
+
+@pytest.mark.parametrize(
+    "reason", ["runtime_error", "extraction_failed", "malformed_response"]
+)
+def test_detect_stops_calling_at_the_first_typed_failure(reason):
+    calls = []
+
+    def agent(text):
+        calls.append(text)
+        verdict = NoDecision(reason) if text == "bad" else "allow"
+        return {"verdict": verdict}
+
+    with pytest.raises(OutcomeNotScorable, match=reason):
+        detect(from_callable(agent), ["ok", "bad", "never-called"])
+
+    assert calls == ["ok", "bad"]
+
+
+@pytest.mark.parametrize(
+    "reason", ["runtime_error", "extraction_failed", "malformed_response"]
+)
+def test_detect_stops_immediately_when_the_first_input_fails(reason):
+    calls = []
+
+    def agent(text):
+        calls.append(text)
+        return {"verdict": NoDecision(reason)}
+
+    with pytest.raises(OutcomeNotScorable, match=reason):
+        detect(from_callable(agent), ["bad", "never-called"])
+
+    assert calls == ["bad"]
+
+
+def test_the_refusal_names_the_scan_rather_than_a_repeat_series():
+    with pytest.raises(OutcomeNotScorable, match="a blindness scan"):
+        score([Observation(verdict=NoDecision("runtime_error"))])
+
+
+def test_score_stops_consuming_at_a_typed_failure():
+    def observations():
+        yield Observation(verdict="allow")
+        yield Observation(verdict=NoDecision("runtime_error"))
+        pytest.fail("consumed an observation after a typed failure")
+
+    with pytest.raises(OutcomeNotScorable, match="runtime_error"):
+        score(observations())
+
+
+def test_distinct_harness_failures_cannot_look_like_decision_diversity():
+    with pytest.raises(OutcomeNotScorable, match="harness failed"):
+        score([
+            Observation(verdict=NoDecision("runtime_error")),
+            Observation(verdict=NoDecision("extraction_failed")),
+        ])
+
+
+def test_score_refuses_an_invalid_threshold_before_consuming_observations():
+    def observations():
+        pytest.fail("consumed observations for an invalid configuration")
+        yield Observation(verdict="allow")
+
+    with pytest.raises(ValueError, match="threshold"):
+        score(observations(), threshold=0)
