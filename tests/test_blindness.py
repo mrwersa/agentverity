@@ -127,6 +127,18 @@ class TestScoreOnCollectedObservations:
         assert result.majority_verdict == ("search", "answer")
 
 
+class _KeyOnlyObservation:
+    def __init__(self, verdict, *, text="", tools=()):
+        self.verdict = verdict
+        self.text = text
+        self.tools = tools
+        self.key_calls = []
+
+    def key(self, layer):
+        self.key_calls.append(layer)
+        return getattr(self, layer)
+
+
 @pytest.mark.parametrize("consumer", ["detect", "score"])
 class TestTypedOutcomeValidation:
     @staticmethod
@@ -192,6 +204,67 @@ class TestTypedOutcomeValidation:
         assert result.distinct == 2
         assert result.skew == 0.5
 
+    @pytest.mark.parametrize(
+        "reason", ["runtime_error", "extraction_failed", "malformed_response"]
+    )
+    @pytest.mark.parametrize("status", ["missing", "false"])
+    def test_duck_typed_failures_are_refused_from_their_key(
+        self, consumer, reason, status
+    ):
+        observations = [
+            _KeyOnlyObservation("allow"),
+            _KeyOnlyObservation(NoDecision(reason)),
+        ]
+        if status == "false":
+            for observation in observations:
+                observation.is_incomplete = False
+
+        with pytest.raises(OutcomeNotScorable, match="a blindness scan"):
+            self._scan(consumer, observations)
+
+        assert all(observation.key_calls == ["verdict"] for observation in observations)
+
+    @pytest.mark.parametrize("keys, distinct", [
+        (["allow", Decision("allow")], 1),
+        ([NoDecision("refused"), Decision("refused")], 2),
+        ([NoDecision("no_tool_selected"), Decision("no_tool_selected")], 2),
+        ([NoDecision("open_ended"), "allow"], 2),
+        ([["search", "answer"], ["search", "answer"]], 1),
+    ])
+    def test_valid_duck_typed_keys_keep_their_distribution(self, consumer, keys, distinct):
+        observations = [_KeyOnlyObservation(key) for key in keys]
+
+        result = self._scan(consumer, observations)
+
+        assert result.inputs == 2
+        assert result.distinct == distinct
+        assert result.skew == 1 / distinct
+        assert all(observation.key_calls == ["verdict"] for observation in observations)
+
+    @pytest.mark.parametrize("layer", ["text", "tools"])
+    def test_duck_typed_observations_use_the_requested_layer(self, consumer, layer):
+        observations = [
+            _KeyOnlyObservation(NoDecision("runtime_error"), text="a", tools=("search",)),
+            _KeyOnlyObservation(NoDecision("extraction_failed"), text="b", tools=("answer",)),
+        ]
+
+        result = self._scan(consumer, observations, layer=layer)
+
+        assert result.distinct == 2
+        assert result.skew == 0.5
+        assert all(observation.key_calls == [layer] for observation in observations)
+
+    def test_keys_are_read_once_even_when_status_metadata_is_present(self, consumer):
+        observations = [_KeyOnlyObservation("allow"), _KeyOnlyObservation("allow")]
+        for observation in observations:
+            observation.is_incomplete = True
+
+        result = self._scan(consumer, observations)
+
+        assert result.distinct == 1
+        assert result.blind
+        assert all(observation.key_calls == ["verdict"] for observation in observations)
+
 
 @pytest.mark.parametrize(
     "reason", ["runtime_error", "extraction_failed", "malformed_response"]
@@ -256,3 +329,41 @@ def test_score_refuses_an_invalid_threshold_before_consuming_observations():
 
     with pytest.raises(ValueError, match="threshold"):
         score(observations(), threshold=0)
+
+
+@pytest.mark.parametrize(
+    "reason", ["runtime_error", "extraction_failed", "malformed_response"]
+)
+def test_detect_stops_at_a_duck_typed_failure(reason):
+    calls = []
+
+    def agent(text):
+        calls.append(text)
+        verdict = NoDecision(reason) if text == "bad" else "allow"
+        return _KeyOnlyObservation(verdict)
+
+    with pytest.raises(OutcomeNotScorable, match=reason):
+        detect(agent, ["ok", "bad", "never-called"])
+
+    assert calls == ["ok", "bad"]
+
+
+@pytest.mark.parametrize(
+    "reason", ["runtime_error", "extraction_failed", "malformed_response"]
+)
+def test_score_stops_consuming_at_a_duck_typed_failure(reason):
+    def observations():
+        yield _KeyOnlyObservation("allow")
+        yield _KeyOnlyObservation(NoDecision(reason))
+        pytest.fail("consumed an observation after a duck-typed failure")
+
+    with pytest.raises(OutcomeNotScorable, match=reason):
+        score(observations())
+
+
+def test_distinct_duck_typed_failures_cannot_look_like_decision_diversity():
+    with pytest.raises(OutcomeNotScorable, match="harness failed"):
+        score([
+            _KeyOnlyObservation(NoDecision("runtime_error")),
+            _KeyOnlyObservation(NoDecision("extraction_failed")),
+        ])

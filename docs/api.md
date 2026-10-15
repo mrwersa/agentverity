@@ -209,6 +209,9 @@ Separate source-scan and relation calls are additional.
   `error_policy="record"` for a report containing recorded call errors.
   Genuine agent refusals remain outcomes in the skew distribution, and
   text and tools layers use their own observation keys.
+  Validation uses the returned `key(layer)` value directly. Custom
+  observations need no `is_incomplete` flag, and each requested key is read
+  once during consumption.
 - `pairs_for_deterministic_call` budgets the minimum pair count under a
   projected fixed flip rate.
 - `best_case_admission_pairs` asks when observed flip counts could first admit
