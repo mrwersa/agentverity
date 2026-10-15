@@ -122,12 +122,11 @@ formatting change to the imported numerical code and has no numerical effect.
 The table generator, generated TeX and tests include the camera-ready's column
 alignment and width corrections at the source revision in the manifest.
 
-The existing Python 3.12 budget JSON is retained. Its normal quantile differs
-from the pinned source snapshot in the last floating-point bit of nine `z` fields;
-classifications, budgets, probabilities and collection lengths match. The
-manifest records both hashes and this difference. The maintenance input and
-results are identical to the source. Use an exact AgentVerity commit when
-citing this folder, rather than a moving branch or the PyPI package version.
+The budget JSON, generated tables, maintenance input and results are identical
+to the pinned camera-ready source. The manifest records both source and local
+hashes, and declares only the lint adaptation above. Use an exact AgentVerity
+commit when citing this folder, rather than a moving branch or the PyPI package
+version.
 
 This folder's software and derived records use the [MIT licence](LICENSE.md),
 with attribution to Saeed Aghaee. The surrounding AgentVerity library remains
