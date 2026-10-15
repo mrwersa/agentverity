@@ -201,7 +201,14 @@ Separate source-scan and relation calls are additional.
 - `measure` runs only the verdict-stochasticity meter, the underlying
   decision-stability check.
 - `detect` runs only the constant-gate-blindness scan, the underlying
-  decision-coverage check.
+  decision-coverage check. On the verdict layer, a typed harness failure
+  raises `OutcomeNotScorable` before any later input is called.
+- `agentverity.blindness.score` checks already-collected observations for
+  skew and refuses typed harness failures as it consumes them. These
+  standalone functions raise on failure; use `run` with
+  `error_policy="record"` for a report containing recorded call errors.
+  Genuine agent refusals remain outcomes in the skew distribution, and
+  text/tool layers use their own observation keys.
 - `pairs_for_deterministic_call` budgets the minimum pair count under a
   projected fixed flip rate.
 - `best_case_admission_pairs` asks when observed flip counts could first admit
