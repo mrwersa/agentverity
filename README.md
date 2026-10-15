@@ -8,7 +8,7 @@
 [![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25%2B-brightgreen.svg)](#development)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/mrwersa/agentverity/blob/main/LICENSE)
 
-A passing agent test can choose a different route on its next run. That makes
+An agent can pass a test and choose a different route on its next run. That makes
 one passing output a noisy regression reference for later releases.
 AgentVerity is a local Python library and CLI that checks whether repeated
 agent decisions are repeatable enough to save as a baseline. It also flags
@@ -34,6 +34,7 @@ Every answer is allowed, but the changing queue would make a regression check
 noisy. The five quiet routes need more evidence to qualify separately.
 A **flip** is a pairwise disagreement: two reruns of the same case returned
 different decisions. This evidence is refused as a regression reference.
+Observations form non-overlapping pairs in collection order.
 
 ## Try it without model calls
 
@@ -102,7 +103,9 @@ python examples/payment_dispute_gate.py
 | Narrow, 6 duplicate-charge cases | ✅ 6/6 | ✅ verdict-deterministic | ❌ 1/6 required routes | ❌ REFUSED |
 | Repaired, 6 dispute categories | ✅ 6/6 | ✅ verdict-deterministic | ✅ 6/6 required routes | ✅ ADMITTED |
 
-Both sets score 6/6. Only the repaired set reaches all six required routes.
+Both sets score 6/6, and both pooled meters qualify. Missing coverage blocks
+the narrow reference. The repaired reference is admitted at pooled level;
+its individual route intervals remain inconclusive.
 
 ## Where it fits
 
@@ -122,13 +125,16 @@ check cannot detect changed arguments.
 | `agentverity plan` | Budget evidence before calling an agent |
 | `agentverity run` | Collect and assess repeated decisions |
 | `agentverity assess` | Assess recorded evidence without new target calls |
-| `agentverity snapshot` | Admit an approved regression reference when evidence permits |
+| `agentverity snapshot` | Collect live evidence and admit an approved regression reference when evidence permits |
 | `agentverity inspect` | Read the stored reference without calling anything |
 | `agentverity check` | Recheck admission and compare current decisions with the reference |
 | `agentverity compare-evidence` | Compare repeatability structure and provenance across evidence windows |
 
 `compare-evidence` can report NO CHANGE even when stable output labels differ.
 Use `check` when the reviewed decisions themselves must match.
+To save imported evidence, Python callers use
+[`create_snapshot(result, approved=True)`](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md#what-an-import-can-and-cannot-check);
+CLI `snapshot` collects a new live run.
 
 ## Stop when more runs cannot help
 

@@ -1,0 +1,4 @@
+{"input": "synthetic duplicate charge", "decision": "billing"}
+{"input": "synthetic cash withdrawal", "decision": "cash_withdrawal"}
+{"input": "synthetic duplicate charge", "decision": "billing"}
+{"input": "synthetic cash withdrawal", "decision": "cash_withdrawal"}

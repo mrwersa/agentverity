@@ -543,14 +543,34 @@ def test_every_example_is_named_somewhere_a_reader_looks() -> None:
     assert not missing, f"examples nothing points at: {missing}"
 
 
+def _release_rule(text: str) -> str:
+    start = text.index("## When to cut one")
+    body = text[start : text.index("## Cut a release", start)]
+    # Historical introductions are optional. Compare from the actual
+    # rule so a guide without an introduction keeps its opening line.
+    return body[body.index("Cut a release when any of these is true:") :]
+
+
+def test_the_release_policy_comparison_ignores_optional_history() -> None:
+    policy = _release_rule((ROOT / "RELEASING.md").read_text(encoding="utf-8"))
+    without_history = f"## When to cut one\n\n{policy}## Cut a release\n"
+    with_history = (
+        f"## When to cut one\n\nHistorical release context.\n\n{policy}## Cut a release\n"
+    )
+
+    assert _release_rule(without_history) == _release_rule(with_history)
+    assert _release_rule(without_history).startswith(
+        "Cut a release when any of these is true:"
+    )
+
+
 def test_the_release_trigger_matches_the_sibling_project_word_for_word() -> None:
     """One rule in two repositories drifts unless something compares them.
 
     The section exists because the absence of a release trigger produced two
     opposite failures, seventeen unreleased pull requests here and a four-day
     unreleased fix there. Wording that diverges is how one of them quietly
-    grows an exception. Only the opening paragraph differs, because each
-    repository names its own history first.
+    grows an exception. Historical introductions are outside the policy.
 
     Skipped when the sibling is not checked out, since it is a separate
     repository and not a dependency.
@@ -563,15 +583,8 @@ def test_the_release_trigger_matches_the_sibling_project_word_for_word() -> None
     if not sibling.is_file():
         pytest.skip("agentmandate is not checked out beside this repository")
 
-    def rule(text: str) -> str:
-        start = text.index("## When to cut one")
-        body = text[start : text.index("## Cut a release", start)]
-        # Drop the opening paragraph: each repository leads with its own
-        # history, and the rule is everything after it.
-        return body.split("\n\n", 2)[2]
-
-    here = rule(Path(__file__).resolve().parents[1].joinpath("RELEASING.md")
+    here = _release_rule(Path(__file__).resolve().parents[1].joinpath("RELEASING.md")
                 .read_text(encoding="utf-8"))
-    there = rule(sibling.read_text(encoding="utf-8"))
+    there = _release_rule(sibling.read_text(encoding="utf-8"))
 
     assert here == there, "the release trigger has drifted between the projects"

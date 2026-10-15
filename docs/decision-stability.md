@@ -41,6 +41,32 @@ With no observed changes, a 5% threshold needs 73 independent pairs.
 `pairs_for_deterministic_call(0.05)` returns that number, while `plan_repeats`
 translates it into repeats per input before calls begin.
 
+## Recover from a short quiet collection
+
+The [short onboarding fixture](../examples/onboarding/quiet_short.jsonl)
+records zero flips in two pairs. Its 5% assessment is inconclusive. Keep the
+application's tolerance and price the additional evidence before collecting:
+
+```console
+$ agentverity plan --observed 0/2 --epsilon 0.05
+agentverity — observed-count admission plan
+  observed:     0 flips / 2 pairs
+  tolerance:    0.05
+  assumption:   every additional pair agrees
+  earliest:     73 total pairs
+  additional:   71 pairs
+
+This is an optimistic fixed-endpoint calculation. It cannot create early admission: qualification still belongs at a predeclared endpoint or to a predeclared sequential rule.
+```
+
+This is a best-case requirement, not guaranteed qualification. Predeclare the
+collection endpoint, arrange equivalent starting state, and preserve the
+observation order. `k` means repeats per input. Choosing a cheaper precision
+changes the tolerated disagreement rate, so do so only if the application
+policy permits it; it is not a display setting.
+
+## Plan after observing flips
+
 After collection, counts and rates answer different questions. For example,
 four flips in 73 pairs cannot admit under a projection that keeps the 4/73
 rate fixed, but it could first admit at 202 total pairs if every later pair

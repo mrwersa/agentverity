@@ -121,6 +121,14 @@ matching prose: a `larger_within_period_budget_is_not_cross_time_evidence`
 machine key and an evaluation-period assumption. Rename artefact keys and
 prose together in one reviewed revision; do not update either side piecemeal.
 
+The [first-use walkthrough protocol](docs/onboarding-walkthrough.md) supplies
+an offline exercise, answer key, and private session template for the
+onboarding gate. Participant sessions remain pending; command verification
+does not satisfy the fresh-user metric or justify an `explain` command.
+Five [simulated persona walkthroughs](docs/evidence/onboarding-personas-2026-10-15.md)
+have identified copy improvements; their execution times and answers are not
+fresh-user validation.
+
 ## 3–6 months: interoperate through evidence-preserving standards
 
 | Item | User problem and intended outcome | Success metric | Dependencies and risks | Build/defer gate |

@@ -364,7 +364,7 @@ the denominator.
 | Code | Meaning |
 |---|---|
 | `0` | Assessed: an interpretable result was produced |
-| `1` | Contract failure, blindness, or a target proven above tolerance |
+| `1` | Contract failure, blindness, or a declared route stability target proven above its tolerance |
 | `2` | Incomplete, undecided (including a missed target), malformed, or unsupported evidence |
 
 Exit `0` means the assessment completed and can be read, not that the evidence
