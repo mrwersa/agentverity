@@ -1,13 +1,12 @@
 {
   "schema": "agentverity.workshop-reproduction/v1",
   "scope": "core workshop supplement",
-  "source_revision": "00bc03851f801779d5fbd3ad449872e39984e8a8",
+  "source_revision": "8ee6678329abd7ae64bdbb9c7e1a504137e663be",
   "python": "3.12",
   "raw_maintenance_receipts_included": false,
   "first_crossing_positions_independently_verified": false,
   "changes": {
-    "validate_method.py": "Parenthesised string concatenation for lint. No numerical change.",
-    "budget_results.json": "Retained Python 3.12 generated output. The source differs only in the last floating-point bit of nine normal-quantile z fields; classifications, budgets, probabilities and collection lengths are unchanged."
+    "validate_method.py": "Parenthesised string concatenation for lint. No numerical change."
   },
   "files": {
     "validate_method.py": {
@@ -40,7 +39,7 @@
     },
     "budget_results.json": {
       "sha256": "21d094a047064c25b4e8fe16c39b1d1b94bada7b948e08ed69150081652104f6",
-      "source_sha256": "26bd8c9d1df778e4c52be20a0fa3dce0cbcbcb09f8e449757fa0ee1b3c9faed0"
+      "source_sha256": "21d094a047064c25b4e8fe16c39b1d1b94bada7b948e08ed69150081652104f6"
     },
     "budget_table.tex": {
       "sha256": "679159e0341fb5b31499c4d21b0055b2d9139be8142fabd766f739bbbe730ded",
