@@ -83,6 +83,15 @@ in the private funnel.
   historical record of the proposal. This outcome does not establish an
   AgentVerity importer, producer round trip, independent adoption or pilot.
 
+### 2026-10-15 | EvalPort conformance review contribution
+
+- Channel: [our PR #132](https://github.com/adhabnr-ux/evalport/pull/132)
+- Contributed: four synthetic repeated-run fixtures and documentation separating
+  structural validity from observation ordering, error handling and baseline
+  admission. Both reference SDKs accept the documents; an AgentVerity consumer
+  rehearsal checks the downstream interpretation separately.
+- Status: submitted for upstream review; not merged or evidence of adoption.
+
 ## Rules for updating this log
 
 - Append entries; never delete or edit history except to add an outcome note dated after the fact.

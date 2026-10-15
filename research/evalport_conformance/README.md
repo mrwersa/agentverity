@@ -3,6 +3,8 @@
 Offline consumer review for [EvalPort issue #20](https://github.com/adhabnr-ux/evalport/issues/20)
 and [Discussion #22](https://github.com/adhabnr-ux/evalport/discussions/22).
 All decisions and identifiers in these fixtures are synthetic.
+The upstream fixture contribution is [PR #132](https://github.com/adhabnr-ux/evalport/pull/132),
+submitted for review.
 
 The repetition contract landed in [PR #35](https://github.com/adhabnr-ux/evalport/pull/35)
 on 1 September 2026. This review uses upstream commit

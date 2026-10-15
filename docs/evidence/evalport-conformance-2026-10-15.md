@@ -4,6 +4,8 @@ Reviewed 15 October 2026 against upstream commit
 `af1cadcb359dad55e9590dd0cd603c8d7028b9e1` and AgentVerity 0.25.5.
 The [executable review](../../research/evalport_conformance/README.md) uses
 synthetic observations only and makes no model calls.
+The four fixtures and upstream documentation were submitted as
+[EvalPort PR #132](https://github.com/adhabnr-ux/evalport/pull/132), pending review.
 
 ## Shipped upstream behaviour
 
