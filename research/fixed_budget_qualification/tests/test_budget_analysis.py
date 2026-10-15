@@ -12,6 +12,37 @@ from validate_method import classify, wilson_interval
 
 
 class BudgetAnalysisTests(unittest.TestCase):
+    def test_design_table_aligns_labels_left_and_budgets_under_headings(self):
+        rendered = budget.render_table({"designs": [
+            {"q0": .01, "budget": 142}, {"q0": .01, "budget": 173},
+            {"q0": .02, "budget": 311}, {"q0": .02, "budget": 389},
+            {"q0": .03, "budget": 779}, {"q0": .03, "budget": 1012},
+        ]})
+        self.assertIn(r"\begin{tabular}{lcc}\toprule", rendered)
+        self.assertIn(r"1\% & 142 & \phantom{1{,}}173\\", rendered)
+        self.assertIn(r"3\% & 779 & 1{,}012\\", rendered)
+
+    def test_aligned_integers_pad_every_entry_to_one_width(self):
+        self.assertEqual(budget.aligned_integers([142, 311, 779]),
+                         ["142", "311", "779"])
+        self.assertEqual(budget.aligned_integers([73, 1012]),
+                         [r"\phantom{1{,}0}73", "1{,}012"])
+
+    def test_cost_table_uses_available_width_and_keeps_numeric_rows(self):
+        report = {"operating_characteristics": [
+            budget.operating_characteristics(146, q)
+            for q in (0, .01, .02, .03, .05, .1)
+        ]}
+        rendered = budget.render_cost_table(report)
+        self.assertIn(
+            r"\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrr@{}}",
+            rendered,
+        )
+        self.assertIn(r"\end{tabular*}\end{table}", rendered)
+        self.assertIn(r"2\% & 43.9\% & 115.0 & 141.7\\", rendered)
+        self.assertIn(r"10\% & 0.0031\% & 30.0 & 121.9\\", rendered)
+        self.assertEqual(sum(" & " in line for line in rendered.splitlines()), 7)
+
     def test_boundaries_match_wilson_including_strict_equalities(self):
         for b in range(1, 201):
             for epsilon in (.01, .05, .2, .5, .9):

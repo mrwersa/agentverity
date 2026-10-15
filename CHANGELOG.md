@@ -10,6 +10,12 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
 
 ### Fixed
 
+- A decision literally named `<no decision: refused>` now reads differently
+  from a genuine refusal in blindness warnings, headlines and summary lines.
+  The roadmap distinguishes statistical qualification from snapshot admission.
+- The standalone workshop reproduction includes the camera-ready's table
+  formatting and 24 checks. Its source manifest records the updated provenance
+  and the retained budget JSON's last-bit normal-quantile difference.
 - Blindness warnings, headlines and summary lines display decision labels and
   no-decision reasons without Python dataclass representations. Typed comparison
   keys, structured outcome values and report schemas are unchanged.

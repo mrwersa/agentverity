@@ -29,9 +29,9 @@ python3 -m unittest discover -s tests -v
 The first command runs 100,000 Monte Carlo replicates per scenario with seed
 20260822 and checks the reported ranges. It also enumerates exact binomial and
 beta-binomial classification probabilities. The remaining commands check the
-committed maintenance results, generated budget tables and curves, and 21
-numerical and pathwise tests. The finite tests verify the boundary, its
-inverse and the recomputed maintenance table.
+committed maintenance results, generated budget tables and curves, and 24
+numerical, pathwise and table-rendering tests. The finite tests verify the
+boundary, its inverse, the recomputed maintenance table and table formatting.
 
 The package can be copied out of this repository and run without installing
 AgentVerity. CI also runs its tests in a separate Python process, keeping the
@@ -71,7 +71,7 @@ one fixed rate. They are not measurements of provider performance.
 | [maintenance_input.json](maintenance_input.json) | Disagreement counts and stopping positions for 40 conditions at 146 pairs each. |
 | [analyse_maintenance.py](analyse_maintenance.py) | Recomputes classifications, checks stopping counts against the boundary and recomputes savings. |
 | [maintenance_results.json](maintenance_results.json) | Generated maintenance aggregate: 79.8% of the 292 pairs in the two stopped conditions, which is 4.0% of all 5,840 scheduled pairs. |
-| [tests/](tests/) | Wilson/grid checks, independent Bernoulli convolution, exhaustive small-budget paths and derived-record consistency tests. |
+| [tests/](tests/) | Wilson/grid checks, independent Bernoulli convolution, exhaustive small-budget paths, derived-record consistency and table-rendering tests. |
 | [SOURCE_MANIFEST.json](SOURCE_MANIFEST.json) | Input hashes and the source revision for this reproduction package. |
 
 ## Maintenance evidence boundary
@@ -119,6 +119,15 @@ workshop supplement. Legacy `anonymous.*` schema identifiers are retained for
 compatibility with that package. The manifest records their origin. A
 parenthesised string concatenation in `validate_method.py` is the only
 formatting change to the imported numerical code and has no numerical effect.
+The table generator, generated TeX and tests include the camera-ready's column
+alignment and width corrections at the source revision in the manifest.
+
+The existing Python 3.12 budget JSON is retained. Its normal quantile differs
+from the pinned source snapshot in the last floating-point bit of nine `z` fields;
+classifications, budgets, probabilities and collection lengths match. The
+manifest records both hashes and this difference. The maintenance input and
+results are identical to the source. Use an exact AgentVerity commit when
+citing this folder, rather than a moving branch or the PyPI package version.
 
 This folder's software and derived records use the [MIT licence](LICENSE.md),
 with attribution to Saeed Aghaee. The surrounding AgentVerity library remains

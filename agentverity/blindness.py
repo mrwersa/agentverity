@@ -173,8 +173,10 @@ def score(
 
 
 def _verdict_display(value: Any) -> str:
-    """Quote a verdict for prose while retaining no-decision reasons."""
-    if isinstance(value, (Decision, NoDecision)):
+    """Quote decision labels and distinguish typed no-decision markers."""
+    if isinstance(value, NoDecision):
+        return str(value)
+    if isinstance(value, Decision):
         return repr(str(value))
     return repr(value)
 

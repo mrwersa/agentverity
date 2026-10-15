@@ -26,7 +26,7 @@ def run_supplement(*args: str) -> subprocess.CompletedProcess[str]:
 
 def test_standalone_numerical_and_pathwise_checks_pass() -> None:
     result = run_supplement("-m", "unittest", "discover", "-s", "tests", "-v")
-    assert "Ran 21 tests" in result.stderr
+    assert "Ran 24 tests" in result.stderr
     assert "OK" in result.stderr
 
 
@@ -41,6 +41,10 @@ def test_reproduction_files_match_manifest() -> None:
     assert manifest["scope"] == "core workshop supplement"
     assert manifest["raw_maintenance_receipts_included"] is False
     assert manifest["first_crossing_positions_independently_verified"] is False
+    assert {
+        name for name, record in manifest["files"].items()
+        if record["sha256"] != record["source_sha256"]
+    } == set(manifest["changes"])
     for name, record in manifest["files"].items():
         assert Path(name).as_posix() == name and ".." not in Path(name).parts
         assert hashlib.sha256((SUPPLEMENT / name).read_bytes()).hexdigest() == record["sha256"]
