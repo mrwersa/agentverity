@@ -47,3 +47,8 @@ documented export format, and add a focused module under
 Passing this contract is necessary, not sufficient. The roadmap still requires
 a real adopter, redistributable fixtures, and a maintainer before a new source
 is accepted in-tree.
+
+The [EvalPort conformance review](../research/evalport_conformance/README.md)
+exercises a restricted synthetic projection against the shipped attempt and
+isolation fields. It distinguishes structural document validity from these
+consumer requirements and adds no public importer.

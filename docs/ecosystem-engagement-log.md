@@ -70,6 +70,19 @@ in the private funnel.
 - Contributed: answered the maintainer's open design question with our evidence-model reasoning (isolation declared once per collection set, mixed modes belong in separate ResultSets), flagged the enum-versus-open-string divergence between the issue sketch and the converged RFC, and endorsed validator-enforced uniqueness plus the additive bump
 - Relevance: closes the last open question the RFC asked of this project before the SPEC.md write-up
 
+### 2026-10-15 | EvalPort shipped-contract outcome
+
+- Channel: [our issue #20](https://github.com/adhabnr-ux/evalport/issues/20) and
+  [our reply on Discussion #22](https://github.com/adhabnr-ux/evalport/discussions/22#discussioncomment-18252210)
+- Outcome: [PR #35](https://github.com/adhabnr-ux/evalport/pull/35) merged on
+  1 September, adding `Result.attempt`, open-string `ResultSet.isolation` and
+  SDK-enforced attempt uniqueness. The maintainer supplied the valid-repeat
+  and duplicate-attempt fixtures and invited a consumer review. Our public
+  acknowledgement followed on 2 September.
+- Status: the upstream contract shipped. The August entries above remain the
+  historical record of the proposal. This outcome does not establish an
+  AgentVerity importer, producer round trip, independent adoption or pilot.
+
 ## Rules for updating this log
 
 - Append entries; never delete or edit history except to add an outcome note dated after the fact.
