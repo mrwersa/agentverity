@@ -210,6 +210,27 @@ def test_detect_stops_calling_at_the_first_typed_failure(reason):
     assert calls == ["ok", "bad"]
 
 
+@pytest.mark.parametrize(
+    "reason", ["runtime_error", "extraction_failed", "malformed_response"]
+)
+def test_detect_stops_immediately_when_the_first_input_fails(reason):
+    calls = []
+
+    def agent(text):
+        calls.append(text)
+        return {"verdict": NoDecision(reason)}
+
+    with pytest.raises(OutcomeNotScorable, match=reason):
+        detect(from_callable(agent), ["bad", "never-called"])
+
+    assert calls == ["bad"]
+
+
+def test_the_refusal_names_the_scan_rather_than_a_repeat_series():
+    with pytest.raises(OutcomeNotScorable, match="a blindness scan"):
+        score([Observation(verdict=NoDecision("runtime_error"))])
+
+
 def test_score_stops_consuming_at_a_typed_failure():
     def observations():
         yield Observation(verdict="allow")

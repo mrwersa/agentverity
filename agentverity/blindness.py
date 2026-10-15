@@ -122,7 +122,7 @@ def score(
     layer: str = "verdict",
     threshold: float = 0.9,
 ) -> BlindnessResult:
-    """Score already-collected observations for verdict skew.
+    """Score observations for verdict skew, consuming them lazily.
 
     :func:`detect` calls the agent and then delegates here. Call this directly
     when the observations were gathered by an earlier phase, so a probe set does
@@ -151,8 +151,8 @@ def score(
         # Skew counts a distribution rather than comparing repeat pairs.
         # Refuse harness failures without adding the meter's comparability
         # requirement to other outcomes or legacy text fallback.
-        if layer == "verdict" and observation.is_incomplete:
-            check_scorable((observation,), layer)
+        if layer == "verdict" and getattr(observation, "is_incomplete", False):
+            check_scorable((observation,), layer, context="a blindness scan")
         collected.append(observation)
     if not collected:
         raise ValueError("observations must not be empty")

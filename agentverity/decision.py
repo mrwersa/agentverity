@@ -155,7 +155,11 @@ def as_outcome(value: object) -> Outcome:
     raise ValueError(f"cannot read an outcome from {value!r}")
 
 
-def check_scorable(observations: Sequence[object], layer: str = "verdict") -> None:
+def check_scorable(
+    observations: Sequence[object],
+    layer: str = "verdict",
+    context: str = "a repeat series",
+) -> None:
     """Refuse a repeat series that cannot honestly be scored for stability.
 
     One helper, called from both pooled and per-route scoring, because two
@@ -178,13 +182,13 @@ def check_scorable(observations: Sequence[object], layer: str = "verdict") -> No
             continue
         if key.is_incomplete:
             raise OutcomeNotScorable(
-                f"a repeat series contains {key}, which means the harness "
+                f"{context} contains {key}, which means the harness "
                 "failed rather than the agent answering. Evidence containing "
                 "it is incomplete and must not be scored for stability."
             )
         if not key.comparable:
             raise OutcomeNotScorable(
-                f"a repeat series contains {key}. Categorical stability is "
+                f"{context} contains {key}. Categorical stability is "
                 "undefined when a run produced no decision, and dropping those "
                 "runs while keeping the repeat count would report stability "
                 "over reruns that did not decide anything. Measure a "
