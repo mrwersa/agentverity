@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project follows [Semantic Versioning](https://semver.org/) once it
 reaches 1.0.0; before that, minor versions may include breaking changes.
 
+## [Unreleased]
+
+### Fixed
+
+- Blindness scans validate the returned verdict key, so custom observations
+  that expose `key(layer)` cannot hide typed harness failures through absent
+  or false `is_incomplete` metadata. Each key is read once; detection and lazy
+  scoring stop at the failing observation.
+
 ## [0.25.3] - 2026-10-15
 
 ### Changed
@@ -25,10 +34,6 @@ reaches 1.0.0; before that, minor versions may include breaking changes.
   the scan's existing open-ended/text-fallback handling are preserved.
 - The optional sibling release-policy comparison now ignores historical
   introductions without dropping part of the policy.
-
-## [Unreleased]
-
-(No changes planned for the next release.)
 
 ## [0.25.2] - 2026-10-14
 

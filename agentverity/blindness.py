@@ -30,7 +30,7 @@ from typing import Any
 
 from agentverity.observation import Observation
 
-from .decision import check_scorable, comparison_key
+from .decision import NoDecision, check_scorable, comparison_key
 
 AgentFn = Callable[[str], Observation]
 
@@ -126,7 +126,9 @@ def score(
 
     :func:`detect` calls the agent and then delegates here. Call this directly
     when the observations were gathered by an earlier phase, so a probe set does
-    not have to be re-run purely to count its verdict distribution.
+    not have to be re-run purely to count its verdict distribution. Each key
+    is read once and validated directly, including for custom observations
+    that expose ``key(layer)`` without status metadata.
 
     Args:
         observations: One :class:`Observation` per input, already collected.
@@ -146,17 +148,17 @@ def score(
     """
     if not 0 < threshold <= 1:
         raise ValueError("threshold must be between 0 and 1")
-    collected = []
+    verdicts = []
     for observation in observations:
+        key = observation.key(layer)
         # Skew counts a distribution rather than comparing repeat pairs.
         # Refuse harness failures without adding the meter's comparability
         # requirement to other outcomes or legacy text fallback.
-        if layer == "verdict" and getattr(observation, "is_incomplete", False):
-            check_scorable((observation,), layer, context="a blindness scan")
-        collected.append(observation)
-    if not collected:
+        if layer == "verdict" and isinstance(key, NoDecision) and key.is_incomplete:
+            check_scorable((key,), layer, context="a blindness scan")
+        verdicts.append(_hashable(key))
+    if not verdicts:
         raise ValueError("observations must not be empty")
-    verdicts = [_hashable(obs.key(layer)) for obs in collected]
     c = Counter(verdicts)
     top, top_n = c.most_common(1)[0]
     n = len(verdicts)
