@@ -100,7 +100,7 @@ def test_a_shared_session_adapter_is_now_refused_a_live_baseline():
     isolated = run(from_strands_factory(_Agent), inputs, config=RunConfig(k=10))
 
     assert shared.meter.call == "verdict-deterministic", "only isolation refuses it"
-    with pytest.raises(SnapshotRefused, match="not independent"):
+    with pytest.raises(SnapshotRefused, match="not established"):
         create_snapshot(shared, approved=True)
 
     assert create_snapshot(isolated, approved=True).isolation == "fresh-instance"
@@ -199,7 +199,7 @@ def test_the_cli_refuses_a_baseline_from_a_shared_session_agent(tmp_path, capsys
     ])
 
     assert code == 2
-    assert "not independent" in capsys.readouterr().err
+    assert "not established" in capsys.readouterr().err
 
 
 def test_a_reshaping_wrapper_invents_nothing():

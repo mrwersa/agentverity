@@ -634,12 +634,10 @@ def _require_snapshot_evidence(result: RunResult) -> None:
         raise SnapshotRefused("source observations are incomplete")
     if result.isolation not in CERTIFIABLE_ISOLATION:
         raise SnapshotRefused(
-            f"trials were collected under {result.isolation!r}, so they are "
-            "not independent and every interval above is narrower than the "
-            "evidence supports. A baseline certified from them publishes a "
-            "number this run already said was wrong. Collect repeats from "
-            "separated sessions, or measure a layer that does not assume "
-            "independence."
+            f"trials were collected under {result.isolation!r}, so independence "
+            "is not established and the interval's stated confidence "
+            "interpretation is unsupported. Collect repeats from separated "
+            "sessions with equivalent starting state before admitting a baseline."
         )
 
 

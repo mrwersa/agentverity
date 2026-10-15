@@ -153,10 +153,10 @@ class TestIndependenceIsRecordedNotAssumed:
     """An import can violate independence in ways a self-run cannot: a shared
     conversation, a warm cache, one session reused across repeats."""
 
-    def test_a_shared_session_is_flagged_as_narrowing_the_interval(self):
+    def test_a_shared_session_has_no_supported_confidence_interpretation(self):
         caveat = evidence(isolation="shared-session").independence_caveat
-        assert "not independent" in caveat
-        assert "narrower" in caveat
+        assert "not established" in caveat
+        assert "confidence interpretation is unsupported" in caveat
 
     def test_an_unrecorded_isolation_says_the_assumption_is_unverified(self):
         caveat = evidence(isolation="unknown").independence_caveat
@@ -283,10 +283,10 @@ class TestAssessment:
         )
         assert len(result.caveats) == 2
         assert "within-period disagreement probability" in result.caveats[0]
-        assert "not independent" in result.caveats[1]
+        assert "not established" in result.caveats[1]
         assert "EVIDENCE CAVEATS" in result.summary()
         assert run_result_to_dict(result)["caveats"] == list(result.caveats)
-        assert "not independent" in run_result_to_junit_xml(result)
+        assert "not established" in run_result_to_junit_xml(result)
         assert run_result_to_otel_attributes(result)["agentverity.caveats"] == 2
 
 

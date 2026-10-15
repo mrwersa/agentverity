@@ -30,7 +30,7 @@ from typing import Any
 
 from agentverity.observation import Observation
 
-from .decision import NoDecision, check_scorable, comparison_key
+from .decision import Decision, NoDecision, check_scorable, comparison_key
 
 AgentFn = Callable[[str], Observation]
 
@@ -67,7 +67,7 @@ class BlindnessResult:
             return None
         return (
             f"constant-gate blindness: agent returns "
-            f"{self.majority_verdict!r} on {self.skew:.0%} of inputs. "
+            f"{_verdict_display(self.majority_verdict)} on {self.skew:.0%} of inputs. "
             f"Relation passes may be trivial because the probe set rarely "
             f"exercises a decision boundary. A green suite is NOT evidence of "
             f"correct behaviour here."
@@ -170,6 +170,13 @@ def score(
         distinct=len(c),
         threshold=threshold,
     )
+
+
+def _verdict_display(value: Any) -> str:
+    """Quote a verdict for prose while retaining no-decision reasons."""
+    if isinstance(value, (Decision, NoDecision)):
+        return repr(str(value))
+    return repr(value)
 
 
 def _hashable(v: Any) -> Any:

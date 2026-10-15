@@ -294,13 +294,14 @@ the caller's declaration. Neither infers independence from matching decisions.
 |---|---|---|---|
 | `fresh-session` | Each trial started a new session | no caveat | yes |
 | `fresh-instance` | Each trial used a new agent instance | no caveat | yes |
-| `shared-session` | Trials ran in one session | not independent, the interval is too narrow | **no** |
+| `shared-session` | Trials ran in one session | independence is not established; the stated confidence interpretation is unsupported | **no** |
 | `unknown` | Not recorded | independence assumed rather than established | yes, with the caveat |
 
 Everything is still **assessed**. What the last column governs is admission: a
-snapshot is a number you are committing to, and certifying one from trials you
-have said were not independent publishes an interval the same report called
-too narrow.
+snapshot is a number you are committing to, and certifying one from a shared
+session would rely on a confidence interpretation the evidence does not support.
+Shared state can induce dependence, but the isolation declaration alone does
+not establish its direction or how it changes interval coverage.
 
 `unknown` is admitted because it is the default of every importer, and
 refusing it would teach callers to write `fresh-session` to make the error go

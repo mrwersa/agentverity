@@ -139,7 +139,7 @@ CLI `snapshot` collects a new live run.
 ## Stop when more runs cannot help
 
 Repeat-run variation is often called **flakiness**. With no flips, a fixed
-95% Wilson interval needs 73 independent pairs to qualify below a 5%
+nominal 95% Wilson interval needs 73 independent pairs to qualify below a 5%
 tolerance. This is a best-case minimum, not a guarantee of qualification.
 
 `plan` prices that evidence. Live `--curtail` stops when qualification becomes
