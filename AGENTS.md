@@ -42,6 +42,11 @@ A release PR publishes automatically after merge to `main`: set the version, mov
 
 ## Conventions
 
+- Use a separate worktree or checkout for concurrent agent work. Stage explicit
+  file paths and inspect the staged diff before committing; broad staging in a
+  shared checkout can capture another agent's unfinished changes. Keep frozen
+  research artifacts and cross-repository paper files outside the change unless
+  the user explicitly includes them in its scope.
 - Commit subjects: imperative and scoped (`fix: ...`, `docs: ...`, `test: ...`, `release: ...`). Branches: `feature/short-description` off latest `main`; direct and force pushes to `main` are blocked.
 - Tests are named `test_<observable_behavior>` and use deterministic fixtures/recorded evidence — no live model/provider calls anywhere in the suite.
 - Preserve the package's explicit vocabulary: decisions, evidence, flips, and the three outcomes `deterministic` / `stochastic` / `undecided`.
