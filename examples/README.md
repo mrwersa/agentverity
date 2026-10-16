@@ -6,6 +6,7 @@ otherwise. Start with the first one.
 | Example | What it shows |
 |---|---|
 | [`payment_dispute_gate.py`](payment_dispute_gate.py) | The evidence gate. Two probe sets both score 6/6 on an exact-match evaluator; one is refused a baseline because every probe takes the same route, the other is admitted. |
+| [`regression_reference.py`](regression_reference.py) | Save and reload an approved reference, then collect fresh evidence for an unchanged router and a consistently changed router. Repeatability qualifies in both checks, but the changed decisions differ from the reference. |
 | [`custom_relation.py`](custom_relation.py) | A domain relation the built-in catalogue cannot express, and how to run it with `--relations`. See [docs/custom-relations.md](../docs/custom-relations.md). |
 | [`evaluator_stability.py`](evaluator_stability.py) | The same tri-state rule applied to a categorical LLM judge, without confusing repeatability with agreement. |
 | [`support_router.py`](support_router.py) | A small router with a declared decision suite, for reading the per-route table. |

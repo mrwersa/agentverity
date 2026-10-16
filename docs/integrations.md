@@ -40,6 +40,14 @@ No single evaluator qualifies an agent. Use layers:
 AgentVerity owns step 5. It does not replace the surrounding quality, security,
 or operational checks. Running the cheaper labelled quality check first also
 avoids spending on repeated calls for an agent already known to be wrong.
+
+For later regression checks, `agentverity check` collects fresh repetitions
+using the saved reference's repeat count and tolerance. It applies admission
+again before comparing decisions, so budget repeated calls for each check.
+The offline [regression-reference example](../examples/regression_reference.py)
+shows a matching run and a changed router whose new decisions are repeatable
+but differ from the approved reference.
+
 When the evaluator already retained repeated categorical outputs, import them
 instead of making the target calls again. Promptfoo has a direct JSON bridge,
 DeepEval can share precomputed test cases, and anything else that can write one

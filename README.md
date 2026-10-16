@@ -16,9 +16,14 @@ missing routes and evidence too small to support a conclusion.
 
 ## The 60-second problem
 
-A payment router sends disputes to six queues. Promptfoo repeats six reviewed
-cases 26 times: **156/156 assertions pass**. One case accepts either of two
-valid fraud queues. AgentVerity reads the same export and finds:
+This synthetic example uses a local payment router with one deliberately
+varying route. Promptfoo repeats six reviewed cases 26 times:
+**156/156 assertions pass**. One case accepts either of two valid fraud queues.
+
+We set a **disagreement tolerance** of 5%: the highest acceptable probability
+that two reruns of the same case return different decisions.
+A **flip** is a pairwise disagreement. AgentVerity reads the same export and
+reports a 95% confidence interval (CI) for that probability. An excerpt:
 
 ```text
 route              cases  pairs  flips  95% CI            result
@@ -32,8 +37,7 @@ flip pairs:
 
 Every answer is allowed, but the changing queue would make a regression check
 noisy. The five quiet routes need more evidence to qualify separately.
-A **flip** is a pairwise disagreement: two reruns of the same case returned
-different decisions. This evidence is refused as a regression reference.
+This evidence is refused as a regression reference.
 Observations form non-overlapping pairs in collection order.
 
 ## Try it without model calls
@@ -107,6 +111,27 @@ Both sets score 6/6, and both pooled meters qualify. Missing coverage blocks
 the narrow reference. The repaired reference is admitted at pooled level;
 its individual route intervals remain inconclusive.
 
+## From an approved reference to a regression check
+
+Run the complete offline example:
+
+```bash
+python examples/regression_reference.py
+```
+
+```text
+Reference: ADMITTED (2 reviewed decisions)
+Unchanged router: MATCH (0 changed decisions)
+Changed router: CHANGED (2 changed decisions)
+```
+
+The example saves an approved reference, reloads it, and collects fresh
+repetitions for each comparison. The changed router repeats its new decisions
+consistently, but those decisions differ from the approved reference. A
+repeatability check alone would miss that change.
+Qualification here is pooled across the two cases. It does not qualify each
+case separately.
+
 ## Where it fits
 
 | Layer | Question |
@@ -127,7 +152,7 @@ check cannot detect changed arguments.
 | `agentverity assess` | Assess recorded evidence without new target calls |
 | `agentverity snapshot` | Collect live evidence and admit an approved regression reference when evidence permits |
 | `agentverity inspect` | Read the stored reference without calling anything |
-| `agentverity check` | Recheck admission and compare current decisions with the reference |
+| `agentverity check` | Collect fresh repetitions, recheck admission and compare with the reference |
 | `agentverity compare-evidence` | Compare repeatability structure and provenance across evidence windows |
 
 `compare-evidence` can report NO CHANGE even when stable output labels differ.
@@ -135,6 +160,10 @@ Use `check` when the reviewed decisions themselves must match.
 To save imported evidence, Python callers use
 [`create_snapshot(result, approved=True)`](https://github.com/mrwersa/agentverity/blob/main/docs/imported-evidence.md#what-an-import-can-and-cannot-check);
 CLI `snapshot` collects a new live run.
+
+Each CLI `check` also calls the agent again, using the saved repeat count and
+tolerance. Budget these repetitions for every regression check. If the new
+evidence cannot pass admission, the command refuses the comparison.
 
 ## Stop when more runs cannot help
 
