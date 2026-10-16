@@ -129,6 +129,8 @@ The example saves an approved reference, reloads it, and collects fresh
 repetitions for each comparison. The changed router repeats its new decisions
 consistently, but those decisions differ from the approved reference. A
 repeatability check alone would miss that change.
+Qualification here is pooled across the two cases. It does not qualify each
+case separately.
 
 ## Where it fits
 
